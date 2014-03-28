@@ -34,6 +34,8 @@ var opName = map[string]int{
 	"func":   FUNC,
 	"return": RETURN,
 	"if":     IF,
+	"for":    FOR,
+	"in":     IN,
 	"else":   ELSE,
 	"==":     EQ,
 	"!=":     NE,

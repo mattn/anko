@@ -62,3 +62,9 @@ type CallExpr struct {
 	Name     string
 	SubExprs []Expr
 }
+
+type ItemExpr struct {
+	ExprImpl
+	Value Expr
+	Index Expr
+}

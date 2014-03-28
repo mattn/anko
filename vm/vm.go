@@ -71,7 +71,27 @@ func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 			}
 			return r, nil
 		}
-
+		return NilValue, nil
+	case *ast.ForStmt:
+		val, err := invokeExpr(stmt.Value, env)
+		if err != nil {
+			return NilValue, err
+		}
+		newenv := make(Env)
+		for k, v := range env {
+			newenv[k] = v
+		}
+		if val.Kind() == reflect.Array || val.Kind() == reflect.Slice {
+			r := NilValue
+			for i := 0; i < val.Len(); i++ {
+				newenv[stmt.Var] = val.Index(i)
+				r, err = runStmts(stmt.Stmts, newenv)
+				if err != nil {
+					return NilValue, err
+				}
+			}
+			return r, nil
+		}
 		return NilValue, nil
 	case *ast.ReturnStmt:
 		r, err := invokeExpr(stmt.Expr, env)
@@ -192,6 +212,28 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		return v, nil
+	case *ast.ItemExpr:
+		v, err := invokeExpr(e.Value, env)
+		if err != nil {
+			return NilValue, err
+		}
+		i, err := invokeExpr(e.Index, env)
+		if err != nil {
+			return NilValue, err
+		}
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+			if i.Kind() != reflect.Int {
+				return NilValue, errors.New("Array index should be int")
+			}
+			return v.Index(int(i.Int())), nil
+		}
+		if v.Kind() == reflect.Map {
+			if i.Kind() != reflect.String {
+				return NilValue, errors.New("Map key should be string")
+			}
+			return v.MapIndex(i), nil
+		}
+		return NilValue, nil
 	case *ast.BinOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
 		if err != nil {

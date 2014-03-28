@@ -29,9 +29,16 @@ type FuncStmt struct {
 
 type IfStmt struct {
 	StmtImpl
-	Expr Expr
+	Expr      Expr
 	ThenStmts []Stmt
 	ElseStmts []Stmt
+}
+
+type ForStmt struct {
+	StmtImpl
+	Var   string
+	Value Expr
+	Stmts []Stmt
 }
 
 type ReturnStmt struct {

@@ -12,6 +12,7 @@ import (
 %type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
 %type<stmt_if_else> stmt_if_else
+%type<stmt_for> stmt_for
 %type<expr> expr
 %type<exprs> exprs
 %type<pair> pair
@@ -22,8 +23,10 @@ import (
 	stmt_func    ast.Stmt
 	stmt_if      ast.Stmt
 	stmt_if_else ast.Stmt
+	stmt_for     ast.Stmt
 	stmts        []ast.Stmt
 	stmt         ast.Stmt
+	teim         ast.Expr
 	expr         ast.Expr
 	tok          Token
 	idents       []string
@@ -32,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR FUNC RETURN IF ELSE EQ NE GE LE
+%token<tok> IDENT NUMBER STRING ARRAY VAR FUNC RETURN IF ELSE FOR IN EQ NE GE LE
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -75,6 +78,13 @@ stmts :
 			l.stmts = $$
 		}
 	}
+	| stmt_for stmts
+	{
+		$$ = append([]ast.Stmt{$1}, $2...)
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
 
 stmt : expr ';'
 	{
@@ -102,6 +112,11 @@ stmt_if_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
 stmt_if : IF '(' expr ')' '{' stmts '}'
 	{
 		$$ = &ast.IfStmt{Expr: $3, ThenStmts: $6}
+	}
+
+stmt_for : FOR IDENT IN expr '{' stmts '}'
+	{
+		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
 	}
 
 idents : IDENT
@@ -175,6 +190,10 @@ expr : NUMBER
 			mapExpr[v.Key] = v.Value
 		}
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 	}
 	| '(' expr ')'
 	{
