@@ -49,17 +49,17 @@ func main() {
 			fmt.Print("> ")
 			b, _, err := reader.ReadLine()
 			if err != nil {
-				log.Fatal(err)
+				break
 			}
 			scanner.Init(string(b))
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
 			}
 			for _, stmt := range stmts {
 				_, err := vm.Run(stmt, env)
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(err)
 				}
 			}
 		}

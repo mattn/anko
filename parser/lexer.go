@@ -215,7 +215,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-	log.Fatalf("Line %d, Column %d: %q %s",
+	log.Printf("Line %d, Column %d: %q %s",
 		l.pos.Line, l.pos.Column, l.lit, e)
 }
 
