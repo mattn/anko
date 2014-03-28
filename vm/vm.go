@@ -222,7 +222,7 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if i.Kind() != reflect.Int {
+			if i.Kind() != reflect.Int && i.Kind() != reflect.Int64 {
 				return NilValue, errors.New("Array index should be int")
 			}
 			ii := int(i.Int())
