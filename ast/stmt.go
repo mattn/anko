@@ -27,6 +27,13 @@ type FuncStmt struct {
 	Args  []string
 }
 
+type IfStmt struct {
+	StmtImpl
+	Expr Expr
+	ThenStmts []Stmt
+	ElseStmts []Stmt
+}
+
 type ReturnStmt struct {
 	StmtImpl
 	Expr Expr

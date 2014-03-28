@@ -33,6 +33,12 @@ var opName = map[string]int{
 	"var":    VAR,
 	"func":   FUNC,
 	"return": RETURN,
+	"if":     IF,
+	"else":   ELSE,
+	"==":     EQ,
+	"!=":     NE,
+	">=":     GE,
+	"<=":     LE,
 }
 
 func (s *Scanner) Init(src string) {
@@ -77,7 +83,41 @@ retry:
 			goto retry
 		case -1:
 			tok = EOF
-		case '(', ')', ';', '+', '-', '*', '/', '%', '=', '{', '}', ',':
+		case '!':
+			s.next()
+			if s.peek() == '=' {
+				tok = NE
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
+		case '=':
+			s.next()
+			if s.peek() == '=' {
+				tok = EQ
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
+		case '>':
+			s.next()
+			tok = int(ch)
+			if s.peek() == '=' {
+				tok = GE
+			} else {
+				s.back()
+			}
+		case '<':
+			s.next()
+			tok = int(ch)
+			if s.peek() == '=' {
+				tok = LE
+			} else {
+				s.back()
+			}
+		case '(', ')', ';', '+', '-', '*', '/', '%', '{', '}', ',':
 			tok = int(ch)
 			lit = string(ch)
 		default:
@@ -124,6 +164,10 @@ func (s *Scanner) next() {
 		}
 		s.offset++
 	}
+}
+
+func (s *Scanner) back() {
+	s.offset--
 }
 
 func (s *Scanner) reachEOF() bool {

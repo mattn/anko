@@ -37,7 +37,7 @@ type ParenExpr struct {
 type BinOpExpr struct {
 	ExprImpl
 	Lhs      Expr
-	Operator int
+	Operator string
 	Rhs      Expr
 }
 

@@ -19,6 +19,25 @@ func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
 
+func runStmts(stmts []ast.Stmt, env Env) (reflect.Value, error) {
+	newenv := make(Env)
+	for k, v := range env {
+		newenv[k] = v
+	}
+	v := NilValue
+	var err error
+	for _, stmt := range stmts {
+		v, err = Run(stmt, newenv)
+		if err != nil {
+			return NilValue, err
+		}
+		if _, ok := stmt.(*ast.ReturnStmt); ok {
+			return v, nil
+		}
+	}
+	return v, nil
+}
+
 func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
@@ -34,37 +53,46 @@ func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 		}
 		env[stmt.Name] = v
 		return v, nil
-	case *ast.ReturnStmt:
-		v, err := invokeExpr(stmt.Expr, env)
+	case *ast.IfStmt:
+		r, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
 			return NilValue, err
 		}
-		return v, nil
+		if r.Bool() {
+			r, err = runStmts(stmt.ThenStmts, env)
+			if err != nil {
+				return NilValue, err
+			}
+			return r, nil
+		} else if len(stmt.ElseStmts) > 0 {
+			r, err = runStmts(stmt.ElseStmts, env)
+			if err != nil {
+				return NilValue, err
+			}
+			return r, nil
+		}
+
+		return NilValue, nil
+	case *ast.ReturnStmt:
+		r, err := invokeExpr(stmt.Expr, env)
+		if err != nil {
+			return NilValue, err
+		}
+		return r, nil
 	case *ast.FuncStmt:
 		f := reflect.ValueOf(func(stmt *ast.FuncStmt, env Env) Func {
-			newenv := make(Env)
-			for k, v := range env {
-				newenv[k] = v
-			}
 			return func(args ...reflect.Value) (reflect.Value, error) {
-				v := NilValue
-				var err error
 				if len(args) != len(stmt.Args) {
 					return NilValue, errors.New("Arguments Number of mismatch")
+				}
+				newenv := make(Env)
+				for k, v := range env {
+					newenv[k] = v
 				}
 				for i, arg := range stmt.Args {
 					newenv[arg] = args[i]
 				}
-				for _, stmt := range stmt.Stmts {
-					v, err = Run(stmt, newenv)
-					if err != nil {
-						return NilValue, err
-					}
-					if _, ok := stmt.(*ast.ReturnStmt); ok {
-						return v, nil
-					}
-				}
-				return v, nil
+				return runStmts(stmt.Stmts, newenv)
 			}
 		}(stmt, env))
 		env[stmt.Name] = f
@@ -72,6 +100,18 @@ func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 	default:
 		return NilValue, errors.New("Unknown Statement type")
 	}
+}
+
+func toBool(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return v.Float() != 0.0
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		return v.Int() != 0
+	case reflect.Bool:
+		return v.Bool()
+	}
+	return false
 }
 
 func toFloat64(v reflect.Value) float64 {
@@ -142,25 +182,37 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		switch e.Operator {
-		case '+':
+		case "+":
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
 			}
 			return reflect.ValueOf(toInt64(lhsV) + toInt64(rhsV)), nil
-		case '-':
+		case "-":
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) - toFloat64(rhsV)), nil
 			}
 			return reflect.ValueOf(toInt64(lhsV) - toInt64(rhsV)), nil
-		case '*':
+		case "*":
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) * toFloat64(rhsV)), nil
 			}
 			return reflect.ValueOf(toInt64(lhsV) * toInt64(rhsV)), nil
-		case '/':
+		case "/":
 			return reflect.ValueOf(toFloat64(lhsV) / toFloat64(rhsV)), nil
-		case '%':
+		case "%":
 			return reflect.ValueOf(toInt64(lhsV) % toInt64(rhsV)), nil
+		case "==":
+			return reflect.ValueOf(reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
+		case "!=":
+			return reflect.ValueOf(!reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
+		case ">":
+			return reflect.ValueOf(toFloat64(lhsV) > toFloat64(rhsV)), nil
+		case ">=":
+			return reflect.ValueOf(toFloat64(lhsV) >= toFloat64(rhsV)), nil
+		case "<":
+			return reflect.ValueOf(toFloat64(lhsV) < toFloat64(rhsV)), nil
+		case "<=":
+			return reflect.ValueOf(toFloat64(lhsV) <= toFloat64(rhsV)), nil
 		default:
 			return NilValue, errors.New("Unknown operator")
 		}
@@ -172,7 +224,11 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, err
 			}
-			args[i] = reflect.ValueOf(arg)
+			if i == len(args) {
+				args = append(args, reflect.ValueOf(arg))
+			} else {
+				args[i] = reflect.ValueOf(arg)
+			}
 		}
 		ret := f.Call(args)
 		err := ret[1].Interface()
