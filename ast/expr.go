@@ -19,6 +19,11 @@ type StringExpr struct {
 	Lit string
 }
 
+type ArrayExpr struct {
+	ExprImpl
+	Exprs []Expr
+}
+
 type IdentExpr struct {
 	ExprImpl
 	Lit string

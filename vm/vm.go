@@ -157,6 +157,16 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 		}
 	case *ast.StringExpr:
 		return reflect.ValueOf(e.Lit), nil
+	case *ast.ArrayExpr:
+		arr := make([]interface{}, len(e.Exprs))
+		for i, expr := range e.Exprs {
+			arg, err := invokeExpr(expr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			arr[i] = arg.Interface()
+		}
+		return reflect.ValueOf(arr), nil
 	case *ast.UnaryMinusExpr:
 		v, err := invokeExpr(e.SubExpr, env)
 		if err != nil {

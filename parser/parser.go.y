@@ -28,7 +28,7 @@ import (
 	exprs        []ast.Expr
 }
 
-%token<tok> IDENT NUMBER STRING VAR FUNC RETURN IF ELSE EQ NE GE LE
+%token<tok> IDENT NUMBER STRING ARRAY VAR FUNC RETURN IF ELSE EQ NE GE LE
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -141,6 +141,10 @@ expr : NUMBER
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
+	}
+	| '[' exprs ']'
+	{
+		$$ = &ast.ArrayExpr{Exprs: $2}
 	}
 	| '(' expr ')'
 	{
