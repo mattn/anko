@@ -31,6 +31,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		args := []reflect.Value{}
+		for _, arg := range os.Args[2:] {
+			args = append(args, reflect.ValueOf(arg))
+		}
+
 		scanner.Init(string(body))
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
