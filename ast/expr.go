@@ -24,6 +24,17 @@ type ArrayExpr struct {
 	Exprs []Expr
 }
 
+type PairExpr struct {
+	ExprImpl
+	Key   string
+	Value Expr
+}
+
+type MapExpr struct {
+	ExprImpl
+	MapExpr map[string]Expr
+}
+
 type IdentExpr struct {
 	ExprImpl
 	Lit string

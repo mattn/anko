@@ -13,8 +13,10 @@ import (
 %type<stmt_if> stmt_if
 %type<stmt_if_else> stmt_if_else
 %type<expr> expr
-%type<idents> idents
 %type<exprs> exprs
+%type<pair> pair
+%type<pairs> pairs
+%type<idents> idents
 
 %union{
 	stmt_func    ast.Stmt
@@ -26,6 +28,8 @@ import (
 	tok          Token
 	idents       []string
 	exprs        []ast.Expr
+	pair         *ast.PairExpr
+	pairs        []*ast.PairExpr
 }
 
 %token<tok> IDENT NUMBER STRING ARRAY VAR FUNC RETURN IF ELSE EQ NE GE LE
@@ -109,6 +113,24 @@ idents : IDENT
 		$$ = append($1, $3.lit)
 	}
 
+pair : STRING ':' expr
+	{
+		$$ = &ast.PairExpr{Key: $1.lit, Value: $3}
+	}
+
+pairs :
+	{
+		$$ = []*ast.PairExpr{}
+	}
+	| pair
+	{
+		$$ = []*ast.PairExpr{$1}
+	}
+	| pairs ',' pair
+	{
+		$$ = append($1, $3)
+	}
+
 exprs :
 	{
 		$$ = []ast.Expr{}
@@ -145,6 +167,14 @@ expr : NUMBER
 	| '[' exprs ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
+	}
+	| '{' pairs '}'
+	{
+		mapExpr := make(map[string]ast.Expr)
+		for _, v := range $2 {
+			mapExpr[v.Key] = v.Value
+		}
+		$$ = &ast.MapExpr{MapExpr: mapExpr}
 	}
 	| '(' expr ')'
 	{

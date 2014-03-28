@@ -39,6 +39,24 @@ func main() {
 		return reflect.ValueOf(args[0].Len()), nil
 	})
 
+	env["keys"] = vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		if args[0].Kind() != reflect.Map {
+			return vm.NilValue, errors.New("Argument should be map")
+		}
+		keys := []string{}
+		mk := args[0].MapKeys()
+		for _, key := range mk {
+			keys = append(keys, key.String())
+		}
+		return reflect.ValueOf(keys), nil
+	})
+
 	if len(os.Args) > 1 {
 		scanner := new(parser.Scanner)
 		body, err := ioutil.ReadFile(os.Args[1])
