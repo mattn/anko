@@ -83,6 +83,7 @@ idents : IDENT
 
 exprs :
 	{
+		$$ = []ast.Expr{}
 	}
 	| expr
 	{
