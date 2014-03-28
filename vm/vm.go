@@ -225,6 +225,10 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			if i.Kind() != reflect.Int {
 				return NilValue, errors.New("Array index should be int")
 			}
+			ii := int(i.Int())
+			if ii < 0 || ii >= v.Len() {
+				return NilValue, nil
+			}
 			return v.Index(int(i.Int())), nil
 		}
 		if v.Kind() == reflect.Map {
@@ -233,7 +237,15 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			}
 			return v.MapIndex(i), nil
 		}
-		return NilValue, nil
+		if v.Kind() == reflect.String {
+			rs := []rune(v.Interface().(string))
+			ii := int(i.Int())
+			if ii < 0 || ii >= len(rs) {
+				return NilValue, nil
+			}
+			return reflect.ValueOf(rs[ii]), nil
+		}
+		return NilValue, errors.New("Invalid operation")
 	case *ast.BinOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
 		if err != nil {

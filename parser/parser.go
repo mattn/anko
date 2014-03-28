@@ -10,20 +10,20 @@ import (
 
 //line parser.go.y:22
 type yySymType struct {
-	yys          int
-	stmt_func    ast.Stmt
-	stmt_if      ast.Stmt
-	stmt_if_else ast.Stmt
-	stmt_for     ast.Stmt
-	stmts        []ast.Stmt
-	stmt         ast.Stmt
-	teim         ast.Expr
-	expr         ast.Expr
-	tok          Token
-	idents       []string
-	exprs        []ast.Expr
-	pair         *ast.PairExpr
-	pairs        []*ast.PairExpr
+	yys       int
+	stmt_func ast.Stmt
+	stmt_if   ast.Stmt
+	stmt_else ast.Stmt
+	stmt_for  ast.Stmt
+	stmts     []ast.Stmt
+	stmt      ast.Stmt
+	teim      ast.Expr
+	expr      ast.Expr
+	tok       Token
+	idents    []string
+	exprs     []ast.Expr
+	pair      *ast.PairExpr
+	pairs     []*ast.PairExpr
 }
 
 const IDENT = 57346
@@ -466,7 +466,7 @@ yydefault:
 	case 5:
 		//line parser.go.y:75
 		{
-			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_if_else}, yyS[yypt-0].stmts...)
+			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_else}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
 				l.stmts = yyVAL.stmts
 			}
@@ -502,7 +502,7 @@ yydefault:
 	case 11:
 		//line parser.go.y:108
 		{
-			yyVAL.stmt_if_else = &ast.IfStmt{Expr: yyS[yypt-8].expr, ThenStmts: yyS[yypt-5].stmts, ElseStmts: yyS[yypt-1].stmts}
+			yyVAL.stmt_else = &ast.IfStmt{Expr: yyS[yypt-8].expr, ThenStmts: yyS[yypt-5].stmts, ElseStmts: yyS[yypt-1].stmts}
 		}
 	case 12:
 		//line parser.go.y:113

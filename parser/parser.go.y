@@ -11,7 +11,7 @@ import (
 %type<stmt> stmt
 %type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
-%type<stmt_if_else> stmt_if_else
+%type<stmt_else> stmt_else
 %type<stmt_for> stmt_for
 %type<expr> expr
 %type<exprs> exprs
@@ -22,7 +22,7 @@ import (
 %union{
 	stmt_func    ast.Stmt
 	stmt_if      ast.Stmt
-	stmt_if_else ast.Stmt
+	stmt_else    ast.Stmt
 	stmt_for     ast.Stmt
 	stmts        []ast.Stmt
 	stmt         ast.Stmt
@@ -71,7 +71,7 @@ stmts :
 			l.stmts = $$
 		}
 	}
-	| stmt_if_else stmts
+	| stmt_else stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
@@ -104,7 +104,7 @@ stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
 		$$ = &ast.FuncStmt{Name: $2.lit, Args: $4, Stmts: $7}
 	}
 
-stmt_if_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
+stmt_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
 	{
 		$$ = &ast.IfStmt{Expr: $3, ThenStmts: $6, ElseStmts: $10}
 	}
