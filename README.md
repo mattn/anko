@@ -1,6 +1,6 @@
 # anko
 
-![](http://upload.wikimedia.org/wikipedia/commons/e/ef/An_dango.jpg)
+![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
 Scriptable interpreter written in golang
 
