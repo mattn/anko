@@ -1,0 +1,10 @@
+# ハローワールド
+func foo(x){
+  return 3;
+  x + 1;
+}
+var a = 1;
+var b = a + 1;
+println(a * (b + 2 * a + foo(a) / 2));
+println(1/2);
+println("こんにちわ世界");
