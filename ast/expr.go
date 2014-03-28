@@ -68,3 +68,9 @@ type ItemExpr struct {
 	Value Expr
 	Index Expr
 }
+
+type FuncExpr struct {
+	ExprImpl
+	Stmts []Stmt
+	Args  []string
+}

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type Env map[string]reflect.Value
+type Env map[interface{}]reflect.Value
 
 var NilValue = reflect.ValueOf(nil)
 
@@ -212,6 +212,22 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		return v, nil
+	case *ast.FuncExpr:
+		return reflect.ValueOf(func(expr *ast.FuncExpr, env Env) Func {
+			return func(args ...reflect.Value) (reflect.Value, error) {
+				if len(args) != len(expr.Args) {
+					return NilValue, errors.New("Arguments Number of mismatch")
+				}
+				newenv := make(Env)
+				for k, v := range env {
+					newenv[k] = v
+				}
+				for i, arg := range expr.Args {
+					newenv[arg] = args[i]
+				}
+				return runStmts(expr.Stmts, newenv)
+			}
+		}(e, env)), nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {

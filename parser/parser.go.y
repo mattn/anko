@@ -119,15 +119,6 @@ stmt_for : FOR IDENT IN expr '{' stmts '}'
 		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
 	}
 
-idents : IDENT
-	{
-		$$ = []string{$1.lit}
-	}
-	| idents ',' IDENT
-	{
-		$$ = append($1, $3.lit)
-	}
-
 pair : STRING ':' expr
 	{
 		$$ = &ast.PairExpr{Key: $1.lit, Value: $3}
@@ -144,6 +135,19 @@ pairs :
 	| pairs ',' pair
 	{
 		$$ = append($1, $3)
+	}
+
+idents :
+	{
+		$$ = []string{}
+	}
+	| IDENT
+	{
+		$$ = []string{$1.lit}
+	}
+	| idents ',' IDENT
+	{
+		$$ = append($1, $3.lit)
 	}
 
 exprs :
@@ -183,6 +187,11 @@ expr : NUMBER
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
 	}
+	| FUNC '(' idents ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+	}
+
 	| '{' pairs '}'
 	{
 		mapExpr := make(map[string]ast.Expr)

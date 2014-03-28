@@ -1,3 +1,5 @@
+#!anko
+
 # declare function
 func foo(x){
   return x + 1;
@@ -28,3 +30,8 @@ for k in keys(m) {
   println(m[k]);
 }
 
+var f = func(a) {
+  println(a);
+};
+
+f("あんこ");
