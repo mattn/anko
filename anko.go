@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
@@ -23,6 +24,19 @@ func main() {
 		}
 		fmt.Println()
 		return vm.NilValue, nil
+	})
+
+	env["len"] = vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		if args[0].Kind() != reflect.Array && args[0].Kind() != reflect.Slice {
+			return vm.NilValue, errors.New("Argument should be array")
+		}
+		return reflect.ValueOf(args[0].Len()), nil
 	})
 
 	if len(os.Args) > 1 {
