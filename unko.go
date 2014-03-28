@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/mattn/ungo/parser"
-	"github.com/mattn/ungo/vm"
+	"github.com/mattn/anko/parser"
+	"github.com/mattn/anko/vm"
 	"io/ioutil"
 	"log"
 	"os"

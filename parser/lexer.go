@@ -2,7 +2,7 @@ package parser
 
 import (
 	"errors"
-	"github.com/mattn/ungo/ast"
+	"github.com/mattn/anko/ast"
 	"log"
 )
 

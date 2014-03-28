@@ -3,7 +3,7 @@ package vm
 import (
 	"errors"
 	"fmt"
-	"github.com/mattn/ungo/ast"
+	"github.com/mattn/anko/ast"
 	"reflect"
 	"strconv"
 	"strings"
