@@ -35,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR FUNC RETURN IF ELSE FOR IN EQ NE GE LE
+%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -191,7 +191,10 @@ expr : NUMBER
 	{
 		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
 	}
-
+	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
+	}
 	| '{' pairs '}'
 	{
 		mapExpr := make(map[string]ast.Expr)

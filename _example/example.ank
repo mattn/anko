@@ -35,3 +35,15 @@ var f = func(a) {
 };
 
 f("あんこ");
+
+var f = func(a ...) {
+  println(a);
+};
+
+f("あんこ", "だいすき");
+
+func e(a ...) {
+  println(a);
+}
+
+e("あんこ", "だいすき");

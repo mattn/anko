@@ -102,6 +102,7 @@ func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 	case *ast.FuncStmt:
 		f := reflect.ValueOf(func(stmt *ast.FuncStmt, env Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
+				// TODO VarArg
 				if len(args) != len(stmt.Args) {
 					return NilValue, errors.New("Arguments Number of mismatch")
 				}
@@ -215,15 +216,21 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 	case *ast.FuncExpr:
 		return reflect.ValueOf(func(expr *ast.FuncExpr, env Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
-				if len(args) != len(expr.Args) {
-					return NilValue, errors.New("Arguments Number of mismatch")
+				if !expr.VarArg {
+					if len(args) != len(expr.Args) {
+						return NilValue, errors.New("Arguments Number of mismatch")
+					}
 				}
 				newenv := make(Env)
 				for k, v := range env {
 					newenv[k] = v
 				}
-				for i, arg := range expr.Args {
-					newenv[arg] = args[i]
+				if expr.VarArg {
+					newenv[expr.Args[0]] = reflect.ValueOf(args)
+				} else {
+					for i, arg := range expr.Args {
+						newenv[arg] = args[i]
+					}
 				}
 				return runStmts(expr.Stmts, newenv)
 			}

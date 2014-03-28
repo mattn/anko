@@ -119,6 +119,19 @@ retry:
 			} else {
 				s.back()
 			}
+		case '.':
+			tok = ParseError
+			s.next()
+			if s.peek() == '.' {
+				s.next()
+				if s.peek() == '.' {
+					tok = VARARG
+				} else {
+					s.back()
+				}
+			} else {
+				s.back()
+			}
 		case '(', ')', ':', ';', '+', '-', '*', '/', '%', '{', '}', ',', '[', ']':
 			tok = int(ch)
 			lit = string(ch)

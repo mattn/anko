@@ -71,6 +71,7 @@ type ItemExpr struct {
 
 type FuncExpr struct {
 	ExprImpl
-	Stmts []Stmt
-	Args  []string
+	Stmts  []Stmt
+	Args   []string
+	VarArg bool
 }
