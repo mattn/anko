@@ -1,7 +1,6 @@
 # ハローワールド
 func foo(x){
-  return 3;
-  x + 1;
+  return x + 1;
 }
 var a = 1;
 var b = a + 1;
