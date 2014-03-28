@@ -22,9 +22,9 @@ type VarStmt struct {
 
 type FuncStmt struct {
 	StmtImpl
-	Name string
+	Name  string
 	Stmts []Stmt
-	Args []string
+	Args  []string
 }
 
 type ReturnStmt struct {
