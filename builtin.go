@@ -8,7 +8,7 @@ import (
 )
 
 func setupBuiltins(env *vm.Env) {
-	env.Set("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		for i, arg := range args {
 			if i != 0 {
 				fmt.Print(", ")
@@ -19,7 +19,7 @@ func setupBuiltins(env *vm.Env) {
 		return vm.NilValue, nil
 	}))
 
-	env.Set("len", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("len", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -32,7 +32,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf(args[0].Len()), nil
 	}))
 
-	env.Set("keys", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("keys", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -50,7 +50,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf(keys), nil
 	}))
 
-	env.Set("bytes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("bytes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -63,7 +63,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf([]byte(args[0].String())), nil
 	}))
 
-	env.Set("runes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("runes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -76,7 +76,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf([]rune(args[0].String())), nil
 	}))
 
-	env.Set("string", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("string", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -86,7 +86,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf(fmt.Sprint(args[0].Interface())), nil
 	}))
 
-	env.Set("char", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("char", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -99,7 +99,7 @@ func setupBuiltins(env *vm.Env) {
 		return reflect.ValueOf(string(rune(args[0].Int()))), nil
 	}))
 
-	env.Set("rune", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("rune", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}

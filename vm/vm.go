@@ -275,7 +275,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, errors.New("Invalid operation")
 	case *ast.LetExpr:
-		if _, ok := env.Get(e.Name); ok {
+		if _, ok := env.Get(e.Name); !ok {
 			return NilValue, fmt.Errorf("Unknown variable '%s'", e.Name)
 		}
 		v, err := invokeExpr(e.Expr, env)

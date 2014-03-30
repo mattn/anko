@@ -53,8 +53,9 @@ println("foo");
 println(bytes("あいう"));
 println(runes("あいう"));
 
+var a = 1;
 func foo() {
-  a = 1;
+  a = 2;
 }
-
 foo();
+println(a);
