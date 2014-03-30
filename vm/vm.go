@@ -104,16 +104,21 @@ func Run(stmt ast.Stmt, env Env) (reflect.Value, error) {
 	case *ast.FuncStmt:
 		f := reflect.ValueOf(func(stmt *ast.FuncStmt, env Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
-				// TODO VarArg
-				if len(args) != len(stmt.Args) {
-					return NilValue, errors.New("Arguments Number of mismatch")
+				if !stmt.VarArg {
+					if len(args) != len(stmt.Args) {
+						return NilValue, errors.New("Arguments Number of mismatch")
+					}
 				}
 				newenv := make(Env)
 				for k, v := range env {
 					newenv[k] = v
 				}
-				for i, arg := range stmt.Args {
-					newenv[arg] = args[i]
+				if stmt.VarArg {
+					newenv[stmt.Args[0]] = reflect.ValueOf(args)
+				} else {
+					for i, arg := range stmt.Args {
+						newenv[arg] = args[i]
+					}
 				}
 				return runStmts(stmt.Stmts, newenv)
 			}

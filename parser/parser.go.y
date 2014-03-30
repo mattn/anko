@@ -103,6 +103,10 @@ stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncStmt{Name: $2.lit, Args: $4, Stmts: $7}
 	}
+	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncStmt{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
+	}
 
 stmt_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
 	{

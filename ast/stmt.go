@@ -25,6 +25,7 @@ type FuncStmt struct {
 	Name   string
 	Stmts  []Stmt
 	Args   []string
+	VarArg bool
 }
 
 type IfStmt struct {
