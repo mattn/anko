@@ -12,6 +12,8 @@ import (
 type Env map[interface{}]reflect.Value
 
 var NilValue = reflect.ValueOf(nil)
+var TrueValue = reflect.ValueOf(true)
+var FalseValue = reflect.ValueOf(false)
 
 type Func func(args ...reflect.Value) (reflect.Value, error)
 
@@ -131,6 +133,13 @@ func toBool(v reflect.Value) bool {
 		return v.Int() != 0
 	case reflect.Bool:
 		return v.Bool()
+	case reflect.String:
+		if v.String() == "true" {
+			return true
+		}
+		if toInt64(v) != 0 {
+			return true
+		}
 	}
 	return false
 }
@@ -151,6 +160,11 @@ func toInt64(v reflect.Value) int64 {
 		return int64(v.Float())
 	case reflect.Int, reflect.Int32, reflect.Int64:
 		return v.Int()
+	case reflect.String:
+		i, err := strconv.Atoi(v.String())
+		if err == nil {
+			return int64(i)
+		}
 	}
 	return 0
 }
@@ -269,6 +283,16 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return reflect.ValueOf(rs[ii]), nil
 		}
 		return NilValue, errors.New("Invalid operation")
+	case *ast.LetExpr:
+		if _, ok := env[e.Name]; !ok {
+			return NilValue, fmt.Errorf("Unknown variable '%s'", e.Name)
+		}
+		v, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return NilValue, err
+		}
+		env[e.Name] = v
+		return v, nil
 	case *ast.BinOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
 		if err != nil {
@@ -310,6 +334,23 @@ func invokeExpr(expr ast.Expr, env Env) (reflect.Value, error) {
 			return reflect.ValueOf(toFloat64(lhsV) < toFloat64(rhsV)), nil
 		case "<=":
 			return reflect.ValueOf(toFloat64(lhsV) <= toFloat64(rhsV)), nil
+		case "|":
+			return reflect.ValueOf(toInt64(lhsV) | toInt64(rhsV)), nil
+		case "||":
+			if toBool(lhsV) {
+				return lhsV, nil
+			}
+			if toBool(rhsV) {
+				return rhsV, nil
+			}
+			return FalseValue, nil
+		case "&":
+			return reflect.ValueOf(toInt64(lhsV) & toInt64(rhsV)), nil
+		case "&&":
+			if toBool(lhsV) {
+				return rhsV, nil
+			}
+			return lhsV, nil
 		default:
 			return NilValue, errors.New("Unknown operator")
 		}

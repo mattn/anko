@@ -37,10 +37,6 @@ var opName = map[string]int{
 	"for":    FOR,
 	"in":     IN,
 	"else":   ELSE,
-	"==":     EQ,
-	"!=":     NE,
-	">=":     GE,
-	"<=":     LE,
 }
 
 func (s *Scanner) Init(src string) {
@@ -116,6 +112,22 @@ retry:
 			tok = int(ch)
 			if s.peek() == '=' {
 				tok = LE
+			} else {
+				s.back()
+			}
+		case '|':
+			s.next()
+			tok = int(ch)
+			if s.peek() == '|' {
+				tok = OR
+			} else {
+				s.back()
+			}
+		case '&':
+			s.next()
+			tok = int(ch)
+			if s.peek() == '&' {
+				tok = AND
 			} else {
 				s.back()
 			}

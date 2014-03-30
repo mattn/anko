@@ -35,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE
+%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -254,6 +254,26 @@ expr : NUMBER
 	| expr LE expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
+	}
+	| IDENT '=' expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Expr: $3}
+	}
+	| expr '|' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
+	}
+	| expr OR expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
+	}
+	| expr '&' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
+	}
+	| expr AND expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
 	}
 
 %%

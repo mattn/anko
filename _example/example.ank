@@ -13,7 +13,7 @@ var y = x + 1;
 println(x * (y + 2 * x + foo(x) / 2));
 
 # if/else condition
-if (foo(y) > 1) {
+if (foo(y) >= 1) {
   println("こんにちわ世界");
 } else {
   println("Hello, World");
@@ -41,3 +41,5 @@ var f = func(a ...) {
 };
 
 f("あんこ", "だいすき");
+
+println(1 && 2);

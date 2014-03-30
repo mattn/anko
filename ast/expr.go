@@ -75,3 +75,9 @@ type FuncExpr struct {
 	Args   []string
 	VarArg bool
 }
+
+type LetExpr struct {
+	ExprImpl
+	Name string
+	Expr Expr
+}
