@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	env := vm.Env{}
+	env := vm.NewEnv()
 
 	setupBuiltins(env)
 

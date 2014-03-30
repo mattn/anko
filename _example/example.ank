@@ -52,3 +52,9 @@ println(bar(1,2,3));
 println("foo");
 println(bytes("あいう"));
 println(runes("あいう"));
+
+func foo() {
+  a = 1;
+}
+
+foo();
