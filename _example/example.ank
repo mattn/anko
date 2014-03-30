@@ -49,3 +49,6 @@ f("あんこ", "だいすき");
 println(1 && 2);
 
 println(bar(1,2,3));
+println("foo");
+println(bytes("あいう"));
+println(runes("あいう"));

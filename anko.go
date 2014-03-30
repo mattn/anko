@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
@@ -15,47 +14,7 @@ import (
 func main() {
 	env := vm.Env{}
 
-	env["println"] = vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		for i, arg := range args {
-			if i != 0 {
-				fmt.Print(", ")
-			}
-			fmt.Print(arg.Interface())
-		}
-		fmt.Println()
-		return vm.NilValue, nil
-	})
-
-	env["len"] = vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.Array && args[0].Kind() != reflect.Slice {
-			return vm.NilValue, errors.New("Argument should be array")
-		}
-		return reflect.ValueOf(args[0].Len()), nil
-	})
-
-	env["keys"] = vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.Map {
-			return vm.NilValue, errors.New("Argument should be map")
-		}
-		keys := []string{}
-		mk := args[0].MapKeys()
-		for _, key := range mk {
-			keys = append(keys, key.String())
-		}
-		return reflect.ValueOf(keys), nil
-	})
+	setupBuiltins(env)
 
 	if len(os.Args) > 1 {
 		scanner := new(parser.Scanner)
