@@ -3,7 +3,9 @@ package builtins
 import (
 	"errors"
 	"fmt"
+	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
+	"io/ioutil"
 	"reflect"
 )
 
@@ -114,5 +116,28 @@ func SetupBuiltins(env *vm.Env) {
 			return reflect.ValueOf(0), nil
 		}
 		return reflect.ValueOf(s[0]), nil
+	}))
+
+	env.Define("load", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		if args[0].Kind() != reflect.String {
+			return vm.NilValue, errors.New("Argument should be string")
+		}
+		body, err := ioutil.ReadFile(args[0].String())
+		if err != nil {
+			return vm.NilValue, err
+		}
+		scanner := new(parser.Scanner)
+		scanner.Init(string(body))
+		stmts, err := parser.Parse(scanner)
+		if err != nil {
+			return vm.NilValue, err
+		}
+		return vm.RunStmts(stmts, env)
 	}))
 }

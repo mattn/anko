@@ -20,13 +20,13 @@ func main() {
 
 	if len(os.Args) > 1 {
 		body, err := ioutil.ReadFile(os.Args[1])
-		if err != nil {
+		if err == nil {
+			ct.ChangeColor(ct.Red, false, ct.None, false)
 			fmt.Fprintln(os.Stderr, err)
+			ct.ResetColor()
+			os.Exit(1)
 		}
-		args := []reflect.Value{}
-		for _, arg := range os.Args[2:] {
-			args = append(args, reflect.ValueOf(arg))
-		}
+		env.Set("args", reflect.ValueOf(os.Args[2:]))
 
 		scanner := new(parser.Scanner)
 		scanner.Init(string(body))
@@ -36,17 +36,16 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			ct.ResetColor()
 		} else {
-			for _, stmt := range stmts {
-				_, err := vm.Run(stmt, env)
-				if err != nil {
-					ct.ChangeColor(ct.Red, false, ct.None, false)
-					fmt.Fprintln(os.Stderr, err)
-					ct.ResetColor()
-					break
-				}
+			_, err := vm.RunStmts(stmts, env)
+			if err != nil {
+				ct.ChangeColor(ct.Red, false, ct.None, false)
+				fmt.Fprintln(os.Stderr, err)
+				ct.ResetColor()
+				os.Exit(1)
 			}
 		}
 	} else {
+		env.Define("args", reflect.ValueOf([]string{}))
 		reader := bufio.NewReader(os.Stdin)
 		for {
 			fmt.Print("> ")
