@@ -33,22 +33,6 @@ func ToFunc(f Func) reflect.Value {
 }
 
 func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
-	newenv := env.NewEnv()
-	v := NilValue
-	var err error
-	for _, stmt := range stmts {
-		v, err = Run(stmt, newenv)
-		if err != nil {
-			return NilValue, &Error{message: err.Error(), pos: stmt.GetPos()}
-		}
-		if _, ok := stmt.(*ast.ReturnStmt); ok {
-			return v, nil
-		}
-	}
-	return v, nil
-}
-
-func RunStmtsInSameEnv(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	v := NilValue
 	var err error
 	for _, stmt := range stmts {
@@ -84,13 +68,13 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		if r.Bool() {
-			r, err = RunStmts(stmt.ThenStmts, env)
+			r, err = RunStmts(stmt.ThenStmts, env.NewEnv())
 			if err != nil {
 				return NilValue, err
 			}
 			return r, nil
 		} else if len(stmt.ElseStmts) > 0 {
-			r, err = RunStmts(stmt.ElseStmts, env)
+			r, err = RunStmts(stmt.ElseStmts, env.NewEnv())
 			if err != nil {
 				return NilValue, err
 			}
@@ -145,7 +129,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
-		v, err := RunStmtsInSameEnv(stmt.Stmts, newenv)
+		v, err := RunStmts(stmt.Stmts, newenv)
 		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
 		return v, err
 	default:

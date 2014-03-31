@@ -103,3 +103,9 @@ func (e *Env) Define(k string, v reflect.Value) {
 func (e *Env) String() string {
 	return e.name
 }
+
+func (e *Env) Dump() {
+	for k, v := range e.env {
+		fmt.Printf("%v = %v\n", k, v)
+	}
+}

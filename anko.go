@@ -18,6 +18,7 @@ import (
 )
 
 var e = flag.String("e", "", "One line of program")
+var verbose = flag.Bool("debug", false, "Verbose output")
 
 func main() {
 	flag.Parse()
@@ -83,19 +84,13 @@ func main() {
 			scanner.Init(s)
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
-				s = strings.TrimSpace(string(b) + ";")
-				scanner = new(parser.Scanner)
-				scanner.Init(s)
-				stmts, err = parser.Parse(scanner)
-				if err != nil {
-					ct.ChangeColor(ct.Red, false, ct.None, false)
-					if e, ok := err.(*vm.Error); ok {
-						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
-					} else {
-						fmt.Fprintln(os.Stderr, err)
-					}
-					ct.ResetColor()
+				ct.ChangeColor(ct.Red, false, ct.None, false)
+				if e, ok := err.(*vm.Error); ok {
+					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+				} else {
+					fmt.Fprintln(os.Stderr, err)
 				}
+				ct.ResetColor()
 			}
 
 			if err == nil {
@@ -117,6 +112,9 @@ func main() {
 					}
 					ct.ResetColor()
 				}
+			}
+			if *verbose {
+				env.Dump()
 			}
 		}
 	}
