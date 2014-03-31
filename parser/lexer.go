@@ -65,9 +65,15 @@ retry:
 		if err != nil {
 			tok = ParseError
 		}
-	case isQuote(ch):
+	case ch == '"':
 		tok = STRING
 		lit, err = s.scanString()
+		if err != nil {
+			tok = ParseError
+		}
+	case ch == '`':
+		tok = STRING
+		lit, err = s.scanRawString()
 		if err != nil {
 			tok = ParseError
 		}
@@ -165,10 +171,6 @@ func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-func isQuote(ch rune) bool {
-	return ch == '"'
-}
-
 func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
 }
@@ -245,6 +247,22 @@ func (s *Scanner) scanNumber() (string, error) {
 	return string(ret), nil
 }
 
+func (s *Scanner) scanRawString() (string, error) {
+	var ret []rune
+	for {
+		s.next()
+		if s.peek() == EOF {
+			return "", errors.New("Parser Error")
+			break
+		}
+		if s.peek() == '`' {
+			s.next()
+			break
+		}
+		ret = append(ret, s.peek())
+	}
+	return string(ret), nil
+}
 func (s *Scanner) scanString() (string, error) {
 	var ret []rune
 	for {
@@ -274,7 +292,7 @@ func (s *Scanner) scanString() (string, error) {
 			}
 			return "", errors.New("Parser Error")
 		}
-		if isQuote(s.peek()) {
+		if s.peek() == '"' {
 			s.next()
 			break
 		}
