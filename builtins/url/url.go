@@ -1,15 +1,15 @@
-package os
+package url
 
 import (
 	"errors"
 	"github.com/mattn/anko/vm"
-	o "os"
+	u "net/url"
 	"reflect"
 )
 
 func Import(env *vm.Env) {
-	m := env.NewModule("os")
-	m.Define("getenv", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	m := env.NewModule("url")
+	m.Define("parse", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -19,6 +19,10 @@ func Import(env *vm.Env) {
 		if args[0].Kind() != reflect.String {
 			return vm.NilValue, errors.New("Argument should be string")
 		}
-		return reflect.ValueOf(o.Getenv(args[0].String())), nil
+		ui, err := u.Parse(args[0].String())
+		if err != nil {
+			return vm.NilValue, err
+		}
+		return reflect.ValueOf(ui), nil
 	}))
 }
