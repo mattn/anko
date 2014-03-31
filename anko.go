@@ -62,10 +62,18 @@ func main() {
 			scanner.Init(s)
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
-				ct.ChangeColor(ct.Red, false, ct.None, false)
-				fmt.Println(err)
-				ct.ResetColor()
-			} else {
+				s = strings.TrimSpace(string(b) + ";")
+				scanner = new(parser.Scanner)
+				scanner.Init(s)
+				stmts, err = parser.Parse(scanner)
+				if err != nil {
+					ct.ChangeColor(ct.Red, false, ct.None, false)
+					fmt.Println(err)
+					ct.ResetColor()
+				}
+			}
+
+			if err == nil {
 				v, err := vm.RunStmts(stmts, env)
 				if err != nil {
 					ct.ChangeColor(ct.Red, false, ct.None, false)
