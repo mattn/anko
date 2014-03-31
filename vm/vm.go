@@ -87,7 +87,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 			}
 		}
-		return rvs[0], nil
+		return NilValue, nil
 	case *ast.IfStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
