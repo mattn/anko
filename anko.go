@@ -52,9 +52,6 @@ func main() {
 				continue
 			}
 			s := strings.TrimSpace(string(b))
-			if s[len(s)-1] != ';' {
-				s += ";"
-			}
 			scanner := new(parser.Scanner)
 			scanner.Init(s)
 			stmts, err := parser.Parse(scanner)
