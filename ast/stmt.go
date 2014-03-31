@@ -53,3 +53,9 @@ type ModuleStmt struct {
 	Name  string
 	Stmts []Stmt
 }
+
+type LetStmt struct {
+	StmtImpl
+	Names []string
+	Exprs []Expr
+}

@@ -69,6 +69,25 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, newError(err, stmt)
 		}
 		return rv, nil
+	case *ast.LetStmt:
+		rv := NilValue
+		var err error
+		rvs := []reflect.Value{}
+		for _, expr := range stmt.Exprs {
+			rv, err = invokeExpr(expr, env)
+			if err != nil {
+				return NilValue, newError(err, expr)
+			}
+			rvs = append(rvs, rv)
+		}
+		for i, name := range stmt.Names {
+			if i < len(rvs) {
+				if env.Set(name, rvs[i]) != nil {
+					env.Define(name, rvs[i])
+				}
+			}
+		}
+		return rvs[0], nil
 	case *ast.IfStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
@@ -337,14 +356,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return m, nil
 	case *ast.LetExpr:
-		v, err := invokeExpr(e.Expr, env)
+		rv, err := invokeExpr(e.Expr, env)
 		if err != nil {
 			return NilValue, newError(err, expr)
 		}
-		if env.Set(e.Name, v) != nil {
-			env.Define(e.Name, v)
+		if env.Set(e.Name, rv) != nil {
+			env.Define(e.Name, rv)
 		}
-		return v, nil
+		return rv, nil
 	//case *ast.NewExpr:
 	//	println("NEW")
 	//	return NilValue, nil

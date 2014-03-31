@@ -93,6 +93,13 @@ stmt : expr
 			$1.SetPos(l.pos)
 		}
 	}
+	| idents '=' exprs
+	{
+		$$ = &ast.LetStmt{Names: $1, Exprs: $3}
+		if l, ok := yylex.(*Lexer); ok {
+			$$.SetPos(l.pos)
+		}
+	}
 	| RETURN expr
 	{
 		$$ = &ast.ReturnStmt{Expr: $2}
