@@ -18,11 +18,18 @@ import (
 	"strings"
 )
 
+const version = "0.0.1"
+
 var e = flag.String("e", "", "One line of program")
-var verbose = flag.Bool("debug", false, "Verbose output")
+var verbose = flag.Bool("V", false, "Verbose output")
+var v = flag.Bool("v", false, "Display version")
 
 func main() {
 	flag.Parse()
+	if *v {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	env := vm.NewEnv()
 
