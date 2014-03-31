@@ -131,10 +131,12 @@ retry:
 				s.back()
 			}
 		case '.':
-			tok = ParseError
+			tok = int(ch)
+			lit = string(ch)
 			s.next()
 			if s.peek() == '.' {
 				s.next()
+				tok = ParseError
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
