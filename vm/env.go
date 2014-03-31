@@ -16,8 +16,14 @@ func NewEnv() *Env {
 	return &Env{env: make(map[string]reflect.Value), parent: nil}
 }
 
-func (e *Env) New() *Env {
+func (e *Env) NewEnv() *Env {
 	return &Env{env: make(map[string]reflect.Value), parent: e, name: e.name}
+}
+
+func (e *Env) NewModule(n string) *Env {
+	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
+	e.DefineGlobal(n, reflect.ValueOf(m))
+	return m
 }
 
 func (e *Env) SetName(n string) {

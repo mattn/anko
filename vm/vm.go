@@ -20,7 +20,7 @@ func ToFunc(f Func) reflect.Value {
 }
 
 func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
-	newenv := env.New()
+	newenv := env.NewEnv()
 	v := NilValue
 	var err error
 	for _, stmt := range stmts {
@@ -89,7 +89,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, err
 		}
-		newenv := env.New()
+		newenv := env.NewEnv()
 		if val.Kind() == reflect.Array || val.Kind() == reflect.Slice {
 			r := NilValue
 			for i := 0; i < val.Len(); i++ {
@@ -116,7 +116,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 						return NilValue, errors.New("Arguments Number of mismatch")
 					}
 				}
-				newenv := env.New()
+				newenv := env.NewEnv()
 				if stmt.VarArg {
 					newenv.Define(stmt.Args[0], reflect.ValueOf(args))
 				} else {
@@ -130,7 +130,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		env.Define(stmt.Name, f)
 		return f, nil
 	case *ast.ModuleStmt:
-		newenv := env.New()
+		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
 		v, err := RunStmtsInSameEnv(stmt.Stmts, newenv)
 		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
@@ -250,7 +250,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						return NilValue, errors.New("Arguments Number of mismatch")
 					}
 				}
-				newenv := env.New()
+				newenv := env.NewEnv()
 				if expr.VarArg {
 					newenv.Define(expr.Args[0], reflect.ValueOf(args))
 				} else {

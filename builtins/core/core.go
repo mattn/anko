@@ -1,4 +1,4 @@
-package builtins
+package core
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func SetupBuiltins(env *vm.Env) {
+func Import(env *vm.Env) {
 	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		for i, arg := range args {
 			if i != 0 {
@@ -83,6 +83,20 @@ func SetupBuiltins(env *vm.Env) {
 	}))
 
 	env.Define("string", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		b, ok := args[0].Interface().([]byte)
+		if !ok {
+			return vm.NilValue, errors.New("Argument should be byte array")
+		}
+		return reflect.ValueOf(string(b)), nil
+	}))
+
+	env.Define("to_string", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
