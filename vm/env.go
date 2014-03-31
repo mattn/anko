@@ -6,16 +6,16 @@ import (
 )
 
 type Env struct {
-	env map[string]reflect.Value
+	env    map[string]reflect.Value
 	parent *Env
 }
 
 func NewEnv() *Env {
-	return &Env {env: make(map[string]reflect.Value), parent: nil}
+	return &Env{env: make(map[string]reflect.Value), parent: nil}
 }
 
 func (e *Env) New() *Env {
-	return &Env {env: make(map[string]reflect.Value), parent: e}
+	return &Env{env: make(map[string]reflect.Value), parent: e}
 }
 
 func (e *Env) Get(k string) (reflect.Value, bool) {
