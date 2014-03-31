@@ -241,7 +241,7 @@ func (s *Scanner) scanIdentifier() (string, error) {
 
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
-	for isDigit(s.peek()) || s.peek() == '.' {
+	for isDigit(s.peek()) || s.peek() == '.' || s.peek() == 'e' {
 		ret = append(ret, s.peek())
 		s.next()
 	}
