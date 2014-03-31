@@ -36,6 +36,7 @@ var opName = map[string]int{
 	"true":   TRUE,
 	"false":  FALSE,
 	"nil":    NIL,
+	"module": MODULE,
 }
 
 func (s *Scanner) Init(src string) {
@@ -214,7 +215,21 @@ func (s *Scanner) skipBlank() {
 
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
-	for isLetter(s.peek()) || isDigit(s.peek()) {
+	for {
+		if s.peek() == ':' {
+			s.next()
+			if s.peek() != ':' {
+				s.back()
+				s.back()
+				break
+			}
+			s.next()
+			ret = append(ret, ':')
+			ret = append(ret, ':')
+			continue
+		} else if !isLetter(s.peek()) && !isDigit(s.peek()) {
+			break
+		}
 		ret = append(ret, s.peek())
 		s.next()
 	}

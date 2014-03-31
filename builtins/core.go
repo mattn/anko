@@ -15,7 +15,11 @@ func SetupBuiltins(env *vm.Env) {
 			if i != 0 {
 				fmt.Print(", ")
 			}
-			fmt.Print(arg.Interface())
+			if arg.IsValid() {
+				fmt.Print(arg.Interface())
+			} else {
+				fmt.Println("undefined")
+			}
 		}
 		fmt.Println()
 		return vm.NilValue, nil

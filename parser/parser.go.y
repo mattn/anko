@@ -35,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL
+%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -98,6 +98,10 @@ stmt : expr ';'
 	| RETURN expr ';'
 	{
 		$$ = &ast.ReturnStmt{Expr: $2}
+	}
+	| MODULE IDENT '{' stmts '}'
+	{
+		$$ = &ast.ModuleStmt{Name: $2.lit, Stmts: $4}
 	}
 
 stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'

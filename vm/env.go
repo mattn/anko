@@ -3,9 +3,11 @@ package vm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type Env struct {
+	name   string
 	env    map[string]reflect.Value
 	parent *Env
 }
@@ -15,20 +17,51 @@ func NewEnv() *Env {
 }
 
 func (e *Env) New() *Env {
-	return &Env{env: make(map[string]reflect.Value), parent: e}
+	return &Env{env: make(map[string]reflect.Value), parent: e, name: e.name}
+}
+
+func (e *Env) SetName(n string) {
+	e.name = n
+}
+
+func (e *Env) GetName() string {
+	return e.name
 }
 
 func (e *Env) Get(k string) (reflect.Value, bool) {
-	for {
-		if e.parent == nil {
-			v, ok := e.env[k]
-			return v, ok
+	ns := strings.Split(k, "::")
+	if len(ns) > 1 {
+		global := e
+		for global.parent != nil {
+			global = global.parent
 		}
-		if v, ok := e.env[k]; ok {
-			return v, ok
+		for i, n := range ns {
+			v, ok := global.env[n]
+			if !ok {
+				return NilValue, false
+			}
+			if i == len(ns) - 1 {
+				return v, ok
+			}
+			if vv, ok := v.Interface().(*Env); ok {
+				global = vv
+			} else {
+				return NilValue, false
+			}
 		}
-		e = e.parent
+	} else {
+		for {
+			if e.parent == nil {
+				v, ok := e.env[k]
+				return v, ok
+			}
+			if v, ok := e.env[k]; ok {
+				return v, ok
+			}
+			e = e.parent
+		}
 	}
+	return NilValue, false
 }
 
 func (e *Env) Set(k string, v reflect.Value) error {
@@ -48,6 +81,18 @@ func (e *Env) Set(k string, v reflect.Value) error {
 	}
 }
 
+func (e *Env) DefineGlobal(k string, v reflect.Value) {
+	global := e
+	for global.parent != nil {
+		global = global.parent
+	}
+	global.env[k] = v
+}
+
 func (e *Env) Define(k string, v reflect.Value) {
 	e.env[k] = v
+}
+
+func (e *Env) String() string {
+	return e.name
 }

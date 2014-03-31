@@ -35,6 +35,21 @@ func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	return v, nil
 }
 
+func RunStmtsInSameEnv(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
+	v := NilValue
+	var err error
+	for _, stmt := range stmts {
+		v, err = Run(stmt, env)
+		if err != nil {
+			return NilValue, err
+		}
+		if _, ok := stmt.(*ast.ReturnStmt); ok {
+			return v, nil
+		}
+	}
+	return v, nil
+}
+
 func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
@@ -114,6 +129,12 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}(stmt, env))
 		env.Define(stmt.Name, f)
 		return f, nil
+	case *ast.ModuleStmt:
+		newenv := env.New()
+		newenv.SetName(stmt.Name)
+		v, err := RunStmtsInSameEnv(stmt.Stmts, newenv)
+		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
+		return v, err
 	default:
 		return NilValue, errors.New("Unknown Statement type")
 	}

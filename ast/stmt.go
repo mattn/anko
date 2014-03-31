@@ -56,3 +56,9 @@ type ReturnStmt struct {
 	StmtImpl
 	Expr Expr
 }
+
+type ModuleStmt struct {
+	StmtImpl
+	Name  string
+	Stmts []Stmt
+}

@@ -59,3 +59,11 @@ func foo() {
 }
 foo();
 println(a);
+
+module Foo {
+  func bar1() {
+    println("Foo::bar1");
+  }
+}
+
+println(Foo::bar1());

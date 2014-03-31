@@ -20,7 +20,7 @@ func main() {
 
 	if len(os.Args) > 1 {
 		body, err := ioutil.ReadFile(os.Args[1])
-		if err == nil {
+		if err != nil {
 			ct.ChangeColor(ct.Red, false, ct.None, false)
 			fmt.Fprintln(os.Stderr, err)
 			ct.ResetColor()
