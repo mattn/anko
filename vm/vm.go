@@ -140,6 +140,13 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	}
 }
 
+func toString(v reflect.Value) string {
+	if v.Kind() == reflect.String {
+		return v.String()
+	}
+	return fmt.Sprint(v.Interface())
+}
+
 func toBool(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
@@ -270,6 +277,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, err
 		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
 		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
 			if i.Kind() != reflect.Int && i.Kind() != reflect.Int64 {
 				return NilValue, errors.New("Array index should be int")
@@ -319,6 +329,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		switch e.Operator {
 		case "+":
+			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
+				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
+			}
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
 			}
