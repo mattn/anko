@@ -1,6 +1,6 @@
 #!anko
-var res = http::get("http://www.google.com");
-var h = res["headers"];
+var res = http::get("http://www.google.com")
+var h = res["headers"]
 for k in keys(h) {
-  println(k + ":" + h[k]);
+  println(k + ":" + h[k])
 }
