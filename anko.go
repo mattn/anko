@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
-	"github.com/mattn/anko/builtins/core"
-	"github.com/mattn/anko/builtins/http"
+	anko_core "github.com/mattn/anko/builtins/core"
+	anko_http "github.com/mattn/anko/builtins/http"
+	anko_os "github.com/mattn/anko/builtins/os"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"io/ioutil"
@@ -17,8 +18,9 @@ import (
 func main() {
 	env := vm.NewEnv()
 
-	core.Import(env)
-	http.Import(env)
+	anko_core.Import(env)
+	anko_http.Import(env)
+	anko_os.Import(env)
 
 	if len(os.Args) > 1 {
 		body, err := ioutil.ReadFile(os.Args[1])
