@@ -384,6 +384,44 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 	case *ast.ConstExpr:
 		return reflect.ValueOf(e.Value), nil
+	case *ast.AnonCallExpr:
+		f, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return NilValue, err
+		}
+		if f.Kind() != reflect.Func {
+			return NilValue, errors.New("Unknown function")
+		}
+		args := []reflect.Value{}
+		for i, expr := range e.SubExprs {
+			arg, err := invokeExpr(expr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			if i == len(args) {
+				args = append(args, reflect.ValueOf(arg))
+			} else {
+				args = append(args, reflect.ValueOf(arg))
+			}
+		}
+		ret := NilValue
+		func() {
+			defer func() {
+				if ex := recover(); ex != nil {
+					err = errors.New(fmt.Sprint(ex))
+				}
+			}()
+			rets := f.Call(args)
+			ev := rets[1].Interface()
+			if ev != nil {
+				err = ev.(error)
+			}
+			ret = rets[0].Interface().(reflect.Value)
+		}()
+		if err != nil {
+			return NilValue, err
+		}
+		return ret, nil
 	case *ast.CallExpr:
 		f, ok := env.Get(e.Name)
 		if !ok {

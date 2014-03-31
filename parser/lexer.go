@@ -263,6 +263,7 @@ func (s *Scanner) scanRawString() (string, error) {
 	}
 	return string(ret), nil
 }
+
 func (s *Scanner) scanString() (string, error) {
 	var ret []rune
 	for {

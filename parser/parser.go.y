@@ -188,6 +188,14 @@ expr : NUMBER
 	{
 		$$ = &ast.StringExpr{Lit: $1.lit}
 	}
+	| FUNC '(' idents ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+	}
+	| expr '(' exprs  ')'
+	{
+		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+	}
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
@@ -195,10 +203,6 @@ expr : NUMBER
 	| '[' exprs ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
-	}
-	| FUNC '(' idents ')' '{' stmts '}'
-	{
-		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
 	}
 	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
 	{

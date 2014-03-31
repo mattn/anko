@@ -63,6 +63,12 @@ type CallExpr struct {
 	SubExprs []Expr
 }
 
+type AnonCallExpr struct {
+	ExprImpl
+	Expr     Expr
+	SubExprs []Expr
+}
+
 type ItemExpr struct {
 	ExprImpl
 	Value Expr
