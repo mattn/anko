@@ -2,7 +2,7 @@
 
 ![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
-(Picture licensed under CC BY-SA 3.0)
+(Picture licensed under CC BY-SA 3.0 by wikipedia)
 
 Scriptable interpreter written in golang
 
