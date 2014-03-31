@@ -55,17 +55,18 @@ func (e *Env) Get(k string) (reflect.Value, bool) {
 				return NilValue, false
 			}
 		}
-	} else {
-		for {
-			if e.parent == nil {
-				v, ok := e.env[k]
-				return v, ok
-			}
-			if v, ok := e.env[k]; ok {
-				return v, ok
-			}
-			e = e.parent
+		return NilValue, false
+	}
+
+	for {
+		if e.parent == nil {
+			v, ok := e.env[k]
+			return v, ok
 		}
+		if v, ok := e.env[k]; ok {
+			return v, ok
+		}
+		e = e.parent
 	}
 	return NilValue, false
 }
