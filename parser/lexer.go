@@ -2,8 +2,9 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"github.com/mattn/anko/ast"
-	"log"
+	"os"
 )
 
 const (
@@ -286,8 +287,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-	log.Printf("Line %d, Column %d: %q %s",
-		l.pos.Line, l.pos.Column, l.lit, e)
+	fmt.Fprintf(os.Stderr, "Line %d, Column %d: %q %s", l.pos.Line, l.pos.Column, l.lit, e)
 }
 
 func Parse(s *Scanner) ([]ast.Stmt, error) {
