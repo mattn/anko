@@ -1,0 +1,6 @@
+#!anko
+var res = http::get("http://www.google.com");
+println(keys(res["headers"]));
+for header in keys(res["headers"]) {
+  println(header);
+}
