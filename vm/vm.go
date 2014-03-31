@@ -387,6 +387,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return ret, nil
 	default:
-		return NilValue, errors.New("Unknown Expression type")
+		return NilValue, errors.New("Unknown expression")
 	}
 }
