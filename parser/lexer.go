@@ -15,12 +15,7 @@ const (
 type Token struct {
 	tok int
 	lit string
-	pos Position
-}
-
-type Position struct {
-	Line   int
-	Column int
+	pos ast.Position
 }
 
 type Scanner struct {
@@ -44,7 +39,7 @@ func (s *Scanner) Init(src string) {
 	s.src = []rune(src)
 }
 
-func (s *Scanner) Scan() (tok int, lit string, pos Position) {
+func (s *Scanner) Scan() (tok int, lit string, pos ast.Position) {
 	var err error
 retry:
 	s.skipBlank()
@@ -202,8 +197,8 @@ func (s *Scanner) reachEOF() bool {
 	return len(s.src) <= s.offset
 }
 
-func (s *Scanner) pos() Position {
-	return Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
+func (s *Scanner) pos() ast.Position {
+	return ast.Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
 }
 
 func (s *Scanner) skipBlank() {
@@ -271,7 +266,7 @@ func (s *Scanner) scanString() (string, error) {
 type Lexer struct {
 	s     *Scanner
 	lit   string
-	pos   Position
+	pos   ast.Position
 	stmts []ast.Stmt
 }
 

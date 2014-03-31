@@ -1,13 +1,23 @@
 package ast
 
+type Position struct {
+	Line   int
+	Column int
+}
+
 type Stmt interface {
 	stmt()
+	Position(pos Position)
 }
 
 type StmtImpl struct {
+	pos Position
 }
 
 func (x *StmtImpl) stmt() {}
+func (x *StmtImpl) Position(pos Position) {
+	x.pos = pos
+}
 
 type ExprStmt struct {
 	StmtImpl

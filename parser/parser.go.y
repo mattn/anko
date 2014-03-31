@@ -54,6 +54,7 @@ stmts :
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
+			$1.Position(l.pos)
 			l.stmts = $$
 		}
 	}

@@ -78,7 +78,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyMaxDepth = 200
 
-//line parser.go.y:283
+//line parser.go.y:284
 
 //line yacctab:1
 var yyExca = []int{
@@ -470,11 +470,12 @@ yydefault:
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
+				yyS[yypt-1].stmt.Position(l.pos)
 				l.stmts = yyVAL.stmts
 			}
 		}
 	case 3:
-		//line parser.go.y:61
+		//line parser.go.y:62
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_func}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
@@ -482,7 +483,7 @@ yydefault:
 			}
 		}
 	case 4:
-		//line parser.go.y:68
+		//line parser.go.y:69
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_if}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
@@ -490,7 +491,7 @@ yydefault:
 			}
 		}
 	case 5:
-		//line parser.go.y:75
+		//line parser.go.y:76
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_else}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
@@ -498,7 +499,7 @@ yydefault:
 			}
 		}
 	case 6:
-		//line parser.go.y:82
+		//line parser.go.y:83
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt_for}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
@@ -506,137 +507,137 @@ yydefault:
 			}
 		}
 	case 7:
-		//line parser.go.y:90
+		//line parser.go.y:91
 		{
 			yyVAL.stmt = &ast.ExprStmt{Expr: yyS[yypt-1].expr}
 		}
 	case 8:
-		//line parser.go.y:94
+		//line parser.go.y:95
 		{
 			yyVAL.stmt = &ast.VarStmt{Name: yyS[yypt-3].tok.lit, Expr: yyS[yypt-1].expr}
 		}
 	case 9:
-		//line parser.go.y:98
+		//line parser.go.y:99
 		{
 			yyVAL.stmt = &ast.ReturnStmt{Expr: yyS[yypt-1].expr}
 		}
 	case 10:
-		//line parser.go.y:103
+		//line parser.go.y:104
 		{
 			yyVAL.stmt_func = &ast.FuncStmt{Name: yyS[yypt-6].tok.lit, Args: yyS[yypt-4].idents, Stmts: yyS[yypt-1].stmts}
 		}
 	case 11:
-		//line parser.go.y:107
+		//line parser.go.y:108
 		{
 			yyVAL.stmt_func = &ast.FuncStmt{Name: yyS[yypt-7].tok.lit, Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
 		}
 	case 12:
-		//line parser.go.y:112
+		//line parser.go.y:113
 		{
 			yyVAL.stmt_else = &ast.IfStmt{Expr: yyS[yypt-8].expr, ThenStmts: yyS[yypt-5].stmts, ElseStmts: yyS[yypt-1].stmts}
 		}
 	case 13:
-		//line parser.go.y:117
+		//line parser.go.y:118
 		{
 			yyVAL.stmt_if = &ast.IfStmt{Expr: yyS[yypt-4].expr, ThenStmts: yyS[yypt-1].stmts}
 		}
 	case 14:
-		//line parser.go.y:122
+		//line parser.go.y:123
 		{
 			yyVAL.stmt_for = &ast.ForStmt{Var: yyS[yypt-5].tok.lit, Value: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
 		}
 	case 15:
-		//line parser.go.y:127
+		//line parser.go.y:128
 		{
 			yyVAL.pair = &ast.PairExpr{Key: yyS[yypt-2].tok.lit, Value: yyS[yypt-0].expr}
 		}
 	case 16:
-		//line parser.go.y:132
+		//line parser.go.y:133
 		{
 			yyVAL.pairs = []*ast.PairExpr{}
 		}
 	case 17:
-		//line parser.go.y:136
+		//line parser.go.y:137
 		{
 			yyVAL.pairs = []*ast.PairExpr{yyS[yypt-0].pair}
 		}
 	case 18:
-		//line parser.go.y:140
+		//line parser.go.y:141
 		{
 			yyVAL.pairs = append(yyS[yypt-2].pairs, yyS[yypt-0].pair)
 		}
 	case 19:
-		//line parser.go.y:145
+		//line parser.go.y:146
 		{
 			yyVAL.idents = []string{}
 		}
 	case 20:
-		//line parser.go.y:149
+		//line parser.go.y:150
 		{
 			yyVAL.idents = []string{yyS[yypt-0].tok.lit}
 		}
 	case 21:
-		//line parser.go.y:153
+		//line parser.go.y:154
 		{
 			yyVAL.idents = append(yyS[yypt-2].idents, yyS[yypt-0].tok.lit)
 		}
 	case 22:
-		//line parser.go.y:158
+		//line parser.go.y:159
 		{
 			yyVAL.exprs = []ast.Expr{}
 		}
 	case 23:
-		//line parser.go.y:162
+		//line parser.go.y:163
 		{
 			yyVAL.exprs = []ast.Expr{yyS[yypt-0].expr}
 		}
 	case 24:
-		//line parser.go.y:166
+		//line parser.go.y:167
 		{
 			yyVAL.exprs = append(yyS[yypt-2].exprs, yyS[yypt-0].expr)
 		}
 	case 25:
-		//line parser.go.y:171
+		//line parser.go.y:172
 		{
 			yyVAL.expr = &ast.NumberExpr{Lit: yyS[yypt-0].tok.lit}
 		}
 	case 26:
-		//line parser.go.y:175
+		//line parser.go.y:176
 		{
 			yyVAL.expr = &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}
 		}
 	case 27:
-		//line parser.go.y:179
+		//line parser.go.y:180
 		{
 			yyVAL.expr = &ast.UnaryMinusExpr{SubExpr: yyS[yypt-0].expr}
 		}
 	case 28:
-		//line parser.go.y:183
+		//line parser.go.y:184
 		{
 			yyVAL.expr = &ast.StringExpr{Lit: yyS[yypt-0].tok.lit}
 		}
 	case 29:
-		//line parser.go.y:187
+		//line parser.go.y:188
 		{
 			yyVAL.expr = &ast.CallExpr{Name: yyS[yypt-3].tok.lit, SubExprs: yyS[yypt-1].exprs}
 		}
 	case 30:
-		//line parser.go.y:191
+		//line parser.go.y:192
 		{
 			yyVAL.expr = &ast.ArrayExpr{Exprs: yyS[yypt-1].exprs}
 		}
 	case 31:
-		//line parser.go.y:195
+		//line parser.go.y:196
 		{
 			yyVAL.expr = &ast.FuncExpr{Args: yyS[yypt-4].idents, Stmts: yyS[yypt-1].stmts}
 		}
 	case 32:
-		//line parser.go.y:199
+		//line parser.go.y:200
 		{
 			yyVAL.expr = &ast.FuncExpr{Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
 		}
 	case 33:
-		//line parser.go.y:203
+		//line parser.go.y:204
 		{
 			mapExpr := make(map[string]ast.Expr)
 			for _, v := range yyS[yypt-1].pairs {
@@ -645,92 +646,92 @@ yydefault:
 			yyVAL.expr = &ast.MapExpr{MapExpr: mapExpr}
 		}
 	case 34:
-		//line parser.go.y:211
+		//line parser.go.y:212
 		{
 			yyVAL.expr = &ast.ItemExpr{Value: yyS[yypt-3].expr, Index: yyS[yypt-1].expr}
 		}
 	case 35:
-		//line parser.go.y:215
+		//line parser.go.y:216
 		{
 			yyVAL.expr = &ast.ParenExpr{SubExpr: yyS[yypt-1].expr}
 		}
 	case 36:
-		//line parser.go.y:219
+		//line parser.go.y:220
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "+", Rhs: yyS[yypt-0].expr}
 		}
 	case 37:
-		//line parser.go.y:223
+		//line parser.go.y:224
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "-", Rhs: yyS[yypt-0].expr}
 		}
 	case 38:
-		//line parser.go.y:227
+		//line parser.go.y:228
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "*", Rhs: yyS[yypt-0].expr}
 		}
 	case 39:
-		//line parser.go.y:231
+		//line parser.go.y:232
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "/", Rhs: yyS[yypt-0].expr}
 		}
 	case 40:
-		//line parser.go.y:235
+		//line parser.go.y:236
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "%", Rhs: yyS[yypt-0].expr}
 		}
 	case 41:
-		//line parser.go.y:239
+		//line parser.go.y:240
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "==", Rhs: yyS[yypt-0].expr}
 		}
 	case 42:
-		//line parser.go.y:243
+		//line parser.go.y:244
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "!=", Rhs: yyS[yypt-0].expr}
 		}
 	case 43:
-		//line parser.go.y:247
+		//line parser.go.y:248
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: ">", Rhs: yyS[yypt-0].expr}
 		}
 	case 44:
-		//line parser.go.y:251
+		//line parser.go.y:252
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: ">=", Rhs: yyS[yypt-0].expr}
 		}
 	case 45:
-		//line parser.go.y:255
+		//line parser.go.y:256
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "<", Rhs: yyS[yypt-0].expr}
 		}
 	case 46:
-		//line parser.go.y:259
+		//line parser.go.y:260
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "<=", Rhs: yyS[yypt-0].expr}
 		}
 	case 47:
-		//line parser.go.y:263
+		//line parser.go.y:264
 		{
 			yyVAL.expr = &ast.LetExpr{Name: yyS[yypt-2].tok.lit, Expr: yyS[yypt-0].expr}
 		}
 	case 48:
-		//line parser.go.y:267
+		//line parser.go.y:268
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "|", Rhs: yyS[yypt-0].expr}
 		}
 	case 49:
-		//line parser.go.y:271
+		//line parser.go.y:272
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "||", Rhs: yyS[yypt-0].expr}
 		}
 	case 50:
-		//line parser.go.y:275
+		//line parser.go.y:276
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "&", Rhs: yyS[yypt-0].expr}
 		}
 	case 51:
-		//line parser.go.y:279
+		//line parser.go.y:280
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "&&", Rhs: yyS[yypt-0].expr}
 		}
