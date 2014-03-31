@@ -68,6 +68,34 @@ func Import(env *vm.Env) {
 		return reflect.ValueOf(keys), nil
 	}))
 
+	env.Define("range", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 2 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		if args[0].Kind() != reflect.Int && args[0].Kind() != reflect.Int64 {
+			return vm.NilValue, errors.New("Invalid first argument")
+		}
+		var min, max int64
+		if len(args) == 1 {
+			min = 0
+			max = args[0].Int() - 1
+		} else {
+			if args[1].Kind() != reflect.Int && args[1].Kind() != reflect.Int64 {
+				return vm.NilValue, errors.New("Invalid second argument")
+			}
+			min = args[0].Int()
+			max = args[1].Int()
+		}
+		arr := []int64{}
+		for i := min; i <= max; i++ {
+			arr = append(arr, i)
+		}
+		return reflect.ValueOf(arr), nil
+	}))
+
 	env.Define("bytes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
