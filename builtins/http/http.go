@@ -27,7 +27,7 @@ func Import(env *vm.Env) {
 		defer res.Body.Close()
 		b, err := ioutil.ReadAll(res.Body)
 		return reflect.ValueOf(map[string]interface{} {
-			"headers": res.Header,
+			"headers": map[string][]string(res.Header),
 			"content": b,
 		}), nil
 	}))

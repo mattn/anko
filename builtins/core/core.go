@@ -15,6 +15,10 @@ func Import(env *vm.Env) {
 			if i != 0 {
 				fmt.Print(", ")
 			}
+			v := arg
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
 			if arg.IsValid() {
 				fmt.Print(arg.Interface())
 			} else {
@@ -32,10 +36,14 @@ func Import(env *vm.Env) {
 		if len(args) > 1 {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
-		if args[0].Kind() != reflect.Array && args[0].Kind() != reflect.Slice {
+		v := args[0]
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
 			return vm.NilValue, errors.New("Argument should be array")
 		}
-		return reflect.ValueOf(args[0].Len()), nil
+		return reflect.ValueOf(v.Len()), nil
 	}))
 
 	env.Define("keys", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
@@ -45,11 +53,15 @@ func Import(env *vm.Env) {
 		if len(args) > 1 {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
-		if args[0].Kind() != reflect.Map {
+		v := args[0]
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() != reflect.Map {
 			return vm.NilValue, errors.New("Argument should be map")
 		}
 		keys := []string{}
-		mk := args[0].MapKeys()
+		mk := v.MapKeys()
 		for _, key := range mk {
 			keys = append(keys, key.String())
 		}
@@ -88,6 +100,9 @@ func Import(env *vm.Env) {
 		}
 		if len(args) > 1 {
 			return vm.NilValue, errors.New("Too many arguments")
+		}
+		if args[0].Kind() == reflect.Invalid {
+			return vm.NilValue, errors.New("Argument is undefined")
 		}
 		b, ok := args[0].Interface().([]byte)
 		if !ok {
