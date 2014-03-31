@@ -10,6 +10,7 @@ import (
 	anko_url "github.com/mattn/anko/builtins/url"
 	anko_json "github.com/mattn/anko/builtins/json"
 	anko_os "github.com/mattn/anko/builtins/os"
+	anko_io "github.com/mattn/anko/builtins/io"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"io/ioutil"
@@ -38,6 +39,7 @@ func main() {
 	anko_url.Import(env)
 	anko_json.Import(env)
 	anko_os.Import(env)
+	anko_io.Import(env)
 
 	if flag.NArg() > 0 || *e != "" {
 		var code string
