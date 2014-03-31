@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	anko_core "github.com/mattn/anko/builtins/core"
@@ -16,7 +17,11 @@ import (
 	"strings"
 )
 
+var e = flag.String("e", "", "One line of program")
+
 func main() {
+	flag.Parse()
+
 	env := vm.NewEnv()
 
 	anko_core.Import(env)
@@ -24,18 +29,25 @@ func main() {
 	anko_json.Import(env)
 	anko_os.Import(env)
 
-	if len(os.Args) > 1 {
-		body, err := ioutil.ReadFile(os.Args[1])
-		if err != nil {
-			ct.ChangeColor(ct.Red, false, ct.None, false)
-			fmt.Fprintln(os.Stderr, err)
-			ct.ResetColor()
-			os.Exit(1)
+	if flag.NArg() > 0 || *e != "" {
+		var code string
+		if *e != "" {
+			code = *e
+			env.Set("args", reflect.ValueOf(flag.Args()))
+		} else {
+			body, err := ioutil.ReadFile(flag.Arg(0))
+			if err != nil {
+				ct.ChangeColor(ct.Red, false, ct.None, false)
+				fmt.Fprintln(os.Stderr, err)
+				ct.ResetColor()
+				os.Exit(1)
+			}
+			env.Set("args", reflect.ValueOf(flag.Args()[1:]))
+			code = string(body)
 		}
-		env.Set("args", reflect.ValueOf(os.Args[2:]))
 
 		scanner := new(parser.Scanner)
-		scanner.Init(string(body))
+		scanner.Init(code)
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
 			ct.ChangeColor(ct.Red, false, ct.None, false)
