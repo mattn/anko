@@ -87,15 +87,15 @@ stmts :
 		}
 	}
 
-stmt : expr ';'
+stmt : expr
 	{
 		$$ = &ast.ExprStmt{Expr: $1}
 	}
-	| VAR IDENT '=' expr ';'
+	| VAR IDENT '=' expr
 	{
 		$$ = &ast.VarStmt{Name: $2.lit, Expr: $4}
 	}
-	| RETURN expr ';'
+	| RETURN expr
 	{
 		$$ = &ast.ReturnStmt{Expr: $2}
 	}
