@@ -51,6 +51,6 @@ func Import(env *vm.Env) {
 	}))
 
 	m.Define("NewClient", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		return reflect.ValueOf(&Client{}), nil
+		return reflect.ValueOf(&h.Client{}), nil
 	}))
 }

@@ -1,10 +1,12 @@
 package ast
 
 type Expr interface {
+	Pos
 	expr()
 }
 
 type ExprImpl struct {
+	PosImpl
 }
 
 func (x *ExprImpl) expr() {}
