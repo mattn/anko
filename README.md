@@ -15,8 +15,8 @@ func foo(x){
 }
 
 # declare variables
-var x = 1
-var y = x + 1
+x = 1
+y = x + 1
 
 # print values 
 println(x * (y + 2 * x + foo(x) / 2))
@@ -29,12 +29,12 @@ if (foo(y) > 1) {
 }
 
 # array type
-var a = [1,2,3]
+a = [1,2,3]
 println(a[2])
 println(len(a))
 
 # map type
-var m = {"foo": "bar", "bar": "baz"}
+m = {"foo": "bar", "bar": "baz"}
 for k in keys(m) {
   println(m[k])
 }
