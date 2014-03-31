@@ -28,6 +28,7 @@ var opName = map[string]int{
 	"var":    VAR,
 	"func":   FUNC,
 	"return": RETURN,
+	"throw":  THROW,
 	"if":     IF,
 	"for":    FOR,
 	"in":     IN,

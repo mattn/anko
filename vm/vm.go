@@ -118,6 +118,12 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, newError(err, stmt)
 		}
 		return rv, nil
+	case *ast.ThrowStmt:
+		rv, err := invokeExpr(stmt.Expr, env)
+		if err != nil {
+			return NilValue, newError(err, stmt)
+		}
+		return NilValue, newErrorString(fmt.Sprint(rv.Interface()), stmt)
 	case *ast.FuncStmt:
 		f := reflect.ValueOf(func(stmt *ast.FuncStmt, env *Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {

@@ -49,6 +49,11 @@ type ReturnStmt struct {
 	Expr Expr
 }
 
+type ThrowStmt struct {
+	StmtImpl
+	Expr Expr
+}
+
 type ModuleStmt struct {
 	StmtImpl
 	Name  string

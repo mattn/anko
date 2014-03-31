@@ -35,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE
+%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -103,6 +103,13 @@ stmt : expr
 	| RETURN expr
 	{
 		$$ = &ast.ReturnStmt{Expr: $2}
+		if l, ok := yylex.(*Lexer); ok {
+			$2.SetPos(l.pos)
+		}
+	}
+	| THROW expr
+	{
+		$$ = &ast.ThrowStmt{Expr: $2}
 		if l, ok := yylex.(*Lexer); ok {
 			$2.SetPos(l.pos)
 		}
