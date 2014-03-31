@@ -69,13 +69,6 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, newError(err, stmt)
 		}
 		return rv, nil
-	case *ast.VarStmt:
-		rv, err := invokeExpr(stmt.Expr, env)
-		if err != nil {
-			return NilValue, newError(err, stmt)
-		}
-		env.Define(stmt.Name, rv)
-		return rv, nil
 	case *ast.IfStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
@@ -344,14 +337,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return m, nil
 	case *ast.LetExpr:
-		if _, ok := env.Get(e.Name); !ok {
-			return NilValue, newErrorString(fmt.Sprintf("Unknown variable '%s'", e.Name), expr)
-		}
 		v, err := invokeExpr(e.Expr, env)
 		if err != nil {
 			return NilValue, newError(err, expr)
 		}
-		env.Set(e.Name, v)
+		if env.Set(e.Name, v) != nil {
+			env.Define(e.Name, v)
+		}
 		return v, nil
 	//case *ast.NewExpr:
 	//	println("NEW")

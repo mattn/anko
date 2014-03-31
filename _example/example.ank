@@ -10,8 +10,8 @@ func bar(x ...){
 }
 
 # declare variables
-var x = 1
-var y = x + 1
+x = 1
+y = x + 1
 
 # print values 
 println(x * (y + 2 * x + foo(x) / 2))
@@ -24,23 +24,23 @@ if (foo(y) >= 1) {
 }
 
 # array type
-var a = [1,2,3]
+a = [1,2,3]
 println(a[2])
 println(len(a))
 
 # map type
-var m = {"foo": "bar", "bar": "baz"}
+m = {"foo": "bar", "bar": "baz"}
 for k in keys(m) {
   println(m[k])
 }
 
-var f = func(a) {
+f = func(a) {
   println(a)
 }
 
 f("あんこ")
 
-var f = func(a ...) {
+f = func(a ...) {
   println(a)
 }
 
@@ -53,7 +53,7 @@ println("foo")
 println(bytes("あいう"))
 println(runes("あいう"))
 
-var a = 1
+a = 1
 func foo() {
   a = 2
 }

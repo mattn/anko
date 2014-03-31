@@ -25,7 +25,6 @@ type Scanner struct {
 }
 
 var opName = map[string]int{
-	"var":    VAR,
 	"func":   FUNC,
 	"return": RETURN,
 	"throw":  THROW,

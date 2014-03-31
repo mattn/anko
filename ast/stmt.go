@@ -16,12 +16,6 @@ type ExprStmt struct {
 	Expr Expr
 }
 
-type VarStmt struct {
-	StmtImpl
-	Name string
-	Expr Expr
-}
-
 type FuncStmt struct {
 	StmtImpl
 	Name   string
