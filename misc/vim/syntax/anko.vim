@@ -8,8 +8,7 @@ syn keyword     ankoDirective         module
 syn keyword     ankoDeclaration       var
 
 hi def link     ankoDirective         Statement
-hi def link     ankoDeclaration       Keyword
-hi def link     ankoDeclType          Keyword
+hi def link     ankoDeclaration       Type
 
 syn keyword     ankoStatement         return break continue fallthrough
 syn keyword     ankoConditional       if else
@@ -24,7 +23,11 @@ hi def link     ankoRepeat            Repeat
 syn match       ankoDeclaration       /\<func\>/
 syn match       ankoDeclaration       /^func\>/
 
-syn keyword     ankoBuiltins          keys len len bytes runes string
+syn keyword     ankoCast              bytes runes string
+
+hi def link     ankoCast              Type
+
+syn keyword     ankoBuiltins          keys len len
 syn keyword     ankoBuiltins          println
 syn keyword     ankoConstants         true false nil
 
