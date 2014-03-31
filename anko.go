@@ -43,7 +43,7 @@ func main() {
 		var code string
 		if *e != "" {
 			code = *e
-			env.Set("args", reflect.ValueOf(flag.Args()))
+			env.Define("args", reflect.ValueOf(flag.Args()))
 		} else {
 			body, err := ioutil.ReadFile(flag.Arg(0))
 			if err != nil {
@@ -52,8 +52,8 @@ func main() {
 				ct.ResetColor()
 				os.Exit(1)
 			}
-			env.Set("args", reflect.ValueOf(flag.Args()[1:]))
 			code = string(body)
+			env.Define("args", reflect.ValueOf(flag.Args()[1:]))
 		}
 
 		scanner := new(parser.Scanner)
