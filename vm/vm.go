@@ -310,10 +310,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() != reflect.Struct {
-			return NilValue, errors.New("Invalid operation")
-		}
 		m := v.MethodByName(e.Method)
+		if !m.IsValid() {
+			if v.Kind() == reflect.Ptr {
+				v = v.Elem()
+			}
+			m = v.FieldByName(e.Method)
+		}
 		return m, nil
 	case *ast.LetExpr:
 		if _, ok := env.Get(e.Name); !ok {
@@ -403,16 +406,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, errors.New("Unknown function")
 		}
 		args := []reflect.Value{}
-		for i, expr := range e.SubExprs {
+		for _, expr := range e.SubExprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
 				return NilValue, err
 			}
-			if i == len(args) {
-				args = append(args, reflect.ValueOf(arg))
-			} else {
-				args = append(args, reflect.ValueOf(arg))
-			}
+			args = append(args, reflect.ValueOf(arg))
 		}
 		ret := NilValue
 		func() {
@@ -438,16 +437,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, errors.New("Unknown function")
 		}
 		args := []reflect.Value{}
-		for i, expr := range e.SubExprs {
+		for _, expr := range e.SubExprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
 				return NilValue, err
 			}
-			if i == len(args) {
-				args = append(args, reflect.ValueOf(arg))
-			} else {
-				args = append(args, reflect.ValueOf(arg))
-			}
+			args = append(args, reflect.ValueOf(arg))
 		}
 		ret := NilValue
 		var err error
