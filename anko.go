@@ -19,7 +19,6 @@ func main() {
 	builtins.SetupBuiltins(env)
 
 	if len(os.Args) > 1 {
-		scanner := new(parser.Scanner)
 		body, err := ioutil.ReadFile(os.Args[1])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -29,15 +28,22 @@ func main() {
 			args = append(args, reflect.ValueOf(arg))
 		}
 
+		scanner := new(parser.Scanner)
 		scanner.Init(string(body))
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
+			ct.ChangeColor(ct.Red, false, ct.None, false)
 			fmt.Fprintln(os.Stderr, err)
-		}
-		for _, stmt := range stmts {
-			_, err := vm.Run(stmt, env)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+			ct.ResetColor()
+		} else {
+			for _, stmt := range stmts {
+				_, err := vm.Run(stmt, env)
+				if err != nil {
+					ct.ChangeColor(ct.Red, false, ct.None, false)
+					fmt.Fprintln(os.Stderr, err)
+					ct.ResetColor()
+					break
+				}
 			}
 		}
 	} else {
@@ -56,21 +62,24 @@ func main() {
 			scanner.Init(s)
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
-				fmt.Println(err)
-			}
-			v, err := vm.RunStmts(stmts, env)
-			if err != nil {
 				ct.ChangeColor(ct.Red, false, ct.None, false)
-				fmt.Fprintln(os.Stderr, err)
+				fmt.Println(err)
 				ct.ResetColor()
 			} else {
-				ct.ChangeColor(ct.Black, true, ct.None, false)
-				if v == vm.NilValue {
-					fmt.Println("nil")
+				v, err := vm.RunStmts(stmts, env)
+				if err != nil {
+					ct.ChangeColor(ct.Red, false, ct.None, false)
+					fmt.Fprintln(os.Stderr, err)
+					ct.ResetColor()
 				} else {
-					fmt.Println(v.Interface())
+					ct.ChangeColor(ct.Black, true, ct.None, false)
+					if v == vm.NilValue {
+						fmt.Println("nil")
+					} else {
+						fmt.Println(v.Interface())
+					}
+					ct.ResetColor()
 				}
-				ct.ResetColor()
 			}
 		}
 	}
