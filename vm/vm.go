@@ -13,6 +13,19 @@ var NilValue = reflect.ValueOf(nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
+type Error struct {
+	message string
+	pos ast.Position
+}
+
+func (e *Error) Error() string {
+	return e.message
+}
+
+func (e *Error) Pos() ast.Position {
+	return e.pos
+}
+
 type Func func(args ...reflect.Value) (reflect.Value, error)
 
 func ToFunc(f Func) reflect.Value {
@@ -26,7 +39,7 @@ func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	for _, stmt := range stmts {
 		v, err = Run(stmt, newenv)
 		if err != nil {
-			return NilValue, err
+			return NilValue, &Error{message: err.Error(), pos: stmt.GetPos()}
 		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
 			return v, nil
@@ -41,7 +54,7 @@ func RunStmtsInSameEnv(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	for _, stmt := range stmts {
 		v, err = Run(stmt, env)
 		if err != nil {
-			return NilValue, err
+			return NilValue, &Error{message: err.Error(), pos: stmt.GetPos()}
 		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
 			return v, nil
@@ -305,6 +318,19 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return reflect.ValueOf(rs[ii]), nil
 		}
 		return NilValue, errors.New("Invalid operation")
+	case *ast.MemberExpr:
+		v, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return NilValue, err
+		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() != reflect.Struct {
+			return NilValue, errors.New("Invalid operation")
+		}
+		m := v.MethodByName(e.Method)
+		return m, nil
 	case *ast.LetExpr:
 		if _, ok := env.Get(e.Name); !ok {
 			return NilValue, fmt.Errorf("Unknown variable '%s'", e.Name)

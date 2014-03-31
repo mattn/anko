@@ -47,6 +47,9 @@ stmts :
 	{
 		$$ = nil
 		if l, ok := yylex.(*Lexer); ok {
+			if len($$) > 0 {
+				$$[0].SetPos(l.pos)
+			}
 			l.stmts = $$
 		}
 	}
@@ -54,7 +57,7 @@ stmts :
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
-			$1.Position(l.pos)
+			$1.SetPos(l.pos)
 			l.stmts = $$
 		}
 	}
@@ -195,6 +198,10 @@ expr : NUMBER
 	| expr '(' exprs  ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+	}
+	| expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
 	}
 	| IDENT '(' exprs ')'
 	{

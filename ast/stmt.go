@@ -7,7 +7,8 @@ type Position struct {
 
 type Stmt interface {
 	stmt()
-	Position(pos Position)
+	SetPos(Position)
+	GetPos() Position
 }
 
 type StmtImpl struct {
@@ -15,8 +16,13 @@ type StmtImpl struct {
 }
 
 func (x *StmtImpl) stmt() {}
-func (x *StmtImpl) Position(pos Position) {
+
+func (x *StmtImpl) SetPos(pos Position) {
 	x.pos = pos
+}
+
+func (x *StmtImpl) GetPos() Position {
+	return x.pos
 }
 
 type ExprStmt struct {

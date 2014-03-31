@@ -57,7 +57,11 @@ func main() {
 			_, err := vm.RunStmts(stmts, env)
 			if err != nil {
 				ct.ChangeColor(ct.Red, false, ct.None, false)
-				fmt.Fprintln(os.Stderr, err)
+				if e, ok := err.(*vm.Error); ok {
+					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
+				} else {
+					fmt.Fprintln(os.Stderr, err)
+				}
 				ct.ResetColor()
 				os.Exit(1)
 			}
@@ -85,7 +89,11 @@ func main() {
 				stmts, err = parser.Parse(scanner)
 				if err != nil {
 					ct.ChangeColor(ct.Red, false, ct.None, false)
-					fmt.Println(err)
+					if e, ok := err.(*vm.Error); ok {
+						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					} else {
+						fmt.Fprintln(os.Stderr, err)
+					}
 					ct.ResetColor()
 				}
 			}
@@ -94,7 +102,11 @@ func main() {
 				v, err := vm.RunStmts(stmts, env)
 				if err != nil {
 					ct.ChangeColor(ct.Red, false, ct.None, false)
-					fmt.Fprintln(os.Stderr, err)
+					if e, ok := err.(*vm.Error); ok {
+						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					} else {
+						fmt.Fprintln(os.Stderr, err)
+					}
 					ct.ResetColor()
 				} else {
 					ct.ChangeColor(ct.Black, true, ct.None, false)

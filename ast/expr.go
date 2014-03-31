@@ -69,6 +69,12 @@ type AnonCallExpr struct {
 	SubExprs []Expr
 }
 
+type MemberExpr struct {
+	ExprImpl
+	Expr   Expr
+	Method string
+}
+
 type ItemExpr struct {
 	ExprImpl
 	Value Expr
