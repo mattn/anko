@@ -35,7 +35,7 @@ import (
 	pairs        []*ast.PairExpr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND
+%token<tok> IDENT NUMBER STRING ARRAY VAR VARARG FUNC RETURN IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -215,6 +215,22 @@ expr : NUMBER
 	| '(' expr ')'
 	{
 		$$ = &ast.ParenExpr{SubExpr: $2}
+	}
+	| NEW IDENT '(' exprs ')'
+	{
+		$$ = &ast.NewExpr{Name: $2.lit, SubExprs: $4}
+	}
+	| TRUE
+	{
+		$$ = &ast.ConstExpr{Value: true}
+	}
+	| FALSE
+	{
+		$$ = &ast.ConstExpr{Value: false}
+	}
+	| NIL
+	{
+		$$ = &ast.ConstExpr{Value: nil}
 	}
 	| expr '+' expr
 	{

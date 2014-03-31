@@ -1,4 +1,4 @@
-package main
+package builtins
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-func setupBuiltins(env *vm.Env) {
+func SetupBuiltins(env *vm.Env) {
 	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		for i, arg := range args {
 			if i != 0 {

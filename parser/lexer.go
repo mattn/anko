@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/anko/ast"
-	"os"
 )
 
 const (
@@ -33,6 +32,10 @@ var opName = map[string]int{
 	"for":    FOR,
 	"in":     IN,
 	"else":   ELSE,
+	"new":    NEW,
+	"true":   TRUE,
+	"false":  FALSE,
+	"nil":    NIL,
 }
 
 func (s *Scanner) Init(src string) {
@@ -69,14 +72,14 @@ retry:
 		}
 	default:
 		switch ch {
+		case -1:
+			tok = EOF
 		case '#':
 			for !isEOL(s.peek()) {
 				s.next()
 			}
 			s.next()
 			goto retry
-		case -1:
-			tok = EOF
 		case '!':
 			s.next()
 			if s.peek() == '=' {
@@ -267,6 +270,7 @@ type Lexer struct {
 	s     *Scanner
 	lit   string
 	pos   ast.Position
+	e     error
 	stmts []ast.Stmt
 }
 
@@ -282,13 +286,13 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-	fmt.Fprintf(os.Stderr, "Line %d, Column %d: %q %s", l.pos.Line, l.pos.Column, l.lit, e)
+	l.e = fmt.Errorf("Line %d, Column %d: %q %s", l.pos.Line, l.pos.Column, l.lit, e)
 }
 
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
-		return nil, errors.New("Parse error")
+		return nil, l.e
 	}
 	return l.stmts, nil
 }

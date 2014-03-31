@@ -19,7 +19,7 @@ func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
 
-func runStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
+func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	newenv := env.New()
 	v := NilValue
 	var err error
@@ -56,13 +56,13 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		if r.Bool() {
-			r, err = runStmts(stmt.ThenStmts, env)
+			r, err = RunStmts(stmt.ThenStmts, env)
 			if err != nil {
 				return NilValue, err
 			}
 			return r, nil
 		} else if len(stmt.ElseStmts) > 0 {
-			r, err = runStmts(stmt.ElseStmts, env)
+			r, err = RunStmts(stmt.ElseStmts, env)
 			if err != nil {
 				return NilValue, err
 			}
@@ -79,7 +79,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			r := NilValue
 			for i := 0; i < val.Len(); i++ {
 				newenv.Define(stmt.Var, val.Index(i))
-				r, err = runStmts(stmt.Stmts, newenv)
+				r, err = RunStmts(stmt.Stmts, newenv)
 				if err != nil {
 					return NilValue, err
 				}
@@ -109,7 +109,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				return runStmts(stmt.Stmts, newenv)
+				return RunStmts(stmt.Stmts, newenv)
 			}
 		}(stmt, env))
 		env.Define(stmt.Name, f)
@@ -237,7 +237,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				return runStmts(expr.Stmts, newenv)
+				return RunStmts(expr.Stmts, newenv)
 			}
 		}(e, env)), nil
 	case *ast.ItemExpr:
@@ -284,6 +284,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		env.Set(e.Name, v)
 		return v, nil
+	//case *ast.NewExpr:
+	//	println("NEW")
+	//	return NilValue, nil
 	case *ast.BinOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
 		if err != nil {
@@ -345,6 +348,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		default:
 			return NilValue, errors.New("Unknown operator")
 		}
+	case *ast.ConstExpr:
+		return reflect.ValueOf(e.Value), nil
 	case *ast.CallExpr:
 		f, ok := env.Get(e.Name)
 		if !ok {

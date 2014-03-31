@@ -81,3 +81,14 @@ type LetExpr struct {
 	Name string
 	Expr Expr
 }
+
+type NewExpr struct {
+	ExprImpl
+	Name     string
+	SubExprs []Expr
+}
+
+type ConstExpr struct {
+	ExprImpl
+	Value interface{}
+}
