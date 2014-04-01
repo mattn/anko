@@ -26,7 +26,7 @@ var e = flag.String("e", "", "One line of program")
 var verbose = flag.Bool("V", false, "Verbose output")
 var v = flag.Bool("v", false, "Display version")
 
-var istty = isatty.IsTerminal(int(os.Stdout.Fd()))
+var istty = isatty.IsTerminal(os.Stdout.Fd())
 
 func colortext(color ct.Color, bright bool, f func()) {
 	if istty {
