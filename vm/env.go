@@ -6,34 +6,42 @@ import (
 	"strings"
 )
 
+// Env provides interface to run VM. This mean function scope and blocked-scope.
+// If stack go to blocked-scope, it will make new Env.
 type Env struct {
 	name   string
 	env    map[string]reflect.Value
 	parent *Env
 }
 
+// NewEnv create new global scope.
 func NewEnv() *Env {
 	return &Env{env: make(map[string]reflect.Value), parent: nil}
 }
 
+// NewEnv create new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{env: make(map[string]reflect.Value), parent: e, name: e.name}
 }
 
+// NewEnv create new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
 	e.DefineGlobal(n, reflect.ValueOf(m))
 	return m
 }
 
+// SetName make a name of the scope. This mean that the scope is module.
 func (e *Env) SetName(n string) {
 	e.name = n
 }
 
+// GetName return module name.
 func (e *Env) GetName() string {
 	return e.name
 }
 
+// Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, bool) {
 	ns := strings.Split(k, "::")
 	if len(ns) > 1 {
@@ -71,6 +79,8 @@ func (e *Env) Get(k string) (reflect.Value, bool) {
 	return NilValue, false
 }
 
+// Set modify the value which specified as symbol. If it can't be found in
+// whole. This function return error
 func (e *Env) Set(k string, v reflect.Value) error {
 	for {
 		if e.parent == nil {
@@ -88,6 +98,7 @@ func (e *Env) Set(k string, v reflect.Value) error {
 	}
 }
 
+// DefineGlobal defines global symbol.
 func (e *Env) DefineGlobal(k string, v reflect.Value) {
 	global := e
 	for global.parent != nil {
@@ -96,14 +107,17 @@ func (e *Env) DefineGlobal(k string, v reflect.Value) {
 	global.env[k] = v
 }
 
+// Define defines symbol in current scope.
 func (e *Env) Define(k string, v reflect.Value) {
 	e.env[k] = v
 }
 
+// String return the name of current scope.
 func (e *Env) String() string {
 	return e.name
 }
 
+// Dump show symbol values in the scope.
 func (e *Env) Dump() {
 	for k, v := range e.env {
 		fmt.Printf("%v = %v\n", k, v)

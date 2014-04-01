@@ -13,15 +13,19 @@ var NilValue = reflect.ValueOf(nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
+// Error provides a convenient interface for handling runtime error.
+// It can be Error inteface with type cast which can call Pos().
 type Error struct {
 	message string
 	pos ast.Position
 }
 
-func newErrorString(err string, pos ast.Pos) *Error {
+// newErrorString makes error interface with message.
+func newErrorString(err string, pos ast.Pos) error {
 	return &Error{message: err, pos: pos.GetPos()}
 }
 
+// newError makes error interface with message. This doesn't overwrite last error.
 func newError(err error, pos ast.Pos) error {
 	if err == nil {
 		return nil
@@ -32,20 +36,24 @@ func newError(err error, pos ast.Pos) error {
 	return &Error{message: err.Error(), pos: pos.GetPos()}
 }
 
+// Error return the error message.
 func (e *Error) Error() string {
 	return e.message
 }
 
+// Pos return the position of error.
 func (e *Error) Pos() ast.Position {
 	return e.pos
 }
 
+// Func is function interface to reflect functions internaly.
 type Func func(args ...reflect.Value) (reflect.Value, error)
 
 func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
 
+// RunStmts execute statements in the environment which specified.
 func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
@@ -64,6 +72,7 @@ func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	return rv, nil
 }
 
+// RunStmts execute one statement in the environment which specified.
 func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
@@ -195,6 +204,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	}
 }
 
+// toString convert all reflect.Value-s into string.
 func toString(v reflect.Value) string {
 	if v.Kind() == reflect.String {
 		return v.String()
@@ -202,6 +212,7 @@ func toString(v reflect.Value) string {
 	return fmt.Sprint(v.Interface())
 }
 
+// toBool convert all reflect.Value-s into bool.
 func toBool(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
@@ -221,6 +232,7 @@ func toBool(v reflect.Value) bool {
 	return false
 }
 
+// toFloat64 convert all reflect.Value-s into float64.
 func toFloat64(v reflect.Value) float64 {
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
@@ -231,6 +243,7 @@ func toFloat64(v reflect.Value) float64 {
 	return 0.0
 }
 
+// toInt64 convert all reflect.Value-s into int64.
 func toInt64(v reflect.Value) int64 {
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
@@ -246,6 +259,7 @@ func toInt64(v reflect.Value) int64 {
 	return 0
 }
 
+// invokeExpr evaluate one expression.
 func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	switch e := expr.(type) {
 	case *ast.NumberExpr:
