@@ -27,20 +27,6 @@ func (c *Client) Get(args ...reflect.Value) (reflect.Value, error) {
 
 func Import(env *vm.Env) {
 	m := env.NewModule("http")
-	m.Define("Get", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument should be string")
-		}
-		res, err := h.Get(args[0].String())
-		return reflect.ValueOf([]interface{}{res, err}), err
-	}))
-
 	m.Define("NewClient", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		return reflect.ValueOf(&h.Client{}), nil
 	}))
