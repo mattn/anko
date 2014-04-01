@@ -17,7 +17,6 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
-	"strings"
 )
 
 const version = "0.0.1"
@@ -84,6 +83,8 @@ func main() {
 				colortext(ct.Red, false, func() {
 					if e, ok := err.(*vm.Error); ok && e != nil {
 						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
+					} else if e, ok := err.(*parser.Error); ok {
+						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
 					} else {
 						fmt.Fprintln(os.Stderr, err)
 					}
@@ -94,9 +95,15 @@ func main() {
 	} else {
 		env.Define("args", reflect.ValueOf([]string{}))
 		reader := bufio.NewReader(os.Stdin)
+		code := ""
+		following := false
 		for {
 			colortext(ct.Green, true, func() {
-				fmt.Print("> ")
+				if following {
+					fmt.Print("  ")
+				} else {
+					fmt.Print("> ")
+				}
 			})
 			b, _, err := reader.ReadLine()
 			if err != nil {
@@ -105,19 +112,31 @@ func main() {
 			if len(b) == 0 {
 				continue
 			}
-			s := strings.TrimSpace(string(b))
+			code += string(b)
 			scanner := new(parser.Scanner)
-			scanner.Init(s)
+			scanner.Init(code)
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
+				if following {
+					continue
+				}
+				if e, ok := err.(*parser.Error); ok && e.Pos().Column == len(b) {
+					following = true
+					continue
+				}
 				colortext(ct.Red, false, func() {
 					if e, ok := err.(*vm.Error); ok {
+						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					} else if e, ok := err.(*parser.Error); ok {
 						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
 					} else {
 						fmt.Fprintln(os.Stderr, err)
 					}
 				})
+				continue
 			}
+			following = false
+			code = ""
 
 			if err == nil {
 				v, err := vm.RunStmts(stmts, env)

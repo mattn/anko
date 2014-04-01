@@ -17,6 +17,19 @@ type Token struct {
 	pos ast.Position
 }
 
+type Error struct {
+	message string
+	pos ast.Position
+}
+
+func (e *Error) Error() string {
+	return e.message
+}
+
+func (e *Error) Pos() ast.Position {
+	return e.pos
+}
+
 type Scanner struct {
 	src      []rune
 	offset   int
@@ -314,7 +327,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 func (l *Lexer) Error(e string) {
-	l.e = fmt.Errorf("Line %d, Column %d: %q %s", l.pos.Line, l.pos.Column, l.lit, e)
+	l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, e), pos: l.pos}
 }
 
 func Parse(s *Scanner) ([]ast.Stmt, error) {
