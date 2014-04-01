@@ -341,6 +341,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, newError(err, expr)
 		}
+		if v.Kind() == reflect.Slice {
+			v = v.Index(0)
+		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
@@ -359,11 +362,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		rv, err := invokeExpr(e.Expr, env)
 		if err != nil {
 			return NilValue, newError(err, expr)
-		}
-		if rv.Kind() == reflect.Array || rv.Kind() == reflect.Slice {
-			if rv.Len() > 0 {
-				rv = rv.Index(0)
-			}
 		}
 		if env.Set(e.Name, rv) != nil {
 			env.Define(e.Name, rv)
