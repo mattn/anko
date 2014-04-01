@@ -1,0 +1,11 @@
+#!anko
+
+if (false) {
+  println(1)
+} else if (false) {
+  println(2)
+} else if (false) {
+  println(3)
+} else {
+  println(4)
+}
