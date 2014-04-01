@@ -3,7 +3,6 @@ package http
 import (
 	"errors"
 	"github.com/mattn/anko/vm"
-	"io/ioutil"
 	h "net/http"
 	"reflect"
 )
@@ -39,7 +38,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Argument should be string")
 		}
 		res, err := h.Get(args[0].String())
-		return reflect.ValueOf([]reflect.Value{res, err}), err
+		return reflect.ValueOf([]interface{}{res, err}), err
 	}))
 
 	m.Define("NewClient", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
