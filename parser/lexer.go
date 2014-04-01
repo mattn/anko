@@ -131,6 +131,42 @@ retry:
 				tok = int(ch)
 				lit = string(ch)
 			}
+		case '+':
+			s.next()
+			if s.peek() == '=' {
+				tok = PLUSEQ
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
+		case '-':
+			s.next()
+			if s.peek() == '=' {
+				tok = MINUSEQ
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
+		case '*':
+			s.next()
+			if s.peek() == '=' {
+				tok = MULEQ
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
+		case '/':
+			s.next()
+			if s.peek() == '=' {
+				tok = DIVEQ
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
 		case '>':
 			s.next()
 			tok = int(ch)
@@ -178,7 +214,7 @@ retry:
 			} else {
 				s.back()
 			}
-		case '(', ')', ':', ';', '+', '-', '*', '/', '%', '{', '}', ',', '[', ']', '\n':
+		case '(', ')', ':', ';', '%', '{', '}', ',', '[', ']', '\n':
 			tok = int(ch)
 			lit = string(ch)
 		default:

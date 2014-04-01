@@ -450,7 +450,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return m, nil
 	case *ast.LetExpr:
-		rv, err := invokeExpr(e.Expr, env)
+		rv := NilValue
+		var err error
+		if e.Operator == "=" {
+			rv, err = invokeExpr(e.Expr, env)
+		} else {
+			rv, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator, Rhs: e.Expr}, env)
+		}
 		if err != nil {
 			return NilValue, newError(err, expr)
 		}

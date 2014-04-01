@@ -111,6 +111,7 @@ type FuncExpr struct {
 type LetExpr struct {
 	ExprImpl
 	Name string
+	Operator string
 	Expr Expr
 }
 

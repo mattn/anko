@@ -35,7 +35,7 @@ import (
 	pairs                  []ast.Expr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ
 
 %left '+' '-'
 %left '*' '/' '%'
@@ -395,7 +395,35 @@ expr : NUMBER
 	}
 	| IDENT '=' expr
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Expr: $3}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok {
+			$$.SetPos(l.pos)
+		}
+	}
+	| IDENT PLUSEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "+", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok {
+			$$.SetPos(l.pos)
+		}
+	}
+	| IDENT MINUSEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "-", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok {
+			$$.SetPos(l.pos)
+		}
+	}
+	| IDENT MULEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "*", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok {
+			$$.SetPos(l.pos)
+		}
+	}
+	| IDENT DIVEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "/", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok {
 			$$.SetPos(l.pos)
 		}
