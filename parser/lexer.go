@@ -7,29 +7,35 @@ import (
 )
 
 const (
-	EOF        = -1
-	ParseError = 0
+	EOF        = -1 // End of file.
+	ParseError = 0  // Error from parser.
 )
 
+// Token provide structure of identities or literals.
 type Token struct {
 	tok int
 	lit string
 	pos ast.Position
 }
 
+// Error provides a convenient interface for handling runtime error.
+// It can be Error inteface with type cast which can call Pos().
 type Error struct {
 	message string
 	pos     ast.Position
 }
 
+// Error return the error message.
 func (e *Error) Error() string {
 	return e.message
 }
 
+// Pos return the position of error.
 func (e *Error) Pos() ast.Position {
 	return e.pos
 }
 
+// Scanner store informations for lexer.
 type Scanner struct {
 	src      []rune
 	offset   int
@@ -37,6 +43,7 @@ type Scanner struct {
 	line     int
 }
 
+// opName is correction of operation names.
 var opName = map[string]int{
 	"func":    FUNC,
 	"return":  RETURN,
@@ -55,10 +62,12 @@ var opName = map[string]int{
 	"finally": FINALLY,
 }
 
+// Init reset code to scan.
 func (s *Scanner) Init(src string) {
 	s.src = []rune(src)
 }
 
+// Scan analyses token, and decide identify or literals.
 func (s *Scanner) Scan() (tok int, lit string, pos ast.Position) {
 	var err error
 retry:
@@ -179,22 +188,27 @@ retry:
 	return
 }
 
+// isLetter return true if the rune is a letter for identity.
 func isLetter(ch rune) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
+// isDigit return true if the rune is a number.
 func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
+// isEOL return true if the rune is at end-of-line or end-of-file.
 func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
 }
 
+// isBrank return true if the rune is empty character..
 func isBrank(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n'
 }
 
+// peek return current rune in the code.
 func (s *Scanner) peek() rune {
 	if !s.reachEOF() {
 		return s.src[s.offset]
@@ -203,6 +217,7 @@ func (s *Scanner) peek() rune {
 	}
 }
 
+// next move offset to next.
 func (s *Scanner) next() {
 	if !s.reachEOF() {
 		if s.peek() == '\n' {
@@ -213,24 +228,29 @@ func (s *Scanner) next() {
 	}
 }
 
+// back move back offset once to top.
 func (s *Scanner) back() {
 	s.offset--
 }
 
+// reachEOF return true if offset is at end-of-file.
 func (s *Scanner) reachEOF() bool {
 	return len(s.src) <= s.offset
 }
 
+// pos return the position of current.
 func (s *Scanner) pos() ast.Position {
 	return ast.Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
 }
 
+// skipBlank move position into non-black character.
 func (s *Scanner) skipBlank() {
 	for isBrank(s.peek()) {
 		s.next()
 	}
 }
 
+// scanIdentifier return identifier begining at current position.
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
@@ -243,6 +263,7 @@ func (s *Scanner) scanIdentifier() (string, error) {
 	return string(ret), nil
 }
 
+// scanIdentifier return number begining at current position.
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
 	for isDigit(s.peek()) || s.peek() == '.' || s.peek() == 'e' {
@@ -252,6 +273,7 @@ func (s *Scanner) scanNumber() (string, error) {
 	return string(ret), nil
 }
 
+// scanIdentifier return raw-string begining at current position.
 func (s *Scanner) scanRawString() (string, error) {
 	var ret []rune
 	for {
@@ -269,6 +291,7 @@ func (s *Scanner) scanRawString() (string, error) {
 	return string(ret), nil
 }
 
+// scanIdentifier return string begining at current position. This handle backslash escaping.
 func (s *Scanner) scanString() (string, error) {
 	var ret []rune
 	for {
@@ -307,6 +330,7 @@ func (s *Scanner) scanString() (string, error) {
 	return string(ret), nil
 }
 
+// Lexer provide inteface to parse codes.
 type Lexer struct {
 	s     *Scanner
 	lit   string
@@ -315,6 +339,7 @@ type Lexer struct {
 	stmts []ast.Stmt
 }
 
+// Lex scan the token and literals.
 func (l *Lexer) Lex(lval *yySymType) int {
 	tok, lit, pos := l.s.Scan()
 	if tok == EOF {
@@ -326,10 +351,12 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	return tok
 }
 
+// Error set parse error.
 func (l *Lexer) Error(e string) {
 	l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, e), pos: l.pos}
 }
 
+// Parser provide way to parse the code.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
