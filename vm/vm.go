@@ -206,6 +206,9 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 
 // toString convert all reflect.Value-s into string.
 func toString(v reflect.Value) string {
+	if v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
 	if v.Kind() == reflect.String {
 		return v.String()
 	}
@@ -214,6 +217,9 @@ func toString(v reflect.Value) string {
 
 // toBool convert all reflect.Value-s into bool.
 func toBool(v reflect.Value) bool {
+	if v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return v.Float() != 0.0
@@ -234,6 +240,9 @@ func toBool(v reflect.Value) bool {
 
 // toFloat64 convert all reflect.Value-s into float64.
 func toFloat64(v reflect.Value) float64 {
+	if v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return v.Float()
@@ -245,6 +254,9 @@ func toFloat64(v reflect.Value) float64 {
 
 // toInt64 convert all reflect.Value-s into int64.
 func toInt64(v reflect.Value) int64 {
+	if v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return int64(v.Float())
@@ -357,7 +369,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if ii < 0 || ii >= v.Len() {
 				return NilValue, nil
 			}
-			return v.Index(int(i.Int())), nil
+			return v.Index(ii), nil
 		}
 		if v.Kind() == reflect.Map {
 			if i.Kind() != reflect.String {
@@ -438,6 +450,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case "+":
 			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
+			}
+			if lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice {
+				return reflect.Append(lhsV, rhsV), nil
 			}
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
