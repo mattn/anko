@@ -1,6 +1,7 @@
 #!anko
-res = http::get("http://www.google.com")
-h = res["headers"]
-for k in keys(h) {
-  println(k + ":" + h[k])
-}
+
+r = http::NewClient().Get("http://www.google.com")
+println(r.StatusCode)
+b = io::ReadAll(r.Body)
+println(string(b))
+r.Body.Close()
