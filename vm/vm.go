@@ -371,6 +371,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
+		if vme, ok := v.Interface().(*Env); ok {
+			m, ok := vme.Get(e.Method)
+			if !m.IsValid() || !ok {
+				return NilValue, newErrorString("Invalid operation", expr)
+			}
+			return m, nil
+		}
+
 		m := v.MethodByName(e.Method)
 		if !m.IsValid() {
 			if v.Kind() == reflect.Ptr {
