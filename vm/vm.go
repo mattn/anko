@@ -451,8 +451,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
 			}
-			if lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice {
+			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() != reflect.Array && rhsV.Kind() != reflect.Slice) {
 				return reflect.Append(lhsV, rhsV), nil
+			}
+			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() == reflect.Array || rhsV.Kind() == reflect.Slice) {
+				return reflect.AppendSlice(lhsV, rhsV), nil
 			}
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
