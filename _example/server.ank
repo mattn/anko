@@ -1,0 +1,4 @@
+http.HandleFunc("/", func(w, r) {
+  w.Write(bytes("hello world"))
+})
+http.ListenAndServe(":8080", nil)
