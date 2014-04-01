@@ -83,7 +83,6 @@ func main() {
 			if err != nil {
 				colortext(ct.Red, false, func() {
 					if e, ok := err.(*vm.Error); ok && e != nil {
-						println(e)
 						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
 					} else {
 						fmt.Fprintln(os.Stderr, err)
