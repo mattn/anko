@@ -118,7 +118,8 @@ func main() {
 				following = false
 				code = ""
 			}
-		} else if err == nil {
+		}
+		if err == nil {
 			v, err = vm.RunStmts(stmts, env)
 		}
 
