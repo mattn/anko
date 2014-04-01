@@ -10,7 +10,7 @@ import (
 )
 
 func Import(env *vm.Env) {
-	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	p := func(args ...reflect.Value) (reflect.Value, error) {
 		for i, arg := range args {
 			if i != 0 {
 				fmt.Print(", ")
@@ -25,6 +25,13 @@ func Import(env *vm.Env) {
 				fmt.Println("undefined")
 			}
 		}
+		return vm.NilValue, nil
+	}
+
+	env.Define("print", vm.ToFunc(p))
+
+	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		p(args...)
 		fmt.Println()
 		return vm.NilValue, nil
 	}))
