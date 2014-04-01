@@ -9,7 +9,7 @@ import (
 
 func Import(env *vm.Env) {
 	m := env.NewModule("url")
-	m.Define("parse", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	m.Define("Parse", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}

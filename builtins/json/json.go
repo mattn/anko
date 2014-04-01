@@ -9,7 +9,7 @@ import (
 
 func Import(env *vm.Env) {
 	m := env.NewModule("json")
-	m.Define("encode", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	m.Define("Marshal", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
@@ -23,7 +23,7 @@ func Import(env *vm.Env) {
 		return reflect.ValueOf(string(b)), nil
 	}))
 
-	m.Define("decode", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	m.Define("Unmarshal", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
 		}
