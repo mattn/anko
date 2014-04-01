@@ -1,7 +1,7 @@
 #!anko
 
-r = http::NewClient().Get("http://www.google.com")
+r = http.NewClient().Get("http://www.google.com")
 println(r.StatusCode)
-b = io::ReadAll(r.Body)
+b = io.ReadAll(r.Body)
 println(string(b))
 r.Body.Close()

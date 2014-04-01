@@ -221,18 +221,7 @@ func (s *Scanner) skipBlank() {
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
-		if s.peek() == ':' {
-			s.next()
-			if s.peek() != ':' {
-				s.back()
-				s.back()
-				break
-			}
-			s.next()
-			ret = append(ret, ':')
-			ret = append(ret, ':')
-			continue
-		} else if !isLetter(s.peek()) && !isDigit(s.peek()) {
+		if !isLetter(s.peek()) && !isDigit(s.peek()) {
 			break
 		}
 		ret = append(ret, s.peek())
