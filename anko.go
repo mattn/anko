@@ -111,14 +111,14 @@ func main() {
 				continue
 			}
 			if e, ok := err.(*parser.Error); ok && e.Pos().Column == len(b) {
-				following = true
-				continue
-			}
-			if err == nil {
-				following = false
-				code = ""
+				if !e.Fatal() {
+					following = true
+					continue
+				}
 			}
 		}
+		following = false
+		code = ""
 		if err == nil {
 			v, err = vm.RunStmts(stmts, env)
 		}

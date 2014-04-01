@@ -24,6 +24,7 @@ type Token struct {
 type Error struct {
 	message string
 	pos     ast.Position
+	fatal   bool
 }
 
 // Error return the error message.
@@ -34,6 +35,11 @@ func (e *Error) Error() string {
 // Pos return the position of error.
 func (e *Error) Pos() ast.Position {
 	return e.pos
+}
+
+// Pos return the position of error.
+func (e *Error) Fatal() bool {
+	return e.fatal
 }
 
 // Scanner store informations for lexer.
@@ -382,6 +388,10 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	if tok == EOF {
 		return 0
 	}
+	if tok == ParseError {
+		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Undefined symbol"), pos: l.pos, fatal: true}
+		return 0
+	}
 	lval.tok = Token{tok: tok, lit: lit, pos: pos}
 	l.lit = lit
 	l.pos = pos
@@ -390,7 +400,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 
 // Error set parse error.
 func (l *Lexer) Error(e string) {
-	l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, e), pos: l.pos}
+	l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, e), pos: l.pos, fatal: false}
 }
 
 // Parser provide way to parse the code.
