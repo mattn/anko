@@ -32,9 +32,10 @@ type FuncStmt struct {
 // IfStmt provide "if/else" statement.
 type IfStmt struct {
 	StmtImpl
-	If   Expr
-	Then []Stmt
-	Else []Stmt
+	If     Expr
+	Then   []Stmt
+	ElseIf []Stmt // This is array of IfStmt
+	Else   []Stmt
 }
 
 // TryStmt provide "try/catch/finally" statement.

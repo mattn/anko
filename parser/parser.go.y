@@ -33,8 +33,8 @@ import (
 	tok                    Token
 	idents                 []string
 	exprs                  []ast.Expr
-	pair                   *ast.PairExpr
-	pairs                  []*ast.PairExpr
+	pair                   ast.Expr
+	pairs                  []ast.Expr
 }
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY
@@ -176,11 +176,11 @@ pair : STRING ':' expr
 
 pairs :
 	{
-		$$ = []*ast.PairExpr{}
+		$$ = []ast.Expr{}
 	}
 	| pair
 	{
-		$$ = []*ast.PairExpr{$1}
+		$$ = []ast.Expr{$1}
 	}
 	| pairs ',' pair
 	{
@@ -275,7 +275,7 @@ expr : NUMBER
 	{
 		mapExpr := make(map[string]ast.Expr)
 		for _, v := range $2 {
-			mapExpr[v.Key] = v.Value
+			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
 		}
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
 		if l, ok := yylex.(*Lexer); ok {

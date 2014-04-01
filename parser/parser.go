@@ -23,8 +23,8 @@ type yySymType struct {
 	tok                    Token
 	idents                 []string
 	exprs                  []ast.Expr
-	pair                   *ast.PairExpr
-	pairs                  []*ast.PairExpr
+	pair                   ast.Expr
+	pairs                  []ast.Expr
 }
 
 const IDENT = 57346
@@ -710,12 +710,12 @@ yydefault:
 	case 23:
 		//line parser.go.y:178
 		{
-			yyVAL.pairs = []*ast.PairExpr{}
+			yyVAL.pairs = []ast.Expr{}
 		}
 	case 24:
 		//line parser.go.y:182
 		{
-			yyVAL.pairs = []*ast.PairExpr{yyS[yypt-0].pair}
+			yyVAL.pairs = []ast.Expr{yyS[yypt-0].pair}
 		}
 	case 25:
 		//line parser.go.y:186
@@ -825,7 +825,7 @@ yydefault:
 		{
 			mapExpr := make(map[string]ast.Expr)
 			for _, v := range yyS[yypt-1].pairs {
-				mapExpr[v.Key] = v.Value
+				mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
 			}
 			yyVAL.expr = &ast.MapExpr{MapExpr: mapExpr}
 			if l, ok := yylex.(*Lexer); ok {
