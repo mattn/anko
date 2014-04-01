@@ -22,7 +22,10 @@ func newErrorString(err string, pos ast.Pos) *Error {
 	return &Error{message: err, pos: pos.GetPos()}
 }
 
-func newError(err error, pos ast.Pos) *Error {
+func newError(err error, pos ast.Pos) error {
+	if err == nil {
+		return nil
+	}
 	if ee, ok := err.(*Error); ok {
 		return ee
 	}
@@ -89,24 +92,45 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.IfStmt:
-		rv, err := invokeExpr(stmt.Expr, env)
+		rv, err := invokeExpr(stmt.If, env)
 		if err != nil {
 			return NilValue, newError(err, stmt)
 		}
 		if rv.Bool() {
-			rv, err = RunStmts(stmt.ThenStmts, env.NewEnv())
+			rv, err = RunStmts(stmt.Then, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
 			return rv, nil
-		} else if len(stmt.ElseStmts) > 0 {
-			rv, err = RunStmts(stmt.ElseStmts, env.NewEnv())
+		} else if len(stmt.Else) > 0 {
+			rv, err = RunStmts(stmt.Else, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
 			return rv, nil
 		}
 		return NilValue, nil
+	case *ast.TryStmt:
+		_, err := RunStmts(stmt.Try, env.NewEnv())
+		if err != nil {
+			cenv := env.NewEnv()
+			if stmt.Var != "" {
+				cenv.Define(stmt.Var, reflect.ValueOf(err))
+			}
+			_, e1 := RunStmts(stmt.Catch, cenv)
+			if e1 != nil {
+				err = newError(e1, stmt.Catch[0])
+			} else {
+				err = nil
+			}
+		}
+		if len(stmt.Finally) > 0 {
+			_, e2 := RunStmts(stmt.Finally, env.NewEnv())
+			if e2 != nil {
+				err = newError(e2, stmt.Finally[0])
+			}
+		}
+		return NilValue, newError(err, stmt)
 	case *ast.ForStmt:
 		val, ee := invokeExpr(stmt.Value, env)
 		if ee != nil {

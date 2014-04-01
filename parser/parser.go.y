@@ -11,8 +11,9 @@ import (
 %type<stmt> stmt
 %type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
-%type<stmt_else> stmt_else
+%type<stmt_if_else> stmt_if_else
 %type<stmt_for> stmt_for
+%type<stmt_try_catch_finally> stmt_try_catch_finally
 %type<expr> expr
 %type<exprs> exprs
 %type<pair> pair
@@ -20,19 +21,20 @@ import (
 %type<idents> idents
 
 %union{
-	stmt_func    ast.Stmt
-	stmt_if      ast.Stmt
-	stmt_else    ast.Stmt
-	stmt_for     ast.Stmt
-	stmts        []ast.Stmt
-	stmt         ast.Stmt
-	teim         ast.Expr
-	expr         ast.Expr
-	tok          Token
-	idents       []string
-	exprs        []ast.Expr
-	pair         *ast.PairExpr
-	pairs        []*ast.PairExpr
+	stmt_func              ast.Stmt
+	stmt_if                ast.Stmt
+	stmt_if_else           ast.Stmt
+	stmt_for               ast.Stmt
+	stmt_try_catch_finally ast.Stmt
+	stmts                  []ast.Stmt
+	stmt                   ast.Stmt
+	teim                   ast.Expr
+	expr                   ast.Expr
+	tok                    Token
+	idents                 []string
+	exprs                  []ast.Expr
+	pair                   *ast.PairExpr
+	pairs                  []*ast.PairExpr
 }
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY
@@ -71,7 +73,7 @@ stmts :
 			l.stmts = $$
 		}
 	}
-	| stmt_else stmts
+	| stmt_if_else stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
@@ -79,6 +81,13 @@ stmts :
 		}
 	}
 	| stmt_for stmts
+	{
+		$$ = append([]ast.Stmt{$1}, $2...)
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
+	| stmt_try_catch_finally stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
@@ -128,19 +137,36 @@ stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
 		$$ = &ast.FuncStmt{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
 	}
 
-stmt_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
+stmt_if_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{Expr: $3, ThenStmts: $6, ElseStmts: $10}
+		$$ = &ast.IfStmt{If: $3, Then: $6, Else: $10}
 	}
 
 stmt_if : IF '(' expr ')' '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{Expr: $3, ThenStmts: $6}
+		$$ = &ast.IfStmt{If: $3, Then: $6}
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'
 	{
 		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
+	}
+
+stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FINALLY '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Var: $7.lit, Catch: $10, Finally: $14}
+	}
+	| TRY '{' stmts '}' CATCH '{' stmts '}' FINALLY '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Catch: $7, Finally: $11}
+	}
+	| TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Var: $7.lit, Catch: $10}
+	}
+	| TRY '{' stmts '}' CATCH '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Catch: $7}
 	}
 
 pair : STRING ':' expr

@@ -25,18 +25,21 @@ type Scanner struct {
 }
 
 var opName = map[string]int{
-	"func":   FUNC,
-	"return": RETURN,
-	"throw":  THROW,
-	"if":     IF,
-	"for":    FOR,
-	"in":     IN,
-	"else":   ELSE,
-	"new":    NEW,
-	"true":   TRUE,
-	"false":  FALSE,
-	"nil":    NIL,
-	"module": MODULE,
+	"func":    FUNC,
+	"return":  RETURN,
+	"throw":   THROW,
+	"if":      IF,
+	"for":     FOR,
+	"in":      IN,
+	"else":    ELSE,
+	"new":     NEW,
+	"true":    TRUE,
+	"false":   FALSE,
+	"nil":     NIL,
+	"module":  MODULE,
+	"try":     TRY,
+	"catch":   CATCH,
+	"finally": FINALLY,
 }
 
 func (s *Scanner) Init(src string) {
