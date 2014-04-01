@@ -360,6 +360,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, newError(err, expr)
 		}
+		if rv.Kind() == reflect.Array || rv.Kind() == reflect.Slice {
+			if rv.Len() > 0 {
+				rv = rv.Index(0)
+			}
+		}
 		if env.Set(e.Name, rv) != nil {
 			env.Define(e.Name, rv)
 		}
