@@ -101,24 +101,47 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.IfStmt:
+		// If
 		rv, err := invokeExpr(stmt.If, env)
 		if err != nil {
 			return NilValue, newError(err, stmt)
 		}
 		if rv.Bool() {
+			// Then
 			rv, err = RunStmts(stmt.Then, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
 			return rv, nil
-		} else if len(stmt.Else) > 0 {
+		}
+		done := false
+		if len(stmt.ElseIf) > 0 {
+			for _, stmt := range stmt.ElseIf {
+				stmt_if := stmt.(*ast.IfStmt)
+				// ElseIf
+				rv, err = invokeExpr(stmt_if.If, env)
+				if err != nil {
+					return NilValue, newError(err, stmt)
+				}
+				if rv.Bool() {
+					// ElseIf Then
+					done = true
+					rv, err = RunStmts(stmt_if.Then, env)
+					if err != nil {
+						return NilValue, newError(err, stmt)
+					}
+					break
+				}
+			}
+		}
+		if !done && len(stmt.Else) > 0 {
+			// Else
 			rv, err = RunStmts(stmt.Else, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
-			return rv, nil
 		}
-		return NilValue, nil
+		return rv, nil
 	case *ast.TryStmt:
 		_, err := RunStmts(stmt.Try, env.NewEnv())
 		if err != nil {

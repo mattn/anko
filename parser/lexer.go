@@ -363,5 +363,5 @@ func Parse(s *Scanner) ([]ast.Stmt, error) {
 	if yyParse(&l) != 0 {
 		return nil, l.e
 	}
-	return l.stmts, nil
+	return l.stmts, l.e
 }

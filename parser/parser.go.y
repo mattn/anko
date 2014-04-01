@@ -11,7 +11,6 @@ import (
 %type<stmt> stmt
 %type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
-%type<stmt_if_else> stmt_if_else
 %type<stmt_for> stmt_for
 %type<stmt_try_catch_finally> stmt_try_catch_finally
 %type<expr> expr
@@ -23,7 +22,6 @@ import (
 %union{
 	stmt_func              ast.Stmt
 	stmt_if                ast.Stmt
-	stmt_if_else           ast.Stmt
 	stmt_for               ast.Stmt
 	stmt_try_catch_finally ast.Stmt
 	stmts                  []ast.Stmt
@@ -67,13 +65,6 @@ stmts :
 		}
 	}
 	| stmt_if stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
-	}
-	| stmt_if_else stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
@@ -137,14 +128,21 @@ stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
 		$$ = &ast.FuncStmt{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
 	}
 
-stmt_if_else : IF '(' expr ')' '{' stmts '}' ELSE '{' stmts '}'
-	{
-		$$ = &ast.IfStmt{If: $3, Then: $6, Else: $10}
-	}
-
 stmt_if : IF '(' expr ')' '{' stmts '}'
 	{
 		$$ = &ast.IfStmt{If: $3, Then: $6}
+	}
+	| stmt_if ELSE '{' stmts '}'
+	{
+		if $1.(*ast.IfStmt).Else != nil {
+			yylex.Error("multiple else statement")
+		} else {
+			$1.(*ast.IfStmt).Else = $4
+		}
+	}
+	| stmt_if ELSE IF '(' expr ')' '{' stmts '}'
+	{
+		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'

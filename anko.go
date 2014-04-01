@@ -103,6 +103,9 @@ func main() {
 		scanner := new(parser.Scanner)
 		scanner.Init(code)
 		stmts, err := parser.Parse(scanner)
+
+		v := vm.NilValue
+
 		if repl {
 			if following {
 				continue
@@ -115,9 +118,10 @@ func main() {
 				following = false
 				code = ""
 			}
+		} else if err == nil {
+			v, err = vm.RunStmts(stmts, env)
 		}
 
-		v, err := vm.RunStmts(stmts, env)
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
