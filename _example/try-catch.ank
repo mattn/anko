@@ -1,0 +1,17 @@
+#!anko
+
+try {
+  http.Do()
+} catch {
+  println("catch!")
+} finally {
+  println("finally!")
+}
+
+try {
+  http.Do()
+} catch(e) {
+  println("catch!", e)
+} finally {
+  println("finally!")
+}
