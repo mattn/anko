@@ -1,0 +1,22 @@
+func is(expect, got, name) {
+  if (expect == got) {
+    println(name, "ok")
+  } else {
+    throw name + ": expected " + expect + " but got " + got
+  }
+}
+
+func ok(expect, name) {
+  if (expect) {
+    println(name, "ok")
+  } else {
+    throw name + ": expected " + expect + " but got " + got
+  }
+}
+
+try {
+  load(args[0])
+} catch(e) {
+println("foo", e)
+  #println(e)
+}

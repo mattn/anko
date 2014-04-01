@@ -506,6 +506,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case "%":
 			return reflect.ValueOf(toInt64(lhsV) % toInt64(rhsV)), nil
 		case "==":
+			if lhsV.IsValid() && rhsV.IsValid() {
+				if lhsV.CanInterface() && rhsV.CanInterface() {
+					return reflect.ValueOf(reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
+				}
+			}
 			return reflect.ValueOf(reflect.DeepEqual(lhsV, rhsV)), nil
 		case "!=":
 			return reflect.ValueOf(!reflect.DeepEqual(lhsV, rhsV)), nil

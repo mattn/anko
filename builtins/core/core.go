@@ -147,6 +147,48 @@ func Import(env *vm.Env) {
 		return reflect.ValueOf(string(b)), nil
 	}))
 
+	env.Define("int", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		nt := reflect.TypeOf(1)
+		if !args[0].Type().ConvertibleTo(nt) {
+			return vm.NilValue, errors.New("Argument can't convert to int")
+		}
+		return args[0].Convert(nt), nil
+	}))
+
+	env.Define("float", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		nt := reflect.TypeOf(1.0)
+		if !args[0].Type().ConvertibleTo(nt) {
+			return vm.NilValue, errors.New("Argument can't convert to float")
+		}
+		return args[0].Convert(nt), nil
+	}))
+
+	env.Define("bool", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if len(args) > 1 {
+			return vm.NilValue, errors.New("Too many arguments")
+		}
+		nt := reflect.TypeOf(true)
+		if !args[0].Type().ConvertibleTo(nt) {
+			return vm.NilValue, errors.New("Argument can't convert to bool")
+		}
+		return args[0].Convert(nt), nil
+	}))
+
 	env.Define("toString", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
