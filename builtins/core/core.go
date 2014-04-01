@@ -1,3 +1,4 @@
+// Package core implements core interface for anko script.
 package core
 
 import (

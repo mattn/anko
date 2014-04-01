@@ -1,3 +1,4 @@
+// Package os implements os interface for anko script.
 package json
 
 import (

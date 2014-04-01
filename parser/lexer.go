@@ -1,3 +1,4 @@
+// Package parser implements parser for anko.
 package parser
 
 import (

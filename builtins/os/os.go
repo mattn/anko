@@ -1,3 +1,4 @@
+// Package json implements json interface to manipulate JSON for anko script.
 package os
 
 import (

@@ -1,3 +1,4 @@
+// Package io implements I/O interface for anko script.
 package io
 
 import (
