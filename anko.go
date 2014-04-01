@@ -13,6 +13,7 @@ import (
 	anko_io "github.com/mattn/anko/builtins/io"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
+	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -24,6 +25,18 @@ const version = "0.0.1"
 var e = flag.String("e", "", "One line of program")
 var verbose = flag.Bool("V", false, "Verbose output")
 var v = flag.Bool("v", false, "Display version")
+
+var istty = isatty.IsTerminal(int(os.Stdout.Fd()))
+
+func colortext(color ct.Color, bright bool, f func()) {
+	if istty {
+		ct.ChangeColor(color, bright, ct.None, false)
+		f()
+		ct.ResetColor()
+	} else {
+		f()
+	}
+}
 
 func main() {
 	flag.Parse()
@@ -49,9 +62,9 @@ func main() {
 		} else {
 			body, err := ioutil.ReadFile(flag.Arg(0))
 			if err != nil {
-				ct.ChangeColor(ct.Red, false, ct.None, false)
-				fmt.Fprintln(os.Stderr, err)
-				ct.ResetColor()
+				colortext(ct.Red, false, func() {
+					fmt.Fprintln(os.Stderr, err)
+				})
 				os.Exit(1)
 			}
 			code = string(body)
@@ -62,19 +75,19 @@ func main() {
 		scanner.Init(code)
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
-			ct.ChangeColor(ct.Red, false, ct.None, false)
-			fmt.Fprintln(os.Stderr, err)
-			ct.ResetColor()
+			colortext(ct.Red, false, func() {
+				fmt.Fprintln(os.Stderr, err)
+			})
 		} else {
 			_, err := vm.RunStmts(stmts, env)
 			if err != nil {
-				ct.ChangeColor(ct.Red, false, ct.None, false)
-				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
-				} else {
-					fmt.Fprintln(os.Stderr, err)
-				}
-				ct.ResetColor()
+				colortext(ct.Red, false, func() {
+					if e, ok := err.(*vm.Error); ok {
+						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
+					} else {
+						fmt.Fprintln(os.Stderr, err)
+					}
+				})
 				os.Exit(1)
 			}
 		}
@@ -82,7 +95,9 @@ func main() {
 		env.Define("args", reflect.ValueOf([]string{}))
 		reader := bufio.NewReader(os.Stdin)
 		for {
-			fmt.Print("> ")
+			colortext(ct.Green, true, func() {
+				fmt.Print("> ")
+			})
 			b, _, err := reader.ReadLine()
 			if err != nil {
 				break
@@ -95,33 +110,33 @@ func main() {
 			scanner.Init(s)
 			stmts, err := parser.Parse(scanner)
 			if err != nil {
-				ct.ChangeColor(ct.Red, false, ct.None, false)
-				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
-				} else {
-					fmt.Fprintln(os.Stderr, err)
-				}
-				ct.ResetColor()
-			}
-
-			if err == nil {
-				v, err := vm.RunStmts(stmts, env)
-				if err != nil {
-					ct.ChangeColor(ct.Red, false, ct.None, false)
+				colortext(ct.Red, false, func() {
 					if e, ok := err.(*vm.Error); ok {
 						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
 					} else {
 						fmt.Fprintln(os.Stderr, err)
 					}
-					ct.ResetColor()
+				})
+			}
+
+			if err == nil {
+				v, err := vm.RunStmts(stmts, env)
+				if err != nil {
+					colortext(ct.Red, false, func() {
+						if e, ok := err.(*vm.Error); ok {
+							fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+						} else {
+							fmt.Fprintln(os.Stderr, err)
+						}
+					})
 				} else {
-					ct.ChangeColor(ct.Black, true, ct.None, false)
-					if v == vm.NilValue {
-						fmt.Println("nil")
-					} else {
-						fmt.Println(v.Interface())
-					}
-					ct.ResetColor()
+					colortext(ct.Black, true, func() {
+						if v == vm.NilValue {
+							fmt.Println("nil")
+						} else {
+							fmt.Println(v.Interface())
+						}
+					})
 				}
 			}
 			if *verbose {
