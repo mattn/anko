@@ -8,7 +8,7 @@ type Stmt interface {
 
 // StmtImpl provide commonly implementations for Stmt..
 type StmtImpl struct {
-	PosImpl	// StmtImpl provide Pos() function.
+	PosImpl // StmtImpl provide Pos() function.
 }
 
 // stmt provide restraint interface.

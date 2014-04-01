@@ -8,7 +8,7 @@ type Expr interface {
 
 // ExprImpl provide commonly implementations for Expr.
 type ExprImpl struct {
-	PosImpl	// ExprImpl provide Pos() function.
+	PosImpl // ExprImpl provide Pos() function.
 }
 
 // expr provide restraint interface.
@@ -57,7 +57,7 @@ type UnaryMinusExpr struct {
 	SubExpr Expr
 }
 
-// ParenExpr provide parent block expression. 
+// ParenExpr provide parent block expression.
 type ParenExpr struct {
 	ExprImpl
 	SubExpr Expr

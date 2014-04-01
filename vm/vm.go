@@ -17,7 +17,7 @@ var FalseValue = reflect.ValueOf(false)
 // It can be Error inteface with type cast which can call Pos().
 type Error struct {
 	message string
-	pos ast.Position
+	pos     ast.Position
 }
 
 // newErrorString makes error interface with message.

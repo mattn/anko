@@ -54,7 +54,7 @@ func (e *Env) Get(k string) (reflect.Value, bool) {
 			if !ok {
 				return NilValue, false
 			}
-			if i == len(ns) - 1 {
+			if i == len(ns)-1 {
 				return v, ok
 			}
 			if vv, ok := v.Interface().(*Env); ok {

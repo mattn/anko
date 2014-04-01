@@ -2,7 +2,7 @@ package ast
 
 // Position provides interface to store code locations.
 type Position struct {
-	Line int
+	Line   int
 	Column int
 }
 

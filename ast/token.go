@@ -13,4 +13,3 @@ func (t *Token) GetPos() Position {
 func (t *Token) SetPos(pos Position) {
 	t.pos = pos
 }
-

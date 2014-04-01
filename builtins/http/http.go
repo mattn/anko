@@ -49,7 +49,7 @@ func Import(env *vm.Env) {
 		if !ok {
 			return vm.NilValue, errors.New("Argument should be http.Handler")
 		}
-		h.Handle(args[0].String(),handle)
+		h.Handle(args[0].String(), handle)
 		return vm.NilValue, nil
 	}))
 

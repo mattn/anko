@@ -19,7 +19,7 @@ type Token struct {
 
 type Error struct {
 	message string
-	pos ast.Position
+	pos     ast.Position
 }
 
 func (e *Error) Error() string {
