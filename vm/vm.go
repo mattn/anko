@@ -123,15 +123,16 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err != nil {
 					return NilValue, newError(err, stmt)
 				}
-				if rv.Bool() {
-					// ElseIf Then
-					done = true
-					rv, err = RunStmts(stmt_if.Then, env)
-					if err != nil {
-						return NilValue, newError(err, stmt)
-					}
-					break
+				if !rv.Bool() {
+					continue
 				}
+				// ElseIf Then
+				done = true
+				rv, err = RunStmts(stmt_if.Then, env)
+				if err != nil {
+					return NilValue, newError(err, stmt)
+				}
+				break
 			}
 		}
 		if !done && len(stmt.Else) > 0 {
