@@ -22,7 +22,6 @@ import (
 const version = "0.0.1"
 
 var e = flag.String("e", "", "One line of program")
-var verbose = flag.Bool("V", false, "Verbose output")
 var v = flag.Bool("v", false, "Display version")
 
 var istty = isatty.IsTerminal(os.Stdout.Fd())
@@ -53,51 +52,35 @@ func main() {
 	anko_os.Import(env)
 	anko_io.Import(env)
 
-	if flag.NArg() > 0 || *e != "" {
-		var code string
+	var code string
+	var b []byte
+	var reader *bufio.Reader
+	var following bool
+
+	repl := flag.NArg() == 0 && *e == ""
+
+	env.Define("args", reflect.ValueOf(flag.Args()))
+
+	if repl {
+		reader = bufio.NewReader(os.Stdin)
+	} else {
 		if *e != "" {
-			code = *e
-			env.Define("args", reflect.ValueOf(flag.Args()))
+			b = []byte(*e)
 		} else {
-			body, err := ioutil.ReadFile(flag.Arg(0))
+			var err error
+			b, err = ioutil.ReadFile(flag.Arg(0))
 			if err != nil {
 				colortext(ct.Red, false, func() {
 					fmt.Fprintln(os.Stderr, err)
 				})
 				os.Exit(1)
 			}
-			code = string(body)
 			env.Define("args", reflect.ValueOf(flag.Args()[1:]))
 		}
+	}
 
-		scanner := new(parser.Scanner)
-		scanner.Init(code)
-		stmts, err := parser.Parse(scanner)
-		if err != nil {
-			colortext(ct.Red, false, func() {
-				fmt.Fprintln(os.Stderr, err)
-			})
-		} else {
-			_, err := vm.RunStmts(stmts, env)
-			if err != nil {
-				colortext(ct.Red, false, func() {
-					if e, ok := err.(*vm.Error); ok && e != nil {
-						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
-					} else if e, ok := err.(*parser.Error); ok {
-						fmt.Fprintf(os.Stderr, "%s:%d: %s\n", flag.Arg(0), e.Pos().Line, err)
-					} else {
-						fmt.Fprintln(os.Stderr, err)
-					}
-				})
-				os.Exit(1)
-			}
-		}
-	} else {
-		env.Define("args", reflect.ValueOf([]string{}))
-		reader := bufio.NewReader(os.Stdin)
-		code := ""
-		following := false
-		for {
+	for {
+		if repl {
 			colortext(ct.Green, true, func() {
 				if following {
 					fmt.Print("  ")
@@ -113,53 +96,55 @@ func main() {
 				continue
 			}
 			code += string(b)
-			scanner := new(parser.Scanner)
-			scanner.Init(code)
-			stmts, err := parser.Parse(scanner)
-			if err != nil {
-				if following {
-					continue
-				}
-				if e, ok := err.(*parser.Error); ok && e.Pos().Column == len(b) {
-					following = true
-					continue
-				}
-				colortext(ct.Red, false, func() {
-					if e, ok := err.(*vm.Error); ok {
-						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
-					} else if e, ok := err.(*parser.Error); ok {
-						fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
-					} else {
-						fmt.Fprintln(os.Stderr, err)
-					}
-				})
+		} else {
+			code = string(b)
+		}
+
+		scanner := new(parser.Scanner)
+		scanner.Init(code)
+		stmts, err := parser.Parse(scanner)
+		if repl {
+			if following {
 				continue
 			}
-			following = false
-			code = ""
-
-			if err == nil {
-				v, err := vm.RunStmts(stmts, env)
-				if err != nil {
-					colortext(ct.Red, false, func() {
-						if e, ok := err.(*vm.Error); ok {
-							fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
-						} else {
-							fmt.Fprintln(os.Stderr, err)
-						}
-					})
-				} else {
-					colortext(ct.Black, true, func() {
-						if v == vm.NilValue {
-							fmt.Println("nil")
-						} else {
-							fmt.Println(v.Interface())
-						}
-					})
-				}
+			if e, ok := err.(*parser.Error); ok && e.Pos().Column == len(b) {
+				following = true
+				continue
 			}
-			if *verbose {
-				env.Dump()
+			if err == nil {
+				following = false
+				code = ""
+			}
+		}
+
+		v, err := vm.RunStmts(stmts, env)
+		if err != nil {
+			colortext(ct.Red, false, func() {
+				if e, ok := err.(*vm.Error); ok {
+					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+				} else if e, ok := err.(*parser.Error); ok {
+					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+				} else {
+					fmt.Fprintln(os.Stderr, err)
+				}
+			})
+
+			if repl {
+				continue
+			} else {
+				os.Exit(1)
+			}
+		} else {
+			if repl {
+				colortext(ct.Black, true, func() {
+					if v == vm.NilValue {
+						fmt.Println("nil")
+					} else {
+						fmt.Println(v.Interface())
+					}
+				})
+			} else {
+				break
 			}
 		}
 	}
