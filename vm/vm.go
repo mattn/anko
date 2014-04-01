@@ -376,11 +376,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if v.Kind() == reflect.Ptr {
 				v = v.Elem()
 			}
-			if v.Kind() != reflect.Struct {
-				return NilValue, newErrorString("Invalid operation", expr)
-			}
-			m = v.FieldByName(e.Method)
-			if !m.IsValid() {
+			if v.Kind() == reflect.Struct {
+				m = v.FieldByName(e.Method)
+				if !m.IsValid() {
+					return NilValue, newErrorString("Invalid operation", expr)
+				}
+			} else if v.Kind() == reflect.Map {
+				m = v.MapIndex(reflect.ValueOf(e.Method))
+				if !m.IsValid() {
+					return NilValue, newErrorString("Invalid operation", expr)
+				}
+			} else {
 				return NilValue, newErrorString("Invalid operation", expr)
 			}
 		}
