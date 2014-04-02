@@ -35,11 +35,16 @@ import (
 	pairs                  []ast.Expr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQ NE GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQEQ NEQ GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ
 
 %left '+' '-'
 %left '*' '/' '%'
 %right UNARY
+%right '?' ':'
+%nonassoc NUMBER
+%nonassoc IDENT
+%nonassoc EQEQ NEQ
+%left '>' GE '<' LE
 
 %%
 
@@ -211,7 +216,131 @@ exprs :
 		$$ = append($1, $3)
 	}
 
-expr : NUMBER
+expr : expr '(' exprs  ')'
+	{
+		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+	}
+	| FUNC '(' idents ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+	}
+	| expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+	}
+	| IDENT '(' exprs ')'
+	{
+		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
+	}
+	| '[' exprs ']'
+	{
+		$$ = &ast.ArrayExpr{Exprs: $2}
+	}
+	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
+	}
+	| '{' pairs '}'
+	{
+		mapExpr := make(map[string]ast.Expr)
+		for _, v := range $2 {
+			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
+		}
+		$$ = &ast.MapExpr{MapExpr: mapExpr}
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+	}
+	| '(' expr ')'
+	{
+		$$ = &ast.ParenExpr{SubExpr: $2}
+	}
+	| NEW IDENT '(' exprs ')'
+	{
+		$$ = &ast.NewExpr{Name: $2.lit, SubExprs: $4}
+	}
+	| expr '+' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "+", Rhs: $3}
+	}
+	| expr '-' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "-", Rhs: $3}
+	}
+	| expr '*' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "*", Rhs: $3}
+	}
+	| expr '/' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "/", Rhs: $3}
+	}
+	| expr '%' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
+	}
+	| expr EQEQ expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
+	}
+	| expr NEQ expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "!=", Rhs: $3}
+	}
+	| expr '>' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">", Rhs: $3}
+	}
+	| expr GE expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">=", Rhs: $3}
+	}
+	| expr '<' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<", Rhs: $3}
+	}
+	| expr LE expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
+	}
+	| IDENT '=' expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "=", Expr: $3}
+	}
+	| IDENT PLUSEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "+", Expr: $3}
+	}
+	| IDENT MINUSEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "-", Expr: $3}
+	}
+	| IDENT MULEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "*", Expr: $3}
+	}
+	| IDENT DIVEQ expr
+	{
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "/", Expr: $3}
+	}
+	| expr '|' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
+	}
+	| expr OR expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
+	}
+	| expr '&' expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
+	}
+	| expr AND expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
+	}
+	| NUMBER
 	{
 		$$ = &ast.NumberExpr{Lit: $1.lit}
 	}
@@ -227,86 +356,9 @@ expr : NUMBER
 	{
 		$$ = &ast.StringExpr{Lit: $1.lit}
 	}
-	| FUNC '(' idents ')' '{' stmts '}'
-	{
-		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '(' exprs  ')'
-	{
-		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '.' IDENT
-	{
-		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT '(' exprs ')'
-	{
-		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| '[' exprs ']'
-	{
-		$$ = &ast.ArrayExpr{Exprs: $2}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
-	{
-		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| '{' pairs '}'
-	{
-		mapExpr := make(map[string]ast.Expr)
-		for _, v := range $2 {
-			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
-		}
-		$$ = &ast.MapExpr{MapExpr: mapExpr}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '[' expr ']'
-	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| '(' expr ')'
-	{
-		$$ = &ast.ParenExpr{SubExpr: $2}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| NEW IDENT '(' exprs ')'
-	{
-		$$ = &ast.NewExpr{Name: $2.lit, SubExprs: $4}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
 	| TRUE
 	{
 		$$ = &ast.ConstExpr{Value: true}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
 	}
 	| FALSE
 	{
@@ -316,145 +368,9 @@ expr : NUMBER
 	{
 		$$ = &ast.ConstExpr{Value: nil}
 	}
-	| expr '+' expr
+	| expr '?' expr ':' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "+", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '-' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "-", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '*' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "*", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '/' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "/", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '%' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr EQ expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr NE expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "!=", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '>' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr GE expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">=", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '<' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr LE expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT '=' expr
-	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "=", Expr: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT PLUSEQ expr
-	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "+", Expr: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT MINUSEQ expr
-	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "-", Expr: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT MULEQ expr
-	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "*", Expr: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| IDENT DIVEQ expr
-	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "/", Expr: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '|' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr OR expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr '&' expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
-	| expr AND expr
-	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
+		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
 	}
 
 %%

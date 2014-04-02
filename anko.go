@@ -10,8 +10,8 @@ import (
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_json "github.com/mattn/anko/builtins/json"
 	anko_os "github.com/mattn/anko/builtins/os"
-	anko_url "github.com/mattn/anko/builtins/url"
 	anko_term "github.com/mattn/anko/builtins/term"
+	anko_url "github.com/mattn/anko/builtins/url"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"github.com/mattn/go-isatty"
@@ -122,7 +122,7 @@ func main() {
 		following = false
 		code = ""
 		if err == nil {
-			v, err = vm.RunStmts(stmts, env)
+			v, err = vm.Run(stmts, env)
 		}
 
 		if err != nil {

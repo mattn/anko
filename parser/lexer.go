@@ -122,7 +122,7 @@ retry:
 		case '!':
 			s.next()
 			if s.peek() == '=' {
-				tok = NE
+				tok = NEQ
 			} else {
 				s.back()
 				tok = int(ch)
@@ -131,7 +131,7 @@ retry:
 		case '=':
 			s.next()
 			if s.peek() == '=' {
-				tok = EQ
+				tok = EQEQ
 			} else {
 				s.back()
 				tok = int(ch)
@@ -220,7 +220,7 @@ retry:
 			} else {
 				s.back()
 			}
-		case '(', ')', ':', ';', '%', '{', '}', ',', '[', ']', '\n':
+		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '\n':
 			tok = int(ch)
 			lit = string(ch)
 		default:

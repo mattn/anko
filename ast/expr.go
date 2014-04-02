@@ -71,6 +71,13 @@ type BinOpExpr struct {
 	Rhs      Expr
 }
 
+type TernaryOpExpr struct {
+	ExprImpl
+	Expr Expr
+	Lhs  Expr
+	Rhs  Expr
+}
+
 // CallExpr provide calling expression.
 type CallExpr struct {
 	ExprImpl
@@ -110,9 +117,9 @@ type FuncExpr struct {
 // LetExpr provide expression to let variable.
 type LetExpr struct {
 	ExprImpl
-	Name string
+	Name     string
 	Operator string
-	Expr Expr
+	Expr     Expr
 }
 
 // NewExpr provide expression to make new instance.

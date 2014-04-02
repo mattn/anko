@@ -14,5 +14,7 @@ ok(true == true, "true == true")
 ok(1 <= 1, "1 <= 1")
 ok(1.0 <= 1.0, "1.0 <= 1.0")
 
+is(true, 1 <= 2 ? true : false, "1 == 1 ? true : false")
+
 # vim: set ft=anko:
 

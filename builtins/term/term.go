@@ -8,16 +8,16 @@ import (
 	"reflect"
 )
 
-var ntoc = map[string]ct.Color {
-	"none": ct.None,
-	"black": ct.Black,
-	"red": ct.Red,
-	"green": ct.Green,
-	"yellow": ct.Yellow,
-	"blue": ct.Blue,
+var ntoc = map[string]ct.Color{
+	"none":    ct.None,
+	"black":   ct.Black,
+	"red":     ct.Red,
+	"green":   ct.Green,
+	"yellow":  ct.Yellow,
+	"blue":    ct.Blue,
 	"mazenta": ct.Magenta,
-	"cyan": ct.Cyan,
-	"white": ct.White,
+	"cyan":    ct.Cyan,
+	"white":   ct.White,
 }
 
 func colorOf(name string) ct.Color {

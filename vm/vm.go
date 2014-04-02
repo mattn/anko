@@ -53,12 +53,12 @@ func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
 
-// RunStmts execute statements in the environment which specified.
-func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
+// Run execute statements in the environment which specified.
+func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
 	for _, stmt := range stmts {
-		rv, err = Run(stmt, env)
+		rv, err = RunSingleStmt(stmt, env)
 		if err != nil {
 			if ee, ok := err.(*Error); ok {
 				return NilValue, ee
@@ -72,8 +72,8 @@ func RunStmts(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	return rv, nil
 }
 
-// RunStmts execute one statement in the environment which specified.
-func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
+// RunSingleStmt execute one statement in the environment which specified.
+func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
@@ -106,9 +106,9 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, newError(err, stmt)
 		}
-		if rv.Bool() {
+		if toBool(rv) {
 			// Then
-			rv, err = RunStmts(stmt.Then, env.NewEnv())
+			rv, err = Run(stmt.Then, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
@@ -123,12 +123,12 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err != nil {
 					return NilValue, newError(err, stmt)
 				}
-				if !rv.Bool() {
+				if !toBool(rv) {
 					continue
 				}
 				// ElseIf Then
 				done = true
-				rv, err = RunStmts(stmt_if.Then, env)
+				rv, err = Run(stmt_if.Then, env)
 				if err != nil {
 					return NilValue, newError(err, stmt)
 				}
@@ -137,20 +137,20 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		if !done && len(stmt.Else) > 0 {
 			// Else
-			rv, err = RunStmts(stmt.Else, env.NewEnv())
+			rv, err = Run(stmt.Else, env.NewEnv())
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
 		}
 		return rv, nil
 	case *ast.TryStmt:
-		_, err := RunStmts(stmt.Try, env.NewEnv())
+		_, err := Run(stmt.Try, env.NewEnv())
 		if err != nil {
 			cenv := env.NewEnv()
 			if stmt.Var != "" {
 				cenv.Define(stmt.Var, reflect.ValueOf(err))
 			}
-			_, e1 := RunStmts(stmt.Catch, cenv)
+			_, e1 := Run(stmt.Catch, cenv)
 			if e1 != nil {
 				err = newError(e1, stmt.Catch[0])
 			} else {
@@ -158,7 +158,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		if len(stmt.Finally) > 0 {
-			_, e2 := RunStmts(stmt.Finally, env.NewEnv())
+			_, e2 := Run(stmt.Finally, env.NewEnv())
 			if e2 != nil {
 				err = newError(e2, stmt.Finally[0])
 			}
@@ -175,7 +175,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		for i := 0; i < val.Len(); i++ {
 			newenv.Define(stmt.Var, val.Index(i))
-			_, err := RunStmts(stmt.Stmts, newenv)
+			_, err := Run(stmt.Stmts, newenv)
 			if err != nil {
 				return NilValue, newError(err, stmt)
 			}
@@ -209,7 +209,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				return RunStmts(stmt.Stmts, newenv)
+				return Run(stmt.Stmts, newenv)
 			}
 		}(stmt, env))
 		env.Define(stmt.Name, f)
@@ -217,7 +217,7 @@ func Run(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
-		rv, err := RunStmts(stmt.Stmts, newenv)
+		rv, err := Run(stmt.Stmts, newenv)
 		if err != nil {
 			return NilValue, newError(err, stmt)
 		}
@@ -244,6 +244,7 @@ func toBool(v reflect.Value) bool {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
+
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return v.Float() != 0.0
@@ -370,7 +371,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				return RunStmts(expr.Stmts, newenv)
+				return Run(expr.Stmts, newenv)
 			}
 		}(e, env)), nil
 	case *ast.ItemExpr:
@@ -643,6 +644,23 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, newError(err, expr)
 		}
 		return ret, nil
+	case *ast.TernaryOpExpr:
+		rv, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return NilValue, newError(err, expr)
+		}
+		if toBool(rv) {
+			lhsV, err := invokeExpr(e.Lhs, env)
+			if err != nil {
+				return NilValue, newError(err, expr)
+			}
+			return lhsV, nil
+		}
+		rhsV, err := invokeExpr(e.Rhs, env)
+		if err != nil {
+			return NilValue, newError(err, expr)
+		}
+		return rhsV, nil
 	default:
 		return NilValue, newErrorString("Unknown expression", expr)
 	}

@@ -272,6 +272,6 @@ func Import(env *vm.Env) {
 		if err != nil {
 			return vm.NilValue, err
 		}
-		return vm.RunStmts(stmts, env)
+		return vm.Run(stmts, env)
 	}))
 }
