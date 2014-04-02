@@ -513,6 +513,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return reflect.ValueOf(reflect.DeepEqual(lhsV, rhsV)), nil
 		case "!=":
+			if lhsV.IsValid() && rhsV.IsValid() {
+				if lhsV.CanInterface() && rhsV.CanInterface() {
+					return reflect.ValueOf(!reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
+				}
+			}
 			return reflect.ValueOf(!reflect.DeepEqual(lhsV, rhsV)), nil
 		case ">":
 			return reflect.ValueOf(toFloat64(lhsV) > toFloat64(rhsV)), nil
