@@ -362,7 +362,8 @@ func (s *Scanner) scanString() (string, error) {
 				ret = append(ret, '\t')
 				continue
 			}
-			return "", errors.New("Parser Error")
+			ret = append(ret, s.peek())
+			continue
 		}
 		if s.peek() == '"' {
 			s.next()
