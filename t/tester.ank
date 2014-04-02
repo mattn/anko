@@ -36,5 +36,7 @@ func ok(expect, name) {
   }
 }
 
-println(args[0])
-load(args[0])
+if (len(args) > 0) {
+  println(args[0])
+  load(args[0])
+}
