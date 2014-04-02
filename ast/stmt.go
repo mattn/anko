@@ -80,6 +80,7 @@ type VarStmt struct {
 	Names []string
 	Exprs []Expr
 }
+
 // LetStmt provide statement to let variables.
 // This can store multiple identity and values for "a,b=1,2".
 type LetStmt struct {

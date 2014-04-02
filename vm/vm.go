@@ -92,7 +92,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			rvs = append(rvs, rv)
 		}
-		result := []interface{} {}
+		result := []interface{}{}
 		for i, name := range stmt.Names {
 			if i < len(rvs) {
 				env.Define(name, rvs[i])
@@ -111,7 +111,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			rvs = append(rvs, rv)
 		}
-		result := []interface{} {}
+		result := []interface{}{}
 		for i, name := range stmt.Names {
 			if i < len(rvs) {
 				if env.Set(name, rvs[i]) != nil {
@@ -443,12 +443,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if vme, ok := v.Interface().(*Env); ok {
-			m, ok := vme.Get(e.Method)
-			if !m.IsValid() || !ok {
-				return NilValue, newErrorString("Invalid operation", expr)
+		if v.CanInterface() {
+			if vme, ok := v.Interface().(*Env); ok {
+				m, ok := vme.Get(e.Method)
+				if !m.IsValid() || !ok {
+					return NilValue, newErrorString("Invalid operation", expr)
+				}
+				return m, nil
 			}
-			return m, nil
 		}
 
 		m := v.MethodByName(e.Method)
@@ -608,11 +610,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				}
 				ret = rets[0].Interface().(reflect.Value)
 			} else {
-				var result []interface{}
-				for _, r := range rets {
-					result = append(result, r.Interface())
+				if len(rets) == 0 {
+					ret = NilValue
+				} else if len(rets) == 1 {
+					ret = reflect.ValueOf(rets[0].Interface())
+				} else {
+					var result []interface{}
+					for _, r := range rets {
+						result = append(result, r.Interface())
+					}
+					ret = reflect.ValueOf(result)
 				}
-				ret = reflect.ValueOf(result)
 			}
 		}()
 		if err != nil {

@@ -8,6 +8,5 @@ import (
 
 func Import(env *vm.Env) {
 	m := env.NewModule("io")
-
 	ioutil.Import(m)
 }

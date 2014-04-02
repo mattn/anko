@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	anko_core "github.com/mattn/anko/builtins/core"
-	anko_http "github.com/mattn/anko/builtins/http"
+	anko_encoding "github.com/mattn/anko/builtins/encoding"
 	anko_io "github.com/mattn/anko/builtins/io"
-	anko_json "github.com/mattn/anko/builtins/json"
+	anko_net "github.com/mattn/anko/builtins/net"
 	anko_os "github.com/mattn/anko/builtins/os"
+	anko_path "github.com/mattn/anko/builtins/path"
 	anko_term "github.com/mattn/anko/builtins/term"
-	anko_url "github.com/mattn/anko/builtins/url"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"github.com/mattn/go-isatty"
@@ -47,11 +47,11 @@ func main() {
 	env := vm.NewEnv()
 
 	anko_core.Import(env)
-	anko_http.Import(env)
-	anko_url.Import(env)
-	anko_json.Import(env)
+	anko_net.Import(env)
+	anko_encoding.Import(env)
 	anko_os.Import(env)
 	anko_io.Import(env)
+	anko_path.Import(env)
 	anko_term.Import(env)
 
 	var code string
