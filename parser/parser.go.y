@@ -3,6 +3,7 @@ package parser
 
 import (
 	"github.com/mattn/anko/ast"
+	"unsafe"
 )
 
 %}
@@ -258,7 +259,7 @@ expr : NUMBER
 	}
 	| NIL
 	{
-		$$ = &ast.ConstExpr{Value: (*interface{})(nil)}
+		$$ = &ast.ConstExpr{Value: unsafe.Pointer(nil)}
 	}
 	| expr '?' expr ':' expr
 	{

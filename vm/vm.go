@@ -8,10 +8,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
-var Nil *interface{}
-var NilValue = reflect.ValueOf(&Nil)
+var Nil unsafe.Pointer
+var NilValue = reflect.ValueOf(Nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
@@ -279,10 +280,10 @@ func toFloat64(v reflect.Value) float64 {
 }
 
 func isNil(v reflect.Value) bool {
-	if !v.IsValid() {
+	if (v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr) && v.IsNil() {
 		return true
 	}
-	return v.Kind() == reflect.Interface && v.IsNil()
+	return false
 }
 
 // equal return true when lhsV and rhsV is same value.
@@ -515,6 +516,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		for i, name := range e.Names {
 			if i >= rvs.Len() {
+				if env.Set(name, NilValue) != nil {
+					env.Define(name, NilValue)
+				}
 				continue
 			}
 			v := rvs.Index(i)
