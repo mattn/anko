@@ -147,7 +147,12 @@ func main() {
 					if v == vm.NilValue {
 						fmt.Println("nil")
 					} else {
-						fmt.Printf("%#v\n", v.Interface())
+						s, ok := v.Interface().(fmt.Stringer)
+						if v.Kind() != reflect.String && ok {
+							fmt.Println(s)
+						} else {
+							fmt.Printf("%#v\n", v.Interface())
+						}
 					}
 				})
 			} else {

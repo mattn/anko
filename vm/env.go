@@ -27,7 +27,7 @@ func (e *Env) NewEnv() *Env {
 // NewEnv create new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
-	e.DefineGlobal(n, reflect.ValueOf(m))
+	e.Define(n, reflect.ValueOf(m))
 	return m
 }
 

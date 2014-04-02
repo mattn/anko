@@ -2,10 +2,8 @@
 package io
 
 import (
-	"errors"
 	"github.com/mattn/anko/builtins/io/ioutil"
 	"github.com/mattn/anko/vm"
-	"reflect"
 )
 
 func Import(env *vm.Env) {
