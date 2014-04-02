@@ -72,7 +72,7 @@ func Import(env *vm.Env) {
 			v = v.Elem()
 		}
 		if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
-			return vm.NilValue, errors.New("Argument should be array")
+			return vm.NilValue, errors.New("Argument #1 should be array")
 		}
 		return reflect.ValueOf(v.Len()), nil
 	}))
@@ -89,7 +89,7 @@ func Import(env *vm.Env) {
 			v = v.Elem()
 		}
 		if v.Kind() != reflect.Map {
-			return vm.NilValue, errors.New("Argument should be map")
+			return vm.NilValue, errors.New("Argument #1 should be map")
 		}
 		keys := []string{}
 		mk := v.MapKeys()
@@ -107,7 +107,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.Int && args[0].Kind() != reflect.Int64 {
-			return vm.NilValue, errors.New("Invalid first argument")
+			return vm.NilValue, errors.New("Argument #1 should be int")
 		}
 		var min, max int64
 		if len(args) == 1 {
@@ -115,7 +115,7 @@ func Import(env *vm.Env) {
 			max = args[0].Int() - 1
 		} else {
 			if args[1].Kind() != reflect.Int && args[1].Kind() != reflect.Int64 {
-				return vm.NilValue, errors.New("Invalid second argument")
+				return vm.NilValue, errors.New("Argument #2 should be int")
 			}
 			min = args[0].Int()
 			max = args[1].Int()
@@ -135,7 +135,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument should be string")
+			return vm.NilValue, errors.New("Argument #1 should be string")
 		}
 		return reflect.ValueOf([]byte(args[0].String())), nil
 	}))
@@ -148,7 +148,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument should be string")
+			return vm.NilValue, errors.New("Argument #1 should be string")
 		}
 		return reflect.ValueOf([]rune(args[0].String())), nil
 	}))
@@ -165,7 +165,7 @@ func Import(env *vm.Env) {
 		}
 		b, ok := args[0].Interface().([]byte)
 		if !ok {
-			return vm.NilValue, errors.New("Argument should be byte array")
+			return vm.NilValue, errors.New("Argument #1 should be byte array")
 		}
 		return reflect.ValueOf(string(b)), nil
 	}))
@@ -179,7 +179,7 @@ func Import(env *vm.Env) {
 		}
 		nt := reflect.TypeOf(1)
 		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument can't convert to int")
+			return vm.NilValue, errors.New("Argument #1 can't be converted to int")
 		}
 		return args[0].Convert(nt), nil
 	}))
@@ -193,7 +193,7 @@ func Import(env *vm.Env) {
 		}
 		nt := reflect.TypeOf(1.0)
 		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument can't convert to float")
+			return vm.NilValue, errors.New("Argument #1 can't be converted to float")
 		}
 		return args[0].Convert(nt), nil
 	}))
@@ -207,7 +207,7 @@ func Import(env *vm.Env) {
 		}
 		nt := reflect.TypeOf(true)
 		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument can't convert to bool")
+			return vm.NilValue, errors.New("Argument #1 can't be converted to bool")
 		}
 		return args[0].Convert(nt), nil
 	}))
@@ -230,7 +230,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.Int && args[0].Kind() != reflect.Int64 {
-			return vm.NilValue, errors.New("Argument should be int")
+			return vm.NilValue, errors.New("Argument #1 should be int")
 		}
 		return reflect.ValueOf(string(rune(args[0].Int()))), nil
 	}))
@@ -243,7 +243,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument should be string")
+			return vm.NilValue, errors.New("Argument #1 should be string")
 		}
 		s := args[0].String()
 		if len(s) == 0 {
@@ -260,7 +260,7 @@ func Import(env *vm.Env) {
 			return vm.NilValue, errors.New("Too many arguments")
 		}
 		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument should be string")
+			return vm.NilValue, errors.New("Argument #1 should be string")
 		}
 		body, err := ioutil.ReadFile(args[0].String())
 		if err != nil {
