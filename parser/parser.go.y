@@ -12,8 +12,6 @@ import (
 %type<stmt_var> stmt_var
 %type<stmt_if> stmt_if
 %type<stmt_for> stmt_for
-%type<stmt_break> stmt_break
-%type<stmt_continue> stmt_continue
 %type<stmt_try_catch_finally> stmt_try_catch_finally
 %type<expr> expr
 %type<exprs> exprs
@@ -25,8 +23,6 @@ import (
 	stmt_var               ast.Stmt
 	stmt_if                ast.Stmt
 	stmt_for               ast.Stmt
-	stmt_break             ast.Stmt
-	stmt_continue          ast.Stmt
 	stmt_try_catch_finally ast.Stmt
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
@@ -75,16 +71,16 @@ stmts :
 			l.stmts = $$
 		}
 	}
-	| stmt_break stmts
+	| BREAK stmts
 	{
-		$$ = append([]ast.Stmt{$1}, $2...)
+		$$ = append([]ast.Stmt{&ast.BreakStmt{}}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
 		}
 	}
-	| stmt_continue stmts
+	| CONTINUE stmts
 	{
-		$$ = append([]ast.Stmt{$1}, $2...)
+		$$ = append([]ast.Stmt{&ast.ContinueStmt}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
 		}
@@ -169,16 +165,6 @@ stmt_if : IF '(' expr ')' '{' stmts '}'
 stmt_for : FOR IDENT IN expr '{' stmts '}'
 	{
 		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
-	}
-
-stmt_break : BREAK
-	{
-		$$ = &ast.BreakStmt{}
-	}
-
-stmt_continue : CONTINUE
-	{
-		$$ = &ast.ContinueStmt{}
 	}
 
 stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FINALLY '{' stmts '}'
