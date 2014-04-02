@@ -1,17 +1,25 @@
+count = func() {
+  n = 0
+  return func() {
+    n += 1
+    return n
+  }
+}()
+
 func is(expect, got, name) {
   if (expect == got) {
-    println(name + ":", "OK")
+    println(count() + ": " + name + ":", "OK")
   } else {
-    println(name + ":", "NG")
+    println(count() + ": " + name + ":", "NG")
     throw name + ": expected " + expect + " but got " + got
   }
 }
 
 func ok(expect, name) {
   if (expect) {
-    println(name + ":", "OK")
+    println(count() + ": " + name + ":", "OK")
   } else {
-    println(name + ":", "NG")
+    println(count() + ": " + name + ":", "NG")
     throw name + ": expected " + expect + " but got " + got
   }
 }
