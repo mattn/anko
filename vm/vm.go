@@ -177,6 +177,33 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return NilValue, NewError(err, stmt)
+	case *ast.LoopStmt:
+		newenv := env.NewEnv()
+		for {
+			if stmt.Expr != nil {
+				ev, ee := invokeExpr(stmt.Expr, newenv)
+				if ee != nil {
+					return NilValue, ee
+				}
+				if !toBool(ev) {
+					break
+				}
+			}
+
+			_, err := Run(stmt.Stmts, newenv)
+			if err != nil {
+				if err == BreakError {
+					err = nil
+					break
+				}
+				if err == ContinueError {
+					err = nil
+					continue
+				}
+				return NilValue, NewError(err, stmt)
+			}
+		}
+		return NilValue, nil
 	case *ast.ForStmt:
 		val, ee := invokeExpr(stmt.Value, env)
 		if ee != nil {

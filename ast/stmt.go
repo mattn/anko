@@ -38,11 +38,18 @@ type TryStmt struct {
 	Finally []Stmt
 }
 
-// ForStmt provide "for" expression statement.
+// ForStmt provide "for in" expression statement.
 type ForStmt struct {
 	StmtImpl
 	Var   string
 	Value Expr
+	Stmts []Stmt
+}
+
+// LoopStmt provide "for expr" expression statement.
+type LoopStmt struct {
+	StmtImpl
+	Expr  Expr
 	Stmts []Stmt
 }
 
