@@ -21,8 +21,8 @@ type Error struct {
 	pos     ast.Position
 }
 
-var BreakError = errors.New("break")
-var ContinueError = errors.New("continue")
+var BreakError = errors.New("Unexpected break statement")
+var ContinueError = errors.New("Unexpected continue statement")
 
 // NewErrorString makes error interface with message.
 func NewErrorString(err string, pos ast.Pos) error {
