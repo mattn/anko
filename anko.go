@@ -145,7 +145,7 @@ func main() {
 					if v == vm.NilValue {
 						fmt.Println("nil")
 					} else {
-						fmt.Println(v.Interface())
+						fmt.Printf("%#v\n", v.Interface())
 					}
 				})
 			} else {
