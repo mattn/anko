@@ -81,6 +81,7 @@ type TernaryOpExpr struct {
 // CallExpr provide calling expression.
 type CallExpr struct {
 	ExprImpl
+	Func     interface{}
 	Name     string
 	SubExprs []Expr
 }
@@ -117,9 +118,9 @@ type FuncExpr struct {
 // LetExpr provide expression to let variable.
 type LetExpr struct {
 	ExprImpl
-	Name     string
+	Names    []string
 	Operator string
-	Expr     Expr
+	Exprs    []Expr
 }
 
 // NewExpr provide expression to make new instance.

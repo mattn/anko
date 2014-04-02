@@ -116,13 +116,6 @@ stmt : expr
 			$1.SetPos(l.pos)
 		}
 	}
-	| idents '=' exprs
-	{
-		$$ = &ast.LetStmt{Names: $1, Exprs: $3}
-		if l, ok := yylex.(*Lexer); ok {
-			$$.SetPos(l.pos)
-		}
-	}
 	| RETURN expr
 	{
 		$$ = &ast.ReturnStmt{Expr: $2}
@@ -144,7 +137,7 @@ stmt : expr
 
 stmt_var : VAR idents '=' exprs
 	{
-		$$ = &ast.LetStmt{Names: $2, Exprs: $4}
+		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
 
 stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
@@ -234,30 +227,58 @@ exprs :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' expr
+	| expr ',' exprs
 	{
-		$$ = append($1, $3)
+		$$ = append([]ast.Expr{$1}, $3...)
+	}
+	| IDENT ',' exprs
+	{
+		$$ = append([]ast.Expr{&ast.IdentExpr{Lit: $1.lit}}, $3...)
 	}
 
-expr : expr '(' exprs  ')'
+expr : NUMBER
 	{
-		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+		$$ = &ast.NumberExpr{Lit: $1.lit}
 	}
-	| FUNC '(' idents ')' '{' stmts '}'
+	| IDENT
 	{
-		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+		$$ = &ast.IdentExpr{Lit: $1.lit}
 	}
-	| expr '.' IDENT
+	| '-' expr %prec UNARY
 	{
-		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+		$$ = &ast.UnaryMinusExpr{SubExpr: $2}
 	}
-	| IDENT '(' exprs ')'
+	| STRING
 	{
-		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
+		$$ = &ast.StringExpr{Lit: $1.lit}
+	}
+	| TRUE
+	{
+		$$ = &ast.ConstExpr{Value: true}
+	}
+	| FALSE
+	{
+		$$ = &ast.ConstExpr{Value: false}
+	}
+	| NIL
+	{
+		$$ = &ast.ConstExpr{Value: nil}
+	}
+	| expr '?' expr ':' expr
+	{
+		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 	}
 	| '[' exprs ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
+	}
+	| FUNC '(' idents ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
 	}
 	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
 	{
@@ -271,9 +292,9 @@ expr : expr '(' exprs  ')'
 		}
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
 	}
-	| expr '[' expr ']'
+	| expr '.' IDENT
 	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
 	}
 	| '(' expr ')'
 	{
@@ -327,25 +348,25 @@ expr : expr '(' exprs  ')'
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
 	}
-	| IDENT '=' expr
+	| idents '=' exprs
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "=", Expr: $3}
+		$$ = &ast.LetExpr{Names: $1, Operator: "=", Exprs: $3}
 	}
 	| IDENT PLUSEQ expr
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "+", Expr: $3}
+		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "+", Exprs: []ast.Expr{$3}}
 	}
 	| IDENT MINUSEQ expr
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "-", Expr: $3}
+		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "-", Exprs: []ast.Expr{$3}}
 	}
 	| IDENT MULEQ expr
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "*", Expr: $3}
+		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "*", Exprs: []ast.Expr{$3}}
 	}
 	| IDENT DIVEQ expr
 	{
-		$$ = &ast.LetExpr{Name: $1.lit, Operator: "/", Expr: $3}
+		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "/", Exprs: []ast.Expr{$3}}
 	}
 	| expr '|' expr
 	{
@@ -363,37 +384,13 @@ expr : expr '(' exprs  ')'
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
 	}
-	| NUMBER
+	| IDENT '(' exprs ')'
 	{
-		$$ = &ast.NumberExpr{Lit: $1.lit}
+		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
 	}
-	| IDENT
+	| expr '(' exprs  ')'
 	{
-		$$ = &ast.IdentExpr{Lit: $1.lit}
-	}
-	| '-' expr %prec UNARY
-	{
-		$$ = &ast.UnaryMinusExpr{SubExpr: $2}
-	}
-	| STRING
-	{
-		$$ = &ast.StringExpr{Lit: $1.lit}
-	}
-	| TRUE
-	{
-		$$ = &ast.ConstExpr{Value: true}
-	}
-	| FALSE
-	{
-		$$ = &ast.ConstExpr{Value: false}
-	}
-	| NIL
-	{
-		$$ = &ast.ConstExpr{Value: nil}
-	}
-	| expr '?' expr ':' expr
-	{
-		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
+		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
 	}
 
 %%
