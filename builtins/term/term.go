@@ -2,7 +2,6 @@
 package term
 
 import (
-	"errors"
 	"github.com/daviddengcn/go-colortext"
 	"github.com/mattn/anko/vm"
 	"reflect"
@@ -30,35 +29,23 @@ func colorOf(name string) ct.Color {
 func Import(env *vm.Env) {
 	m := env.NewModule("term")
 
-	m.Define("ChangeColor", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) != 2 && len(args) != 4 {
-			return vm.NilValue, errors.New("Arguments should be 2 or 4")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument #1 should be string")
-		}
-		if args[1].Kind() != reflect.Bool {
-			return vm.NilValue, errors.New("Argument #2 should be bool")
-		}
-		if len(args) == 4 {
-			if args[2].Kind() != reflect.String {
-				return vm.NilValue, errors.New("Argument #3 should be string")
+	m.Define("ChangeColor", reflect.ValueOf(func(fg string, fa bool, rest ...interface{}) {
+		if len(rest) == 2 {
+			bg, ok := rest[0].(string)
+			if !ok {
+				panic("Argument #3 should be string")
 			}
-			if args[3].Kind() != reflect.Bool {
-				return vm.NilValue, errors.New("Argument #4 should be bool")
+			ba, ok := rest[1].(bool)
+			if !ok {
+				panic("Argument #4 should be string")
 			}
-			ct.ChangeColor(colorOf(args[0].String()), args[1].Bool(), colorOf(args[2].String()), args[3].Bool())
+			ct.ChangeColor(colorOf(fg), fa, colorOf(bg), ba)
 		} else {
-			ct.ChangeColor(colorOf(args[0].String()), args[1].Bool(), ct.None, false)
+			ct.ChangeColor(colorOf(fg), fa, ct.None, false)
 		}
-		return vm.NilValue, nil
 	}))
 
-	m.Define("ResetColor", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) > 0 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
+	m.Define("ResetColor", reflect.ValueOf(func() {
 		ct.ResetColor()
-		return vm.NilValue, nil
 	}))
 }

@@ -11,92 +11,31 @@ import (
 )
 
 func Import(env *vm.Env) {
-	p := func(args ...reflect.Value) (reflect.Value, error) {
-		for i, arg := range args {
-			if i != 0 {
-				fmt.Print(" ")
-			}
-			v := arg
-			if v.Kind() == reflect.Interface {
-				v = v.Elem()
-			}
-			if arg.IsValid() {
-				fmt.Print(arg.Interface())
-			} else {
-				fmt.Println("undefined")
-			}
+	env.Define("len", reflect.ValueOf(func(v interface{}) int64 {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Interface {
+			rv = rv.Elem()
 		}
-		return vm.NilValue, nil
-	}
-
-	env.Define("print", vm.ToFunc(p))
-
-	env.Define("println", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		p(args...)
-		fmt.Println()
-		return vm.NilValue, nil
+		if rv.Kind() != reflect.Array && rv.Kind() != reflect.Slice {
+			panic("Argument #1 should be array")
+		}
+		return int64(rv.Len())
 	}))
 
-	env.Define("printf", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
+	env.Define("keys", reflect.ValueOf(func(v interface{}) []string {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Interface {
+			rv = rv.Elem()
 		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Format string should be string")
-		}
-		values := []interface{}{}
-		for _, arg := range args[1:] {
-			v := arg
-			if v.Kind() == reflect.Interface {
-				v = v.Elem()
-			}
-			if arg.IsValid() {
-				values = append(values, arg.Interface())
-			} else {
-				values = append(values, nil)
-			}
-		}
-		fmt.Printf(args[0].String(), values...)
-		return vm.NilValue, nil
-	}))
-
-	env.Define("len", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		v := args[0]
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
-		}
-		if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
-			return vm.NilValue, errors.New("Argument #1 should be array")
-		}
-		return reflect.ValueOf(v.Len()), nil
-	}))
-
-	env.Define("keys", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		v := args[0]
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
-		}
-		if v.Kind() != reflect.Map {
-			return vm.NilValue, errors.New("Argument #1 should be map")
+		if rv.Kind() != reflect.Map {
+			panic("Argument #1 should be map")
 		}
 		keys := []string{}
-		mk := v.MapKeys()
+		mk := rv.MapKeys()
 		for _, key := range mk {
 			keys = append(keys, key.String())
 		}
-		return reflect.ValueOf(keys), nil
+		return keys
 	}))
 
 	env.Define("range", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
@@ -127,151 +66,90 @@ func Import(env *vm.Env) {
 		return reflect.ValueOf(arr), nil
 	}))
 
-	env.Define("bytes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument #1 should be string")
-		}
-		return reflect.ValueOf([]byte(args[0].String())), nil
+	env.Define("toBytes", reflect.ValueOf(func(s string) []byte {
+		return []byte(s)
 	}))
 
-	env.Define("runes", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument #1 should be string")
-		}
-		return reflect.ValueOf([]rune(args[0].String())), nil
+	env.Define("toRunes", reflect.ValueOf(func(s string) []rune {
+		return []rune(s)
 	}))
 
-	env.Define("string", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
+	env.Define("toString", reflect.ValueOf(func(v interface{}) string {
+		nt := reflect.TypeOf("")
+		rv := reflect.ValueOf(v)
+		if rv.Type().ConvertibleTo(nt) {
+			return fmt.Sprint(v)
 		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() == reflect.Invalid {
-			return vm.NilValue, errors.New("Argument is undefined")
-		}
-		b, ok := args[0].Interface().([]byte)
-		if !ok {
-			return vm.NilValue, errors.New("Argument #1 should be byte array")
-		}
-		return reflect.ValueOf(string(b)), nil
+		return rv.Convert(nt).String()
 	}))
 
-	env.Define("int", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
+	env.Define("toInt", reflect.ValueOf(func(v interface{}) int64 {
 		nt := reflect.TypeOf(1)
-		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument #1 can't be converted to int")
+		rv := reflect.ValueOf(v)
+		if rv.Type().ConvertibleTo(nt) {
+			return 0
 		}
-		return args[0].Convert(nt), nil
+		return rv.Convert(nt).Int()
 	}))
 
-	env.Define("float", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
+	env.Define("toFloat", reflect.ValueOf(func(v interface{}) float64 {
 		nt := reflect.TypeOf(1.0)
-		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument #1 can't be converted to float")
+		rv := reflect.ValueOf(v)
+		if rv.Type().ConvertibleTo(nt) {
+			return 0.0
 		}
-		return args[0].Convert(nt), nil
+		return rv.Convert(nt).Float()
 	}))
 
-	env.Define("bool", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
+	env.Define("toBool", reflect.ValueOf(func(v interface{}) bool {
 		nt := reflect.TypeOf(true)
-		if !args[0].Type().ConvertibleTo(nt) {
-			return vm.NilValue, errors.New("Argument #1 can't be converted to bool")
+		rv := reflect.ValueOf(v)
+		if rv.Type().ConvertibleTo(nt) {
+			return false
 		}
-		return args[0].Convert(nt), nil
+		return rv.Convert(nt).Bool()
 	}))
 
-	env.Define("toString", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		return reflect.ValueOf(fmt.Sprint(args[0].Interface())), nil
+	env.Define("toChar", reflect.ValueOf(func(s rune) string {
+		return string(s)
 	}))
 
-	env.Define("char", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.Int && args[0].Kind() != reflect.Int64 {
-			return vm.NilValue, errors.New("Argument #1 should be int")
-		}
-		return reflect.ValueOf(string(rune(args[0].Int()))), nil
-	}))
-
-	env.Define("rune", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument #1 should be string")
-		}
-		s := args[0].String()
+	env.Define("toRune", reflect.ValueOf(func(s string) rune {
 		if len(s) == 0 {
-			return reflect.ValueOf(0), nil
+			return 0
 		}
-		return reflect.ValueOf(s[0]), nil
+		return []rune(s)[0]
 	}))
 
-	env.Define("load", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
-		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.String {
-			return vm.NilValue, errors.New("Argument #1 should be string")
-		}
-		body, err := ioutil.ReadFile(args[0].String())
+	env.Define("string", reflect.ValueOf(fmt.Sprint))
+
+	env.Define("typeof", reflect.ValueOf(func(v interface{}) string {
+		return reflect.TypeOf(v).String()
+	}))
+
+	env.Define("load", reflect.ValueOf(func(s string) interface{} {
+		body, err := ioutil.ReadFile(s)
 		if err != nil {
-			return vm.NilValue, err
+			panic(err)
 		}
 		scanner := new(parser.Scanner)
 		scanner.Init(string(body))
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
-			return vm.NilValue, err
+			if len(stmts) > 0 {
+				panic(vm.NewError(err, stmts[0]))
+			}
+			panic(err)
 		}
-		return vm.Run(stmts, env)
+		rv, err := vm.Run(stmts, env)
+		if rv.IsValid() && rv.CanInterface() {
+			return rv.Interface()
+		}
+		return nil
 	}))
+
+	env.Define("print", reflect.ValueOf(fmt.Print))
+	env.Define("println", reflect.ValueOf(fmt.Println))
+	env.Define("printf", reflect.ValueOf(fmt.Printf))
+
 }
