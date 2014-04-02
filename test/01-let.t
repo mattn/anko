@@ -20,7 +20,7 @@ a = false
 is(false, a, "let false")
 
 a = [1,2,3]
-is([1, 2,3], a, "let array")
+is([1,2,3], a, "let array")
 
 a = {"foo": "bar", "bar": "baz"}
 is({"bar": "baz", "foo": "bar"}, a, "let map")
