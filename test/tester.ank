@@ -1,22 +1,20 @@
 func is(expect, got, name) {
   if (expect == got) {
-    println(name, "ok")
+    println(name + ":", "OK")
   } else {
+    println(name + ":", "NG")
     throw name + ": expected " + expect + " but got " + got
   }
 }
 
 func ok(expect, name) {
   if (expect) {
-    println(name, "ok")
+    println(name + ":", "OK")
   } else {
+    println(name + ":", "NG")
     throw name + ": expected " + expect + " but got " + got
   }
 }
 
-try {
-  load(args[0])
-} catch(e) {
-println("foo", e)
-  #println(e)
-}
+println(args[0])
+load(args[0])
