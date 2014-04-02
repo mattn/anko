@@ -81,6 +81,25 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, newError(err, stmt)
 		}
 		return rv, nil
+	case *ast.VarStmt:
+		rv := NilValue
+		var err error
+		rvs := []reflect.Value{}
+		for _, expr := range stmt.Exprs {
+			rv, err = invokeExpr(expr, env)
+			if err != nil {
+				return NilValue, newError(err, expr)
+			}
+			rvs = append(rvs, rv)
+		}
+		result := []interface{} {}
+		for i, name := range stmt.Names {
+			if i < len(rvs) {
+				env.Define(name, rvs[i])
+				result = append(result, rvs[i].Interface())
+			}
+		}
+		return reflect.ValueOf(result), nil
 	case *ast.LetStmt:
 		rv := NilValue
 		var err error

@@ -74,6 +74,12 @@ type ModuleStmt struct {
 	Stmts []Stmt
 }
 
+// VarStmt provide statement to let variables in current scope.
+type VarStmt struct {
+	StmtImpl
+	Names []string
+	Exprs []Expr
+}
 // LetStmt provide statement to let variables.
 // This can store multiple identity and values for "a,b=1,2".
 type LetStmt struct {
