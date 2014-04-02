@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/anko/ast"
+	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -483,6 +484,29 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 		return m, nil
+	case *ast.AssocExpr:
+		v, ok := env.Get(e.Name)
+		if !ok {
+			return NilValue, NewError(fmt.Errorf("Undefined function '%s'", e.Name), expr)
+		}
+		switch e.Operator {
+		case "++":
+			if v.Kind() == reflect.Float64 {
+				v = reflect.ValueOf(toFloat64(v) + 1.0)
+			} else {
+				v = reflect.ValueOf(toInt64(v) + 1)
+			}
+		case "--":
+			if v.Kind() == reflect.Float64 {
+				v = reflect.ValueOf(toFloat64(v) - 1.0)
+			} else {
+				v = reflect.ValueOf(toInt64(v) - 1)
+			}
+		}
+		if env.Set(e.Name, v) != nil {
+			env.Define(e.Name, v)
+		}
+		return v, nil
 	case *ast.LetExpr:
 		rv := NilValue
 		var err error
@@ -537,19 +561,25 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	//	println("NEW")
 	//	return NilValue, nil
 	case *ast.BinOpExpr:
-		lhsV, err := invokeExpr(e.Lhs, env)
-		if err != nil {
-			return NilValue, NewError(err, expr)
-		}
-		rhsV, err := invokeExpr(e.Rhs, env)
+		lhsV := NilValue
+		rhsV := NilValue
+		var err error
+
+		lhsV, err = invokeExpr(e.Lhs, env)
 		if err != nil {
 			return NilValue, NewError(err, expr)
 		}
 		if lhsV.Kind() == reflect.Interface {
 			lhsV = lhsV.Elem()
 		}
-		if rhsV.Kind() == reflect.Interface {
-			rhsV = rhsV.Elem()
+		if e.Rhs != nil {
+			rhsV, err = invokeExpr(e.Rhs, env)
+			if err != nil {
+				return NilValue, NewError(err, expr)
+			}
+			if rhsV.Kind() == reflect.Interface {
+				rhsV = rhsV.Elem()
+			}
 		}
 		switch e.Operator {
 		case "+":
@@ -609,6 +639,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return rhsV, nil
 			}
 			return lhsV, nil
+		case "**":
+			if lhsV.Kind() == reflect.Float64 {
+				return reflect.ValueOf(math.Pow(toFloat64(lhsV), toFloat64(rhsV))), nil
+			}
+			return reflect.ValueOf(int64(math.Pow(toFloat64(lhsV), toFloat64(rhsV)))), nil
 		default:
 			return NilValue, NewErrorString("Unknown operator", expr)
 		}

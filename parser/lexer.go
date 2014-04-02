@@ -142,7 +142,9 @@ retry:
 			}
 		case '+':
 			s.next()
-			if s.peek() == '=' {
+			if s.peek() == '+' {
+				tok = PLUSPLUS
+			} else if s.peek() == '=' {
 				tok = PLUSEQ
 			} else {
 				s.back()
@@ -151,7 +153,9 @@ retry:
 			}
 		case '-':
 			s.next()
-			if s.peek() == '=' {
+			if s.peek() == '-' {
+				tok = MINUSMINUS
+			} else if s.peek() == '=' {
 				tok = MINUSEQ
 			} else {
 				s.back()
@@ -160,7 +164,9 @@ retry:
 			}
 		case '*':
 			s.next()
-			if s.peek() == '=' {
+			if s.peek() == '*' {
+				tok = POW
+			} else if s.peek() == '=' {
 				tok = MULEQ
 			} else {
 				s.back()

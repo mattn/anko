@@ -13,7 +13,7 @@ func is(expect, got, name) {
     println("OK")
     term.ResetColor()
   } else {
-    printf("%03d: %s: ", count(), name)
+    printf("%03d: %s: %v %v ", count(), name, expect, got)
     term.ChangeColor("red", true)
     println("NG")
     term.ResetColor()

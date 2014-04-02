@@ -36,7 +36,7 @@ import (
 	pairs                  []ast.Expr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ BREAK CONTINUE
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW
 
 %right '='
 %right '?' ':'
@@ -45,7 +45,7 @@ import (
 %nonassoc EQEQ NEQ
 %left '>' GE '<' LE
 
-%left '+' '-'
+%left '+' '-' PLUSPLUS MINUSMINUS
 %left '*' '/' '%'
 %right UNARY
 
@@ -329,6 +329,10 @@ expr : NUMBER
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
 	}
+	| expr POW expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "**", Rhs: $3}
+	}
 	| expr EQEQ expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
@@ -372,6 +376,14 @@ expr : NUMBER
 	| IDENT DIVEQ expr
 	{
 		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "/", Exprs: []ast.Expr{$3}}
+	}
+	| IDENT PLUSPLUS
+	{
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "++"}
+	}
+	| IDENT MINUSMINUS
+	{
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "--"}
 	}
 	| expr '|' expr
 	{

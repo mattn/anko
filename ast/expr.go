@@ -124,6 +124,13 @@ type LetExpr struct {
 	Exprs    []Expr
 }
 
+// AssocExpr provide expression to assoc operation.
+type AssocExpr struct {
+	ExprImpl
+	Name     string
+	Operator string
+}
+
 // NewExpr provide expression to make new instance.
 type NewExpr struct {
 	ExprImpl
