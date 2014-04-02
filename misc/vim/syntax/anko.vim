@@ -27,7 +27,7 @@ syn keyword     ankoCast              bytes runes string
 
 hi def link     ankoCast              Type
 
-syn keyword     ankoBuiltins          keys len len
+syn keyword     ankoBuiltins          keys len
 syn keyword     ankoBuiltins          println printf
 syn keyword     ankoConstants         true false nil
 
