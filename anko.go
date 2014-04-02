@@ -10,6 +10,7 @@ import (
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_net "github.com/mattn/anko/builtins/net"
 	anko_os "github.com/mattn/anko/builtins/os"
+	anko_math "github.com/mattn/anko/builtins/math"
 	anko_path "github.com/mattn/anko/builtins/path"
 	anko_term "github.com/mattn/anko/builtins/term"
 	"github.com/mattn/anko/parser"
@@ -51,6 +52,7 @@ func main() {
 	anko_encoding.Import(env)
 	anko_os.Import(env)
 	anko_io.Import(env)
+	anko_math.Import(env)
 	anko_path.Import(env)
 	anko_term.Import(env)
 
