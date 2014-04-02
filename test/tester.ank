@@ -8,18 +8,30 @@ count = func() {
 
 func is(expect, got, name) {
   if (expect == got) {
-    println(count() + ": " + name + ":", "OK")
+    printf("%03d: %s: ", count(), name)
+    term.ChangeColor("green", true)
+    println("OK")
+    term.ResetColor()
   } else {
-    println(count() + ": " + name + ":", "NG")
+    printf("%03d: %s: ", count(), name)
+    term.ChangeColor("red", true)
+    println("NG")
+    term.ResetColor()
     throw name + ": expected " + expect + " but got " + got
   }
 }
 
 func ok(expect, name) {
   if (expect) {
-    println(count() + ": " + name + ":", "OK")
+    printf("%03d: %s: ", count(), name)
+    term.ChangeColor("green", true)
+    println("OK")
+    term.ResetColor()
   } else {
-    println(count() + ": " + name + ":", "NG")
+    printf("%03d: %s: ", count(), name)
+    term.ChangeColor("red", true)
+    println("NG")
+    term.ResetColor()
     throw name + ": expected " + expect + " but got " + got
   }
 }
