@@ -505,6 +505,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(err, expr)
 		}
+		if lhsV.Kind() == reflect.Interface {
+			lhsV = lhsV.Elem()
+		}
+		if rhsV.Kind() == reflect.Interface {
+			rhsV = rhsV.Elem()
+		}
 		switch e.Operator {
 		case "+":
 			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
