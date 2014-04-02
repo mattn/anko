@@ -21,6 +21,9 @@ type Error struct {
 	pos     ast.Position
 }
 
+var BreakError = errors.New("break")
+var ContinueError = errors.New("continue")
+
 // NewErrorString makes error interface with message.
 func NewErrorString(err string, pos ast.Pos) error {
 	return &Error{message: err, pos: pos.GetPos()}
@@ -30,6 +33,9 @@ func NewErrorString(err string, pos ast.Pos) error {
 func NewError(err error, pos ast.Pos) error {
 	if err == nil {
 		return nil
+	}
+	if err == BreakError || err == ContinueError {
+		return err
 	}
 	if ee, ok := err.(*Error); ok {
 		return ee
@@ -59,11 +65,14 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
 	for _, stmt := range stmts {
+		if _, ok := stmt.(*ast.BreakStmt); ok {
+			return NilValue, BreakError
+		}
+		if _, ok := stmt.(*ast.ContinueStmt); ok {
+			return NilValue, ContinueError
+		}
 		rv, err = RunSingleStmt(stmt, env)
 		if err != nil {
-			if ee, ok := err.(*Error); ok {
-				return NilValue, ee
-			}
 			return NilValue, NewError(err, stmt)
 		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
@@ -178,6 +187,14 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			newenv.Define(stmt.Var, val.Index(i))
 			_, err := Run(stmt.Stmts, newenv)
 			if err != nil {
+				if err == BreakError {
+					err = nil
+					break
+				}
+				if err == ContinueError {
+					err = nil
+					continue
+				}
 				return NilValue, NewError(err, stmt)
 			}
 		}

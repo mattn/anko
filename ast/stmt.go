@@ -46,6 +46,16 @@ type ForStmt struct {
 	Stmts []Stmt
 }
 
+// BreakStmt provide "break" expression statement.
+type BreakStmt struct {
+	StmtImpl
+}
+
+// ContinueStmt provide "continue" expression statement.
+type ContinueStmt struct {
+	StmtImpl
+}
+
 // ForStmt provide "return" expression statement.
 type ReturnStmt struct {
 	StmtImpl
