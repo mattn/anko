@@ -20,15 +20,6 @@ type ExprStmt struct {
 	Expr Expr
 }
 
-// FuncStmt provide "func" statement.
-type FuncStmt struct {
-	StmtImpl
-	Name   string
-	Stmts  []Stmt
-	Args   []string
-	VarArg bool
-}
-
 // IfStmt provide "if/else" statement.
 type IfStmt struct {
 	StmtImpl

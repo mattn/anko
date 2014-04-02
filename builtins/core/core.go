@@ -2,7 +2,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
@@ -38,32 +37,26 @@ func Import(env *vm.Env) {
 		return keys
 	}))
 
-	env.Define("range", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+	env.Define("range", reflect.ValueOf(func(args ...int64) []int64 {
 		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
+			panic("Missing arguments")
 		}
 		if len(args) > 2 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.Int && args[0].Kind() != reflect.Int64 {
-			return vm.NilValue, errors.New("Argument #1 should be int")
+			panic("Too many arguments")
 		}
 		var min, max int64
 		if len(args) == 1 {
 			min = 0
-			max = args[0].Int() - 1
+			max = args[0] - 1
 		} else {
-			if args[1].Kind() != reflect.Int && args[1].Kind() != reflect.Int64 {
-				return vm.NilValue, errors.New("Argument #2 should be int")
-			}
-			min = args[0].Int()
-			max = args[1].Int()
+			min = args[0]
+			max = args[1]
 		}
 		arr := []int64{}
 		for i := min; i <= max; i++ {
 			arr = append(arr, i)
 		}
-		return reflect.ValueOf(arr), nil
+		return arr
 	}))
 
 	env.Define("toBytes", reflect.ValueOf(func(s string) []byte {
@@ -75,12 +68,7 @@ func Import(env *vm.Env) {
 	}))
 
 	env.Define("toString", reflect.ValueOf(func(v interface{}) string {
-		nt := reflect.TypeOf("")
-		rv := reflect.ValueOf(v)
-		if rv.Type().ConvertibleTo(nt) {
-			return fmt.Sprint(v)
-		}
-		return rv.Convert(nt).String()
+		return fmt.Sprint(v)
 	}))
 
 	env.Define("toInt", reflect.ValueOf(func(v interface{}) int64 {
@@ -121,7 +109,9 @@ func Import(env *vm.Env) {
 		return []rune(s)[0]
 	}))
 
-	env.Define("string", reflect.ValueOf(fmt.Sprint))
+	env.Define("string", reflect.ValueOf(func(b []byte) string {
+		return string(b)
+	}))
 
 	env.Define("typeof", reflect.ValueOf(func(v interface{}) string {
 		return reflect.TypeOf(v).String()

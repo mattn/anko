@@ -10,7 +10,7 @@ import (
 %type<stmts> stmts
 %type<stmt> stmt
 %type<stmt_var> stmt_var
-%type<stmt_func> stmt_func
+//%type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
 %type<stmt_for> stmt_for
 %type<stmt_try_catch_finally> stmt_try_catch_finally
@@ -22,7 +22,7 @@ import (
 
 %union{
 	stmt_var               ast.Stmt
-	stmt_func              ast.Stmt
+	//stmt_func              ast.Stmt
 	stmt_if                ast.Stmt
 	stmt_for               ast.Stmt
 	stmt_try_catch_finally ast.Stmt
@@ -80,13 +80,13 @@ stmts :
 			l.stmts = $$
 		}
 	}
-	| stmt_func stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
-	}
+	//| stmt_func stmts
+	//{
+		//$$ = append([]ast.Stmt{$1}, $2...)
+		//if l, ok := yylex.(*Lexer); ok {
+			//l.stmts = $$
+		//}
+	//}
 	| stmt_if stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
@@ -140,14 +140,14 @@ stmt_var : VAR idents '=' exprs
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
 
-stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
-	{
-		$$ = &ast.FuncStmt{Name: $2.lit, Args: $4, Stmts: $7}
-	}
-	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
-	{
-		$$ = &ast.FuncStmt{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
-	}
+//stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
+//	{
+//		$$ = &ast.FuncStmt{Name: $2.lit, Args: $4, Stmts: $7}
+//	}
+//	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
+//	{
+//		$$ = &ast.FuncStmt{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
+//	}
 
 stmt_if : IF '(' expr ')' '{' stmts '}'
 	{
@@ -262,7 +262,7 @@ expr : NUMBER
 	}
 	| NIL
 	{
-		$$ = &ast.ConstExpr{Value: nil}
+		$$ = &ast.ConstExpr{Value: (*int64)(nil)}
 	}
 	| expr '?' expr ':' expr
 	{
@@ -283,6 +283,14 @@ expr : NUMBER
 	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
+	}
+	| FUNC IDENT '(' idents ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Name: $2.lit, Args: $4, Stmts: $7}
+	}
+	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
+	{
+		$$ = &ast.FuncExpr{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
 	}
 	| '{' pairs '}'
 	{

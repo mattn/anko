@@ -9,12 +9,18 @@ import (
 	"strings"
 )
 
-var NilValue = reflect.ValueOf(nil)
+type Nil struct{}
+
+func (n *Nil) String() string {
+	return "nil"
+}
+
+var NilValue = reflect.ValueOf(&Nil{})
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
 // Error provides a convenient interface for handling runtime error.
-// It can be Error inteface with type cast which can call Pos().
+// It can be Error interface with type cast which can call Pos().
 type Error struct {
 	message string
 	pos     ast.Position
@@ -193,27 +199,6 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, NewError(err, stmt)
 		}
 		return NilValue, NewErrorString(fmt.Sprint(rv.Interface()), stmt)
-	case *ast.FuncStmt:
-		f := reflect.ValueOf(func(stmt *ast.FuncStmt, env *Env) Func {
-			return func(args ...reflect.Value) (reflect.Value, error) {
-				if !stmt.VarArg {
-					if len(args) != len(stmt.Args) {
-						return NilValue, NewErrorString("Arguments Number of mismatch", stmt)
-					}
-				}
-				newenv := env.NewEnv()
-				if stmt.VarArg {
-					newenv.Define(stmt.Args[0], reflect.ValueOf(args))
-				} else {
-					for i, arg := range stmt.Args {
-						newenv.Define(arg, args[i])
-					}
-				}
-				return Run(stmt.Stmts, newenv)
-			}
-		}(stmt, env))
-		env.Define(stmt.Name, f)
-		return f, nil
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
@@ -275,6 +260,20 @@ func toFloat64(v reflect.Value) float64 {
 		return float64(v.Int())
 	}
 	return 0.0
+}
+
+// equal return true when lhsV and rhsV is same value.
+func equal(lhsV, rhsV reflect.Value) bool {
+	if lhsV.Kind() == reflect.Interface {
+		lhsV = lhsV.Elem()
+	}
+	if rhsV.Kind() == reflect.Interface {
+		rhsV = rhsV.Elem()
+	}
+	if lhsV.CanInterface() && rhsV.CanInterface() {
+		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
+	}
+	return reflect.DeepEqual(lhsV, rhsV)
 }
 
 // toInt64 convert all reflect.Value-s into int64.
@@ -356,7 +355,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return v, nil
 	case *ast.FuncExpr:
-		return reflect.ValueOf(func(expr *ast.FuncExpr, env *Env) Func {
+		f := reflect.ValueOf(func(expr *ast.FuncExpr, env *Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
 				if !expr.VarArg {
 					if len(args) != len(expr.Args) {
@@ -373,7 +372,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				}
 				return Run(expr.Stmts, newenv)
 			}
-		}(e, env)), nil
+		}(e, env))
+		env.Define(e.Name, f)
+		return f, nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -455,7 +456,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.LetExpr:
 		rv := NilValue
 		var err error
-		rvs := []reflect.Value{}
+		vs := []interface{}{}
 		for i, ee := range e.Exprs {
 			if e.Operator == "=" {
 				rv, err = invokeExpr(ee, env)
@@ -465,27 +466,38 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, NewError(err, ee)
 			}
-			rvs = append(rvs, rv)
+			if rv == NilValue {
+				vs = append(vs, nil)
+			} else {
+				vs = append(vs, rv.Interface())
+			}
 		}
-		result := []interface{}{}
+		rvs := reflect.ValueOf(vs)
+		/*
+		if rvs.Len() == 1 {
+			item := rvs.Index(0)
+			if item.Kind() == reflect.Interface {
+				item = item.Elem()
+			}
+			if item.Kind() == reflect.Slice {
+				rvs = item
+			}
+		}
+		*/
+
 		for i, name := range e.Names {
-			if i >= len(rvs) {
+			if i >= rvs.Len() {
 				continue
 			}
-			v := rvs[i]
+			v := rvs.Index(i)
 			if env.Set(name, v) != nil {
 				env.Define(name, v)
 			}
-			if v == NilValue {
-				result = append(result, nil)
-			} else {
-				result = append(result, v.Interface())
-			}
 		}
-		if len(result) == 1 {
-			return reflect.ValueOf(result[0]), nil
+		if rvs.Len() == 1 {
+			return rvs.Index(0), nil
 		}
-		return reflect.ValueOf(result), nil
+		return rvs, nil
 	//case *ast.NewExpr:
 	//	println("NEW")
 	//	return NilValue, nil
@@ -528,19 +540,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case "%":
 			return reflect.ValueOf(toInt64(lhsV) % toInt64(rhsV)), nil
 		case "==":
-			if lhsV.IsValid() && rhsV.IsValid() {
-				if lhsV.CanInterface() && rhsV.CanInterface() {
-					return reflect.ValueOf(reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
-				}
-			}
-			return reflect.ValueOf(reflect.DeepEqual(lhsV, rhsV)), nil
+			return reflect.ValueOf(equal(lhsV, rhsV)), nil
 		case "!=":
-			if lhsV.IsValid() && rhsV.IsValid() {
-				if lhsV.CanInterface() && rhsV.CanInterface() {
-					return reflect.ValueOf(!reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())), nil
-				}
-			}
-			return reflect.ValueOf(!reflect.DeepEqual(lhsV, rhsV)), nil
+			return reflect.ValueOf(!equal(lhsV, rhsV)), nil
 		case ">":
 			return reflect.ValueOf(toFloat64(lhsV) > toFloat64(rhsV)), nil
 		case ">=":
@@ -594,14 +596,20 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		_, isReflect := f.Interface().(Func)
 
 		args := []reflect.Value{}
-		for _, expr := range e.SubExprs {
+		for i, expr := range e.SubExprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
 				return NilValue, NewError(err, expr)
 			}
+			if arg == NilValue && !f.Type().IsVariadic() {
+				arg = reflect.New(f.Type().In(i)).Elem()
+			}
 			if !isReflect {
 				args = append(args, arg)
 			} else {
+				if arg.Kind() == reflect.Interface {
+					arg = arg.Elem()
+				}
 				args = append(args, reflect.ValueOf(arg))
 			}
 		}
@@ -613,6 +621,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					err = errors.New(fmt.Sprint(ex))
 				}
 			}()
+			if f.Kind() == reflect.Interface {
+				f = f.Elem()
+			}
 			rets := f.Call(args)
 			if isReflect {
 				ev := rets[1].Interface()

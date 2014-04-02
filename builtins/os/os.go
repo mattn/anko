@@ -14,4 +14,5 @@ func Import(env *vm.Env) {
 	m.Define("Stderr", reflect.ValueOf(o.Stderr))
 	m.Define("Getenv", reflect.ValueOf(o.Getenv))
 	m.Define("Setenv", reflect.ValueOf(o.Setenv))
+	m.Define("Exit", reflect.ValueOf(o.Exit))
 }

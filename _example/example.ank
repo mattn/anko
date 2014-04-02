@@ -25,6 +25,7 @@ if (foo(y) >= 1) {
 
 # array type
 a = [1,2,3]
+println(a)
 println(a[2])
 println(len(a))
 
@@ -50,8 +51,8 @@ println(1 && 2)
 
 println(bar(1,2,3))
 println("foo")
-println(bytes("あいう"))
-println(runes("あいう"))
+println(toBytes("あいう"))
+println(toRunes("あいう"))
 
 a = 1
 func foo() {

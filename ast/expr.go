@@ -110,6 +110,7 @@ type ItemExpr struct {
 // FuncExpr provide function expression.
 type FuncExpr struct {
 	ExprImpl
+	Name   string
 	Stmts  []Stmt
 	Args   []string
 	VarArg bool

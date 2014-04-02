@@ -17,7 +17,6 @@ func is(expect, got, name) {
     term.ChangeColor("red", true)
     println("NG")
     term.ResetColor()
-    throw name + ": expected " + expect + " but got " + got
   }
 }
 

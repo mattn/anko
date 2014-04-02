@@ -34,19 +34,9 @@ func Import(env *vm.Env) {
 	m.Define("HandleFunc", reflect.ValueOf(h.HandleFunc))
 	m.Define("ListenAndServe", reflect.ValueOf(h.ListenAndServe))
 
-	m.Define("toHandleFunc", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
-		if len(args) < 1 {
-			return vm.NilValue, errors.New("Missing arguments")
+	m.Define("toHandleFunc", reflect.ValueOf(func(f interface{}) h.HandlerFunc {
+		return func(w h.ResponseWriter, r *h.Request) {
+			f.(vm.Func)(reflect.ValueOf(w), reflect.ValueOf(r))
 		}
-		if len(args) > 1 {
-			return vm.NilValue, errors.New("Too many arguments")
-		}
-		if args[0].Kind() != reflect.Func {
-			return vm.NilValue, errors.New("Argument should be function")
-		}
-		f := args[0].Interface().(vm.Func)
-		return reflect.ValueOf(func(w h.ResponseWriter, r *h.Request) {
-			f(reflect.ValueOf(w), reflect.ValueOf(r))
-		}), nil
 	}))
 }

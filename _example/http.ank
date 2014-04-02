@@ -1,7 +1,7 @@
 #!anko
 
-r = http.NewClient().Get("http://www.google.com")
+r = net.http.DefaultClient.Get("http://www.google.com")
 println(r.StatusCode)
-b = io.ioutil.ReadAll(r.Body)
+b, a = io.ioutil.ReadAll(r.Body)
 println(string(b))
 r.Body.Close()
