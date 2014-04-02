@@ -11,6 +11,7 @@ import (
 	anko_json "github.com/mattn/anko/builtins/json"
 	anko_os "github.com/mattn/anko/builtins/os"
 	anko_url "github.com/mattn/anko/builtins/url"
+	anko_term "github.com/mattn/anko/builtins/term"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"github.com/mattn/go-isatty"
@@ -51,6 +52,7 @@ func main() {
 	anko_json.Import(env)
 	anko_os.Import(env)
 	anko_io.Import(env)
+	anko_term.Import(env)
 
 	var code string
 	var b []byte
