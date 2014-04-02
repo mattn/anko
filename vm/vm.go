@@ -9,13 +9,8 @@ import (
 	"strings"
 )
 
-type Nil struct{}
-
-func (n *Nil) String() string {
-	return "nil"
-}
-
-var NilValue = reflect.ValueOf(&Nil{})
+var Nil *int64
+var NilValue = reflect.ValueOf(&Nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
