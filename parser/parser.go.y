@@ -262,7 +262,7 @@ expr : NUMBER
 	}
 	| NIL
 	{
-		$$ = &ast.ConstExpr{Value: (*int64)(nil)}
+		$$ = &ast.ConstExpr{Value: (*interface{})(nil)}
 	}
 	| expr '?' expr ':' expr
 	{

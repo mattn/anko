@@ -880,7 +880,7 @@ yydefault:
 	case 38:
 		//line parser.go.y:264
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: (*int64)(nil)}
+			yyVAL.expr = &ast.ConstExpr{Value: (*interface{})(nil)}
 		}
 	case 39:
 		//line parser.go.y:268

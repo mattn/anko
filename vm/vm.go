@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var Nil *int64
+var Nil *interface{}
 var NilValue = reflect.ValueOf(&Nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
@@ -412,11 +412,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(err, expr)
 		}
-		if v.Kind() == reflect.Slice {
-			v = v.Index(0)
-		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
+		}
+		if v.Kind() == reflect.Slice {
+			v = v.Index(0)
 		}
 		if v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
@@ -468,8 +468,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 		rvs := reflect.ValueOf(vs)
-		/*
-		if rvs.Len() == 1 {
+		if len(e.Names) > 1 && rvs.Len() == 1 {
 			item := rvs.Index(0)
 			if item.Kind() == reflect.Interface {
 				item = item.Elem()
@@ -478,13 +477,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				rvs = item
 			}
 		}
-		*/
-
 		for i, name := range e.Names {
 			if i >= rvs.Len() {
 				continue
 			}
 			v := rvs.Index(i)
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
 			if env.Set(name, v) != nil {
 				env.Define(name, v)
 			}
@@ -602,7 +602,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, NewError(err, expr)
 			}
-			if arg == NilValue && !f.Type().IsVariadic() {
+			if (arg.Kind() == arg.Interface() || arg.Kind() == reflect.Ptr) && arg.IsNil() && !f.Type().IsVariadic() {
 				arg = reflect.New(f.Type().In(i)).Elem()
 			}
 			if !isReflect {
