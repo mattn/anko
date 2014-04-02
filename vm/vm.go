@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/anko/ast"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -210,6 +211,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(err, stmt)
 		}
+		if !rv.IsValid() {
+			return NilValue, NewError(err, stmt)
+		}
 		return NilValue, NewErrorString(fmt.Sprint(rv.Interface()), stmt)
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
@@ -274,13 +278,26 @@ func toFloat64(v reflect.Value) float64 {
 	return 0.0
 }
 
+func isNil(v reflect.Value) bool {
+	if !v.IsValid() {
+		return true
+	}
+	return v.Kind() == reflect.Interface && v.IsNil()
+}
+
 // equal return true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
-	if lhsV.Kind() == reflect.Interface {
+	if isNil(lhsV) && isNil(rhsV) {
+		return true
+	}
+	if lhsV.Kind() == reflect.Interface || lhsV.Kind() == reflect.Ptr {
 		lhsV = lhsV.Elem()
 	}
-	if rhsV.Kind() == reflect.Interface {
+	if rhsV.Kind() == reflect.Interface || rhsV.Kind() == reflect.Ptr {
 		rhsV = rhsV.Elem()
+	}
+	if !lhsV.IsValid() || !rhsV.IsValid() {
+		return false
 	}
 	if lhsV.CanInterface() && rhsV.CanInterface() {
 		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
@@ -480,8 +497,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			if rv == NilValue {
 				vs = append(vs, nil)
-			} else {
+			} else if rv.IsValid() && rv.CanInterface() {
 				vs = append(vs, rv.Interface())
+			} else {
+				vs = append(vs, nil)
 			}
 		}
 		rvs := reflect.ValueOf(vs)
@@ -619,7 +638,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, NewError(err, expr)
 			}
-			if (arg.Kind() == arg.Interface() || arg.Kind() == reflect.Ptr) && arg.IsNil() && !f.Type().IsVariadic() {
+			if !arg.IsValid() {
+				arg = NilValue
+			} else if (arg.Kind() == arg.Interface() || arg.Kind() == reflect.Ptr) && arg.IsNil() && !f.Type().IsVariadic() {
 				arg = reflect.New(f.Type().In(i)).Elem()
 			}
 			if !isReflect {
@@ -635,8 +656,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		var err error
 		func() {
 			defer func() {
-				if ex := recover(); ex != nil {
-					err = errors.New(fmt.Sprint(ex))
+				if os.Getenv("ANKO_DEBUG") == "" {
+					if ex := recover(); ex != nil {
+						err = errors.New(fmt.Sprint(ex))
+					}
 				}
 			}()
 			if f.Kind() == reflect.Interface {

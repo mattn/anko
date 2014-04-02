@@ -80,7 +80,7 @@ stmts :
 	}
 	| CONTINUE stmts
 	{
-		$$ = append([]ast.Stmt{&ast.ContinueStmt}, $2...)
+		$$ = append([]ast.Stmt{&ast.ContinueStmt{}}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
 		}
