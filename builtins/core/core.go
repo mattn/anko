@@ -14,7 +14,7 @@ func Import(env *vm.Env) {
 	p := func(args ...reflect.Value) (reflect.Value, error) {
 		for i, arg := range args {
 			if i != 0 {
-				fmt.Print(", ")
+				fmt.Print(" ")
 			}
 			v := arg
 			if v.Kind() == reflect.Interface {
