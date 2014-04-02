@@ -37,6 +37,29 @@ func Import(env *vm.Env) {
 		return vm.NilValue, nil
 	}))
 
+	env.Define("printf", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
+		if len(args) < 1 {
+			return vm.NilValue, errors.New("Missing arguments")
+		}
+		if args[0].Kind() != reflect.String {
+			return vm.NilValue, errors.New("Format string should be string")
+		}
+		values := []interface{}{}
+		for _, arg := range args[1:] {
+			v := arg
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
+			if arg.IsValid() {
+				values = append(values, arg.Interface())
+			} else {
+				values = append(values, nil)
+			}
+		}
+		fmt.Printf(args[0].String(), values...)
+		return vm.NilValue, nil
+	}))
+
 	env.Define("len", vm.ToFunc(func(args ...reflect.Value) (reflect.Value, error) {
 		if len(args) < 1 {
 			return vm.NilValue, errors.New("Missing arguments")
