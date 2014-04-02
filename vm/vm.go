@@ -92,14 +92,16 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			rvs = append(rvs, rv)
 		}
+		result := []interface{} {}
 		for i, name := range stmt.Names {
 			if i < len(rvs) {
 				if env.Set(name, rvs[i]) != nil {
 					env.Define(name, rvs[i])
 				}
+				result = append(result, rvs[i].Interface())
 			}
 		}
-		return NilValue, nil
+		return reflect.ValueOf(result), nil
 	case *ast.IfStmt:
 		// If
 		rv, err := invokeExpr(stmt.If, env)

@@ -54,6 +54,7 @@ type Scanner struct {
 var opName = map[string]int{
 	"func":    FUNC,
 	"return":  RETURN,
+	"var":     VAR,
 	"throw":   THROW,
 	"if":      IF,
 	"for":     FOR,
@@ -193,7 +194,7 @@ retry:
 			s.next()
 			tok = int(ch)
 			if s.peek() == '|' {
-				tok = OR
+				tok = OROR
 			} else {
 				s.back()
 			}
@@ -201,7 +202,7 @@ retry:
 			s.next()
 			tok = int(ch)
 			if s.peek() == '&' {
-				tok = AND
+				tok = ANDAND
 			} else {
 				s.back()
 			}

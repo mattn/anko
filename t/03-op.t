@@ -16,5 +16,17 @@ ok(1.0 <= 1.0, "1.0 <= 1.0")
 
 is(true, 1 <= 2 ? true : false, "1 == 1 ? true : false")
 
+a = 1; a += 1
+is(2, a, "+=")
+
+a = 2; a -= 1
+is(1, a, "-=")
+
+a = 2; a *= 2
+is(4, a, "*=")
+
+a = 3; a /= 2
+is(1.5, a, "/=")
+
 # vim: set ft=anko:
 

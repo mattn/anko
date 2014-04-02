@@ -9,6 +9,7 @@ import (
 
 %type<stmts> stmts
 %type<stmt> stmt
+%type<stmt_var> stmt_var
 %type<stmt_func> stmt_func
 %type<stmt_if> stmt_if
 %type<stmt_for> stmt_for
@@ -20,6 +21,7 @@ import (
 %type<idents> idents
 
 %union{
+	stmt_var               ast.Stmt
 	stmt_func              ast.Stmt
 	stmt_if                ast.Stmt
 	stmt_for               ast.Stmt
@@ -35,16 +37,18 @@ import (
 	pairs                  []ast.Expr
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN THROW IF ELSE FOR IN EQEQ NEQ GE LE OR AND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ
+
+%right '='
+%right '?' ':'
+%left OROR
+%left ANDAND
+%nonassoc EQEQ NEQ
+%left '>' GE '<' LE
 
 %left '+' '-'
 %left '*' '/' '%'
 %right UNARY
-%right '?' ':'
-%nonassoc NUMBER
-%nonassoc IDENT
-%nonassoc EQEQ NEQ
-%left '>' GE '<' LE
 
 %%
 
@@ -56,6 +60,20 @@ stmts :
 		}
 	}
 	| stmt stmts
+	{
+		$$ = append([]ast.Stmt{$1}, $2...)
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
+	| stmt ';' stmts
+	{
+		$$ = append([]ast.Stmt{$1}, $3...)
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
+	| stmt_var stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
@@ -122,6 +140,11 @@ stmt : expr
 	| MODULE IDENT '{' stmts '}'
 	{
 		$$ = &ast.ModuleStmt{Name: $2.lit, Stmts: $4}
+	}
+
+stmt_var : VAR idents '=' exprs
+	{
+		$$ = &ast.LetStmt{Names: $2, Exprs: $4}
 	}
 
 stmt_func : FUNC IDENT '(' idents ')' '{' stmts '}'
@@ -328,7 +351,7 @@ expr : expr '(' exprs  ')'
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
 	}
-	| expr OR expr
+	| expr OROR expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
 	}
@@ -336,7 +359,7 @@ expr : expr '(' exprs  ')'
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
 	}
-	| expr AND expr
+	| expr ANDAND expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
 	}
