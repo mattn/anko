@@ -3,4 +3,4 @@
 r = net.http.DefaultClient.Get("http://www.google.com")
 b, a = io.ioutil.ReadAll(r[0].Body)
 println(string(b))
-#r.Body.Close()
+r.Body.Close()
