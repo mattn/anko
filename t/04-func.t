@@ -10,5 +10,14 @@ is([2,3], c(2), "func c(x) { return x, x + 1 }")
 func d(x) { return func() { return x + 1 } }
 is(3, d(2)(), "func d(x) { return func() { return x + 1 } }")
 
-# vim: set ft=anko:
+var x = func(x) {
+  return func(y) {
+    x(y)
+  }
+}(func(z) {
+  return "Yay! " + z
+})("hello world")
 
+is("Yay! hello world", x, "...")
+
+# vim: set ft=anko:
