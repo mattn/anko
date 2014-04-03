@@ -5,7 +5,6 @@ func connect(url) {
   if (proxy != "") {
     u, e = net.url.Parse(proxy)
     if (e != nil) {
-	println("err")
       return nil, e
     }
     return net.Dial("tcp", u.Host)
