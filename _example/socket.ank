@@ -1,10 +1,23 @@
 #!anko
 
-c, e = net.Dial("tcp", "www.google.com:80")
+func connect(url) {
+  proxy = os.Getenv("http_proxy")
+  if (proxy != "") {
+    u, e = net.url.Parse(proxy)
+    if (e != nil) {
+	println("err")
+      return nil, e
+    }
+    return net.Dial("tcp", u.Host)
+  }
+  return net.Dial("tcp", url)
+}
+
+c, e = connect("www.google.com:80")
 if (e != nil) {
   throw e
 }
-c.Write(toBytes("GET / HTTP/1.0\r\n\r\n"))
+c.Write(toBytes("GET http://www.google.com/ HTTP/1.0\r\n\r\n"))
 b, e = io.ioutil.ReadAll(c)
 if (e != nil) {
   throw e

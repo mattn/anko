@@ -359,7 +359,7 @@ func equal(lhsV, rhsV reflect.Value) bool {
 		rhsV = rhsV.Elem()
 	}
 	if !lhsV.IsValid() || !rhsV.IsValid() {
-		return false
+		return true
 	}
 	if lhsV.CanInterface() && rhsV.CanInterface() {
 		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
@@ -678,7 +678,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case "==":
 			return reflect.ValueOf(equal(lhsV, rhsV)), nil
 		case "!=":
-			return reflect.ValueOf(!equal(lhsV, rhsV)), nil
+			return reflect.ValueOf(equal(lhsV, rhsV) == false), nil
 		case ">":
 			return reflect.ValueOf(toFloat64(lhsV) > toFloat64(rhsV)), nil
 		case ">=":
