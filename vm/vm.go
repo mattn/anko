@@ -230,11 +230,25 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.ReturnStmt:
-		rv, err := invokeExpr(stmt.Expr, env)
-		if err != nil {
-			return NilValue, NewError(err, stmt)
+		rvs := []interface{}{}
+		switch len(stmt.Exprs) {
+		case 0:
+			return NilValue, nil
+		case 1:
+			rv, err := invokeExpr(stmt.Exprs[0], env)
+			if err != nil {
+				return NilValue, NewError(err, stmt)
+			}
+			return rv, nil
 		}
-		return rv, nil
+		for _, expr := range stmt.Exprs {
+			rv, err := invokeExpr(expr, env)
+			if err != nil {
+				return NilValue, NewError(err, stmt)
+			}
+			rvs = append(rvs, rv.Interface())
+		}
+		return reflect.ValueOf(rvs), nil
 	case *ast.ThrowStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
@@ -308,6 +322,9 @@ func toFloat64(v reflect.Value) float64 {
 }
 
 func isNil(v reflect.Value) bool {
+	if v.Kind().String() == "unsafe.Pointer" {
+		return true
+	}
 	if (v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr) && v.IsNil() {
 		return true
 	}

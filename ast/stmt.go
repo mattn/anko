@@ -66,7 +66,7 @@ type ContinueStmt struct {
 // ForStmt provide "return" expression statement.
 type ReturnStmt struct {
 	StmtImpl
-	Expr Expr
+	Exprs []Expr
 }
 
 // ThrowStmt provide "throw" expression statement.

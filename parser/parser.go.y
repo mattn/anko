@@ -122,11 +122,11 @@ stmt : expr
 			$1.SetPos(l.pos)
 		}
 	}
-	| RETURN expr
+	| RETURN exprs
 	{
-		$$ = &ast.ReturnStmt{Expr: $2}
+		$$ = &ast.ReturnStmt{Exprs: $2}
 		if l, ok := yylex.(*Lexer); ok {
-			$2.SetPos(l.pos)
+			$2[0].SetPos(l.pos)
 		}
 	}
 	| THROW expr
