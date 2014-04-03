@@ -723,7 +723,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			if !arg.IsValid() {
 				arg = NilValue
-			} else if (arg.Kind() == arg.Interface() || arg.Kind() == reflect.Ptr) && arg.IsNil() && !f.Type().IsVariadic() {
+			} else if arg.Kind().String() == "unsafe.Pointer" {
 				arg = reflect.New(f.Type().In(i)).Elem()
 			}
 			if !isReflect {
