@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"io/ioutil"
+	"os"
 	"reflect"
 )
 
@@ -139,6 +140,11 @@ func Import(env *vm.Env) {
 			return rv.Interface()
 		}
 		return nil
+	}))
+
+	env.Define("panic", reflect.ValueOf(func(e interface{}) {
+		os.Setenv("ANKO_DEBUG", "1")
+		panic(e)
 	}))
 
 	env.Define("print", reflect.ValueOf(fmt.Print))

@@ -126,7 +126,9 @@ stmt : expr
 	{
 		$$ = &ast.ReturnStmt{Exprs: $2}
 		if l, ok := yylex.(*Lexer); ok {
-			$2[0].SetPos(l.pos)
+			if len($2) > 0 {
+				$2[0].SetPos(l.pos)
+			}
 		}
 	}
 	| THROW expr
@@ -146,9 +148,9 @@ stmt_var : VAR idents '=' exprs
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
 
-stmt_if : IF '(' expr ')' '{' stmts '}'
+stmt_if : stmt_if ELSE IF '(' expr ')' '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{If: $3, Then: $6}
+		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
 	}
 	| stmt_if ELSE '{' stmts '}'
 	{
@@ -158,9 +160,9 @@ stmt_if : IF '(' expr ')' '{' stmts '}'
 			$1.(*ast.IfStmt).Else = $4
 		}
 	}
-	| stmt_if ELSE IF '(' expr ')' '{' stmts '}'
+	| IF '(' expr ')' '{' stmts '}'
 	{
-		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
+		$$ = &ast.IfStmt{If: $3, Then: $6}
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'

@@ -26,6 +26,7 @@ type Error struct {
 
 var BreakError = errors.New("Unexpected break statement")
 var ContinueError = errors.New("Unexpected continue statement")
+var ReturnError = errors.New("Unexpected error")
 
 // NewErrorString makes error interface with message.
 func NewErrorString(err string, pos ast.Pos) error {
@@ -37,7 +38,7 @@ func NewError(err error, pos ast.Pos) error {
 	if err == nil {
 		return nil
 	}
-	if err == BreakError || err == ContinueError {
+	if err == BreakError || err == ContinueError || err == ReturnError {
 		return err
 	}
 	if ee, ok := err.(*Error); ok {
@@ -75,11 +76,11 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, ContinueError
 		}
 		rv, err = RunSingleStmt(stmt, env)
-		if err != nil {
-			return NilValue, NewError(err, stmt)
-		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
-			return rv, nil
+			return reflect.ValueOf(rv), ReturnError
+		}
+		if err != nil {
+			return rv, NewError(err, stmt)
 		}
 	}
 	return rv, nil
@@ -91,7 +92,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return NilValue, NewError(err, stmt)
+			return rv, NewError(err, stmt)
 		}
 		return rv, nil
 	case *ast.VarStmt:
@@ -101,7 +102,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		for _, expr := range stmt.Exprs {
 			rv, err = invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return rv, NewError(err, expr)
 			}
 			rvs = append(rvs, rv)
 		}
@@ -117,13 +118,13 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		// If
 		rv, err := invokeExpr(stmt.If, env)
 		if err != nil {
-			return NilValue, NewError(err, stmt)
+			return rv, NewError(err, stmt)
 		}
 		if toBool(rv) {
 			// Then
 			rv, err = Run(stmt.Then, env.NewEnv())
 			if err != nil {
-				return NilValue, NewError(err, stmt)
+				return rv, NewError(err, stmt)
 			}
 			return rv, nil
 		}
@@ -134,7 +135,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				// ElseIf
 				rv, err = invokeExpr(stmt_if.If, env)
 				if err != nil {
-					return NilValue, NewError(err, stmt)
+					return rv, NewError(err, stmt)
 				}
 				if !toBool(rv) {
 					continue
@@ -143,7 +144,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				done = true
 				rv, err = Run(stmt_if.Then, env)
 				if err != nil {
-					return NilValue, NewError(err, stmt)
+					return rv, NewError(err, stmt)
 				}
 				break
 			}
@@ -152,7 +153,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// Else
 			rv, err = Run(stmt.Else, env.NewEnv())
 			if err != nil {
-				return NilValue, NewError(err, stmt)
+				return rv, NewError(err, stmt)
 			}
 		}
 		return rv, nil
@@ -183,14 +184,14 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			if stmt.Expr != nil {
 				ev, ee := invokeExpr(stmt.Expr, newenv)
 				if ee != nil {
-					return NilValue, ee
+					return ev, ee
 				}
 				if !toBool(ev) {
 					break
 				}
 			}
 
-			_, err := Run(stmt.Stmts, newenv)
+			rv, err := Run(stmt.Stmts, newenv)
 			if err != nil {
 				if err == BreakError {
 					err = nil
@@ -200,14 +201,19 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					err = nil
 					continue
 				}
-				return NilValue, NewError(err, stmt)
+				if err == ReturnError {
+					err = nil
+					break
+				}
+				return rv, NewError(err, stmt)
 			}
+			return rv, nil
 		}
 		return NilValue, nil
 	case *ast.ForStmt:
 		val, ee := invokeExpr(stmt.Value, env)
 		if ee != nil {
-			return NilValue, ee
+			return val, ee
 		}
 		if val.Kind() != reflect.Array && val.Kind() != reflect.Slice {
 			return NilValue, NewErrorString("Invalid operation", stmt)
@@ -215,7 +221,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		for i := 0; i < val.Len(); i++ {
 			newenv.Define(stmt.Var, val.Index(i))
-			_, err := Run(stmt.Stmts, newenv)
+			rv, err := Run(stmt.Stmts, newenv)
 			if err != nil {
 				if err == BreakError {
 					err = nil
@@ -225,7 +231,11 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					err = nil
 					continue
 				}
-				return NilValue, NewError(err, stmt)
+				if err == ReturnError {
+					err = nil
+					break
+				}
+				return rv, NewError(err, stmt)
 			}
 		}
 		return NilValue, nil
@@ -237,33 +247,39 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		case 1:
 			rv, err := invokeExpr(stmt.Exprs[0], env)
 			if err != nil {
-				return NilValue, NewError(err, stmt)
+				return rv, NewError(err, stmt)
 			}
 			return rv, nil
 		}
 		for _, expr := range stmt.Exprs {
 			rv, err := invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(err, stmt)
+				return rv, NewError(err, stmt)
 			}
-			rvs = append(rvs, rv.Interface())
+			if isNil(rv) {
+				rvs = append(rvs, Nil)
+			} else if rv.IsValid() {
+				rvs = append(rvs, rv.Interface())
+			} else {
+				rvs = append(rvs, Nil)
+			}
 		}
 		return reflect.ValueOf(rvs), nil
 	case *ast.ThrowStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return NilValue, NewError(err, stmt)
+			return rv, NewError(err, stmt)
 		}
 		if !rv.IsValid() {
 			return NilValue, NewError(err, stmt)
 		}
-		return NilValue, NewErrorString(fmt.Sprint(rv.Interface()), stmt)
+		return rv, NewErrorString(fmt.Sprint(rv.Interface()), stmt)
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
 		rv, err := Run(stmt.Stmts, newenv)
 		if err != nil {
-			return NilValue, NewError(err, stmt)
+			return rv, NewError(err, stmt)
 		}
 		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
@@ -390,7 +406,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v, ok := env.Get(e.Lit); ok {
 			return v, nil
 		} else {
-			return NilValue, NewErrorString(fmt.Sprintf("Undefined variable: %s", e.Lit), expr)
+			return v, NewErrorString(fmt.Sprintf("Undefined variable: %s", e.Lit), expr)
 		}
 	case *ast.StringExpr:
 		return reflect.ValueOf(e.Lit), nil
@@ -399,7 +415,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		for i, expr := range e.Exprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return arg, NewError(err, expr)
 			}
 			a[i] = arg.Interface()
 		}
@@ -409,7 +425,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		for k, expr := range e.MapExpr {
 			v, err := invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return v, NewError(err, expr)
 			}
 			m[k] = v.Interface()
 		}
@@ -417,7 +433,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.UnaryMinusExpr:
 		v, err := invokeExpr(e.SubExpr, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return v, NewError(err, expr)
 		}
 		if v.Kind() == reflect.Float64 {
 			return reflect.ValueOf(-v.Float()), nil
@@ -426,7 +442,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.ParenExpr:
 		v, err := invokeExpr(e.SubExpr, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return v, NewError(err, expr)
 		}
 		return v, nil
 	case *ast.FuncExpr:
@@ -445,7 +461,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				return Run(expr.Stmts, newenv)
+				rr, err := Run(expr.Stmts, newenv)
+				if err == ReturnError {
+					err = nil
+					rr = rr.Interface().(reflect.Value)
+				}
+				return rr, err
 			}
 		}(e, env))
 		env.Define(e.Name, f)
@@ -453,11 +474,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return v, NewError(err, expr)
 		}
 		i, err := invokeExpr(e.Index, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return i, NewError(err, expr)
 		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
@@ -486,11 +507,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return reflect.ValueOf(rs[ii]), nil
 		}
-		return NilValue, NewErrorString("Invalid operation", expr)
+		return v, NewErrorString("Invalid operation", expr)
 	case *ast.MemberExpr:
 		v, err := invokeExpr(e.Expr, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return v, NewError(err, expr)
 		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
@@ -498,11 +519,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Slice {
 			v = v.Index(0)
 		}
-		if v.CanInterface() {
+		if v.IsValid() && v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
 				m, ok := vme.Get(e.Method)
 				if !m.IsValid() || !ok {
-					return NilValue, NewErrorString("Invalid operation", expr)
+					return NilValue, NewErrorString(fmt.Sprintf("Invalid operation '%s'", e.Method), expr)
 				}
 				return m, nil
 			}
@@ -516,15 +537,15 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if v.Kind() == reflect.Struct {
 				m = v.FieldByName(e.Method)
 				if !m.IsValid() {
-					return NilValue, NewErrorString("Invalid operation", expr)
+					return NilValue, NewErrorString(fmt.Sprintf("Invalid operation '%s'", e.Method), expr)
 				}
 			} else if v.Kind() == reflect.Map {
 				m = v.MapIndex(reflect.ValueOf(e.Method))
 				if !m.IsValid() {
-					return NilValue, NewErrorString("Invalid operation", expr)
+					return NilValue, NewErrorString(fmt.Sprintf("Invalid operation '%s'", e.Method), expr)
 				}
 			} else {
-				return NilValue, NewErrorString("Invalid operation", expr)
+				return NilValue, NewErrorString(fmt.Sprintf("Invalid operation '%s'", e.Method), expr)
 			}
 		}
 		return m, nil
@@ -562,7 +583,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				rv, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Names[i]}, Operator: e.Operator, Rhs: ee}, env)
 			}
 			if err != nil {
-				return NilValue, NewError(err, ee)
+				return rv, NewError(err, ee)
 			}
 			if rv == NilValue {
 				vs = append(vs, nil)
@@ -611,7 +632,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 
 		lhsV, err = invokeExpr(e.Lhs, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return lhsV, NewError(err, expr)
 		}
 		if lhsV.Kind() == reflect.Interface {
 			lhsV = lhsV.Elem()
@@ -619,7 +640,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if e.Rhs != nil {
 			rhsV, err = invokeExpr(e.Rhs, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return rhsV, NewError(err, expr)
 			}
 			if rhsV.Kind() == reflect.Interface {
 				rhsV = rhsV.Elem()
@@ -696,10 +717,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.AnonCallExpr:
 		f, err := invokeExpr(e.Expr, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return f, NewError(err, expr)
 		}
 		if f.Kind() != reflect.Func {
-			return NilValue, NewErrorString("Unknown function", expr)
+			return f, NewErrorString("Unknown function", expr)
 		}
 		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs}, env)
 	case *ast.CallExpr:
@@ -710,7 +731,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			var ok bool
 			f, ok = env.Get(e.Name)
 			if !ok {
-				return NilValue, NewError(fmt.Errorf("Undefined function '%s'", e.Name), expr)
+				return f, NewError(fmt.Errorf("Undefined function '%s'", e.Name), expr)
 			}
 		}
 		_, isReflect := f.Interface().(Func)
@@ -719,11 +740,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		for i, expr := range e.SubExprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return arg, NewError(err, expr)
 			}
 			if !arg.IsValid() {
 				arg = NilValue
-			} else if arg.Kind().String() == "unsafe.Pointer" {
+			} else if arg.Kind().String() == "unsafe.Pointer" && f.Type().NumIn() < i {
 				arg = reflect.New(f.Type().In(i)).Elem()
 			}
 			if !isReflect {
@@ -768,24 +789,24 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}()
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return ret, NewError(err, expr)
 		}
 		return ret, nil
 	case *ast.TernaryOpExpr:
 		rv, err := invokeExpr(e.Expr, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return rv, NewError(err, expr)
 		}
 		if toBool(rv) {
 			lhsV, err := invokeExpr(e.Lhs, env)
 			if err != nil {
-				return NilValue, NewError(err, expr)
+				return lhsV, NewError(err, expr)
 			}
 			return lhsV, nil
 		}
 		rhsV, err := invokeExpr(e.Rhs, env)
 		if err != nil {
-			return NilValue, NewError(err, expr)
+			return rhsV, NewError(err, expr)
 		}
 		return rhsV, nil
 	default:
