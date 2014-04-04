@@ -200,18 +200,24 @@ retry:
 			}
 		case '|':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '|' {
+			switch s.peek() {
+			case '|':
 				tok = OROR
-			} else {
+			case '=':
+				tok = OREQ
+			default:
+				tok = int(ch)
 				s.back()
 			}
 		case '&':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '&' {
+			switch s.peek() {
+			case '&':
 				tok = ANDAND
-			} else {
+			case '=':
+				tok = ANDEQ
+			default:
+				tok = int(ch)
 				s.back()
 			}
 		case '.':
