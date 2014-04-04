@@ -408,11 +408,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return reflect.ValueOf(int64(v)), nil
 	case *ast.IdentExpr:
-		if v, ok := env.Get(e.Lit); ok {
-			return v, nil
-		} else {
-			return v, NewStringError(expr, fmt.Sprintf("Undefined variable: %s", e.Lit))
-		}
+		return env.Get(e.Lit)
 	case *ast.StringExpr:
 		return reflect.ValueOf(e.Lit), nil
 	case *ast.ArrayExpr:
@@ -522,51 +518,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return reflect.ValueOf(rs[ii]), nil
 		}
 		return v, NewStringError(expr, "Invalid operation")
-	case *ast.MemberExpr:
-		v, err := invokeExpr(e.Expr, env)
-		if err != nil {
-			return v, NewError(expr, err)
-		}
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
-		}
-		if v.Kind() == reflect.Slice {
-			v = v.Index(0)
-		}
-		if v.IsValid() && v.CanInterface() {
-			if vme, ok := v.Interface().(*Env); ok {
-				m, ok := vme.Get(e.Method)
-				if !m.IsValid() || !ok {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
-				}
-				return m, nil
-			}
-		}
-
-		m := v.MethodByName(e.Method)
-		if !m.IsValid() {
-			if v.Kind() == reflect.Ptr {
-				v = v.Elem()
-			}
-			if v.Kind() == reflect.Struct {
-				m = v.FieldByName(e.Method)
-				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
-				}
-			} else if v.Kind() == reflect.Map {
-				m = v.MapIndex(reflect.ValueOf(e.Method))
-				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
-				}
-			} else {
-				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
-			}
-		}
-		return m, nil
 	case *ast.AssocExpr:
-		v, ok := env.Get(e.Name)
-		if !ok {
-			return NilValue, NewErrorf(expr, "Undefined function '%s'", e.Name)
+		v, err := env.Get(e.Name)
+		if err != nil {
+			return v, err
 		}
 		switch e.Operator {
 		case "++":
@@ -629,6 +584,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				v = v.Elem()
 			}
 			if env.Set(name, v) != nil {
+				if strings.Contains(name, ".") {
+					return NilValue, NewErrorf(expr, "Undefined symbol '%s'", name)
+				}
 				env.Define(name, v)
 			}
 		}
@@ -744,11 +702,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if e.Func != nil {
 			f = e.Func.(reflect.Value)
 		} else {
-			var ok bool
-			f, ok = env.Get(e.Name)
-			if !ok {
-				return f, NewErrorf(expr, "Undefined function '%s'", e.Name)
+			var err error
+			ff, err := env.Get(e.Name)
+			if err != nil {
+				return f, err
 			}
+			f = ff
 		}
 		_, isReflect := f.Interface().(Func)
 
@@ -762,11 +721,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if !arg.IsValid() {
 				arg = NilValue
 			} else if i < f.Type().NumIn() {
-				it := f.Type().In(i)
-				if arg.Kind().String() == "unsafe.Pointer" {
-					arg = reflect.New(it).Elem()
-				} else if arg.Kind() != it.Kind() && arg.Type().ConvertibleTo(f.Type().In(i)) {
-					arg = arg.Convert(it)
+				if !f.Type().IsVariadic() {
+					it := f.Type().In(i)
+					if arg.Kind().String() == "unsafe.Pointer" {
+						arg = reflect.New(it).Elem()
+					} else if arg.Kind() != it.Kind() && arg.Type().ConvertibleTo(f.Type().In(i)) {
+						arg = arg.Convert(it)
+					}
 				}
 			}
 

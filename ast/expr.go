@@ -94,13 +94,6 @@ type AnonCallExpr struct {
 	SubExprs []Expr
 }
 
-// MemberExpr provide expression to refer menber.
-type MemberExpr struct {
-	ExprImpl
-	Expr   Expr
-	Method string
-}
-
 // ItemExpr provide expression to refer Map/Array item.
 type ItemExpr struct {
 	ExprImpl
