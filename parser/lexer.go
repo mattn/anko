@@ -124,116 +124,142 @@ retry:
 			goto retry
 		case '!':
 			s.next()
-			if s.peek() == '=' {
+			switch case s.peek() {
+			case '=':
 				tok = NEQ
-			} else {
+				lit = "!="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '=':
 			s.next()
-			if s.peek() == '=' {
+			switch case s.peek() {
+			case '=':
 				tok = EQEQ
-			} else {
+				lit = "=="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '+':
 			s.next()
-			if s.peek() == '+' {
+			switch case s.peek() {
+			case '+':
 				tok = PLUSPLUS
-			} else if s.peek() == '=' {
+				lit = "++"
+			case '=':
 				tok = PLUSEQ
-			} else {
+				lit = "+="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '-':
 			s.next()
-			if s.peek() == '-' {
+			switch s.peek() {
+			case '-':
 				tok = MINUSMINUS
-			} else if s.peek() == '=' {
+				lit = "--"
+			case '=':
 				tok = MINUSEQ
-			} else {
+				lit = "-="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '*':
 			s.next()
-			if s.peek() == '*' {
+			switch s.peek() {
+			case '*':
 				tok = POW
-			} else if s.peek() == '=' {
+				lit = "**"
+			case '=':
 				tok = MULEQ
-			} else {
+				lit = "*="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '/':
 			s.next()
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = DIVEQ
-			} else {
+				lit = "/="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '>':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = GE
-			} else {
+				lit = ">="
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '<':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = LE
-			} else {
+				lit = "<="
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '|':
 			s.next()
 			switch s.peek() {
 			case '|':
 				tok = OROR
+				lit = "||"
 			case '=':
 				tok = OREQ
+				lit = "|="
 			default:
-				tok = int(ch)
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '&':
 			s.next()
 			switch s.peek() {
 			case '&':
 				tok = ANDAND
+				lit = "&&"
 			case '=':
 				tok = ANDEQ
+				lit = "&="
 			default:
-				tok = int(ch)
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '.':
-			tok = int(ch)
-			lit = string(ch)
 			s.next()
 			if s.peek() == '.' {
 				s.next()
-				tok = ParseError
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
-					s.back()
+					tok = ParseError
 				}
 			} else {
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '\n', '^':
 			tok = int(ch)
