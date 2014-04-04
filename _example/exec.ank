@@ -1,0 +1,5 @@
+#!anko
+
+cmd = os.exec.Command("ls", "-la")
+cmd.Stdout = os.Stdout
+cmd.Run()
