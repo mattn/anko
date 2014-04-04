@@ -3,7 +3,6 @@ package vm
 import (
 	"fmt"
 	"reflect"
-	"strings"
 )
 
 // Env provides interface to run VM. This mean function scope and blocked-scope.
@@ -41,7 +40,6 @@ func (e *Env) GetName() string {
 	return e.name
 }
 
-// Get return value which specified symbol. It go to upper scope until found.
 // Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, bool) {
 	for {
