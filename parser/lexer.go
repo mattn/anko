@@ -9,6 +9,7 @@ import (
 
 const (
 	EOF        = -1 // End of file.
+	EOL        = '\n' // End of line.
 	ParseError = 0  // Error from parser.
 )
 
@@ -124,7 +125,7 @@ retry:
 			goto retry
 		case '!':
 			s.next()
-			switch case s.peek() {
+			switch s.peek() {
 			case '=':
 				tok = NEQ
 				lit = "!="
@@ -135,7 +136,7 @@ retry:
 			}
 		case '=':
 			s.next()
-			switch case s.peek() {
+			switch s.peek() {
 			case '=':
 				tok = EQEQ
 				lit = "=="
@@ -146,7 +147,7 @@ retry:
 			}
 		case '+':
 			s.next()
-			switch case s.peek() {
+			switch s.peek() {
 			case '+':
 				tok = PLUSPLUS
 				lit = "++"
@@ -203,6 +204,9 @@ retry:
 			case '=':
 				tok = GE
 				lit = ">="
+			case '>':
+				tok = SHIFTRIGHT
+				lit = ">>"
 			default:
 				s.back()
 				tok = int(ch)
@@ -214,6 +218,9 @@ retry:
 			case '=':
 				tok = LE
 				lit = "<="
+			case '<':
+				tok = SHIFTLEFT
+				lit = "<<"
 			default:
 				s.back()
 				tok = int(ch)
@@ -312,6 +319,16 @@ func (s *Scanner) next() {
 	}
 }
 
+// current return the current offset.
+func (s *Scanner) current() int {
+	return s.offset
+}
+
+// offset set the offset value.
+func (s *Scanner) set(o int) {
+	s.offset = o
+}
+
 // back move back offset once to top.
 func (s *Scanner) back() {
 	s.offset--
@@ -378,13 +395,18 @@ func (s *Scanner) scanRawString() (string, error) {
 // scanIdentifier return string begining at current position. This handle backslash escaping.
 func (s *Scanner) scanString() (string, error) {
 	var ret []rune
+eos:
 	for {
 		s.next()
-		if s.peek() == EOF {
+		switch s.peek() {
+		case EOL:
 			return "", errors.New("Parser Error")
-			break
-		}
-		if s.peek() == '\\' {
+		case EOF:
+			return "", errors.New("Parser Error")
+		case '"':
+			s.next()
+			break eos
+		case '\\':
 			s.next()
 			switch s.peek() {
 			case 'b':
@@ -405,12 +427,9 @@ func (s *Scanner) scanString() (string, error) {
 			}
 			ret = append(ret, s.peek())
 			continue
+		default:
+			ret = append(ret, s.peek())
 		}
-		if s.peek() == '"' {
-			s.next()
-			break
-		}
-		ret = append(ret, s.peek())
 	}
 	return string(ret), nil
 }
