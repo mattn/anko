@@ -51,10 +51,11 @@ type IdentExpr struct {
 	Lit string
 }
 
-// UnaryMinusExpr provide unary minus expression. ex: -1.
-type UnaryMinusExpr struct {
+// UnaryExpr provide unary minus expression. ex: -1, ^1, ~1.
+type UnaryExpr struct {
 	ExprImpl
-	SubExpr Expr
+	Operator string
+	Expr     Expr
 }
 
 // ParenExpr provide parent block expression.

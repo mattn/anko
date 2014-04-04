@@ -47,5 +47,17 @@ a = 1
 a |= 2
 is(3, a, "|=")
 
+a = !3
+is(false, a, "!3")
+
+a = !true
+is(false, a, "!true")
+
+a = !false
+is(true, a, "!false")
+
+a = ^3
+is(-4, a, "!false")
+
 # vim: set ft=anko:
 

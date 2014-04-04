@@ -253,7 +253,15 @@ expr : NUMBER
 	}
 	| '-' expr %prec UNARY
 	{
-		$$ = &ast.UnaryMinusExpr{SubExpr: $2}
+		$$ = &ast.UnaryExpr{Operator: "-", Expr: $2}
+	}
+	| '!' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "!", Expr: $2}
+	}
+	| '^' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
 	}
 	| STRING
 	{

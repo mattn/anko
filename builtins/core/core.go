@@ -131,7 +131,7 @@ func Import(env *vm.Env) {
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
 			if len(stmts) > 0 {
-				panic(vm.NewError(err, stmts[0]))
+				panic(vm.NewError(stmts[0], err))
 			}
 			panic(err)
 		}
