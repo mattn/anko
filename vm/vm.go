@@ -693,10 +693,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if toBool(lhsV) {
 				return lhsV, nil
 			}
-			if toBool(rhsV) {
-				return rhsV, nil
-			}
-			return FalseValue, nil
+			return rhsV, nil
 		case "&":
 			return reflect.ValueOf(toInt64(lhsV) & toInt64(rhsV)), nil
 		case "&&":
