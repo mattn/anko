@@ -21,6 +21,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 )
 
@@ -66,6 +67,7 @@ func main() {
 	var b []byte
 	var reader *bufio.Reader
 	var following bool
+	var source string
 
 	repl := flag.NArg() == 0 && *e == ""
 
@@ -73,9 +75,11 @@ func main() {
 
 	if repl {
 		reader = bufio.NewReader(os.Stdin)
+		source = "typein"
 	} else {
 		if *e != "" {
 			b = []byte(*e)
+			source = "argument"
 		} else {
 			var err error
 			b, err = ioutil.ReadFile(flag.Arg(0))
@@ -86,6 +90,7 @@ func main() {
 				os.Exit(1)
 			}
 			env.Define("args", reflect.ValueOf(flag.Args()[1:]))
+			source = filepath.Clean(flag.Arg(0))
 		}
 	}
 
@@ -136,9 +141,9 @@ func main() {
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos().Line, err)
 				} else if e, ok := err.(*parser.Error); ok {
-					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos().Line, err)
 				} else {
 					fmt.Fprintln(os.Stderr, err)
 				}
