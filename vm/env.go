@@ -42,30 +42,8 @@ func (e *Env) GetName() string {
 }
 
 // Get return value which specified symbol. It go to upper scope until found.
+// Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, bool) {
-	ns := strings.Split(k, "::")
-	if len(ns) > 1 {
-		global := e
-		for global.parent != nil {
-			global = global.parent
-		}
-		for i, n := range ns {
-			v, ok := global.env[n]
-			if !ok {
-				return NilValue, false
-			}
-			if i == len(ns)-1 {
-				return v, ok
-			}
-			if vv, ok := v.Interface().(*Env); ok {
-				global = vv
-			} else {
-				return NilValue, false
-			}
-		}
-		return NilValue, false
-	}
-
 	for {
 		if e.parent == nil {
 			v, ok := e.env[k]
