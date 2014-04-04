@@ -758,11 +758,18 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return arg, NewError(expr, err)
 			}
+
 			if !arg.IsValid() {
 				arg = NilValue
-			} else if arg.Kind().String() == "unsafe.Pointer" && f.Type().NumIn() < i {
-				arg = reflect.New(f.Type().In(i)).Elem()
+			} else if i < f.Type().NumIn() {
+				it := f.Type().In(i)
+				if arg.Kind().String() == "unsafe.Pointer" {
+					arg = reflect.New(it).Elem()
+				} else if arg.Kind() != it.Kind() && arg.Type().ConvertibleTo(f.Type().In(i)) {
+					arg = arg.Convert(it)
+				}
 			}
+
 			if !isReflect {
 				args = append(args, arg)
 			} else {
