@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
-	anko_core "github.com/mattn/anko/builtins/core"
+	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding "github.com/mattn/anko/builtins/encoding"
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_math "github.com/mattn/anko/builtins/math"
