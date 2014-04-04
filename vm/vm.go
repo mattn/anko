@@ -720,6 +720,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return reflect.ValueOf(math.Pow(toFloat64(lhsV), toFloat64(rhsV))), nil
 			}
 			return reflect.ValueOf(int64(math.Pow(toFloat64(lhsV), toFloat64(rhsV)))), nil
+		case ">>":
+			return reflect.ValueOf(toInt64(lhsV) >> uint64(toInt64(rhsV))), nil
+		case "<<":
+			return reflect.ValueOf(toInt64(lhsV) << uint64(toInt64(rhsV))), nil
 		default:
 			return NilValue, NewStringError(expr, "Unknown operator")
 		}
@@ -736,6 +740,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs}, env)
 	case *ast.CallExpr:
 		f := NilValue
+
 		if e.Func != nil {
 			f = e.Func.(reflect.Value)
 		} else {

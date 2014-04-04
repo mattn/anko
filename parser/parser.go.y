@@ -43,7 +43,7 @@ import (
 %left OROR
 %left ANDAND
 %nonassoc EQEQ NEQ
-%left '>' GE '<' LE
+%left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
 
 %left '+' '-' PLUSPLUS MINUSMINUS
 %left '*' '/' '%'
@@ -350,6 +350,14 @@ expr : NUMBER
 	| expr POW expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "**", Rhs: $3}
+	}
+	| expr SHIFTLEFT expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<<", Rhs: $3}
+	}
+	| expr SHIFTRIGHT expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">>", Rhs: $3}
 	}
 	| expr EQEQ expr
 	{

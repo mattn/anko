@@ -450,7 +450,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 		return 0
 	}
 	if tok == ParseError {
-		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Undefined symbol"), pos: l.pos, fatal: true}
+		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Parse error"), pos: l.pos, fatal: true}
 		return 0
 	}
 	lval.tok = Token{tok: tok, lit: lit, pos: pos}
