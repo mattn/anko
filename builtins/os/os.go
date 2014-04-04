@@ -2,6 +2,7 @@
 package os
 
 import (
+	"github.com/mattn/anko/builtins/os/exec"
 	"github.com/mattn/anko/vm"
 	o "os"
 	"reflect"
@@ -15,4 +16,6 @@ func Import(env *vm.Env) {
 	m.Define("Getenv", reflect.ValueOf(o.Getenv))
 	m.Define("Setenv", reflect.ValueOf(o.Setenv))
 	m.Define("Exit", reflect.ValueOf(o.Exit))
+
+	exec.Import(m)
 }
