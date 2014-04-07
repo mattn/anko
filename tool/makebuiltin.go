@@ -111,7 +111,7 @@ func Import(env *vm.Env) {
 	m := env.NewModule("%s")
 `, pn, pkg, pn, pkg, pn)
 		for _, k := range keys {
-			fmt.Printf("\t" + `m.Define("%s", reflect.ValueOf(pkg.%s))` + "\n", k, k)
+			fmt.Printf("\t"+`m.Define("%s", reflect.ValueOf(pkg.%s))`+"\n", k, k)
 		}
 		fmt.Println("}")
 	}

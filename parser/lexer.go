@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	EOF        = -1 // End of file.
+	EOF        = -1   // End of file.
 	EOL        = '\n' // End of line.
-	ParseError = 0  // Error from parser.
+	ParseError = 0    // Error from parser.
 )
 
 // Token provide structure of identities or literals.

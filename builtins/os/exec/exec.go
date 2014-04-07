@@ -3,8 +3,8 @@ package exec
 
 import (
 	"github.com/mattn/anko/vm"
-	"reflect"
 	e "os/exec"
+	"reflect"
 )
 
 func Import(env *vm.Env) {

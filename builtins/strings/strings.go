@@ -3,8 +3,8 @@ package strings
 
 import (
 	"github.com/mattn/anko/vm"
-	pkg "strings"
 	"reflect"
+	pkg "strings"
 )
 
 func Import(env *vm.Env) {

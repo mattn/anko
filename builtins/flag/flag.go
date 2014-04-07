@@ -2,8 +2,8 @@
 package flag
 
 import (
-	"github.com/mattn/anko/vm"
 	pkg "flag"
+	"github.com/mattn/anko/vm"
 	"reflect"
 )
 
