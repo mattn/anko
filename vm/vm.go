@@ -400,6 +400,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			env.Define(lhs.Lit, rv)
 		}
+		return rv, nil
 	case *ast.MemberExpr:
 		v, err := invokeExpr(lhs.Expr, env)
 		if err != nil {
@@ -833,7 +834,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if v.Kind() == reflect.Interface {
 				v = v.Elem()
 			}
-			invokeLetExpr(lhs, v, env)
+			_, err = invokeLetExpr(lhs, v, env)
+			if err != nil {
+				return rvs, NewError(lhs, err)
+			}
 		}
 		if rvs.Len() == 1 {
 			return rvs.Index(0), nil
