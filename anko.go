@@ -157,7 +157,7 @@ func main() {
 		} else {
 			if repl {
 				colortext(ct.Black, true, func() {
-					if v == vm.NilValue {
+					if v == vm.NilValue || !v.IsValid() {
 						fmt.Println("nil")
 					} else {
 						s, ok := v.Interface().(fmt.Stringer)
