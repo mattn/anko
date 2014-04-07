@@ -212,7 +212,6 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 				return rv, NewError(stmt, err)
 			}
-			return rv, nil
 		}
 		return NilValue, nil
 	case *ast.ForStmt:
