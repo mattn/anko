@@ -229,7 +229,7 @@ lhs : IDENT
 	}
 	| expr '.' IDENT
 	{
-		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+		$$ = &ast.MemberExpr{Expr: $1, Name: $3.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '[' expr ']'
@@ -325,7 +325,7 @@ expr : NUMBER
 	}
 	| expr '.' IDENT
 	{
-		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+		$$ = &ast.MemberExpr{Expr: $1, Name: $3.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '[' exprs ']'

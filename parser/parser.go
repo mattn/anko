@@ -936,7 +936,7 @@ yydefault:
 	case 33:
 		//line parser.go.y:231
 		{
-			yyVAL.lhs = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Method: yyS[yypt-0].tok.lit}
+			yyVAL.lhs = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
 			if l, ok := yylex.(*Lexer); ok {
 				yyVAL.lhs.SetPos(l.pos)
 			}
@@ -1075,7 +1075,7 @@ yydefault:
 	case 53:
 		//line parser.go.y:327
 		{
-			yyVAL.expr = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Method: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
 			if l, ok := yylex.(*Lexer); ok {
 				yyVAL.expr.SetPos(l.pos)
 			}

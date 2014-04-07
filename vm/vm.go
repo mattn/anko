@@ -400,6 +400,37 @@ func letExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
 			}
 			env.Define(lhs.Lit, rv)
 		}
+	case *ast.MemberExpr:
+		v, err := invokeExpr(lhs.Expr, env)
+		if err != nil {
+			return v, NewError(expr, err)
+		}
+
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Slice {
+			v = v.Index(0)
+		}
+
+		if !v.IsValid() {
+			return NilValue, NewStringError(expr, "Cannot assignable")
+		}
+
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Struct {
+			v = v.FieldByName(lhs.Name)
+		} else if v.Kind() == reflect.Map {
+			v = v.MapIndex(reflect.ValueOf(lhs.Name))
+		}
+
+		if !v.CanSet() {
+			return NilValue, NewStringError(expr, "Cannot assignable")
+		}
+		v.Set(rv)
+		return v, nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
@@ -545,31 +576,31 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		if v.IsValid() && v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
-				m, err := vme.Get(e.Method)
+				m, err := vme.Get(e.Name)
 				if !m.IsValid() || err != nil {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 				return m, nil
 			}
 		}
 
-		m := v.MethodByName(e.Method)
+		m := v.MethodByName(e.Name)
 		if !m.IsValid() {
 			if v.Kind() == reflect.Ptr {
 				v = v.Elem()
 			}
 			if v.Kind() == reflect.Struct {
-				m = v.FieldByName(e.Method)
+				m = v.FieldByName(e.Name)
 				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 			} else if v.Kind() == reflect.Map {
-				m = v.MapIndex(reflect.ValueOf(e.Method))
+				m = v.MapIndex(reflect.ValueOf(e.Name))
 				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 			} else {
-				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 			}
 		}
 		return m, nil
