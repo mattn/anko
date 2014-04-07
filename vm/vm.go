@@ -463,9 +463,6 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if i.Kind() != reflect.String {
 				return NilValue, NewStringError(expr, "Map key should be string")
 			}
-			if !v.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
-			}
 			v.SetMapIndex(i, rv)
 			return rv, nil
 		}
