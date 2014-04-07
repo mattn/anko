@@ -10,6 +10,7 @@ import (
 
 func Import(env *vm.Env) {
 	m := env.NewModule("os")
+	m.Define("Args", reflect.ValueOf(o.Args))
 	m.Define("Stdin", reflect.ValueOf(o.Stdin))
 	m.Define("Stdout", reflect.ValueOf(o.Stdout))
 	m.Define("Stderr", reflect.ValueOf(o.Stderr))

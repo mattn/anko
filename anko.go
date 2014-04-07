@@ -7,6 +7,7 @@ import (
 	"github.com/daviddengcn/go-colortext"
 	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding "github.com/mattn/anko/builtins/encoding"
+	anko_flag "github.com/mattn/anko/builtins/flag"
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_math "github.com/mattn/anko/builtins/math"
 	anko_net "github.com/mattn/anko/builtins/net"
@@ -27,8 +28,9 @@ import (
 
 const version = "0.0.1"
 
-var e = flag.String("e", "", "One line of program")
-var v = flag.Bool("v", false, "Display version")
+var fs = flag.NewFlagSet(os.Args[0], 1)
+var e = fs.String("e", "", "One line of program")
+var v = fs.Bool("v", false, "Display version")
 
 var istty = isatty.IsTerminal(os.Stdout.Fd())
 
@@ -43,7 +45,7 @@ func colortext(color ct.Color, bright bool, f func()) {
 }
 
 func main() {
-	flag.Parse()
+	fs.Parse(os.Args[1:])
 	if *v {
 		fmt.Println(version)
 		os.Exit(0)
@@ -51,27 +53,15 @@ func main() {
 
 	env := vm.NewEnv()
 
-	anko_core.Import(env)
-	anko_net.Import(env)
-	anko_encoding.Import(env)
-	anko_os.Import(env)
-	anko_io.Import(env)
-	anko_math.Import(env)
-	anko_path.Import(env)
-	anko_regexp.Import(env)
-	anko_sort.Import(env)
-	anko_strings.Import(env)
-	anko_term.Import(env)
-
 	var code string
 	var b []byte
 	var reader *bufio.Reader
 	var following bool
 	var source string
 
-	repl := flag.NArg() == 0 && *e == ""
+	repl := fs.NArg() == 0 && *e == ""
 
-	env.Define("args", reflect.ValueOf(flag.Args()))
+	env.Define("args", reflect.ValueOf(fs.Args()))
 
 	if repl {
 		reader = bufio.NewReader(os.Stdin)
@@ -82,17 +72,31 @@ func main() {
 			source = "argument"
 		} else {
 			var err error
-			b, err = ioutil.ReadFile(flag.Arg(0))
+			b, err = ioutil.ReadFile(fs.Arg(0))
 			if err != nil {
 				colortext(ct.Red, false, func() {
 					fmt.Fprintln(os.Stderr, err)
 				})
 				os.Exit(1)
 			}
-			env.Define("args", reflect.ValueOf(flag.Args()[1:]))
-			source = filepath.Clean(flag.Arg(0))
+			env.Define("args", reflect.ValueOf(fs.Args()[1:]))
+			source = filepath.Clean(fs.Arg(0))
 		}
 	}
+	os.Args = fs.Args()
+
+	anko_core.Import(env)
+	anko_flag.Import(env)
+	anko_net.Import(env)
+	anko_encoding.Import(env)
+	anko_os.Import(env)
+	anko_io.Import(env)
+	anko_math.Import(env)
+	anko_path.Import(env)
+	anko_regexp.Import(env)
+	anko_sort.Import(env)
+	anko_strings.Import(env)
+	anko_term.Import(env)
 
 	for {
 		if repl {
