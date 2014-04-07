@@ -66,6 +66,7 @@ func main() {
 	if repl {
 		reader = bufio.NewReader(os.Stdin)
 		source = "typein"
+		os.Args = append([]string{os.Args[0]}, fs.Args()...)
 	} else {
 		if *e != "" {
 			b = []byte(*e)
@@ -82,8 +83,8 @@ func main() {
 			env.Define("args", reflect.ValueOf(fs.Args()[1:]))
 			source = filepath.Clean(fs.Arg(0))
 		}
+		os.Args = fs.Args()
 	}
-	os.Args = fs.Args()
 
 	anko_core.Import(env)
 	anko_flag.Import(env)
