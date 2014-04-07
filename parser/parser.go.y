@@ -293,6 +293,26 @@ expr : NUMBER
 		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
+	| '&' IDENT %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: &ast.IdentExpr{Lit: $2.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '&' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '*' IDENT %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: &ast.IdentExpr{Lit: $2.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '*' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
 	| STRING
 	{
 		$$ = &ast.StringExpr{Lit: $1.lit}

@@ -58,6 +58,18 @@ type UnaryExpr struct {
 	Expr     Expr
 }
 
+// AddrExpr provide referencing address expression.
+type AddrExpr struct {
+	ExprImpl
+	Expr Expr
+}
+
+// DerefExpr provide dereferencing address expression.
+type DerefExpr struct {
+	ExprImpl
+	Expr Expr
+}
+
 // ParenExpr provide parent block expression.
 type ParenExpr struct {
 	ExprImpl

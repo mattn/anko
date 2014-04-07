@@ -42,6 +42,24 @@ func (e *Env) GetName() string {
 }
 
 // Get return value which specified symbol. It go to upper scope until found.
+func (e *Env) Addr(k string) (reflect.Value, error) {
+	for {
+		if e.parent == nil {
+			v, ok := e.env[k]
+			if !ok {
+				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+			}
+			return v, nil
+		}
+		if v, ok := e.env[k]; ok {
+			return v.Addr(), nil
+		}
+		e = e.parent
+	}
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+}
+
+// Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, error) {
 	for {
 		if e.parent == nil {

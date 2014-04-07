@@ -391,7 +391,7 @@ func toInt64(v reflect.Value) int64 {
 	return 0
 }
 
-func letExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
+func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
 	switch lhs := expr.(type) {
 	case *ast.IdentExpr:
 		if env.Set(lhs.Lit, rv) != nil {
@@ -513,6 +513,125 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			m[k] = v.Interface()
 		}
 		return reflect.ValueOf(m), nil
+	case *ast.DerefExpr:
+		v := NilValue
+		var err error
+		switch ee := e.Expr.(type) {
+		case *ast.IdentExpr:
+			v, err = env.Get(ee.Lit)
+			if err != nil {
+				return v, err
+			}
+		case *ast.MemberExpr:
+			v, err := invokeExpr(ee.Expr, env)
+			if err != nil {
+				return v, NewError(expr, err)
+			}
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
+			if v.Kind() == reflect.Slice {
+				v = v.Index(0)
+			}
+			if v.IsValid() && v.CanInterface() {
+				if vme, ok := v.Interface().(*Env); ok {
+					m, err := vme.Get(ee.Name)
+					if !m.IsValid() || err != nil {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+					return m, nil
+				}
+			}
+
+			m := v.MethodByName(ee.Name)
+			if !m.IsValid() {
+				if v.Kind() == reflect.Ptr {
+					v = v.Elem()
+				}
+				if v.Kind() == reflect.Struct {
+					m = v.FieldByName(ee.Name)
+					if !m.IsValid() {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+				} else if v.Kind() == reflect.Map {
+					m = v.MapIndex(reflect.ValueOf(ee.Name))
+					if !m.IsValid() {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+				} else {
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+				}
+				v = m
+			} else {
+				v = m
+			}
+		default:
+			return NilValue, NewStringError(expr, "Invalid operation for the value")
+		}
+		if v.Kind() != reflect.Ptr {
+			return NilValue, NewStringError(expr, "Cannot deference for the value")
+		}
+		return v.Addr(), nil
+	case *ast.AddrExpr:
+		v := NilValue
+		var err error
+		switch ee := e.Expr.(type) {
+		case *ast.IdentExpr:
+			v, err = env.Get(ee.Lit)
+			if err != nil {
+				return v, err
+			}
+		case *ast.MemberExpr:
+			v, err := invokeExpr(ee.Expr, env)
+			if err != nil {
+				return v, NewError(expr, err)
+			}
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
+			if v.Kind() == reflect.Slice {
+				v = v.Index(0)
+			}
+			if v.IsValid() && v.CanInterface() {
+				if vme, ok := v.Interface().(*Env); ok {
+					m, err := vme.Get(ee.Name)
+					if !m.IsValid() || err != nil {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+					return m, nil
+				}
+			}
+
+			m := v.MethodByName(ee.Name)
+			if !m.IsValid() {
+				if v.Kind() == reflect.Ptr {
+					v = v.Elem()
+				}
+				if v.Kind() == reflect.Struct {
+					m = v.FieldByName(ee.Name)
+					if !m.IsValid() {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+				} else if v.Kind() == reflect.Map {
+					m = v.MapIndex(reflect.ValueOf(ee.Name))
+					if !m.IsValid() {
+						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					}
+				} else {
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+				}
+				v = m
+			} else {
+				v = m
+			}
+		default:
+			return NilValue, NewStringError(expr, "Invalid operation for the value")
+		}
+		if !v.CanAddr() {
+			i := v.Interface()
+			return reflect.ValueOf(&i), nil
+		}
+		return v.Addr(), nil
 	case *ast.UnaryExpr:
 		v, err := invokeExpr(e.Expr, env)
 		if err != nil {
@@ -678,8 +797,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
-
-		return letExpr(e.Lhs, rv, env)
+		return invokeLetExpr(e.Lhs, rv, env)
 	case *ast.LetsExpr:
 		rv := NilValue
 		var err error
@@ -715,7 +833,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if v.Kind() == reflect.Interface {
 				v = v.Elem()
 			}
-			letExpr(lhs, v, env)
+			invokeLetExpr(lhs, v, env)
 		}
 		if rvs.Len() == 1 {
 			return rvs.Index(0), nil
