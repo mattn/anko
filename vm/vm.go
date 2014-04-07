@@ -629,7 +629,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				v = reflect.ValueOf(toInt64(v) - 1)
 			}
 		default:
-			v, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator, Rhs: e.Expr}, env)
+			v, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator[0:1], Rhs: e.Expr}, env)
 			if err != nil {
 				return v, err
 			}

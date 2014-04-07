@@ -46,7 +46,8 @@ import (
 %right '?' ':'
 %left OROR
 %left ANDAND
-%nonassoc EQEQ NEQ '(' ')' ','
+%left IDENT
+%nonassoc EQEQ NEQ ',' '(' ')'
 %left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
 
 %left '+' '-' PLUSPLUS MINUSMINUS
@@ -258,10 +259,13 @@ exprs :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' expr
+	| expr ',' exprs
 	{
-		//$$ = append([]ast.Expr{$1}, $3...)
-		$$ = append($1, $3)
+		$$ = append([]ast.Expr{$1}, $3...)
+	}
+	| IDENT ',' exprs
+	{
+		$$ = append([]ast.Expr{&ast.IdentExpr{Lit: $1.lit}}, $3...)
 	}
 
 expr : NUMBER
@@ -443,11 +447,6 @@ expr : NUMBER
 		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	//| lhs '=' expr
-	//{
-		//$$ = &ast.LetExpr{Lhs: $1, Operator: "=", Rhs: $3}
-		//if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
-	//}
 	| IDENT PLUSEQ expr
 	{
 		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "+=", Expr: $3}
