@@ -355,7 +355,7 @@ func (s *Scanner) skipBlank() {
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
-		if !isLetter(s.peek()) && !isDigit(s.peek()) && s.peek() != '.' {
+		if !isLetter(s.peek()) && !isDigit(s.peek()) {
 			break
 		}
 		ret = append(ret, s.peek())

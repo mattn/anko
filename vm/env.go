@@ -153,7 +153,11 @@ func (e *Env) Set(k string, nv reflect.Value) error {
 		}
 
 		if found {
-			v.Set(nv)
+			if v.CanSet() {
+				v.Set(nv)
+			} else {
+				return fmt.Errorf("Invalid assign operation '%s'", k)
+			}
 			break
 		}
 		e = e.parent

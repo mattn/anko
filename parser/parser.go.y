@@ -289,6 +289,11 @@ expr : NUMBER
 		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
+	| expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
 	| '[' exprs ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
@@ -403,39 +408,44 @@ expr : NUMBER
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| idents '=' exprs
+	//| idents '=' exprs
+	//{
+	//	$$ = &ast.LetExpr{Names: $1, Operator: "=", Exprs: $3}
+	//	if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	//}
+	| IDENT '=' expr
 	{
-		$$ = &ast.LetExpr{Names: $1, Operator: "=", Exprs: $3}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "=", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT PLUSEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "+", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "+", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT MINUSEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "-", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "-", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT MULEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "*", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "*", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT DIVEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "/", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "/", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT ANDEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "&", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "&", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT OREQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "|", Exprs: []ast.Expr{$3}}
+		$$ = &ast.LetExpr{Name: $1.lit, Operator: "|", Expr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT PLUSPLUS

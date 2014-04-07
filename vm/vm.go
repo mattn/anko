@@ -481,6 +481,47 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}(e, env))
 		env.Define(e.Name, f)
 		return f, nil
+	case *ast.MemberExpr:
+		v, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return v, NewError(expr, err)
+		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Slice {
+			v = v.Index(0)
+		}
+		if v.IsValid() && v.CanInterface() {
+			if vme, ok := v.Interface().(*Env); ok {
+				m, err := vme.Get(e.Method)
+				if !m.IsValid() || err != nil {
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+				}
+				return m, nil
+			}
+		}
+
+		m := v.MethodByName(e.Method)
+		if !m.IsValid() {
+			if v.Kind() == reflect.Ptr {
+				v = v.Elem()
+			}
+			if v.Kind() == reflect.Struct {
+				m = v.FieldByName(e.Method)
+				if !m.IsValid() {
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+				}
+			} else if v.Kind() == reflect.Map {
+				m = v.MapIndex(reflect.ValueOf(e.Method))
+				if !m.IsValid() {
+					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+				}
+			} else {
+				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Method))
+			}
+		}
+		return m, nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -544,6 +585,28 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.LetExpr:
 		rv := NilValue
 		var err error
+		if e.Operator == "=" {
+			rv, err = invokeExpr(e.Expr, env)
+		} else {
+			rv, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator, Rhs: e.Expr}, env)
+		}
+		if err != nil {
+			return rv, NewError(e, err)
+		}
+		if rv.Kind() == reflect.Interface {
+			rv = rv.Elem()
+		}
+		if env.Set(e.Name, rv) != nil {
+			if strings.Contains(e.Name, ".") {
+				return NilValue, NewErrorf(expr, "Undefined symbol '%s'", e.Name)
+			}
+			env.Define(e.Name, rv)
+		}
+		return rv, nil
+/*
+	case *ast.LetExpr:
+		rv := NilValue
+		var err error
 		vs := []interface{}{}
 		for i, ee := range e.Exprs {
 			if e.Operator == "=" {
@@ -594,6 +657,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return rvs.Index(0), nil
 		}
 		return rvs, nil
+*/
 	//case *ast.NewExpr:
 	//	println("NEW")
 	//	return NilValue, nil
