@@ -5,26 +5,32 @@ import (
 	"flag"
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
-	anko_core "github.com/mattn/anko/builtins/core"
+	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding "github.com/mattn/anko/builtins/encoding"
+	anko_flag "github.com/mattn/anko/builtins/flag"
 	anko_io "github.com/mattn/anko/builtins/io"
+	anko_math "github.com/mattn/anko/builtins/math"
 	anko_net "github.com/mattn/anko/builtins/net"
 	anko_os "github.com/mattn/anko/builtins/os"
-	anko_math "github.com/mattn/anko/builtins/math"
 	anko_path "github.com/mattn/anko/builtins/path"
+	anko_regexp "github.com/mattn/anko/builtins/regexp"
+	anko_sort "github.com/mattn/anko/builtins/sort"
+	anko_strings "github.com/mattn/anko/builtins/strings"
 	anko_term "github.com/mattn/anko/builtins/term"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 )
 
 const version = "0.0.1"
 
-var e = flag.String("e", "", "One line of program")
-var v = flag.Bool("v", false, "Display version")
+var fs = flag.NewFlagSet(os.Args[0], 1)
+var e = fs.String("e", "", "One line of program")
+var v = fs.Bool("v", false, "Display version")
 
 var istty = isatty.IsTerminal(os.Stdout.Fd())
 
@@ -39,7 +45,7 @@ func colortext(color ct.Color, bright bool, f func()) {
 }
 
 func main() {
-	flag.Parse()
+	fs.Parse(os.Args[1:])
 	if *v {
 		fmt.Println(version)
 		os.Exit(0)
@@ -47,41 +53,50 @@ func main() {
 
 	env := vm.NewEnv()
 
-	anko_core.Import(env)
-	anko_net.Import(env)
-	anko_encoding.Import(env)
-	anko_os.Import(env)
-	anko_io.Import(env)
-	anko_math.Import(env)
-	anko_path.Import(env)
-	anko_term.Import(env)
-
 	var code string
 	var b []byte
 	var reader *bufio.Reader
 	var following bool
+	var source string
 
-	repl := flag.NArg() == 0 && *e == ""
+	repl := fs.NArg() == 0 && *e == ""
 
-	env.Define("args", reflect.ValueOf(flag.Args()))
+	env.Define("args", reflect.ValueOf(fs.Args()))
 
 	if repl {
 		reader = bufio.NewReader(os.Stdin)
+		source = "typein"
 	} else {
 		if *e != "" {
 			b = []byte(*e)
+			source = "argument"
 		} else {
 			var err error
-			b, err = ioutil.ReadFile(flag.Arg(0))
+			b, err = ioutil.ReadFile(fs.Arg(0))
 			if err != nil {
 				colortext(ct.Red, false, func() {
 					fmt.Fprintln(os.Stderr, err)
 				})
 				os.Exit(1)
 			}
-			env.Define("args", reflect.ValueOf(flag.Args()[1:]))
+			env.Define("args", reflect.ValueOf(fs.Args()[1:]))
+			source = filepath.Clean(fs.Arg(0))
 		}
 	}
+	os.Args = fs.Args()
+
+	anko_core.Import(env)
+	anko_flag.Import(env)
+	anko_net.Import(env)
+	anko_encoding.Import(env)
+	anko_os.Import(env)
+	anko_io.Import(env)
+	anko_math.Import(env)
+	anko_path.Import(env)
+	anko_regexp.Import(env)
+	anko_sort.Import(env)
+	anko_strings.Import(env)
+	anko_term.Import(env)
 
 	for {
 		if repl {
@@ -130,9 +145,9 @@ func main() {
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos().Line, err)
 				} else if e, ok := err.(*parser.Error); ok {
-					fmt.Fprintf(os.Stderr, "typein:%d: %s\n", e.Pos().Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos().Line, err)
 				} else {
 					fmt.Fprintln(os.Stderr, err)
 				}
@@ -146,7 +161,7 @@ func main() {
 		} else {
 			if repl {
 				colortext(ct.Black, true, func() {
-					if v == vm.NilValue {
+					if v == vm.NilValue || !v.IsValid() {
 						fmt.Println("nil")
 					} else {
 						s, ok := v.Interface().(fmt.Stringer)

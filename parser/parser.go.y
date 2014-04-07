@@ -16,6 +16,8 @@ import (
 %type<stmt_try_catch_finally> stmt_try_catch_finally
 %type<expr> expr
 %type<exprs> exprs
+%type<lhs> lhs
+%type<lhss> lhss
 %type<pair> pair
 %type<pairs> pairs
 %type<idents> idents
@@ -28,22 +30,25 @@ import (
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
 	teim                   ast.Expr
-	expr                   ast.Expr
 	tok                    Token
-	idents                 []string
+	expr                   ast.Expr
 	exprs                  []ast.Expr
+	lhs                    ast.Expr
+	lhss                   []ast.Expr
 	pair                   ast.Expr
 	pairs                  []ast.Expr
+	idents                 []string
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT
 
 %right '='
 %right '?' ':'
 %left OROR
 %left ANDAND
-%nonassoc EQEQ NEQ
-%left '>' GE '<' LE
+%left IDENT
+%nonassoc EQEQ NEQ ',' '(' ')'
+%left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
 
 %left '+' '-' PLUSPLUS MINUSMINUS
 %left '*' '/' '%'
@@ -63,6 +68,7 @@ stmts :
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
+			$1.SetPos(l.pos);
 		}
 	}
 	| stmt ';' stmts
@@ -70,6 +76,7 @@ stmts :
 		$$ = append([]ast.Stmt{$1}, $3...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
+			$1.SetPos(l.pos);
 		}
 	}
 	| BREAK stmts
@@ -118,23 +125,14 @@ stmts :
 stmt : expr
 	{
 		$$ = &ast.ExprStmt{Expr: $1}
-		if l, ok := yylex.(*Lexer); ok {
-			$1.SetPos(l.pos)
-		}
 	}
-	| RETURN expr
+	| RETURN exprs
 	{
-		$$ = &ast.ReturnStmt{Expr: $2}
-		if l, ok := yylex.(*Lexer); ok {
-			$2.SetPos(l.pos)
-		}
+		$$ = &ast.ReturnStmt{Exprs: $2}
 	}
 	| THROW expr
 	{
 		$$ = &ast.ThrowStmt{Expr: $2}
-		if l, ok := yylex.(*Lexer); ok {
-			$2.SetPos(l.pos)
-		}
 	}
 	| MODULE IDENT '{' stmts '}'
 	{
@@ -146,9 +144,9 @@ stmt_var : VAR idents '=' exprs
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
 
-stmt_if : IF '(' expr ')' '{' stmts '}'
+stmt_if : stmt_if ELSE IF '(' expr ')' '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{If: $3, Then: $6}
+		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
 	}
 	| stmt_if ELSE '{' stmts '}'
 	{
@@ -158,9 +156,9 @@ stmt_if : IF '(' expr ')' '{' stmts '}'
 			$1.(*ast.IfStmt).Else = $4
 		}
 	}
-	| stmt_if ELSE IF '(' expr ')' '{' stmts '}'
+	| IF '(' expr ')' '{' stmts '}'
 	{
-		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
+		$$ = &ast.IfStmt{If: $3, Then: $6}
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'
@@ -224,6 +222,35 @@ idents :
 		$$ = append($1, $3.lit)
 	}
 
+lhs : IDENT
+	{
+		$$ = &ast.IdentExpr{Lit: $1.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Name: $3.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+
+lhss :
+	{
+		$$ = []ast.Expr{}
+	}
+	| lhs
+	{
+		$$ = []ast.Expr{$1}
+	}
+	| lhs ',' lhss
+	{
+		$$ = append([]ast.Expr{$1}, $3...)
+	}
+
 exprs :
 	{
 		$$ = []ast.Expr{}
@@ -244,58 +271,107 @@ exprs :
 expr : NUMBER
 	{
 		$$ = &ast.NumberExpr{Lit: $1.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT
 	{
 		$$ = &ast.IdentExpr{Lit: $1.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '-' expr %prec UNARY
 	{
-		$$ = &ast.UnaryMinusExpr{SubExpr: $2}
+		$$ = &ast.UnaryExpr{Operator: "-", Expr: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '!' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "!", Expr: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '^' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '&' IDENT %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: &ast.IdentExpr{Lit: $2.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '&' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '*' IDENT %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: &ast.IdentExpr{Lit: $2.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '*' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.lit}}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| STRING
 	{
 		$$ = &ast.StringExpr{Lit: $1.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| TRUE
 	{
 		$$ = &ast.ConstExpr{Value: true}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FALSE
 	{
 		$$ = &ast.ConstExpr{Value: false}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| NIL
 	{
 		$$ = &ast.ConstExpr{Value: unsafe.Pointer(nil)}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '?' expr ':' expr
 	{
 		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '[' expr ']'
 	{
 		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Name: $3.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '[' exprs ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FUNC '(' idents ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FUNC '(' IDENT VARARG ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FUNC IDENT '(' idents ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.lit, Args: $4, Stmts: $7}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '{' pairs '}'
 	{
@@ -304,118 +380,162 @@ expr : NUMBER
 			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
 		}
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
-	}
-	| expr '.' IDENT
-	{
-		$$ = &ast.MemberExpr{Expr: $1, Method: $3.lit}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '(' expr ')'
 	{
 		$$ = &ast.ParenExpr{SubExpr: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| NEW IDENT '(' exprs ')'
 	{
 		$$ = &ast.NewExpr{Name: $2.lit, SubExprs: $4}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '+' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "+", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '-' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "-", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '*' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "*", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '/' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "/", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '%' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr POW expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "**", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr SHIFTLEFT expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<<", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr SHIFTRIGHT expr
+	{
+		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">>", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr EQEQ expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr NEQ expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "!=", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '>' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr GE expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">=", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '<' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr LE expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| idents '=' exprs
+	| lhss '=' exprs
 	{
-		$$ = &ast.LetExpr{Names: $1, Operator: "=", Exprs: $3}
+		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT PLUSEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "+", Exprs: []ast.Expr{$3}}
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "+=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT MINUSEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "-", Exprs: []ast.Expr{$3}}
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "-=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT MULEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "*", Exprs: []ast.Expr{$3}}
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "*=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT DIVEQ expr
 	{
-		$$ = &ast.LetExpr{Names: []string{$1.lit}, Operator: "/", Exprs: []ast.Expr{$3}}
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "/=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| IDENT ANDEQ expr
+	{
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "&=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| IDENT OREQ expr
+	{
+		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "|=", Expr: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT PLUSPLUS
 	{
 		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "++"}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT MINUSMINUS
 	{
 		$$ = &ast.AssocExpr{Name: $1.lit, Operator: "--"}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '|' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr OROR expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '&' expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr ANDAND expr
 	{
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '(' exprs  ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 
 %%

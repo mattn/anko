@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"io/ioutil"
+	"os"
 	"reflect"
 )
 
@@ -14,6 +15,9 @@ func Import(env *vm.Env) {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
+		}
+		if rv.Kind() == reflect.String {
+			return int64(len([]byte(rv.String())))
 		}
 		if rv.Kind() != reflect.Array && rv.Kind() != reflect.Slice {
 			panic("Argument #1 should be array")
@@ -127,7 +131,7 @@ func Import(env *vm.Env) {
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
 			if len(stmts) > 0 {
-				panic(vm.NewError(err, stmts[0]))
+				panic(vm.NewError(stmts[0], err))
 			}
 			panic(err)
 		}
@@ -136,6 +140,11 @@ func Import(env *vm.Env) {
 			return rv.Interface()
 		}
 		return nil
+	}))
+
+	env.Define("panic", reflect.ValueOf(func(e interface{}) {
+		os.Setenv("ANKO_DEBUG", "1")
+		panic(e)
 	}))
 
 	env.Define("print", reflect.ValueOf(fmt.Print))

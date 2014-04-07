@@ -42,41 +42,39 @@ func (e *Env) GetName() string {
 }
 
 // Get return value which specified symbol. It go to upper scope until found.
-func (e *Env) Get(k string) (reflect.Value, bool) {
-	ns := strings.Split(k, "::")
-	if len(ns) > 1 {
-		global := e
-		for global.parent != nil {
-			global = global.parent
-		}
-		for i, n := range ns {
-			v, ok := global.env[n]
-			if !ok {
-				return NilValue, false
-			}
-			if i == len(ns)-1 {
-				return v, ok
-			}
-			if vv, ok := v.Interface().(*Env); ok {
-				global = vv
-			} else {
-				return NilValue, false
-			}
-		}
-		return NilValue, false
-	}
-
+func (e *Env) Addr(k string) (reflect.Value, error) {
 	for {
 		if e.parent == nil {
 			v, ok := e.env[k]
-			return v, ok
+			if !ok {
+				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+			}
+			return v, nil
 		}
 		if v, ok := e.env[k]; ok {
-			return v, ok
+			return v.Addr(), nil
 		}
 		e = e.parent
 	}
-	return NilValue, false
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+}
+
+// Get return value which specified symbol. It go to upper scope until found.
+func (e *Env) Get(k string) (reflect.Value, error) {
+	for {
+		if e.parent == nil {
+			v, ok := e.env[k]
+			if !ok {
+				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+			}
+			return v, nil
+		}
+		if v, ok := e.env[k]; ok {
+			return v, nil
+		}
+		e = e.parent
+	}
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 }
 
 // Set modify the value which specified as symbol. If it can't be found in
@@ -96,20 +94,25 @@ func (e *Env) Set(k string, v reflect.Value) error {
 		}
 		e = e.parent
 	}
+	return nil
 }
 
 // DefineGlobal defines global symbol.
-func (e *Env) DefineGlobal(k string, v reflect.Value) {
+func (e *Env) DefineGlobal(k string, v reflect.Value) error {
 	global := e
 	for global.parent != nil {
 		global = global.parent
 	}
-	global.env[k] = v
+	return global.Define(k, v)
 }
 
 // Define defines symbol in current scope.
-func (e *Env) Define(k string, v reflect.Value) {
+func (e *Env) Define(k string, v reflect.Value) error {
+	if strings.Contains(k, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", k)
+	}
 	e.env[k] = v
+	return nil
 }
 
 // String return the name of current scope.

@@ -9,6 +9,7 @@ import (
 
 const (
 	EOF        = -1 // End of file.
+	EOL        = '\n' // End of line.
 	ParseError = 0  // Error from parser.
 )
 
@@ -124,112 +125,150 @@ retry:
 			goto retry
 		case '!':
 			s.next()
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = NEQ
-			} else {
+				lit = "!="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '=':
 			s.next()
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = EQEQ
-			} else {
+				lit = "=="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '+':
 			s.next()
-			if s.peek() == '+' {
+			switch s.peek() {
+			case '+':
 				tok = PLUSPLUS
-			} else if s.peek() == '=' {
+				lit = "++"
+			case '=':
 				tok = PLUSEQ
-			} else {
+				lit = "+="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '-':
 			s.next()
-			if s.peek() == '-' {
+			switch s.peek() {
+			case '-':
 				tok = MINUSMINUS
-			} else if s.peek() == '=' {
+				lit = "--"
+			case '=':
 				tok = MINUSEQ
-			} else {
+				lit = "-="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '*':
 			s.next()
-			if s.peek() == '*' {
+			switch s.peek() {
+			case '*':
 				tok = POW
-			} else if s.peek() == '=' {
+				lit = "**"
+			case '=':
 				tok = MULEQ
-			} else {
+				lit = "*="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '/':
 			s.next()
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = DIVEQ
-			} else {
+				lit = "/="
+			default:
 				s.back()
 				tok = int(ch)
 				lit = string(ch)
 			}
 		case '>':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = GE
-			} else {
+				lit = ">="
+			case '>':
+				tok = SHIFTRIGHT
+				lit = ">>"
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '<':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '=' {
+			switch s.peek() {
+			case '=':
 				tok = LE
-			} else {
+				lit = "<="
+			case '<':
+				tok = SHIFTLEFT
+				lit = "<<"
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '|':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '|' {
+			switch s.peek() {
+			case '|':
 				tok = OROR
-			} else {
+				lit = "||"
+			case '=':
+				tok = OREQ
+				lit = "|="
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '&':
 			s.next()
-			tok = int(ch)
-			if s.peek() == '&' {
+			switch s.peek() {
+			case '&':
 				tok = ANDAND
-			} else {
+				lit = "&&"
+			case '=':
+				tok = ANDEQ
+				lit = "&="
+			default:
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
 		case '.':
-			tok = int(ch)
-			lit = string(ch)
 			s.next()
 			if s.peek() == '.' {
 				s.next()
-				tok = ParseError
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
-					s.back()
+					tok = ParseError
 				}
 			} else {
 				s.back()
+				tok = int(ch)
+				lit = string(ch)
 			}
-		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '\n':
+		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '\n', '^':
 			tok = int(ch)
 			lit = string(ch)
 		default:
@@ -278,6 +317,16 @@ func (s *Scanner) next() {
 		}
 		s.offset++
 	}
+}
+
+// current return the current offset.
+func (s *Scanner) current() int {
+	return s.offset
+}
+
+// offset set the offset value.
+func (s *Scanner) set(o int) {
+	s.offset = o
 }
 
 // back move back offset once to top.
@@ -346,13 +395,18 @@ func (s *Scanner) scanRawString() (string, error) {
 // scanIdentifier return string begining at current position. This handle backslash escaping.
 func (s *Scanner) scanString() (string, error) {
 	var ret []rune
+eos:
 	for {
 		s.next()
-		if s.peek() == EOF {
+		switch s.peek() {
+		case EOL:
 			return "", errors.New("Parser Error")
-			break
-		}
-		if s.peek() == '\\' {
+		case EOF:
+			return "", errors.New("Parser Error")
+		case '"':
+			s.next()
+			break eos
+		case '\\':
 			s.next()
 			switch s.peek() {
 			case 'b':
@@ -373,12 +427,9 @@ func (s *Scanner) scanString() (string, error) {
 			}
 			ret = append(ret, s.peek())
 			continue
+		default:
+			ret = append(ret, s.peek())
 		}
-		if s.peek() == '"' {
-			s.next()
-			break
-		}
-		ret = append(ret, s.peek())
 	}
 	return string(ret), nil
 }
@@ -399,7 +450,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 		return 0
 	}
 	if tok == ParseError {
-		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Undefined symbol"), pos: l.pos, fatal: true}
+		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Parse error"), pos: l.pos, fatal: true}
 		return 0
 	}
 	lval.tok = Token{tok: tok, lit: lit, pos: pos}

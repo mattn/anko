@@ -51,10 +51,23 @@ type IdentExpr struct {
 	Lit string
 }
 
-// UnaryMinusExpr provide unary minus expression. ex: -1.
-type UnaryMinusExpr struct {
+// UnaryExpr provide unary minus expression. ex: -1, ^1, ~1.
+type UnaryExpr struct {
 	ExprImpl
-	SubExpr Expr
+	Operator string
+	Expr     Expr
+}
+
+// AddrExpr provide referencing address expression.
+type AddrExpr struct {
+	ExprImpl
+	Expr Expr
+}
+
+// DerefExpr provide dereferencing address expression.
+type DerefExpr struct {
+	ExprImpl
+	Expr Expr
 }
 
 // ParenExpr provide parent block expression.
@@ -96,8 +109,8 @@ type AnonCallExpr struct {
 // MemberExpr provide expression to refer menber.
 type MemberExpr struct {
 	ExprImpl
-	Expr   Expr
-	Method string
+	Expr Expr
+	Name string
 }
 
 // ItemExpr provide expression to refer Map/Array item.
@@ -119,9 +132,16 @@ type FuncExpr struct {
 // LetExpr provide expression to let variable.
 type LetExpr struct {
 	ExprImpl
-	Names    []string
+	Lhs Expr
+	Rhs Expr
+}
+
+// LetsExpr provide multiple expression of let.
+type LetsExpr struct {
+	ExprImpl
+	Lhss     []Expr
 	Operator string
-	Exprs    []Expr
+	Rhss     []Expr
 }
 
 // AssocExpr provide expression to assoc operation.
@@ -129,6 +149,7 @@ type AssocExpr struct {
 	ExprImpl
 	Name     string
 	Operator string
+	Expr     Expr
 }
 
 // NewExpr provide expression to make new instance.

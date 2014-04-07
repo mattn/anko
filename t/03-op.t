@@ -1,4 +1,4 @@
-
+#!anko
 
 ok(1 > 0, "1 > 0")
 ok(1 != 1.0, "1 != 1.0")
@@ -11,7 +11,8 @@ ok(false != "1", "false != \"1\"")
 ok(false != true, "false != true")
 ok(false == false, "false == false")
 ok(true == true, "true == true")
-ok(true == true, "true == true")
+ok(false == false, "false == false")
+ok(nil == nil, "nil == nil")
 
 ok(1 <= 1, "1 <= 1")
 ok(1.0 <= 1.0, "1.0 <= 1.0")
@@ -38,6 +39,30 @@ is(1, a, "--")
 
 a = 2**3
 is(8, a, "**")
+
+a = 1; a &= 2
+is(0, a, "&=")
+
+a = 1; a |= 2
+is(3, a, "|=")
+
+a = !3
+is(false, a, "!3")
+
+a = !true
+is(false, a, "!true")
+
+a = !false
+is(true, a, "!false")
+
+a = ^3
+is(-4, a, "^3")
+
+a = 3 << 2
+is(12, a, "3 << 2")
+
+a = 11 >> 2
+is(2, a, "11 >> 2")
 
 # vim: set ft=anko:
 
