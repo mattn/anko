@@ -43,127 +43,38 @@ func (e *Env) GetName() string {
 
 // Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, error) {
-	tok := strings.Split(k, ".")
-	v := NilValue
-
-	for e != nil {
-		v = reflect.ValueOf(e)
-		found := true
-		for _, n := range tok {
-			if vv, ok := v.Interface().(*Env); ok {
-				ve, ok := vv.env[n]
-				if !ok {
-					found = false
-					break
-				}
-				v = ve
-			} else {
-				if v.Kind() == reflect.Interface {
-					v = v.Elem()
-				}
-				if v.Kind() == reflect.Slice {
-					v = v.Index(0)
-				}
-
-				if !v.IsValid() {
-					found = false
-					break
-				}
-
-				m := v.MethodByName(n)
-				if m.IsValid() {
-					v = m
-				} else {
-					if v.Kind() == reflect.Ptr {
-						v = v.Elem()
-					}
-					if v.Kind() == reflect.Struct {
-						v = v.FieldByName(n)
-					} else if v.Kind() == reflect.Map {
-						v = v.MapIndex(reflect.ValueOf(n))
-					}
-				}
+	for {
+		if e.parent == nil {
+			v, ok := e.env[k]
+			if !ok {
+				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 			}
+			return v, nil
 		}
-
-		if found {
-			break
+		if v, ok := e.env[k]; ok {
+			return v, nil
 		}
 		e = e.parent
-		if e == nil {
-			return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
-		}
 	}
-
-	return v, nil
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 }
 
 // Set modify the value which specified as symbol. If it can't be found in
 // whole. This function return error
-func (e *Env) Set(k string, nv reflect.Value) error {
-	tok := strings.Split(k, ".")
-
-	if len(tok) == 1 {
-		for {
-			if e.parent == nil {
-				if _, ok := e.env[k]; !ok {
-					return fmt.Errorf("Unknown symbol '%s'", k)
-				}
-				e.env[k] = nv
-				return nil
+func (e *Env) Set(k string, v reflect.Value) error {
+	for {
+		if e.parent == nil {
+			if _, ok := e.env[k]; !ok {
+				return fmt.Errorf("Unknown symbol '%s'", k)
 			}
-			if _, ok := e.env[k]; ok {
-				e.env[k] = nv
-				return nil
-			}
-			e = e.parent
+			e.env[k] = v
+			return nil
 		}
-	}
-
-	v := reflect.ValueOf(e)
-	for e != nil {
-		found := true
-		for i, n := range tok {
-			if vv, vok := v.Interface().(*Env); vok {
-				v, _ = vv.env[n]
-				if !v.IsValid() {
-					return fmt.Errorf("nil reference for '%s'", strings.Join(tok[:i], "."))
-				}
-			} else {
-				if v.Kind() == reflect.Interface {
-					v = v.Elem()
-				}
-				if v.Kind() == reflect.Slice {
-					v = v.Index(0)
-				}
-
-				if !v.IsValid() {
-					return fmt.Errorf("nil reference for '%s'", strings.Join(tok[:i], "."))
-				}
-
-				if v.Kind() == reflect.Ptr {
-					v = v.Elem()
-				}
-				if v.Kind() == reflect.Struct {
-					v = v.FieldByName(n)
-				} else if v.Kind() == reflect.Map {
-					v = v.MapIndex(reflect.ValueOf(n))
-				}
-			}
-		}
-
-		if found {
-			if v.CanSet() {
-				v.Set(nv)
-			} else {
-				return fmt.Errorf("Invalid assign operation '%s'", k)
-			}
-			break
+		if _, ok := e.env[k]; ok {
+			e.env[k] = v
+			return nil
 		}
 		e = e.parent
-		if e == nil {
-			return fmt.Errorf("Undefined symbol '%s'", k)
-		}
 	}
 	return nil
 }
