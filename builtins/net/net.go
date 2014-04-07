@@ -1,17 +1,78 @@
-// Package os implements os related interface for anko script.
-package os
+// Package net implements net interface for anko script.
+package net
 
 import (
-	"github.com/mattn/anko/builtins/net/http"
-	"github.com/mattn/anko/builtins/net/url"
+	pkg_http "github.com/mattn/anko/builtins/net/http"
+	pkg_url "github.com/mattn/anko/builtins/net/url"
 	"github.com/mattn/anko/vm"
-	n "net"
+	pkg "net"
 	"reflect"
 )
 
 func Import(env *vm.Env) {
 	m := env.NewModule("net")
-	http.Import(m)
-	url.Import(m)
-	m.Define("Dial", reflect.ValueOf(n.Dial))
+	m.Define("CIDRMask", reflect.ValueOf(pkg.CIDRMask))
+	m.Define("Dial", reflect.ValueOf(pkg.Dial))
+	m.Define("DialIP", reflect.ValueOf(pkg.DialIP))
+	m.Define("DialTCP", reflect.ValueOf(pkg.DialTCP))
+	m.Define("DialTimeout", reflect.ValueOf(pkg.DialTimeout))
+	m.Define("DialUDP", reflect.ValueOf(pkg.DialUDP))
+	m.Define("DialUnix", reflect.ValueOf(pkg.DialUnix))
+	m.Define("ErrWriteToConnected", reflect.ValueOf(pkg.ErrWriteToConnected))
+	m.Define("FileConn", reflect.ValueOf(pkg.FileConn))
+	m.Define("FileListener", reflect.ValueOf(pkg.FileListener))
+	m.Define("FilePacketConn", reflect.ValueOf(pkg.FilePacketConn))
+	m.Define("FlagBroadcast", reflect.ValueOf(pkg.FlagBroadcast))
+	m.Define("FlagLoopback", reflect.ValueOf(pkg.FlagLoopback))
+	m.Define("FlagMulticast", reflect.ValueOf(pkg.FlagMulticast))
+	m.Define("FlagPointToPoint", reflect.ValueOf(pkg.FlagPointToPoint))
+	m.Define("FlagUp", reflect.ValueOf(pkg.FlagUp))
+	m.Define("IPv4", reflect.ValueOf(pkg.IPv4))
+	m.Define("IPv4Mask", reflect.ValueOf(pkg.IPv4Mask))
+	m.Define("IPv4allrouter", reflect.ValueOf(pkg.IPv4allrouter))
+	m.Define("IPv4allsys", reflect.ValueOf(pkg.IPv4allsys))
+	m.Define("IPv4bcast", reflect.ValueOf(pkg.IPv4bcast))
+	m.Define("IPv4len", reflect.ValueOf(pkg.IPv4len))
+	m.Define("IPv4zero", reflect.ValueOf(pkg.IPv4zero))
+	m.Define("IPv6interfacelocalallnodes", reflect.ValueOf(pkg.IPv6interfacelocalallnodes))
+	m.Define("IPv6len", reflect.ValueOf(pkg.IPv6len))
+	m.Define("IPv6linklocalallnodes", reflect.ValueOf(pkg.IPv6linklocalallnodes))
+	m.Define("IPv6linklocalallrouters", reflect.ValueOf(pkg.IPv6linklocalallrouters))
+	m.Define("IPv6loopback", reflect.ValueOf(pkg.IPv6loopback))
+	m.Define("IPv6unspecified", reflect.ValueOf(pkg.IPv6unspecified))
+	m.Define("IPv6zero", reflect.ValueOf(pkg.IPv6zero))
+	m.Define("InterfaceAddrs", reflect.ValueOf(pkg.InterfaceAddrs))
+	m.Define("InterfaceByIndex", reflect.ValueOf(pkg.InterfaceByIndex))
+	m.Define("InterfaceByName", reflect.ValueOf(pkg.InterfaceByName))
+	m.Define("Interfaces", reflect.ValueOf(pkg.Interfaces))
+	m.Define("JoinHostPort", reflect.ValueOf(pkg.JoinHostPort))
+	m.Define("Listen", reflect.ValueOf(pkg.Listen))
+	m.Define("ListenIP", reflect.ValueOf(pkg.ListenIP))
+	m.Define("ListenMulticastUDP", reflect.ValueOf(pkg.ListenMulticastUDP))
+	m.Define("ListenPacket", reflect.ValueOf(pkg.ListenPacket))
+	m.Define("ListenTCP", reflect.ValueOf(pkg.ListenTCP))
+	m.Define("ListenUDP", reflect.ValueOf(pkg.ListenUDP))
+	m.Define("ListenUnix", reflect.ValueOf(pkg.ListenUnix))
+	m.Define("ListenUnixgram", reflect.ValueOf(pkg.ListenUnixgram))
+	m.Define("LookupAddr", reflect.ValueOf(pkg.LookupAddr))
+	m.Define("LookupCNAME", reflect.ValueOf(pkg.LookupCNAME))
+	m.Define("LookupHost", reflect.ValueOf(pkg.LookupHost))
+	m.Define("LookupIP", reflect.ValueOf(pkg.LookupIP))
+	m.Define("LookupMX", reflect.ValueOf(pkg.LookupMX))
+	m.Define("LookupNS", reflect.ValueOf(pkg.LookupNS))
+	m.Define("LookupPort", reflect.ValueOf(pkg.LookupPort))
+	m.Define("LookupSRV", reflect.ValueOf(pkg.LookupSRV))
+	m.Define("LookupTXT", reflect.ValueOf(pkg.LookupTXT))
+	m.Define("ParseCIDR", reflect.ValueOf(pkg.ParseCIDR))
+	m.Define("ParseIP", reflect.ValueOf(pkg.ParseIP))
+	m.Define("ParseMAC", reflect.ValueOf(pkg.ParseMAC))
+	m.Define("Pipe", reflect.ValueOf(pkg.Pipe))
+	m.Define("ResolveIPAddr", reflect.ValueOf(pkg.ResolveIPAddr))
+	m.Define("ResolveTCPAddr", reflect.ValueOf(pkg.ResolveTCPAddr))
+	m.Define("ResolveUDPAddr", reflect.ValueOf(pkg.ResolveUDPAddr))
+	m.Define("ResolveUnixAddr", reflect.ValueOf(pkg.ResolveUnixAddr))
+	m.Define("SplitHostPort", reflect.ValueOf(pkg.SplitHostPort))
+
+	pkg_http.Import(m)
+	pkg_url.Import(m)
 }

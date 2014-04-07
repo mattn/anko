@@ -2,11 +2,11 @@
 package io
 
 import (
-	"github.com/mattn/anko/builtins/encoding/json"
+	pkg_json "github.com/mattn/anko/builtins/encoding/json"
 	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) {
 	m := env.NewModule("encoding")
-	json.Import(m)
+	pkg_json.Import(m)
 }
