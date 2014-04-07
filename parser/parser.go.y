@@ -229,10 +229,6 @@ exprs :
 	{
 		$$ = append([]ast.Expr{$1}, $3...)
 	}
-	| IDENT ',' exprs
-	{
-		$$ = append([]ast.Expr{&ast.IdentExpr{Lit: $1.lit}}, $3...)
-	}
 
 expr : NUMBER
 	{
