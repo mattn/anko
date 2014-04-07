@@ -85,7 +85,7 @@ func (e *Env) DefineGlobal(k string, v reflect.Value) error {
 	for global.parent != nil {
 		global = global.parent
 	}
-	return global.Set(k, v)
+	return global.Define(k, v)
 }
 
 // Define defines symbol in current scope.
