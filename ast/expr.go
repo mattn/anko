@@ -120,9 +120,16 @@ type FuncExpr struct {
 // LetExpr provide expression to let variable.
 type LetExpr struct {
 	ExprImpl
-	Name     string
+	Lhs      Expr
+	Rhs      Expr
+}
+
+// LetsExpr provide multiple expression of let.
+type LetsExpr struct {
+	ExprImpl
+	Lhss     []Expr
 	Operator string
-	Expr     Expr
+	Rhss     []Expr
 }
 
 // AssocExpr provide expression to assoc operation.
@@ -130,6 +137,7 @@ type AssocExpr struct {
 	ExprImpl
 	Name     string
 	Operator string
+	Expr     Expr
 }
 
 // NewExpr provide expression to make new instance.

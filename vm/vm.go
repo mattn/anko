@@ -391,6 +391,57 @@ func toInt64(v reflect.Value) int64 {
 	return 0
 }
 
+func letExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
+	switch lhs := expr.(type) {
+	case *ast.IdentExpr:
+		if env.Set(lhs.Lit, rv) != nil {
+			if strings.Contains(lhs.Lit, ".") {
+				return NilValue, NewErrorf(expr, "Undefined symbol '%s'", lhs.Lit)
+			}
+			env.Define(lhs.Lit, rv)
+		}
+	case *ast.ItemExpr:
+		v, err := invokeExpr(lhs.Value, env)
+		if err != nil {
+			return v, NewError(expr, err)
+		}
+		i, err := invokeExpr(lhs.Index, env)
+		if err != nil {
+			return i, NewError(expr, err)
+		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+			if i.Kind() != reflect.Int && i.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			ii := int(i.Int())
+			if ii < 0 || ii >= v.Len() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			vv := v.Index(ii)
+			if !vv.CanSet() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			vv.Set(rv)
+			return rv, nil
+		}
+		if v.Kind() == reflect.Map {
+			if i.Kind() != reflect.String {
+				return NilValue, NewStringError(expr, "Map key should be string")
+			}
+			if !v.CanSet() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			v.SetMapIndex(i, rv)
+			return rv, nil
+		}
+		return v, NewStringError(expr, "Invalid operation")
+	}
+	return NilValue, NewStringError(expr, "Invalid operation")
+}
+
 // invokeExpr evaluate one expression.
 func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	switch e := expr.(type) {
@@ -577,45 +628,35 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			} else {
 				v = reflect.ValueOf(toInt64(v) - 1)
 			}
+		default:
+			v, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator, Rhs: e.Expr}, env)
+			if err != nil {
+				return v, err
+			}
+
 		}
 		if env.Set(e.Name, v) != nil {
 			env.Define(e.Name, v)
 		}
 		return v, nil
 	case *ast.LetExpr:
-		rv := NilValue
-		var err error
-		if e.Operator == "=" {
-			rv, err = invokeExpr(e.Expr, env)
-		} else {
-			rv, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator, Rhs: e.Expr}, env)
-		}
+		rv, err := invokeExpr(e.Rhs, env)
 		if err != nil {
 			return rv, NewError(e, err)
 		}
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
-		if env.Set(e.Name, rv) != nil {
-			if strings.Contains(e.Name, ".") {
-				return NilValue, NewErrorf(expr, "Undefined symbol '%s'", e.Name)
-			}
-			env.Define(e.Name, rv)
-		}
-		return rv, nil
-/*
-	case *ast.LetExpr:
+
+		return letExpr(e.Lhs, rv, env)
+	case *ast.LetsExpr:
 		rv := NilValue
 		var err error
 		vs := []interface{}{}
-		for i, ee := range e.Exprs {
-			if e.Operator == "=" {
-				rv, err = invokeExpr(ee, env)
-			} else {
-				rv, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Names[i]}, Operator: e.Operator, Rhs: ee}, env)
-			}
+		for _, rhs := range e.Rhss {
+			rv, err = invokeExpr(rhs, env)
 			if err != nil {
-				return rv, NewError(ee, err)
+				return rv, NewError(rhs, err)
 			}
 			if rv == NilValue {
 				vs = append(vs, nil)
@@ -626,7 +667,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 		rvs := reflect.ValueOf(vs)
-		if len(e.Names) > 1 && rvs.Len() == 1 {
+		if len(e.Lhss) > 1 && rvs.Len() == 1 {
 			item := rvs.Index(0)
 			if item.Kind() == reflect.Interface {
 				item = item.Elem()
@@ -635,29 +676,20 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				rvs = item
 			}
 		}
-		for i, name := range e.Names {
+		for i, lhs := range e.Lhss {
 			if i >= rvs.Len() {
-				if env.Set(name, NilValue) != nil {
-					env.Define(name, NilValue)
-				}
-				continue
+				break
 			}
 			v := rvs.Index(i)
 			if v.Kind() == reflect.Interface {
 				v = v.Elem()
 			}
-			if env.Set(name, v) != nil {
-				if strings.Contains(name, ".") {
-					return NilValue, NewErrorf(expr, "Undefined symbol '%s'", name)
-				}
-				env.Define(name, v)
-			}
+			letExpr(lhs, v, env)
 		}
 		if rvs.Len() == 1 {
 			return rvs.Index(0), nil
 		}
 		return rvs, nil
-*/
 	//case *ast.NewExpr:
 	//	println("NEW")
 	//	return NilValue, nil
