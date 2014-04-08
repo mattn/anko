@@ -10,6 +10,6 @@ if (false) {
 } else {
   r = 4
 }
-is(4, r, "switch/default")
+is(4, r, "if")
 
 # vim: set ft=anko:
