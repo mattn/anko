@@ -89,10 +89,22 @@ type VarStmt struct {
 	Exprs []Expr
 }
 
-// LetStmt provide statement to let variables.
-// This can store multiple identity and values for "a,b=1,2".
-type LetStmt struct {
+// SwitchStmt provide switch statement.
+type SwitchStmt struct {
 	StmtImpl
-	Names []string
-	Exprs []Expr
+	Expr Expr
+	Cases []Stmt
+}
+
+// CaseStmt provide switch/case statement.
+type CaseStmt struct {
+	StmtImpl
+	Expr Expr
+	Stmts []Stmt
+}
+
+// DefaultStmt provide switch/default statement.
+type DefaultStmt struct {
+	StmtImpl
+	Stmts []Stmt
 }

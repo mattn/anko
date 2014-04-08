@@ -14,33 +14,40 @@ import (
 %type<stmt_if> stmt_if
 %type<stmt_for> stmt_for
 %type<stmt_try_catch_finally> stmt_try_catch_finally
+%type<stmt_switch> stmt_switch
+%type<stmt_default> stmt_default
+%type<stmt_case> stmt_case
+%type<stmt_cases> stmt_cases
 %type<expr> expr
 %type<exprs> exprs
-%type<lhs> lhs
-%type<lhss> lhss
-%type<pair> pair
-%type<pairs> pairs
-%type<idents> idents
+%type<expr_lhs> expr_lhs
+%type<expr_lhss> expr_lhss
+%type<expr_pair> expr_pair
+%type<expr_pairs> expr_pairs
+%type<expr_idents> expr_idents
 
 %union{
 	stmt_var               ast.Stmt
 	stmt_if                ast.Stmt
 	stmt_for               ast.Stmt
 	stmt_try_catch_finally ast.Stmt
+	stmt_switch            ast.Stmt
+	stmt_default           ast.Stmt
+	stmt_case              ast.Stmt
+	stmt_cases             []ast.Stmt
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
-	teim                   ast.Expr
-	tok                    Token
 	expr                   ast.Expr
 	exprs                  []ast.Expr
-	lhs                    ast.Expr
-	lhss                   []ast.Expr
-	pair                   ast.Expr
-	pairs                  []ast.Expr
-	idents                 []string
+	expr_lhs               ast.Expr
+	expr_lhss              []ast.Expr
+	expr_pair              ast.Expr
+	expr_pairs             []ast.Expr
+	expr_idents            []string
+	tok                    Token
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT
 
 %right '='
 %right '?' ':'
@@ -82,44 +89,37 @@ stmts :
 	| BREAK stmts
 	{
 		$$ = append([]ast.Stmt{&ast.BreakStmt{}}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 	| CONTINUE stmts
 	{
 		$$ = append([]ast.Stmt{&ast.ContinueStmt{}}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 	| stmt_var stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 	| stmt_if stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 	| stmt_for stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 	| stmt_try_catch_finally stmts
 	{
 		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
+	}
+	| stmt_switch stmts
+	{
+		$$ = append([]ast.Stmt{$1}, $2...)
+		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
 	}
 
 stmt : expr
@@ -139,7 +139,7 @@ stmt : expr
 		$$ = &ast.ModuleStmt{Name: $2.lit, Stmts: $4}
 	}
 
-stmt_var : VAR idents '=' exprs
+stmt_var : VAR expr_idents '=' exprs
 	{
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
@@ -191,25 +191,66 @@ stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FIN
 		$$ = &ast.TryStmt{Try: $3, Catch: $7}
 	}
 
-pair : STRING ':' expr
+stmt_cases :
+	{
+		$$ = []ast.Stmt{}
+	}
+	| stmt_case
+	{
+		$$ = []ast.Stmt{$1}
+	}
+	| stmt_cases stmt_case
+	{
+		$$ = append($1, $2)
+	}
+	| stmt_default
+	{
+		$$ = []ast.Stmt{$1}
+	}
+	| stmt_cases stmt_default
+	{
+		for _, stmt := range $1 {
+			if _, ok := stmt.(*ast.DefaultStmt); ok {
+				yylex.Error("multiple default statement")
+			}
+		}
+		$$ = append($1, $2)
+	}
+
+stmt_case : CASE expr ':' stmts
+	{
+		$$ = &ast.CaseStmt{Expr: $2, Stmts: $4}
+	}
+
+stmt_default : DEFAULT ':' stmts
+	{
+		$$ = &ast.DefaultStmt{Stmts: $3}
+	}
+
+stmt_switch : SWITCH expr '{' stmt_cases '}'
+	{
+		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
+	}
+
+expr_pair : STRING ':' expr
 	{
 		$$ = &ast.PairExpr{Key: $1.lit, Value: $3}
 	}
 
-pairs :
+expr_pairs :
 	{
 		$$ = []ast.Expr{}
 	}
-	| pair
+	| expr_pair
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| pairs ',' pair
+	| expr_pairs ',' expr_pair
 	{
 		$$ = append($1, $3)
 	}
 
-idents :
+expr_idents :
 	{
 		$$ = []string{}
 	}
@@ -217,12 +258,12 @@ idents :
 	{
 		$$ = []string{$1.lit}
 	}
-	| idents ',' IDENT
+	| expr_idents ',' IDENT
 	{
 		$$ = append($1, $3.lit)
 	}
 
-lhs : IDENT
+expr_lhs : IDENT
 	{
 		$$ = &ast.IdentExpr{Lit: $1.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
@@ -238,15 +279,15 @@ lhs : IDENT
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 
-lhss :
+expr_lhss :
 	{
 		$$ = []ast.Expr{}
 	}
-	| lhs
+	| expr_lhs
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| lhs ',' lhss
+	| expr_lhs ',' expr_lhss
 	{
 		$$ = append([]ast.Expr{$1}, $3...)
 	}
@@ -353,7 +394,7 @@ expr : NUMBER
 		$$ = &ast.ArrayExpr{Exprs: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| FUNC '(' idents ')' '{' stmts '}'
+	| FUNC '(' expr_idents ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
@@ -363,7 +404,7 @@ expr : NUMBER
 		$$ = &ast.FuncExpr{Args: []string{$3.lit}, Stmts: $7, VarArg: true}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| FUNC IDENT '(' idents ')' '{' stmts '}'
+	| FUNC IDENT '(' expr_idents ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.lit, Args: $4, Stmts: $7}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
@@ -373,7 +414,7 @@ expr : NUMBER
 		$$ = &ast.FuncExpr{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| '{' pairs '}'
+	| '{' expr_pairs '}'
 	{
 		mapExpr := make(map[string]ast.Expr)
 		for _, v := range $2 {
@@ -462,7 +503,7 @@ expr : NUMBER
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| lhss '=' exprs
+	| expr_lhss '=' exprs
 	{
 		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }

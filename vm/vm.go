@@ -287,6 +287,40 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
+	case *ast.SwitchStmt:
+		rv, err := invokeExpr(stmt.Expr, env)
+		if err != nil {
+			return rv, NewError(stmt, err)
+		}
+		done := false
+		var default_stmt *ast.DefaultStmt
+		for _, ss := range stmt.Cases {
+			if ssd, ok := ss.(*ast.DefaultStmt); ok {
+				default_stmt = ssd
+				continue
+			}
+			case_stmt := ss.(*ast.CaseStmt)
+			cv, err := invokeExpr(case_stmt.Expr, env)
+			if err != nil {
+				return rv, NewError(stmt, err)
+			}
+			if !equal(rv, cv) {
+				continue
+			}
+			rv, err = Run(case_stmt.Stmts, env)
+			if err != nil {
+				return rv, NewError(stmt, err)
+			}
+			done = true
+			break
+		}
+		if !done && default_stmt != nil {
+			rv, err = Run(default_stmt.Stmts, env)
+			if err != nil {
+				return rv, NewError(stmt, err)
+			}
+		}
+		return rv, nil
 	default:
 		return NilValue, NewStringError(stmt, "Unknown statement")
 	}

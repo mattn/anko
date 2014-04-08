@@ -11,7 +11,7 @@ hi def link     ankoDirective         Statement
 hi def link     ankoDeclaration       Type
 
 syn keyword     ankoStatement         return break continue fallthrough
-syn keyword     ankoConditional       if else
+syn keyword     ankoConditional       if else switch
 syn keyword     ankoLabel             case default
 syn keyword     ankoRepeat            for range
 
