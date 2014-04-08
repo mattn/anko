@@ -2,7 +2,7 @@
 
 DIR=$(cd $(dirname $0);pwd)
 
-ls $DIR/*.t |\
+ls $DIR/*.ank |\
 while read f; do
-  $DIR/../anko $DIR/tester.ank $f
+  $DIR/../anko $DIR/lib/tester.ank $f
 done
