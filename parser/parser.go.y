@@ -179,17 +179,17 @@ stmt_for : FOR IDENT IN expr '{' stmts '}'
 		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
 	}
 
-stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FINALLY '{' stmts '}'
+stmt_try_catch_finally : TRY '{' stmts '}' CATCH IDENT '{' stmts '}' FINALLY '{' stmts '}'
 	{
-		$$ = &ast.TryStmt{Try: $3, Var: $7.lit, Catch: $10, Finally: $14}
+		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8, Finally: $12}
 	}
 	| TRY '{' stmts '}' CATCH '{' stmts '}' FINALLY '{' stmts '}'
 	{
 		$$ = &ast.TryStmt{Try: $3, Catch: $7, Finally: $11}
 	}
-	| TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}'
+	| TRY '{' stmts '}' CATCH IDENT '{' stmts '}'
 	{
-		$$ = &ast.TryStmt{Try: $3, Var: $7.lit, Catch: $10}
+		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8}
 	}
 	| TRY '{' stmts '}' CATCH '{' stmts '}'
 	{
