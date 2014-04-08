@@ -1,5 +1,7 @@
 # anko
 
+[![Build Status](https://travis-ci.org/mattn/anko.png?branch=master)](https://travis-ci.org/mattn/anko)
+
 ![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
 (Picture licensed under CC BY-SA 3.0 by wikipedia)
