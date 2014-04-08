@@ -54,7 +54,8 @@ import (
 %left OROR
 %left ANDAND
 %left IDENT
-%nonassoc EQEQ NEQ ',' '(' ')'
+//%nonassoc EQEQ NEQ '(' ',' ')'
+%nonassoc EQEQ NEQ ','
 %left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
 
 %left '+' '-' PLUSPLUS MINUSMINUS
@@ -383,19 +384,9 @@ expr : NUMBER
 		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
-	| expr '[' expr ']'
-	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
-	}
 	| expr '.' IDENT
 	{
 		$$ = &ast.MemberExpr{Expr: $1, Name: $3.lit}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
-	}
-	| '[' exprs ']'
-	{
-		$$ = &ast.ArrayExpr{Exprs: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FUNC '(' expr_idents ')' '{' stmts '}'
@@ -416,6 +407,11 @@ expr : NUMBER
 	| FUNC IDENT '(' IDENT VARARG ')' '{' stmts '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.lit, Args: []string{$4.lit}, Stmts: $8, VarArg: true}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| '[' exprs ']'
+	{
+		$$ = &ast.ArrayExpr{Exprs: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| '{' expr_pairs '}'
@@ -575,6 +571,16 @@ expr : NUMBER
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.lit, SubExprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| IDENT '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: $1.lit}, Index: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '(' exprs  ')'

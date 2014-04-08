@@ -435,6 +435,14 @@ func isNil(v reflect.Value) bool {
 	return false
 }
 
+func isNum(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr, reflect.Float32, reflect.Float64:
+		return true
+	}
+	return false
+}
+
 // equal return true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
 	if isNil(lhsV) && isNil(rhsV) {
@@ -448,6 +456,11 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 	if !lhsV.IsValid() || !rhsV.IsValid() {
 		return true
+	}
+	if isNum(lhsV) && isNum(rhsV) {
+		if rhsV.Type().ConvertibleTo(lhsV.Type()) {
+			rhsV = rhsV.Convert(lhsV.Type())
+		}
 	}
 	if lhsV.CanInterface() && rhsV.CanInterface() {
 		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
