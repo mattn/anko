@@ -173,6 +173,10 @@ stmt_for : FOR IDENT IN expr '{' stmts '}'
 	{
 		$$ = &ast.LoopStmt{Expr: $3, Stmts: $6}
 	}
+	| FOR '(' expr ';' expr ';' expr ')' '{' stmts '}' 
+	{
+		$$ = &ast.CForStmt{Expr1: $3, Expr2: $5, Expr3: $7, Stmts: $10}
+	}
 
 stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FINALLY '{' stmts '}'
 	{

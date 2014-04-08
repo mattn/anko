@@ -46,6 +46,15 @@ type ForStmt struct {
 	Stmts []Stmt
 }
 
+// CForStmt provide C-style "for (;;)" expression statement.
+type CForStmt struct {
+	StmtImpl
+	Expr1 Expr
+	Expr2 Expr
+	Expr3 Expr
+	Stmts []Stmt
+}
+
 // LoopStmt provide "for expr" expression statement.
 type LoopStmt struct {
 	StmtImpl
@@ -92,14 +101,14 @@ type VarStmt struct {
 // SwitchStmt provide switch statement.
 type SwitchStmt struct {
 	StmtImpl
-	Expr Expr
+	Expr  Expr
 	Cases []Stmt
 }
 
 // CaseStmt provide switch/case statement.
 type CaseStmt struct {
 	StmtImpl
-	Expr Expr
+	Expr  Expr
 	Stmts []Stmt
 }
 

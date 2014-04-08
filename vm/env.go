@@ -24,6 +24,20 @@ func (e *Env) NewEnv() *Env {
 	return &Env{env: make(map[string]reflect.Value), parent: e, name: e.name}
 }
 
+// Destroy delete current scope.
+func (e *Env) Destroy() {
+	if e.parent == nil {
+		return
+	}
+	for k, v := range e.parent.env {
+		if v.Interface() == e {
+			delete(e.parent.env, k)
+		}
+	}
+	e.parent = nil
+	e.env = nil
+}
+
 // NewEnv create new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}

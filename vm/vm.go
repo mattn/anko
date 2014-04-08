@@ -126,7 +126,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		if toBool(rv) {
 			// Then
-			rv, err = Run(stmt.Then, env.NewEnv())
+			newenv := env.NewEnv()
+			defer newenv.Destroy()
+			rv, err = Run(stmt.Then, newenv)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
@@ -155,16 +157,22 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		if !done && len(stmt.Else) > 0 {
 			// Else
-			rv, err = Run(stmt.Else, env.NewEnv())
+			newenv := env.NewEnv()
+			defer newenv.Destroy()
+			rv, err = Run(stmt.Else, newenv)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
 		}
 		return rv, nil
 	case *ast.TryStmt:
-		_, err := Run(stmt.Try, env.NewEnv())
+		newenv := env.NewEnv()
+		defer newenv.Destroy()
+		_, err := Run(stmt.Try, newenv)
 		if err != nil {
+			// Catch
 			cenv := env.NewEnv()
+			defer cenv.Destroy()
 			if stmt.Var != "" {
 				cenv.Define(stmt.Var, reflect.ValueOf(err))
 			}
@@ -176,7 +184,10 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		if len(stmt.Finally) > 0 {
-			_, e2 := Run(stmt.Finally, env.NewEnv())
+			// Finally
+			fenv := env.NewEnv()
+			defer fenv.Destroy()
+			_, e2 := Run(stmt.Finally, newenv)
 			if e2 != nil {
 				err = NewError(stmt.Finally[0], e2)
 			}
@@ -184,6 +195,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		return NilValue, NewError(stmt, err)
 	case *ast.LoopStmt:
 		newenv := env.NewEnv()
+		defer newenv.Destroy()
 		for {
 			if stmt.Expr != nil {
 				ev, ee := invokeExpr(stmt.Expr, newenv)
@@ -222,6 +234,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, NewStringError(stmt, "Invalid operation for non-array value")
 		}
 		newenv := env.NewEnv()
+		defer newenv.Destroy()
 		for i := 0; i < val.Len(); i++ {
 			newenv.Define(stmt.Var, val.Index(i))
 			rv, err := Run(stmt.Stmts, newenv)
@@ -239,6 +252,44 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					break
 				}
 				return rv, NewError(stmt, err)
+			}
+		}
+		return NilValue, nil
+	case *ast.CForStmt:
+		newenv := env.NewEnv()
+		defer newenv.Destroy()
+		_, err := invokeExpr(stmt.Expr1, newenv)
+		if err != nil {
+			return NilValue, err
+		}
+		for {
+			fb, err := invokeExpr(stmt.Expr2, newenv)
+			if err != nil {
+				return NilValue, err
+			}
+			if !toBool(fb) {
+				break
+			}
+
+			rv, err := Run(stmt.Stmts, newenv)
+			if err != nil {
+				if err == BreakError {
+					err = nil
+					break
+				}
+				if err == ContinueError {
+					err = nil
+					continue
+				}
+				if err == ReturnError {
+					err = nil
+					break
+				}
+				return rv, NewError(stmt, err)
+			}
+			_, err = invokeExpr(stmt.Expr3, newenv)
+			if err != nil {
+				return NilValue, err
 			}
 		}
 		return NilValue, nil
