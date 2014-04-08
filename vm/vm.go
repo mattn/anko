@@ -236,7 +236,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for i := 0; i < val.Len(); i++ {
-			newenv.Define(stmt.Var, val.Index(i))
+			newenv.Define(stmt.Var, val.Index(i).Elem())
 			rv, err := Run(stmt.Stmts, newenv)
 			if err != nil {
 				if err == BreakError {
