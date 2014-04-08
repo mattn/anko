@@ -479,7 +479,14 @@ func toInt64(v reflect.Value) int64 {
 	case reflect.Int, reflect.Int32, reflect.Int64:
 		return v.Int()
 	case reflect.String:
-		i, err := strconv.Atoi(v.String())
+		s := v.String()
+		var i int64
+		var err error
+		if strings.HasPrefix(s, "0x") {
+			i, err = strconv.ParseInt(s, 16, 64)
+		} else {
+			i, err = strconv.ParseInt(s, 10, 64)
+		}
 		if err == nil {
 			return int64(i)
 		}
@@ -578,11 +585,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return reflect.ValueOf(float64(v)), nil
 		}
-		v, err := strconv.Atoi(e.Lit)
+		var i int64
+		var err error
+		if strings.HasPrefix(e.Lit, "0x") {
+			i, err = strconv.ParseInt(e.Lit[2:], 16, 64)
+		} else {
+			i, err = strconv.ParseInt(e.Lit, 10, 64)
+		}
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
-		return reflect.ValueOf(int64(v)), nil
+		return reflect.ValueOf(i), nil
 	case *ast.IdentExpr:
 		return env.Get(e.Lit)
 	case *ast.StringExpr:

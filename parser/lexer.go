@@ -283,6 +283,11 @@ func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
+// isHex return true if the rune is a hex digits.
+func isHex(ch rune) bool {
+	return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')
+}
+
 // isEOL return true if the rune is at end-of-line or end-of-file.
 func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
@@ -361,9 +366,21 @@ func (s *Scanner) scanIdentifier() (string, error) {
 // scanIdentifier return number begining at current position.
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
-	for isDigit(s.peek()) || s.peek() == '.' || s.peek() == 'e' {
+	ch := s.peek()
+	ret = append(ret, ch)
+	s.next()
+	if ch == '0' && s.peek() == 'x' {
 		ret = append(ret, s.peek())
 		s.next()
+		for isHex(s.peek()) {
+			ret = append(ret, s.peek())
+			s.next()
+		}
+	} else {
+		for isDigit(s.peek()) || s.peek() == '.' || s.peek() == 'e' {
+			ret = append(ret, s.peek())
+			s.next()
+		}
 	}
 	return string(ret), nil
 }
