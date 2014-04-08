@@ -14,7 +14,7 @@ for {
 is(4, x, "for loop")
 
 x = 0
-for (a = 0; a < 10; a++) {
+for a = 0; a < 10; a++ {
   x++
 }
 is(10, x, "C-style for loop")

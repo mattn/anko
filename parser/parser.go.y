@@ -145,9 +145,9 @@ stmt_var : VAR expr_idents '=' exprs
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 	}
 
-stmt_if : stmt_if ELSE IF '(' expr ')' '{' stmts '}'
+stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 	{
-		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $5, Then: $8})
+		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
 	}
 	| stmt_if ELSE '{' stmts '}'
 	{
@@ -157,9 +157,9 @@ stmt_if : stmt_if ELSE IF '(' expr ')' '{' stmts '}'
 			$1.(*ast.IfStmt).Else = $4
 		}
 	}
-	| IF '(' expr ')' '{' stmts '}'
+	| IF expr '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{If: $3, Then: $6}
+		$$ = &ast.IfStmt{If: $2, Then: $4}
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'
@@ -170,13 +170,13 @@ stmt_for : FOR IDENT IN expr '{' stmts '}'
 	{
 		$$ = &ast.LoopStmt{Stmts: $3}
 	}
-	| FOR '(' expr ')' '{' stmts '}'
+	| FOR expr '{' stmts '}'
 	{
-		$$ = &ast.LoopStmt{Expr: $3, Stmts: $6}
+		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
 	}
-	| FOR '(' expr ';' expr ';' expr ')' '{' stmts '}' 
+	| FOR expr ';' expr ';' expr '{' stmts '}' 
 	{
-		$$ = &ast.CForStmt{Expr1: $3, Expr2: $5, Expr3: $7, Stmts: $10}
+		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
 	}
 
 stmt_try_catch_finally : TRY '{' stmts '}' CATCH '(' IDENT ')' '{' stmts '}' FINALLY '{' stmts '}'
