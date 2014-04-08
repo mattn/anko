@@ -130,12 +130,16 @@ func Import(env *vm.Env) {
 		scanner.Init(string(body))
 		stmts, err := parser.Parse(scanner)
 		if err != nil {
-			if len(stmts) > 0 {
-				panic(vm.NewError(stmts[0], err))
+			if pe, ok := err.(*parser.Error); ok {
+				pe.Filename = s
+				panic(pe)
 			}
 			panic(err)
 		}
 		rv, err := vm.Run(stmts, env)
+		if err != nil {
+			panic(err)
+		}
 		if rv.IsValid() && rv.CanInterface() {
 			return rv.Interface()
 		}

@@ -23,24 +23,15 @@ type Token struct {
 // Error provides a convenient interface for handling runtime error.
 // It can be Error inteface with type cast which can call Pos().
 type Error struct {
-	message string
-	pos     ast.Position
-	fatal   bool
+	Message  string
+	Pos      ast.Position
+	Filename string
+	Fatal    bool
 }
 
 // Error return the error message.
 func (e *Error) Error() string {
-	return e.message
-}
-
-// Pos return the position of error.
-func (e *Error) Pos() ast.Position {
-	return e.pos
-}
-
-// Pos return the position of error.
-func (e *Error) Fatal() bool {
-	return e.fatal
+	return e.Message
 }
 
 // Scanner store informations for lexer.
@@ -453,7 +444,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 		return 0
 	}
 	if tok == ParseError {
-		l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, "Parse error"), pos: l.pos, fatal: true}
+		l.e = &Error{Message: fmt.Sprintf("%q %s", l.lit, "Parse error"), Pos: l.pos, Fatal: true}
 		return 0
 	}
 	lval.tok = Token{tok: tok, lit: lit, pos: pos}
@@ -464,7 +455,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 
 // Error set parse error.
 func (l *Lexer) Error(e string) {
-	l.e = &Error{message: fmt.Sprintf("%q %s", l.lit, e), pos: l.pos, fatal: false}
+	l.e = &Error{Message: fmt.Sprintf("%q %s", l.lit, e), Pos: l.pos, Fatal: false}
 }
 
 // Parser provide way to parse the code.

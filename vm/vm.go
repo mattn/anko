@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/parser"
 	"math"
 	"os"
 	"reflect"
@@ -20,8 +21,8 @@ var FalseValue = reflect.ValueOf(false)
 // Error provides a convenient interface for handling runtime error.
 // It can be Error interface with type cast which can call Pos().
 type Error struct {
-	message string
-	pos     ast.Position
+	Message string
+	Pos     ast.Position
 }
 
 var BreakError = errors.New("Unexpected break statement")
@@ -30,12 +31,12 @@ var ReturnError = errors.New("Unexpected error")
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {
-	return &Error{message: err, pos: pos.GetPos()}
+	return &Error{Message: err, Pos: pos.GetPos()}
 }
 
 // NewStringError makes error interface with message.
 func NewErrorf(pos ast.Pos, format string, args ...interface{}) error {
-	return &Error{message: fmt.Sprintf(format, args...), pos: pos.GetPos()}
+	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.GetPos()}
 }
 
 // NewError makes error interface with message. This doesn't overwrite last error.
@@ -46,20 +47,18 @@ func NewError(pos ast.Pos, err error) error {
 	if err == BreakError || err == ContinueError || err == ReturnError {
 		return err
 	}
+	if pe, ok := err.(*parser.Error); ok {
+		return pe
+	}
 	if ee, ok := err.(*Error); ok {
 		return ee
 	}
-	return &Error{message: err.Error(), pos: pos.GetPos()}
+	return &Error{Message: err.Error(), Pos: pos.GetPos()}
 }
 
 // Error return the error message.
 func (e *Error) Error() string {
-	return e.message
-}
-
-// Pos return the position of error.
-func (e *Error) Pos() ast.Position {
-	return e.pos
+	return e.Message
 }
 
 // Func is function interface to reflect functions internaly.
@@ -1025,7 +1024,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			defer func() {
 				if os.Getenv("ANKO_DEBUG") == "" {
 					if ex := recover(); ex != nil {
-						err = errors.New(fmt.Sprint(ex))
+						if e, ok := ex.(error); ok {
+							err = e
+						} else {
+							err = errors.New(fmt.Sprint(ex))
+						}
 					}
 				}
 			}()
