@@ -52,7 +52,6 @@ for d in data {
 	}
     print("  ")
   }
+  term.ResetColor()
   println()
 }
-term.ResetColor()
-
