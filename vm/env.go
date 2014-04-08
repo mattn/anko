@@ -30,7 +30,7 @@ func (e *Env) Destroy() {
 		return
 	}
 	for k, v := range e.parent.env {
-		if v.Interface() == e {
+		if v.IsValid() && v.Interface() == e {
 			delete(e.parent.env, k)
 		}
 	}
