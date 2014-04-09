@@ -10,8 +10,8 @@ syn keyword     ankoDeclaration       var
 hi def link     ankoDirective         Statement
 hi def link     ankoDeclaration       Type
 
-syn keyword     ankoStatement         return break continue fallthrough
-syn keyword     ankoConditional       if else switch
+syn keyword     ankoStatement         return break continue throw
+syn keyword     ankoConditional       if else switch try catch finally
 syn keyword     ankoLabel             case default
 syn keyword     ankoRepeat            for range
 
