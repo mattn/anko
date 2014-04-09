@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var NilValue = reflect.ValueOf(nil)
+var NilValue = reflect.ValueOf((*interface{})(nil))
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
@@ -78,11 +78,11 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, ContinueError
 		}
 		rv, err = RunSingleStmt(stmt, env)
-		if err != nil {
-			return rv, NewError(stmt, err)
-		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
 			return reflect.ValueOf(rv), ReturnError
+		}
+		if err != nil {
+			return rv, NewError(stmt, err)
 		}
 	}
 	return rv, nil
@@ -1084,9 +1084,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return arg, NewError(expr, err)
 			}
 
-			if !arg.IsValid() {
-				arg = NilValue
-			} else if i < f.Type().NumIn() {
+			if i < f.Type().NumIn() {
 				if !f.Type().IsVariadic() {
 					it := f.Type().In(i)
 					if arg.Kind().String() == "unsafe.Pointer" {
@@ -1095,6 +1093,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						arg = arg.Convert(it)
 					}
 				}
+			}
+			if !arg.IsValid() {
+				arg = NilValue
 			}
 
 			if !isReflect {
