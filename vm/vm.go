@@ -386,6 +386,9 @@ func toString(v reflect.Value) string {
 	if v.Kind() == reflect.String {
 		return v.String()
 	}
+	if !v.IsValid() {
+		return "nil"
+	}
 	return fmt.Sprint(v.Interface())
 }
 
