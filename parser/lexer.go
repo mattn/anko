@@ -97,7 +97,13 @@ retry:
 		}
 	case ch == '"':
 		tok = STRING
-		lit, err = s.scanString()
+		lit, err = s.scanString('"')
+		if err != nil {
+			tok = ParseError
+		}
+	case ch == '\'':
+		tok = STRING
+		lit, err = s.scanString('\'')
 		if err != nil {
 			tok = ParseError
 		}
@@ -404,7 +410,7 @@ func (s *Scanner) scanRawString() (string, error) {
 }
 
 // scanIdentifier return string begining at current position. This handle backslash escaping.
-func (s *Scanner) scanString() (string, error) {
+func (s *Scanner) scanString(l rune) (string, error) {
 	var ret []rune
 eos:
 	for {
@@ -414,7 +420,7 @@ eos:
 			return "", errors.New("Parser Error")
 		case EOF:
 			return "", errors.New("Parser Error")
-		case '"':
+		case l:
 			s.next()
 			break eos
 		case '\\':
