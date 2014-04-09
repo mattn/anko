@@ -10,11 +10,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
-var Nil unsafe.Pointer
-var NilValue = reflect.ValueOf(Nil)
+var NilValue = reflect.ValueOf(nil)
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
@@ -315,11 +313,11 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				return rv, NewError(stmt, err)
 			}
 			if isNil(rv) {
-				rvs = append(rvs, Nil)
+				rvs = append(rvs, nil)
 			} else if rv.IsValid() {
 				rvs = append(rvs, rv.Interface())
 			} else {
-				rvs = append(rvs, Nil)
+				rvs = append(rvs, nil)
 			}
 		}
 		return reflect.ValueOf(rvs), nil
@@ -430,7 +428,7 @@ func toFloat64(v reflect.Value) float64 {
 }
 
 func isNil(v reflect.Value) bool {
-	if v.Kind().String() == "unsafe.Pointer" {
+	if !v.IsValid() || v.Kind().String() == "unsafe.Pointer" {
 		return true
 	}
 	if (v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr) && v.IsNil() {
@@ -1045,7 +1043,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, NewStringError(expr, "Unknown operator")
 		}
 	case *ast.ConstExpr:
-		return reflect.ValueOf(e.Value), nil
+		switch e.Value {
+		case "true":
+			return reflect.ValueOf(true), nil
+		case "false":
+			return reflect.ValueOf(false), nil
+		}
+		return reflect.ValueOf(nil), nil
 	case *ast.AnonCallExpr:
 		f, err := invokeExpr(e.Expr, env)
 		if err != nil {

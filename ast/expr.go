@@ -162,5 +162,5 @@ type NewExpr struct {
 // ConstExpr provide expression for constant variable.
 type ConstExpr struct {
 	ExprImpl
-	Value interface{}
+	Value string
 }

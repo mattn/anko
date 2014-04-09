@@ -3,7 +3,6 @@ package parser
 
 import (
 	"github.com/mattn/anko/ast"
-	"unsafe"
 )
 
 %}
@@ -366,17 +365,17 @@ expr : NUMBER
 	}
 	| TRUE
 	{
-		$$ = &ast.ConstExpr{Value: true}
+		$$ = &ast.ConstExpr{Value: $1.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| FALSE
 	{
-		$$ = &ast.ConstExpr{Value: false}
+		$$ = &ast.ConstExpr{Value: $1.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| NIL
 	{
-		$$ = &ast.ConstExpr{Value: unsafe.Pointer(nil)}
+		$$ = &ast.ConstExpr{Value: $1.lit}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPos(l.pos) }
 	}
 	| expr '?' expr ':' expr
