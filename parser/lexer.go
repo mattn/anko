@@ -10,7 +10,6 @@ import (
 const (
 	EOF        = -1   // End of file.
 	EOL        = '\n' // End of line.
-	ParseError = 0    // Error from parser.
 )
 
 // Token provide structure of identities or literals.
@@ -73,8 +72,7 @@ func (s *Scanner) Init(src string) {
 }
 
 // Scan analyses token, and decide identify or literals.
-func (s *Scanner) Scan() (tok int, lit string, pos ast.Position) {
-	var err error
+func (s *Scanner) Scan() (tok int, lit string, pos ast.Position, err error) {
 retry:
 	s.skipBlank()
 	pos = s.pos()
@@ -82,7 +80,7 @@ retry:
 	case isLetter(ch):
 		lit, err = s.scanIdentifier()
 		if err != nil {
-			tok = ParseError
+			return
 		}
 		if name, ok := opName[lit]; ok {
 			tok = name
@@ -93,25 +91,25 @@ retry:
 		tok = NUMBER
 		lit, err = s.scanNumber()
 		if err != nil {
-			tok = ParseError
+			return
 		}
 	case ch == '"':
 		tok = STRING
 		lit, err = s.scanString('"')
 		if err != nil {
-			tok = ParseError
+			return
 		}
 	case ch == '\'':
 		tok = STRING
 		lit, err = s.scanString('\'')
 		if err != nil {
-			tok = ParseError
+			return
 		}
 	case ch == '`':
 		tok = STRING
 		lit, err = s.scanRawString()
 		if err != nil {
-			tok = ParseError
+			return
 		}
 	default:
 		switch ch {
@@ -261,7 +259,8 @@ retry:
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
-					tok = ParseError
+					err = fmt.Errorf(`syntax error "%s"`, "..")
+					return
 				}
 			} else {
 				s.back()
@@ -272,7 +271,8 @@ retry:
 			tok = int(ch)
 			lit = string(ch)
 		default:
-			tok = ParseError
+			err = fmt.Errorf(`syntax error "%s"`, ch)
+			return
 		}
 		s.next()
 	}
@@ -387,6 +387,9 @@ func (s *Scanner) scanNumber() (string, error) {
 			ret = append(ret, s.peek())
 			s.next()
 		}
+		if isLetter(s.peek()) {
+			return "", errors.New("identifier starts immediately after numeric literal")
+		}
 	}
 	return string(ret), nil
 }
@@ -397,7 +400,7 @@ func (s *Scanner) scanRawString() (string, error) {
 	for {
 		s.next()
 		if s.peek() == EOF {
-			return "", errors.New("Parser Error")
+			return "", errors.New("unexpected EOF")
 			break
 		}
 		if s.peek() == '`' {
@@ -417,9 +420,9 @@ eos:
 		s.next()
 		switch s.peek() {
 		case EOL:
-			return "", errors.New("Parser Error")
+			return "", errors.New("unexpected EOL")
 		case EOF:
-			return "", errors.New("Parser Error")
+			return "", errors.New("unexpected EOF")
 		case l:
 			s.next()
 			break eos
@@ -462,12 +465,11 @@ type Lexer struct {
 
 // Lex scan the token and literals.
 func (l *Lexer) Lex(lval *yySymType) int {
-	tok, lit, pos := l.s.Scan()
-	if tok == EOF {
-		return 0
+	tok, lit, pos, err := l.s.Scan()
+	if err != nil {
+		l.e = &Error{Message: fmt.Sprintf("%s", err.Error()), Pos: pos, Fatal: true}
 	}
-	if tok == ParseError {
-		l.e = &Error{Message: fmt.Sprintf("%q %s", l.lit, "Parse error"), Pos: l.pos, Fatal: true}
+	if tok == EOF {
 		return 0
 	}
 	lval.tok = Token{tok: tok, lit: lit, pos: pos}
@@ -478,7 +480,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 
 // Error set parse error.
 func (l *Lexer) Error(e string) {
-	l.e = &Error{Message: fmt.Sprintf("%q %s", l.lit, e), Pos: l.pos, Fatal: false}
+	l.e = &Error{Message: e, Pos: l.pos, Fatal: false}
 }
 
 // Parser provide way to parse the code.

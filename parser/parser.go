@@ -995,16 +995,16 @@ yydefault:
 	case 17:
 		//line parser.go.y:152
 		{
-			if yyS[yypt-4].stmt_if.(*ast.IfStmt).Else != nil {
+			if yyVAL.stmt_if.(*ast.IfStmt).Else != nil {
 				yylex.Error("multiple else statement")
 			} else {
-				yyS[yypt-4].stmt_if.(*ast.IfStmt).Else = yyS[yypt-1].stmts
+				yyVAL.stmt_if.(*ast.IfStmt).Else = append(yyVAL.stmt_if.(*ast.IfStmt).Else, yyS[yypt-1].stmts...)
 			}
 		}
 	case 18:
 		//line parser.go.y:160
 		{
-			yyVAL.stmt_if = &ast.IfStmt{If: yyS[yypt-3].expr, Then: yyS[yypt-1].stmts}
+			yyVAL.stmt_if = &ast.IfStmt{If: yyS[yypt-3].expr, Then: yyS[yypt-1].stmts, Else: nil}
 		}
 	case 19:
 		//line parser.go.y:165

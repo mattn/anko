@@ -150,15 +150,15 @@ stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 	}
 	| stmt_if ELSE '{' stmts '}'
 	{
-		if $1.(*ast.IfStmt).Else != nil {
+		if $$.(*ast.IfStmt).Else != nil {
 			yylex.Error("multiple else statement")
 		} else {
-			$1.(*ast.IfStmt).Else = $4
+			$$.(*ast.IfStmt).Else = append($$.(*ast.IfStmt).Else, $4...)
 		}
 	}
 	| IF expr '{' stmts '}'
 	{
-		$$ = &ast.IfStmt{If: $2, Then: $4}
+		$$ = &ast.IfStmt{If: $2, Then: $4, Else: nil}
 	}
 
 stmt_for : FOR IDENT IN expr '{' stmts '}'
