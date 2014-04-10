@@ -9,11 +9,7 @@ import (
 
 %type<stmts> stmts
 %type<stmt> stmt
-%type<stmt_var> stmt_var
 %type<stmt_if> stmt_if
-%type<stmt_for> stmt_for
-%type<stmt_try_catch_finally> stmt_try_catch_finally
-%type<stmt_switch> stmt_switch
 %type<stmt_default> stmt_default
 %type<stmt_case> stmt_case
 %type<stmt_cases> stmt_cases
@@ -26,11 +22,7 @@ import (
 %type<expr_idents> expr_idents
 
 %union{
-	stmt_var               ast.Stmt
 	stmt_if                ast.Stmt
-	stmt_for               ast.Stmt
-	stmt_try_catch_finally ast.Stmt
-	stmt_switch            ast.Stmt
 	stmt_default           ast.Stmt
 	stmt_case              ast.Stmt
 	stmt_cases             []ast.Stmt
@@ -53,7 +45,6 @@ import (
 %left OROR
 %left ANDAND
 %left IDENT
-//%nonassoc EQEQ NEQ '(' ',' ')'
 %nonassoc EQEQ NEQ ','
 %left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
 
@@ -86,45 +77,18 @@ stmts :
 			$1.SetPos(l.pos);
 		}
 	}
-	| BREAK stmts
-	{
-		$$ = append([]ast.Stmt{&ast.BreakStmt{}}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| CONTINUE stmts
-	{
-		$$ = append([]ast.Stmt{&ast.ContinueStmt{}}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| stmt_var stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| stmt_if stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| stmt_for stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| stmt_try_catch_finally stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
-	| stmt_switch stmts
-	{
-		$$ = append([]ast.Stmt{$1}, $2...)
-		if l, ok := yylex.(*Lexer); ok { l.stmts = $$ }
-	}
 
 stmt : expr
 	{
 		$$ = &ast.ExprStmt{Expr: $1}
+	}
+	| BREAK
+	{
+		$$ = &ast.BreakStmt{}
+	}
+	| CONTINUE
+	{
+		$$ = &ast.ContinueStmt{}
 	}
 	| RETURN exprs
 	{
@@ -138,10 +102,50 @@ stmt : expr
 	{
 		$$ = &ast.ModuleStmt{Name: $2.lit, Stmts: $4}
 	}
-
-stmt_var : VAR expr_idents '=' exprs
+	| VAR expr_idents '=' exprs
 	{
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
+	}
+	| stmt_if
+	{
+		$$ = $1
+	}
+	| FOR IDENT IN expr '{' stmts '}'
+	{
+		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
+	}
+	| FOR '{' stmts '}'
+	{
+		$$ = &ast.LoopStmt{Stmts: $3}
+	}
+	| FOR expr '{' stmts '}'
+	{
+		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
+	}
+	| FOR expr ';' expr ';' expr '{' stmts '}' 
+	{
+		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+	}
+	| TRY '{' stmts '}' CATCH IDENT '{' stmts '}' FINALLY '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8, Finally: $12}
+	}
+	| TRY '{' stmts '}' CATCH '{' stmts '}' FINALLY '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Catch: $7, Finally: $11}
+	}
+	| TRY '{' stmts '}' CATCH IDENT '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8}
+	}
+	| TRY '{' stmts '}' CATCH '{' stmts '}'
+	{
+		$$ = &ast.TryStmt{Try: $3, Catch: $7}
+	}
+
+	| SWITCH expr '{' stmt_cases '}'
+	{
+		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
 	}
 
 stmt_if : stmt_if ELSE IF expr '{' stmts '}'
@@ -159,40 +163,6 @@ stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 	| IF expr '{' stmts '}'
 	{
 		$$ = &ast.IfStmt{If: $2, Then: $4, Else: nil}
-	}
-
-stmt_for : FOR IDENT IN expr '{' stmts '}'
-	{
-		$$ = &ast.ForStmt{Var: $2.lit, Value: $4, Stmts: $6}
-	}
-	| FOR '{' stmts '}'
-	{
-		$$ = &ast.LoopStmt{Stmts: $3}
-	}
-	| FOR expr '{' stmts '}'
-	{
-		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
-	}
-	| FOR expr ';' expr ';' expr '{' stmts '}' 
-	{
-		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
-	}
-
-stmt_try_catch_finally : TRY '{' stmts '}' CATCH IDENT '{' stmts '}' FINALLY '{' stmts '}'
-	{
-		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8, Finally: $12}
-	}
-	| TRY '{' stmts '}' CATCH '{' stmts '}' FINALLY '{' stmts '}'
-	{
-		$$ = &ast.TryStmt{Try: $3, Catch: $7, Finally: $11}
-	}
-	| TRY '{' stmts '}' CATCH IDENT '{' stmts '}'
-	{
-		$$ = &ast.TryStmt{Try: $3, Var: $6.lit, Catch: $8}
-	}
-	| TRY '{' stmts '}' CATCH '{' stmts '}'
-	{
-		$$ = &ast.TryStmt{Try: $3, Catch: $7}
 	}
 
 stmt_cases :
@@ -229,11 +199,6 @@ stmt_case : CASE expr ':' stmts
 stmt_default : DEFAULT ':' stmts
 	{
 		$$ = &ast.DefaultStmt{Stmts: $3}
-	}
-
-stmt_switch : SWITCH expr '{' stmt_cases '}'
-	{
-		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
 	}
 
 expr_pair : STRING ':' expr
