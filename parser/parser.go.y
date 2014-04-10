@@ -66,8 +66,8 @@ stmts :
 		$$ = append([]ast.Stmt{$1}, $2...)
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
-			if len($2) > 0 {
-				if $1.GetPos().Line == $2[len($2)-1].GetPos().Line {
+			for _, s := range $2 {
+				if $1.GetPos().Line == s.GetPos().Line {
 					l.pos = $1.GetPos()
 					yylex.Error("syntax error")
 				}

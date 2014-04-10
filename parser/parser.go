@@ -866,8 +866,8 @@ yydefault:
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
 				l.stmts = yyVAL.stmts
-				if len(yyS[yypt-0].stmts) > 0 {
-					if yyS[yypt-1].stmt.GetPos().Line == yyS[yypt-0].stmts[len(yyS[yypt-0].stmts)-1].GetPos().Line {
+				for _, s := range yyS[yypt-0].stmts {
+					if yyS[yypt-1].stmt.GetPos().Line == s.GetPos().Line {
 						l.pos = yyS[yypt-1].stmt.GetPos()
 						yylex.Error("syntax error")
 					}
