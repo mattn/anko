@@ -19,6 +19,10 @@ type Token struct {
 	pos ast.Position
 }
 
+func (t *Token) GetPos() ast.Position {
+	return t.pos
+}
+
 // Error provides a convenient interface for handling runtime error.
 // It can be Error inteface with type cast which can call Pos().
 type Error struct {
@@ -479,8 +483,8 @@ func (l *Lexer) Lex(lval *yySymType) int {
 }
 
 // Error set parse error.
-func (l *Lexer) Error(e string) {
-	l.e = &Error{Message: e, Pos: l.pos, Fatal: false}
+func (l *Lexer) Error(msg string) {
+	l.e = &Error{Message: msg, Pos: l.pos, Fatal: false}
 }
 
 // Parser provide way to parse the code.

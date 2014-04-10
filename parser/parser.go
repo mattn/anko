@@ -135,7 +135,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyMaxDepth = 200
 
-//line parser.go.y:556
+//line parser.go.y:578
 
 //line yacctab:1
 var yyExca = []int{
@@ -866,11 +866,16 @@ yydefault:
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-1].stmt}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
 				l.stmts = yyVAL.stmts
-				yyS[yypt-1].stmt.SetPos(l.pos)
+				if len(yyS[yypt-0].stmts) > 0 {
+					if yyS[yypt-1].stmt.GetPos().Line == yyS[yypt-0].stmts[len(yyS[yypt-0].stmts)-1].GetPos().Line {
+						l.pos = yyS[yypt-1].stmt.GetPos()
+						yylex.Error("syntax error")
+					}
+				}
 			}
 		}
 	case 3:
-		//line parser.go.y:73
+		//line parser.go.y:78
 		{
 			yyVAL.stmts = append([]ast.Stmt{yyS[yypt-2].stmt}, yyS[yypt-0].stmts...)
 			if l, ok := yylex.(*Lexer); ok {
@@ -879,97 +884,114 @@ yydefault:
 			}
 		}
 	case 4:
-		//line parser.go.y:82
+		//line parser.go.y:87
 		{
 			yyVAL.stmt = &ast.ExprStmt{Expr: yyS[yypt-0].expr}
+			yyVAL.stmt.SetPos(yyS[yypt-0].expr.GetPos())
 		}
 	case 5:
-		//line parser.go.y:86
+		//line parser.go.y:92
 		{
 			yyVAL.stmt = &ast.BreakStmt{}
+			yyVAL.stmt.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 6:
-		//line parser.go.y:90
+		//line parser.go.y:97
 		{
 			yyVAL.stmt = &ast.ContinueStmt{}
+			yyVAL.stmt.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 7:
-		//line parser.go.y:94
-		{
-			yyVAL.stmt = &ast.ReturnStmt{Exprs: yyS[yypt-0].exprs}
-		}
-	case 8:
-		//line parser.go.y:98
-		{
-			yyVAL.stmt = &ast.ThrowStmt{Expr: yyS[yypt-0].expr}
-		}
-	case 9:
 		//line parser.go.y:102
 		{
+			yyVAL.stmt = &ast.ReturnStmt{Exprs: yyS[yypt-0].exprs}
+			yyVAL.stmt.SetPos(yyS[yypt-1].tok.GetPos())
+		}
+	case 8:
+		//line parser.go.y:107
+		{
+			yyVAL.stmt = &ast.ThrowStmt{Expr: yyS[yypt-0].expr}
+			yyVAL.stmt.SetPos(yyS[yypt-1].tok.GetPos())
+		}
+	case 9:
+		//line parser.go.y:112
+		{
 			yyVAL.stmt = &ast.ModuleStmt{Name: yyS[yypt-3].tok.lit, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 10:
-		//line parser.go.y:106
+		//line parser.go.y:117
 		{
 			yyVAL.stmt = &ast.VarStmt{Names: yyS[yypt-2].expr_idents, Exprs: yyS[yypt-0].exprs}
+			yyVAL.stmt.SetPos(yyS[yypt-3].tok.GetPos())
 		}
 	case 11:
-		//line parser.go.y:110
-		{
-			yyVAL.stmt = yyS[yypt-0].stmt_if
-		}
-	case 12:
-		//line parser.go.y:114
-		{
-			yyVAL.stmt = &ast.ForStmt{Var: yyS[yypt-5].tok.lit, Value: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
-		}
-	case 13:
-		//line parser.go.y:118
-		{
-			yyVAL.stmt = &ast.LoopStmt{Stmts: yyS[yypt-1].stmts}
-		}
-	case 14:
 		//line parser.go.y:122
 		{
+			yyVAL.stmt = yyS[yypt-0].stmt_if
+			yyVAL.stmt.SetPos(yyS[yypt-0].stmt_if.GetPos())
+		}
+	case 12:
+		//line parser.go.y:127
+		{
+			yyVAL.stmt = &ast.ForStmt{Var: yyS[yypt-5].tok.lit, Value: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-6].tok.GetPos())
+		}
+	case 13:
+		//line parser.go.y:132
+		{
+			yyVAL.stmt = &ast.LoopStmt{Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-3].tok.GetPos())
+		}
+	case 14:
+		//line parser.go.y:137
+		{
 			yyVAL.stmt = &ast.LoopStmt{Expr: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 15:
-		//line parser.go.y:126
-		{
-			yyVAL.stmt = &ast.CForStmt{Expr1: yyS[yypt-7].expr, Expr2: yyS[yypt-5].expr, Expr3: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
-		}
-	case 16:
-		//line parser.go.y:130
-		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-10].stmts, Var: yyS[yypt-7].tok.lit, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
-		}
-	case 17:
-		//line parser.go.y:134
-		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-9].stmts, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
-		}
-	case 18:
-		//line parser.go.y:138
-		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-6].stmts, Var: yyS[yypt-3].tok.lit, Catch: yyS[yypt-1].stmts}
-		}
-	case 19:
 		//line parser.go.y:142
 		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-5].stmts, Catch: yyS[yypt-1].stmts}
+			yyVAL.stmt = &ast.CForStmt{Expr1: yyS[yypt-7].expr, Expr2: yyS[yypt-5].expr, Expr3: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-8].tok.GetPos())
 		}
-	case 20:
+	case 16:
 		//line parser.go.y:147
 		{
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-10].stmts, Var: yyS[yypt-7].tok.lit, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-12].tok.GetPos())
+		}
+	case 17:
+		//line parser.go.y:152
+		{
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-9].stmts, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-11].tok.GetPos())
+		}
+	case 18:
+		//line parser.go.y:157
+		{
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-6].stmts, Var: yyS[yypt-3].tok.lit, Catch: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-8].tok.GetPos())
+		}
+	case 19:
+		//line parser.go.y:162
+		{
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-5].stmts, Catch: yyS[yypt-1].stmts}
+			yyVAL.stmt.SetPos(yyS[yypt-7].tok.GetPos())
+		}
+	case 20:
+		//line parser.go.y:168
+		{
 			yyVAL.stmt = &ast.SwitchStmt{Expr: yyS[yypt-3].expr, Cases: yyS[yypt-1].stmt_cases}
+			yyVAL.stmt.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 21:
-		//line parser.go.y:152
+		//line parser.go.y:174
 		{
 			yyS[yypt-6].stmt_if.(*ast.IfStmt).ElseIf = append(yyS[yypt-6].stmt_if.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: yyS[yypt-3].expr, Then: yyS[yypt-1].stmts})
 		}
 	case 22:
-		//line parser.go.y:156
+		//line parser.go.y:178
 		{
 			if yyVAL.stmt_if.(*ast.IfStmt).Else != nil {
 				yylex.Error("multiple else statement")
@@ -978,32 +1000,32 @@ yydefault:
 			}
 		}
 	case 23:
-		//line parser.go.y:164
+		//line parser.go.y:186
 		{
 			yyVAL.stmt_if = &ast.IfStmt{If: yyS[yypt-3].expr, Then: yyS[yypt-1].stmts, Else: nil}
 		}
 	case 24:
-		//line parser.go.y:169
+		//line parser.go.y:191
 		{
 			yyVAL.stmt_cases = []ast.Stmt{}
 		}
 	case 25:
-		//line parser.go.y:173
+		//line parser.go.y:195
 		{
 			yyVAL.stmt_cases = []ast.Stmt{yyS[yypt-0].stmt_case}
 		}
 	case 26:
-		//line parser.go.y:177
+		//line parser.go.y:199
 		{
 			yyVAL.stmt_cases = append(yyS[yypt-1].stmt_cases, yyS[yypt-0].stmt_case)
 		}
 	case 27:
-		//line parser.go.y:181
+		//line parser.go.y:203
 		{
 			yyVAL.stmt_cases = []ast.Stmt{yyS[yypt-0].stmt_default}
 		}
 	case 28:
-		//line parser.go.y:185
+		//line parser.go.y:207
 		{
 			for _, stmt := range yyS[yypt-1].stmt_cases {
 				if _, ok := stmt.(*ast.DefaultStmt); ok {
@@ -1013,52 +1035,52 @@ yydefault:
 			yyVAL.stmt_cases = append(yyS[yypt-1].stmt_cases, yyS[yypt-0].stmt_default)
 		}
 	case 29:
-		//line parser.go.y:195
+		//line parser.go.y:217
 		{
 			yyVAL.stmt_case = &ast.CaseStmt{Expr: yyS[yypt-2].expr, Stmts: yyS[yypt-0].stmts}
 		}
 	case 30:
-		//line parser.go.y:200
+		//line parser.go.y:222
 		{
 			yyVAL.stmt_default = &ast.DefaultStmt{Stmts: yyS[yypt-0].stmts}
 		}
 	case 31:
-		//line parser.go.y:205
+		//line parser.go.y:227
 		{
 			yyVAL.expr_pair = &ast.PairExpr{Key: yyS[yypt-2].tok.lit, Value: yyS[yypt-0].expr}
 		}
 	case 32:
-		//line parser.go.y:210
+		//line parser.go.y:232
 		{
 			yyVAL.expr_pairs = []ast.Expr{}
 		}
 	case 33:
-		//line parser.go.y:214
+		//line parser.go.y:236
 		{
 			yyVAL.expr_pairs = []ast.Expr{yyS[yypt-0].expr_pair}
 		}
 	case 34:
-		//line parser.go.y:218
+		//line parser.go.y:240
 		{
 			yyVAL.expr_pairs = append(yyS[yypt-2].expr_pairs, yyS[yypt-0].expr_pair)
 		}
 	case 35:
-		//line parser.go.y:223
+		//line parser.go.y:245
 		{
 			yyVAL.expr_idents = []string{}
 		}
 	case 36:
-		//line parser.go.y:227
+		//line parser.go.y:249
 		{
 			yyVAL.expr_idents = []string{yyS[yypt-0].tok.lit}
 		}
 	case 37:
-		//line parser.go.y:231
+		//line parser.go.y:253
 		{
 			yyVAL.expr_idents = append(yyS[yypt-2].expr_idents, yyS[yypt-0].tok.lit)
 		}
 	case 38:
-		//line parser.go.y:236
+		//line parser.go.y:258
 		{
 			yyVAL.expr_lhs = &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1066,7 +1088,7 @@ yydefault:
 			}
 		}
 	case 39:
-		//line parser.go.y:241
+		//line parser.go.y:263
 		{
 			yyVAL.expr_lhs = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1074,7 +1096,7 @@ yydefault:
 			}
 		}
 	case 40:
-		//line parser.go.y:246
+		//line parser.go.y:268
 		{
 			yyVAL.expr_lhs = &ast.ItemExpr{Value: yyS[yypt-3].expr, Index: yyS[yypt-1].expr}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1082,194 +1104,156 @@ yydefault:
 			}
 		}
 	case 41:
-		//line parser.go.y:252
+		//line parser.go.y:274
 		{
 			yyVAL.expr_lhss = []ast.Expr{}
 		}
 	case 42:
-		//line parser.go.y:256
+		//line parser.go.y:278
 		{
 			yyVAL.expr_lhss = []ast.Expr{yyS[yypt-0].expr_lhs}
 		}
 	case 43:
-		//line parser.go.y:260
+		//line parser.go.y:282
 		{
 			yyVAL.expr_lhss = append([]ast.Expr{yyS[yypt-2].expr_lhs}, yyS[yypt-0].expr_lhss...)
 		}
 	case 44:
-		//line parser.go.y:265
+		//line parser.go.y:287
 		{
 			yyVAL.exprs = []ast.Expr{}
 		}
 	case 45:
-		//line parser.go.y:269
+		//line parser.go.y:291
 		{
 			yyVAL.exprs = []ast.Expr{yyS[yypt-0].expr}
 		}
 	case 46:
-		//line parser.go.y:273
+		//line parser.go.y:295
 		{
 			yyVAL.exprs = append([]ast.Expr{yyS[yypt-2].expr}, yyS[yypt-0].exprs...)
 		}
 	case 47:
-		//line parser.go.y:277
+		//line parser.go.y:299
 		{
 			yyVAL.exprs = append([]ast.Expr{&ast.IdentExpr{Lit: yyS[yypt-2].tok.lit}}, yyS[yypt-0].exprs...)
 		}
 	case 48:
-		//line parser.go.y:282
+		//line parser.go.y:304
 		{
 			yyVAL.expr = &ast.NumberExpr{Lit: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 49:
-		//line parser.go.y:287
+		//line parser.go.y:309
 		{
 			yyVAL.expr = &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 50:
-		//line parser.go.y:292
+		//line parser.go.y:314
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "-", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].expr.GetPos())
 		}
 	case 51:
-		//line parser.go.y:297
+		//line parser.go.y:319
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "!", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].expr.GetPos())
 		}
 	case 52:
-		//line parser.go.y:302
+		//line parser.go.y:324
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "^", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].expr.GetPos())
 		}
 	case 53:
-		//line parser.go.y:307
+		//line parser.go.y:329
 		{
 			yyVAL.expr = &ast.AddrExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 54:
-		//line parser.go.y:312
+		//line parser.go.y:334
 		{
 			yyVAL.expr = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 55:
-		//line parser.go.y:317
+		//line parser.go.y:339
 		{
 			yyVAL.expr = &ast.DerefExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 56:
-		//line parser.go.y:322
+		//line parser.go.y:344
 		{
 			yyVAL.expr = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 57:
-		//line parser.go.y:327
+		//line parser.go.y:349
 		{
 			yyVAL.expr = &ast.StringExpr{Lit: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 58:
-		//line parser.go.y:332
+		//line parser.go.y:354
 		{
 			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 59:
-		//line parser.go.y:337
+		//line parser.go.y:359
 		{
 			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 60:
-		//line parser.go.y:342
+		//line parser.go.y:364
 		{
 			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 61:
-		//line parser.go.y:347
+		//line parser.go.y:369
 		{
 			yyVAL.expr = &ast.TernaryOpExpr{Expr: yyS[yypt-4].expr, Lhs: yyS[yypt-2].expr, Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-4].expr.GetPos())
 		}
 	case 62:
-		//line parser.go.y:352
+		//line parser.go.y:374
 		{
 			yyVAL.expr = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 63:
-		//line parser.go.y:357
+		//line parser.go.y:379
 		{
 			yyVAL.expr = &ast.FuncExpr{Args: yyS[yypt-4].expr_idents, Stmts: yyS[yypt-1].stmts}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-6].tok.GetPos())
 		}
 	case 64:
-		//line parser.go.y:362
+		//line parser.go.y:384
 		{
 			yyVAL.expr = &ast.FuncExpr{Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-7].tok.GetPos())
 		}
 	case 65:
-		//line parser.go.y:367
+		//line parser.go.y:389
 		{
 			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-6].tok.lit, Args: yyS[yypt-4].expr_idents, Stmts: yyS[yypt-1].stmts}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-7].tok.GetPos())
 		}
 	case 66:
-		//line parser.go.y:372
+		//line parser.go.y:394
 		{
 			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-7].tok.lit, Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-8].tok.GetPos())
 		}
 	case 67:
-		//line parser.go.y:377
+		//line parser.go.y:399
 		{
 			yyVAL.expr = &ast.ArrayExpr{Exprs: yyS[yypt-1].exprs}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1277,7 +1261,7 @@ yydefault:
 			}
 		}
 	case 68:
-		//line parser.go.y:382
+		//line parser.go.y:404
 		{
 			mapExpr := make(map[string]ast.Expr)
 			for _, v := range yyS[yypt-1].expr_pairs {
@@ -1289,7 +1273,7 @@ yydefault:
 			}
 		}
 	case 69:
-		//line parser.go.y:391
+		//line parser.go.y:413
 		{
 			yyVAL.expr = &ast.ParenExpr{SubExpr: yyS[yypt-1].expr}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1297,260 +1281,196 @@ yydefault:
 			}
 		}
 	case 70:
-		//line parser.go.y:396
+		//line parser.go.y:418
 		{
 			yyVAL.expr = &ast.NewExpr{Name: yyS[yypt-3].tok.lit, SubExprs: yyS[yypt-1].exprs}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 71:
-		//line parser.go.y:401
+		//line parser.go.y:423
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "+", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 72:
-		//line parser.go.y:406
+		//line parser.go.y:428
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "-", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 73:
-		//line parser.go.y:411
+		//line parser.go.y:433
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "*", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 74:
-		//line parser.go.y:416
+		//line parser.go.y:438
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "/", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 75:
-		//line parser.go.y:421
+		//line parser.go.y:443
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "%", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 76:
-		//line parser.go.y:426
+		//line parser.go.y:448
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "**", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 77:
-		//line parser.go.y:431
+		//line parser.go.y:453
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "<<", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 78:
-		//line parser.go.y:436
+		//line parser.go.y:458
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: ">>", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 79:
-		//line parser.go.y:441
+		//line parser.go.y:463
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "==", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 80:
-		//line parser.go.y:446
+		//line parser.go.y:468
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "!=", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 81:
-		//line parser.go.y:451
+		//line parser.go.y:473
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: ">", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 82:
-		//line parser.go.y:456
+		//line parser.go.y:478
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: ">=", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 83:
-		//line parser.go.y:461
+		//line parser.go.y:483
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "<", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 84:
-		//line parser.go.y:466
+		//line parser.go.y:488
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "<=", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 85:
-		//line parser.go.y:471
+		//line parser.go.y:493
 		{
 			yyVAL.expr = &ast.LetsExpr{Lhss: yyS[yypt-2].expr_lhss, Operator: "=", Rhss: yyS[yypt-0].exprs}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr_lhss[0].GetPos())
 		}
 	case 86:
-		//line parser.go.y:476
+		//line parser.go.y:498
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "+=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 87:
-		//line parser.go.y:481
+		//line parser.go.y:503
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "-=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 88:
-		//line parser.go.y:486
+		//line parser.go.y:508
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "*=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 89:
-		//line parser.go.y:491
+		//line parser.go.y:513
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "/=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 90:
-		//line parser.go.y:496
+		//line parser.go.y:518
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "&=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 91:
-		//line parser.go.y:501
+		//line parser.go.y:523
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "|=", Expr: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 92:
-		//line parser.go.y:506
+		//line parser.go.y:528
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.lit, Operator: "++"}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-1].tok.GetPos())
 		}
 	case 93:
-		//line parser.go.y:511
+		//line parser.go.y:533
 		{
 			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.lit, Operator: "--"}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-1].tok.GetPos())
 		}
 	case 94:
-		//line parser.go.y:516
+		//line parser.go.y:538
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "|", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 95:
-		//line parser.go.y:521
+		//line parser.go.y:543
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "||", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 96:
-		//line parser.go.y:526
+		//line parser.go.y:548
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "&", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 97:
-		//line parser.go.y:531
+		//line parser.go.y:553
 		{
 			yyVAL.expr = &ast.BinOpExpr{Lhs: yyS[yypt-2].expr, Operator: "&&", Rhs: yyS[yypt-0].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 98:
-		//line parser.go.y:536
+		//line parser.go.y:558
 		{
 			yyVAL.expr = &ast.CallExpr{Name: yyS[yypt-3].tok.lit, SubExprs: yyS[yypt-1].exprs}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-3].tok.GetPos())
 		}
 	case 99:
-		//line parser.go.y:541
+		//line parser.go.y:563
 		{
 			yyVAL.expr = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: yyS[yypt-3].tok.lit}, Index: yyS[yypt-1].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-3].tok.GetPos())
 		}
 	case 100:
-		//line parser.go.y:546
+		//line parser.go.y:568
 		{
 			yyVAL.expr = &ast.ItemExpr{Value: yyS[yypt-3].expr, Index: yyS[yypt-1].expr}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-3].expr.GetPos())
 		}
 	case 101:
-		//line parser.go.y:551
+		//line parser.go.y:573
 		{
 			yyVAL.expr = &ast.AnonCallExpr{Expr: yyS[yypt-3].expr, SubExprs: yyS[yypt-1].exprs}
-			if l, ok := yylex.(*Lexer); ok {
-				yyVAL.expr.SetPos(l.pos)
-			}
+			yyVAL.expr.SetPos(yyS[yypt-3].expr.GetPos())
 		}
 	}
 	goto yystack /* stack new state and value */
