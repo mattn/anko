@@ -3,13 +3,13 @@ package ast
 type Token struct {
 	Tok int
 	Lit string
-	pos Position
+	Pos Position
 }
 
 func (t *Token) GetPos() Position {
-	return t.pos
+	return t.Pos
 }
 
 func (t *Token) SetPos(pos Position) {
-	t.pos = pos
+	t.Pos = pos
 }

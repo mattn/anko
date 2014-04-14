@@ -12,17 +12,6 @@ const (
 	EOL        = '\n' // End of line.
 )
 
-// Token provide structure of identities or literals.
-type Token struct {
-	tok int
-	lit string
-	pos ast.Position
-}
-
-func (t *Token) GetPos() ast.Position {
-	return t.pos
-}
-
 // Error provides a convenient interface for handling runtime error.
 // It can be Error inteface with type cast which can call Pos().
 type Error struct {
@@ -476,7 +465,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	if tok == EOF {
 		return 0
 	}
-	lval.tok = Token{tok: tok, lit: lit, pos: pos}
+	lval.tok = ast.Token{Tok: tok, Lit: lit, Pos: pos}
 	l.lit = lit
 	l.pos = pos
 	return tok

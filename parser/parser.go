@@ -24,7 +24,7 @@ type yySymType struct {
 	expr_pair    ast.Expr
 	expr_pairs   []ast.Expr
 	expr_idents  []string
-	tok          Token
+	tok          ast.Token
 }
 
 const IDENT = 57346
@@ -916,7 +916,7 @@ yydefault:
 	case 9:
 		//line parser.go.y:112
 		{
-			yyVAL.stmt = &ast.ModuleStmt{Name: yyS[yypt-3].tok.lit, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt = &ast.ModuleStmt{Name: yyS[yypt-3].tok.Lit, Stmts: yyS[yypt-1].stmts}
 			yyVAL.stmt.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 10:
@@ -934,7 +934,7 @@ yydefault:
 	case 12:
 		//line parser.go.y:127
 		{
-			yyVAL.stmt = &ast.ForStmt{Var: yyS[yypt-5].tok.lit, Value: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
+			yyVAL.stmt = &ast.ForStmt{Var: yyS[yypt-5].tok.Lit, Value: yyS[yypt-3].expr, Stmts: yyS[yypt-1].stmts}
 			yyVAL.stmt.SetPos(yyS[yypt-6].tok.GetPos())
 		}
 	case 13:
@@ -958,7 +958,7 @@ yydefault:
 	case 16:
 		//line parser.go.y:147
 		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-10].stmts, Var: yyS[yypt-7].tok.lit, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-10].stmts, Var: yyS[yypt-7].tok.Lit, Catch: yyS[yypt-5].stmts, Finally: yyS[yypt-1].stmts}
 			yyVAL.stmt.SetPos(yyS[yypt-12].tok.GetPos())
 		}
 	case 17:
@@ -970,7 +970,7 @@ yydefault:
 	case 18:
 		//line parser.go.y:157
 		{
-			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-6].stmts, Var: yyS[yypt-3].tok.lit, Catch: yyS[yypt-1].stmts}
+			yyVAL.stmt = &ast.TryStmt{Try: yyS[yypt-6].stmts, Var: yyS[yypt-3].tok.Lit, Catch: yyS[yypt-1].stmts}
 			yyVAL.stmt.SetPos(yyS[yypt-8].tok.GetPos())
 		}
 	case 19:
@@ -1047,7 +1047,7 @@ yydefault:
 	case 31:
 		//line parser.go.y:227
 		{
-			yyVAL.expr_pair = &ast.PairExpr{Key: yyS[yypt-2].tok.lit, Value: yyS[yypt-0].expr}
+			yyVAL.expr_pair = &ast.PairExpr{Key: yyS[yypt-2].tok.Lit, Value: yyS[yypt-0].expr}
 		}
 	case 32:
 		//line parser.go.y:232
@@ -1072,17 +1072,17 @@ yydefault:
 	case 36:
 		//line parser.go.y:249
 		{
-			yyVAL.expr_idents = []string{yyS[yypt-0].tok.lit}
+			yyVAL.expr_idents = []string{yyS[yypt-0].tok.Lit}
 		}
 	case 37:
 		//line parser.go.y:253
 		{
-			yyVAL.expr_idents = append(yyS[yypt-2].expr_idents, yyS[yypt-0].tok.lit)
+			yyVAL.expr_idents = append(yyS[yypt-2].expr_idents, yyS[yypt-0].tok.Lit)
 		}
 	case 38:
 		//line parser.go.y:258
 		{
-			yyVAL.expr_lhs = &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}
+			yyVAL.expr_lhs = &ast.IdentExpr{Lit: yyS[yypt-0].tok.Lit}
 			if l, ok := yylex.(*Lexer); ok {
 				yyVAL.expr_lhs.SetPos(l.pos)
 			}
@@ -1090,7 +1090,7 @@ yydefault:
 	case 39:
 		//line parser.go.y:263
 		{
-			yyVAL.expr_lhs = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
+			yyVAL.expr_lhs = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.Lit}
 			if l, ok := yylex.(*Lexer); ok {
 				yyVAL.expr_lhs.SetPos(l.pos)
 			}
@@ -1136,18 +1136,18 @@ yydefault:
 	case 47:
 		//line parser.go.y:299
 		{
-			yyVAL.exprs = append([]ast.Expr{&ast.IdentExpr{Lit: yyS[yypt-2].tok.lit}}, yyS[yypt-0].exprs...)
+			yyVAL.exprs = append([]ast.Expr{&ast.IdentExpr{Lit: yyS[yypt-2].tok.Lit}}, yyS[yypt-0].exprs...)
 		}
 	case 48:
 		//line parser.go.y:304
 		{
-			yyVAL.expr = &ast.NumberExpr{Lit: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.NumberExpr{Lit: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 49:
 		//line parser.go.y:309
 		{
-			yyVAL.expr = &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.IdentExpr{Lit: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 50:
@@ -1171,49 +1171,49 @@ yydefault:
 	case 53:
 		//line parser.go.y:329
 		{
-			yyVAL.expr = &ast.AddrExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}}
+			yyVAL.expr = &ast.AddrExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.Lit}}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 54:
 		//line parser.go.y:334
 		{
-			yyVAL.expr = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}}
+			yyVAL.expr = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.Lit}}
 			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 55:
 		//line parser.go.y:339
 		{
-			yyVAL.expr = &ast.DerefExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.lit}}
+			yyVAL.expr = &ast.DerefExpr{Expr: &ast.IdentExpr{Lit: yyS[yypt-0].tok.Lit}}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 56:
 		//line parser.go.y:344
 		{
-			yyVAL.expr = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}}
+			yyVAL.expr = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.Lit}}
 			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 57:
 		//line parser.go.y:349
 		{
-			yyVAL.expr = &ast.StringExpr{Lit: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.StringExpr{Lit: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 58:
 		//line parser.go.y:354
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 59:
 		//line parser.go.y:359
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 60:
 		//line parser.go.y:364
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.ConstExpr{Value: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-0].tok.GetPos())
 		}
 	case 61:
@@ -1225,7 +1225,7 @@ yydefault:
 	case 62:
 		//line parser.go.y:374
 		{
-			yyVAL.expr = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.lit}
+			yyVAL.expr = &ast.MemberExpr{Expr: yyS[yypt-2].expr, Name: yyS[yypt-0].tok.Lit}
 			yyVAL.expr.SetPos(yyS[yypt-2].expr.GetPos())
 		}
 	case 63:
@@ -1237,19 +1237,19 @@ yydefault:
 	case 64:
 		//line parser.go.y:384
 		{
-			yyVAL.expr = &ast.FuncExpr{Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
+			yyVAL.expr = &ast.FuncExpr{Args: []string{yyS[yypt-5].tok.Lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
 			yyVAL.expr.SetPos(yyS[yypt-7].tok.GetPos())
 		}
 	case 65:
 		//line parser.go.y:389
 		{
-			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-6].tok.lit, Args: yyS[yypt-4].expr_idents, Stmts: yyS[yypt-1].stmts}
+			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-6].tok.Lit, Args: yyS[yypt-4].expr_idents, Stmts: yyS[yypt-1].stmts}
 			yyVAL.expr.SetPos(yyS[yypt-7].tok.GetPos())
 		}
 	case 66:
 		//line parser.go.y:394
 		{
-			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-7].tok.lit, Args: []string{yyS[yypt-5].tok.lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
+			yyVAL.expr = &ast.FuncExpr{Name: yyS[yypt-7].tok.Lit, Args: []string{yyS[yypt-5].tok.Lit}, Stmts: yyS[yypt-1].stmts, VarArg: true}
 			yyVAL.expr.SetPos(yyS[yypt-8].tok.GetPos())
 		}
 	case 67:
@@ -1283,7 +1283,7 @@ yydefault:
 	case 70:
 		//line parser.go.y:418
 		{
-			yyVAL.expr = &ast.NewExpr{Name: yyS[yypt-3].tok.lit, SubExprs: yyS[yypt-1].exprs}
+			yyVAL.expr = &ast.NewExpr{Name: yyS[yypt-3].tok.Lit, SubExprs: yyS[yypt-1].exprs}
 			yyVAL.expr.SetPos(yyS[yypt-4].tok.GetPos())
 		}
 	case 71:
@@ -1379,49 +1379,49 @@ yydefault:
 	case 86:
 		//line parser.go.y:498
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "+=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "+=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 87:
 		//line parser.go.y:503
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "-=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "-=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 88:
 		//line parser.go.y:508
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "*=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "*=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 89:
 		//line parser.go.y:513
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "/=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "/=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 90:
 		//line parser.go.y:518
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "&=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "&=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 91:
 		//line parser.go.y:523
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.lit, Operator: "|=", Expr: yyS[yypt-0].expr}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-2].tok.Lit, Operator: "|=", Expr: yyS[yypt-0].expr}
 			yyVAL.expr.SetPos(yyS[yypt-2].tok.GetPos())
 		}
 	case 92:
 		//line parser.go.y:528
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.lit, Operator: "++"}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.Lit, Operator: "++"}
 			yyVAL.expr.SetPos(yyS[yypt-1].tok.GetPos())
 		}
 	case 93:
 		//line parser.go.y:533
 		{
-			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.lit, Operator: "--"}
+			yyVAL.expr = &ast.AssocExpr{Name: yyS[yypt-1].tok.Lit, Operator: "--"}
 			yyVAL.expr.SetPos(yyS[yypt-1].tok.GetPos())
 		}
 	case 94:
@@ -1451,13 +1451,13 @@ yydefault:
 	case 98:
 		//line parser.go.y:558
 		{
-			yyVAL.expr = &ast.CallExpr{Name: yyS[yypt-3].tok.lit, SubExprs: yyS[yypt-1].exprs}
+			yyVAL.expr = &ast.CallExpr{Name: yyS[yypt-3].tok.Lit, SubExprs: yyS[yypt-1].exprs}
 			yyVAL.expr.SetPos(yyS[yypt-3].tok.GetPos())
 		}
 	case 99:
 		//line parser.go.y:563
 		{
-			yyVAL.expr = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: yyS[yypt-3].tok.lit}, Index: yyS[yypt-1].expr}
+			yyVAL.expr = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: yyS[yypt-3].tok.Lit}, Index: yyS[yypt-1].expr}
 			yyVAL.expr.SetPos(yyS[yypt-3].tok.GetPos())
 		}
 	case 100:
