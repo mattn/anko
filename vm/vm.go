@@ -29,12 +29,12 @@ var ReturnError = errors.New("Unexpected return statement")
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {
-	return &Error{Message: err, Pos: pos.GetPos()}
+	return &Error{Message: err, Pos: pos.Position()}
 }
 
 // NewStringError makes error interface with message.
 func NewErrorf(pos ast.Pos, format string, args ...interface{}) error {
-	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.GetPos()}
+	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.Position()}
 }
 
 // NewError makes error interface with message. This doesn't overwrite last error.
@@ -51,7 +51,7 @@ func NewError(pos ast.Pos, err error) error {
 	if ee, ok := err.(*Error); ok {
 		return ee
 	}
-	return &Error{Message: err.Error(), Pos: pos.GetPos()}
+	return &Error{Message: err.Error(), Pos: pos.Position()}
 }
 
 // Error return the error message.

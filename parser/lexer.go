@@ -466,7 +466,7 @@ func (l *Lexer) Lex(lval *yySymType) int {
 		return 0
 	}
 	lval.tok = ast.Token{Tok: tok, Lit: lit}
-	lval.tok.SetPos(pos)
+	lval.tok.SetPosition(pos)
 	l.lit = lit
 	l.pos = pos
 	return tok

@@ -8,8 +8,8 @@ type Position struct {
 
 // Pos interface provies two functions to get/set the position for expression or statement.
 type Pos interface {
-	GetPos() Position
-	SetPos(Position)
+	Position() Position
+	SetPosition(Position)
 }
 
 // PosImpl provies commonly implementations for Pos.
@@ -17,12 +17,12 @@ type PosImpl struct {
 	pos Position
 }
 
-// GetPos return the position of the expression or statement.
-func (x *PosImpl) GetPos() Position {
+// Position return the position of the expression or statement.
+func (x *PosImpl) Position() Position {
 	return x.pos
 }
 
-// SetPos is a function to specify position of the expression or statement.
-func (x *PosImpl) SetPos(pos Position) {
+// SetPosition is a function to specify position of the expression or statement.
+func (x *PosImpl) SetPosition(pos Position) {
 	x.pos = pos
 }
