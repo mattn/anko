@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	EOF        = -1   // End of file.
-	EOL        = '\n' // End of line.
+	EOF = -1   // End of file.
+	EOL = '\n' // End of line.
 )
 
 // Error provides a convenient interface for handling runtime error.
@@ -465,7 +465,8 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	if tok == EOF {
 		return 0
 	}
-	lval.tok = ast.Token{Tok: tok, Lit: lit, Pos: pos}
+	lval.tok = ast.Token{Tok: tok, Lit: lit}
+	lval.tok.SetPos(pos)
 	l.lit = lit
 	l.pos = pos
 	return tok
