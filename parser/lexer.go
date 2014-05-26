@@ -264,7 +264,7 @@ retry:
 			tok = int(ch)
 			lit = string(ch)
 		default:
-			err = fmt.Errorf(`syntax error "%s"`, ch)
+			err = fmt.Errorf(`syntax error "%s"`, string(ch))
 			return
 		}
 		s.next()
