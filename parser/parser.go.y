@@ -300,14 +300,15 @@ exprs :
 		$$ = append([]ast.Expr{&ast.IdentExpr{Lit: $1.Lit}}, $3...)
 	}
 
-expr : NUMBER
-	{
-		$$ = &ast.NumberExpr{Lit: $1.Lit}
-		$$.SetPosition($1.Position())
-	}
-	| IDENT
+expr :
+	IDENT
 	{
 		$$ = &ast.IdentExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+	| NUMBER
+	{
+		$$ = &ast.NumberExpr{Lit: $1.Lit}
 		$$.SetPosition($1.Position())
 	}
 	| '-' expr %prec UNARY
