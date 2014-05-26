@@ -17,6 +17,7 @@ import (
 %type<exprs> exprs
 %type<expr_lhs> expr_lhs
 %type<expr_lhss> expr_lhss
+%type<expr_lets> expr_lets
 %type<expr_pair> expr_pair
 %type<expr_pairs> expr_pairs
 %type<expr_idents> expr_idents
@@ -32,6 +33,7 @@ import (
 	exprs                  []ast.Expr
 	expr_lhs               ast.Expr
 	expr_lhss              []ast.Expr
+	expr_lets              ast.Expr
 	expr_pair              ast.Expr
 	expr_pairs             []ast.Expr
 	expr_idents            []string
@@ -138,7 +140,7 @@ stmt : expr
 		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
 		$$.SetPosition($1.Position())
 	}
-	| FOR expr ';' expr ';' expr '{' stmts '}' 
+	| FOR expr_lets ';' expr ';' expr '{' stmts '}' 
 	{
 		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
 		$$.SetPosition($1.Position())
@@ -163,10 +165,14 @@ stmt : expr
 		$$ = &ast.TryStmt{Try: $3, Catch: $7}
 		$$.SetPosition($1.Position())
 	}
-
 	| SWITCH expr '{' stmt_cases '}'
 	{
 		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
+		$$.SetPosition($1.Position())
+	}
+	| expr_lets
+	{
+		$$ = &ast.ExprStmt{Expr: $1}
 		$$.SetPosition($1.Position())
 	}
 
@@ -270,11 +276,19 @@ expr_lhs : IDENT
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
 
+expr_lets : expr_lhss '=' exprs
+	{
+		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
+		$$.SetPosition($1[0].Position())
+	}
+
 expr_lhss :
+		  /*
 	{
 		$$ = []ast.Expr{}
 	}
-	| expr_lhs
+	*/
+	expr_lhs
 	{
 		$$ = []ast.Expr{$1}
 	}
@@ -490,11 +504,6 @@ expr :
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| expr_lhss '=' exprs
-	{
-		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
-		$$.SetPosition($1[0].Position())
-	}
 	| IDENT PLUSEQ expr
 	{
 		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "+=", Expr: $3}
@@ -523,6 +532,11 @@ expr :
 	| IDENT OREQ expr
 	{
 		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "|=", Expr: $3}
+		$$.SetPosition($1.Position())
+	}
+	| IDENT '=' expr
+	{
+		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "=", Expr: $3}
 		$$.SetPosition($1.Position())
 	}
 	| IDENT PLUSPLUS
