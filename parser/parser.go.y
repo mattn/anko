@@ -504,49 +504,49 @@ expr :
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT PLUSEQ expr
+	| expr PLUSEQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "+=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "+=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT MINUSEQ expr
+	| expr MINUSEQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "-=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "-=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT MULEQ expr
+	| expr MULEQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "*=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "*=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT DIVEQ expr
+	| expr DIVEQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "/=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "/=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT ANDEQ expr
+	| expr ANDEQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "&=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "&=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT OREQ expr
+	| expr OREQ expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "|=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "|=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT '=' expr
+	| expr '=' expr
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "=", Expr: $3}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT PLUSPLUS
+	| expr PLUSPLUS
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "++"}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "++"}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT MINUSMINUS
+	| expr MINUSMINUS
 	{
-		$$ = &ast.AssocExpr{Name: $1.Lit, Operator: "--"}
+		$$ = &ast.AssocExpr{Lhs: $1, Operator: "--"}
 		$$.SetPosition($1.Position())
 	}
 	| expr '|' expr

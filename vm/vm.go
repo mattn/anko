@@ -878,34 +878,50 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return v, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
-		v, err := env.Get(e.Name)
+		switch e.Operator {
+		case "++":
+			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
+				v, err := env.Get(alhs.Lit)
+				if err != nil {
+					return v, err
+				}
+				if v.Kind() == reflect.Float64 {
+					v = reflect.ValueOf(toFloat64(v) + 1.0)
+				} else {
+					v = reflect.ValueOf(toInt64(v) + 1)
+				}
+				if env.Set(alhs.Lit, v) != nil {
+					env.Define(alhs.Lit, v)
+				}
+				return v, nil
+			}
+		case "--":
+			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
+				v, err := env.Get(alhs.Lit)
+				if err != nil {
+					return v, err
+				}
+				if v.Kind() == reflect.Float64 {
+					v = reflect.ValueOf(toFloat64(v) - 1.0)
+				} else {
+					v = reflect.ValueOf(toInt64(v) - 1)
+				}
+				if env.Set(alhs.Lit, v) != nil {
+					env.Define(alhs.Lit, v)
+				}
+				return v, nil
+			}
+		}
+
+		v, err := invokeExpr(&ast.BinOpExpr{Lhs: e.Lhs, Operator: e.Operator[0:1], Rhs: e.Rhs}, env)
 		if err != nil {
 			return v, err
 		}
-		switch e.Operator {
-		case "++":
-			if v.Kind() == reflect.Float64 {
-				v = reflect.ValueOf(toFloat64(v) + 1.0)
-			} else {
-				v = reflect.ValueOf(toInt64(v) + 1)
-			}
-		case "--":
-			if v.Kind() == reflect.Float64 {
-				v = reflect.ValueOf(toFloat64(v) - 1.0)
-			} else {
-				v = reflect.ValueOf(toInt64(v) - 1)
-			}
-		default:
-			v, err = invokeExpr(&ast.BinOpExpr{Lhs: &ast.IdentExpr{Lit: e.Name}, Operator: e.Operator[0:1], Rhs: e.Expr}, env)
-			if err != nil {
-				return v, err
-			}
 
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
 		}
-		if env.Set(e.Name, v) != nil {
-			env.Define(e.Name, v)
-		}
-		return v, nil
+		return invokeLetExpr(e.Lhs, v, env)
 	case *ast.LetExpr:
 		rv, err := invokeExpr(e.Rhs, env)
 		if err != nil {

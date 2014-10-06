@@ -147,9 +147,9 @@ type LetsExpr struct {
 // AssocExpr provide expression to assoc operation.
 type AssocExpr struct {
 	ExprImpl
-	Name     string
+	Lhs      Expr
 	Operator string
-	Expr     Expr
+	Rhs      Expr
 }
 
 // NewExpr provide expression to make new instance.
