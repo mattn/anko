@@ -531,14 +531,19 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		}
 		if v.Kind() == reflect.Struct {
 			v = v.FieldByName(lhs.Name)
+			if !v.CanSet() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			v.Set(rv)
 		} else if v.Kind() == reflect.Map {
-			v = v.MapIndex(reflect.ValueOf(lhs.Name))
+			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
+		} else {
+			if !v.CanSet() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			v.Set(rv)
 		}
 
-		if !v.CanSet() {
-			return NilValue, NewStringError(expr, "Cannot assignable")
-		}
-		v.Set(rv)
 		return v, nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
