@@ -15,8 +15,7 @@ import (
 %type<stmt_cases> stmt_cases
 %type<expr> expr
 %type<exprs> exprs
-%type<expr_lhs> expr_lhs
-%type<expr_lhss> expr_lhss
+%type<expr_many> expr_many
 %type<expr_lets> expr_lets
 %type<expr_pair> expr_pair
 %type<expr_pairs> expr_pairs
@@ -31,8 +30,7 @@ import (
 	stmt                   ast.Stmt
 	expr                   ast.Expr
 	exprs                  []ast.Expr
-	expr_lhs               ast.Expr
-	expr_lhss              []ast.Expr
+	expr_many              []ast.Expr
 	expr_lets              ast.Expr
 	expr_pair              ast.Expr
 	expr_pairs             []ast.Expr
@@ -260,41 +258,24 @@ expr_idents :
 		$$ = append($1, $3.Lit)
 	}
 
-expr_lhs : IDENT
-	{
-		$$ = &ast.IdentExpr{Lit: $1.Lit}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-	| expr '.' IDENT
-	{
-		$$ = &ast.MemberExpr{Expr: $1, Name: $3.Lit}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-	| expr '[' expr ']'
-	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-
-expr_lets : expr_lhss '=' exprs
+expr_lets : expr_many '=' expr_many
 	{
 		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
 		$$.SetPosition($1[0].Position())
 	}
 
-expr_lhss :
-		  /*
-	{
-		$$ = []ast.Expr{}
-	}
-	*/
-	expr_lhs
+expr_many :
+	expr
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| expr_lhs ',' expr_lhss
+	| expr ',' exprs
 	{
 		$$ = append([]ast.Expr{$1}, $3...)
+	}
+	| IDENT ',' exprs
+	{
+		$$ = append([]ast.Expr{&ast.IdentExpr{Lit: $1.Lit}}, $3...)
 	}
 
 exprs :
@@ -532,11 +513,6 @@ expr :
 	| expr OREQ expr
 	{
 		$$ = &ast.AssocExpr{Lhs: $1, Operator: "|=", Rhs: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '=' expr
-	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "=", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr PLUSPLUS
