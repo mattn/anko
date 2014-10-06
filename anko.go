@@ -113,12 +113,16 @@ func main() {
 					fmt.Print("> ")
 				}
 			})
-			b, _, err := reader.ReadLine()
+			var err error
+			b, _, err = reader.ReadLine()
 			if err != nil {
 				break
 			}
 			if len(b) == 0 {
 				continue
+			}
+			if code != "" {
+				code += "\n"
 			}
 			code += string(b)
 		} else {
@@ -132,11 +136,12 @@ func main() {
 		v := vm.NilValue
 
 		if repl {
-			if following {
-				continue
-			}
-			if e, ok := err.(*parser.Error); ok && e.Pos.Column == len(b) {
-				if !e.Fatal {
+			if e, ok := err.(*parser.Error); ok {
+				if e.Pos.Column == len(b) && !e.Fatal  {
+					following = true
+					continue
+				}
+				if e.Error() == "unexpected EOF" {
 					following = true
 					continue
 				}
