@@ -192,7 +192,6 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, NewError(stmt, err)
 	case *ast.LoopStmt:
-		fmt.Printf("loop stmt")
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for {
