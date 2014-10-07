@@ -1114,6 +1114,16 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					}
 					if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
 						arg = arg.Convert(it)
+					} else if arg.Kind() == reflect.Func {
+						if _, isFunc := arg.Interface().(Func); isFunc {
+							rfunc := arg
+							arg = reflect.MakeFunc(it, func(args []reflect.Value) ([]reflect.Value) {
+								for i := range args {
+									args[i] = reflect.ValueOf(args[i])
+								}
+								return rfunc.Call(args)[:it.NumOut()]
+							})
+						}
 					} else if !arg.IsValid() {
 						arg = reflect.Zero(it)
 					}

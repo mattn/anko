@@ -1,4 +1,4 @@
-net.http.HandleFunc("/", net.http.toHandleFunc(func(w, r) {
+net.http.HandleFunc("/", func(w, r) {
   w.Write(toBytes("hello world"))
-}))
+})
 net.http.ListenAndServe(":8080", nil)
