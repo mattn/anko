@@ -33,10 +33,4 @@ func Import(env *vm.Env) {
 	m.Define("Handle", reflect.ValueOf(h.Handle))
 	m.Define("HandleFunc", reflect.ValueOf(h.HandleFunc))
 	m.Define("ListenAndServe", reflect.ValueOf(h.ListenAndServe))
-
-	m.Define("toHandleFunc", reflect.ValueOf(func(f interface{}) h.HandlerFunc {
-		return func(w h.ResponseWriter, r *h.Request) {
-			f.(vm.Func)(reflect.ValueOf(w), reflect.ValueOf(r))
-		}
-	}))
 }
