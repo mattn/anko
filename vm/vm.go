@@ -1151,7 +1151,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if f.Kind() == reflect.Interface {
 				f = f.Elem()
 			}
-			fmt.Println(args)
 			rets := f.Call(args)
 			if isReflect {
 				ev := rets[1].Interface()
