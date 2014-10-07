@@ -1113,8 +1113,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					it := f.Type().In(i)
 					if arg.Kind().String() == "unsafe.Pointer" {
 						arg = reflect.New(it).Elem()
-					} else if arg.Kind() != it.Kind() && arg.Type().ConvertibleTo(f.Type().In(i)) {
+					}
+					if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
 						arg = arg.Convert(it)
+					} else if !arg.IsValid() {
+						arg = reflect.Zero(it)
 					}
 				}
 			}
@@ -1148,6 +1151,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if f.Kind() == reflect.Interface {
 				f = f.Elem()
 			}
+			fmt.Println(args)
 			rets := f.Call(args)
 			if isReflect {
 				ev := rets[1].Interface()
