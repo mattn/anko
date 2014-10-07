@@ -216,8 +216,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					continue
 				}
 				if err == ReturnError {
-					err = nil
-					break
+					return rv, err
 				}
 				return rv, NewError(stmt, err)
 			}
@@ -233,6 +232,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
+
 		for i := 0; i < val.Len(); i++ {
 			iv := val.Index(i)
 			if val.Index(i).Kind() == reflect.Interface || val.Index(i).Kind() == reflect.Ptr {
@@ -250,8 +250,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					continue
 				}
 				if err == ReturnError {
-					err = nil
-					break
+					return rv, err
 				}
 				return rv, NewError(stmt, err)
 			}
@@ -284,8 +283,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					continue
 				}
 				if err == ReturnError {
-					err = nil
-					break
+					return rv, err
 				}
 				return rv, NewError(stmt, err)
 			}
