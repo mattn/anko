@@ -1,3 +1,5 @@
+// +build !appengine
+
 // Package term implements terminal interface for anko script.
 package term
 

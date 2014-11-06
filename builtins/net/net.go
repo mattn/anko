@@ -1,3 +1,5 @@
+// +build !appengine
+
 // Package net implements net interface for anko script.
 package net
 

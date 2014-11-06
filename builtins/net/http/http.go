@@ -1,3 +1,5 @@
+// +build !appengine
+
 // Package http implements http interface for anko script.
 package http
 

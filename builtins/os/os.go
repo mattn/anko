@@ -34,7 +34,7 @@ func Import(env *vm.Env) {
 	m.Define("Getgroups", reflect.ValueOf(pkg.Getgroups))
 	m.Define("Getpagesize", reflect.ValueOf(pkg.Getpagesize))
 	m.Define("Getpid", reflect.ValueOf(pkg.Getpid))
-	m.Define("Getppid", reflect.ValueOf(pkg.Getppid))
+	handleAppEngine(m)
 	m.Define("Getuid", reflect.ValueOf(pkg.Getuid))
 	m.Define("Getwd", reflect.ValueOf(pkg.Getwd))
 	m.Define("Hostname", reflect.ValueOf(pkg.Hostname))

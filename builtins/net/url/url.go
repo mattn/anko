@@ -1,3 +1,5 @@
+// +build !appengine
+
 // Package url implements url interface for anko script.
 package url
 
