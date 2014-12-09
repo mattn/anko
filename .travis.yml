@@ -6,5 +6,5 @@ before_install:
 script:
     - go build
     - ./t/test.sh
-    - ./anko ./_example/term.ank
+    - ./anko ./_example/scripts/term.ank
 
