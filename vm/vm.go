@@ -448,8 +448,12 @@ func isNum(v reflect.Value) bool {
 
 // equal return true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
-	if isNil(lhsV) && isNil(rhsV) {
+	lhsIsNil, rhsIsNil := isNil(lhsV), isNil(rhsV)
+	if lhsIsNil && rhsIsNil {
 		return true
+	}
+	if (!lhsIsNil && rhsIsNil) || (lhsIsNil && !rhsIsNil) {
+		return false
 	}
 	if lhsV.Kind() == reflect.Interface || lhsV.Kind() == reflect.Ptr {
 		lhsV = lhsV.Elem()
