@@ -177,6 +177,7 @@ stmt : expr
 stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 	{
 		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
+		$$.SetPosition($1.Position())
 	}
 	| stmt_if ELSE '{' stmts '}'
 	{
@@ -185,10 +186,12 @@ stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 		} else {
 			$$.(*ast.IfStmt).Else = append($$.(*ast.IfStmt).Else, $4...)
 		}
+		$$.SetPosition($1.Position())
 	}
 	| IF expr '{' stmts '}'
 	{
 		$$ = &ast.IfStmt{If: $2, Then: $4, Else: nil}
+		$$.SetPosition($1.Position())
 	}
 
 stmt_cases :

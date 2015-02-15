@@ -1117,7 +1117,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					} else if arg.Kind() == reflect.Func {
 						if _, isFunc := arg.Interface().(Func); isFunc {
 							rfunc := arg
-							arg = reflect.MakeFunc(it, func(args []reflect.Value) ([]reflect.Value) {
+							arg = reflect.MakeFunc(it, func(args []reflect.Value) []reflect.Value {
 								for i := range args {
 									args[i] = reflect.ValueOf(args[i])
 								}
