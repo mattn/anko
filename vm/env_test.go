@@ -8,9 +8,9 @@ import (
 func TestGet(t *testing.T) {
 	env := NewEnv()
 	env.Define("foo", reflect.ValueOf("bar"))
-	v, ok := env.Get("foo")
-	if !ok {
-		t.Fatalf(`Can't Get valeu for "foo"`)
+	v, err := env.Get("foo")
+	if err != nil {
+		t.Fatalf(`Can't Get value for "foo"`)
 	}
 	if v.Kind() != reflect.String {
 		t.Fatalf(`Can't Get string value for "foo"`)
@@ -24,10 +24,10 @@ func TestDefine(t *testing.T) {
 	env := NewEnv()
 	env.Define("foo", reflect.ValueOf("bar"))
 
-	env = env.New()
-	v, ok := env.Get("foo")
-	if !ok {
-		t.Fatalf(`Can't Get valeu for "foo"`)
+	env = env.NewEnv()
+	v, err := env.Get("foo")
+	if err != nil {
+		t.Fatalf(`Can't Get value for "foo"`)
 	}
 	if v.Kind() != reflect.String {
 		t.Fatalf(`Can't Get string value for "foo"`)
@@ -42,11 +42,11 @@ func TestDefineModify(t *testing.T) {
 	env.Define("foo", reflect.ValueOf("bar"))
 	orig := env
 
-	env = env.New()
+	env = env.NewEnv()
 	env.Define("foo", reflect.ValueOf(true))
-	v, ok := env.Get("foo")
-	if !ok {
-		t.Fatalf(`Can't Get valeu for "foo"`)
+	v, err := env.Get("foo")
+	if err != nil {
+		t.Fatalf(`Can't Get value for "foo"`)
 	}
 	if v.Kind() != reflect.Bool {
 		t.Fatalf(`Can't Get bool value for "foo"`)
@@ -55,9 +55,9 @@ func TestDefineModify(t *testing.T) {
 		t.Fatalf("Expected %v, but %v:", true, v.Bool())
 	}
 
-	v, ok = orig.Get("foo")
-	if !ok {
-		t.Fatalf(`Can't Get valeu for "foo"`)
+	v, err = orig.Get("foo")
+	if err != nil {
+		t.Fatalf(`Can't Get value for "foo"`)
 	}
 	if v.Kind() != reflect.String {
 		t.Fatalf(`Can't Get string value for "foo"`)
