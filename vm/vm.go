@@ -62,6 +62,10 @@ func (e *Error) Error() string {
 // Func is function interface to reflect functions internaly.
 type Func func(args ...reflect.Value) (reflect.Value, error)
 
+func (f Func) String() string {
+	return fmt.Sprintf("[Func: %p]", f)
+}
+
 func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
