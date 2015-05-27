@@ -9,7 +9,8 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("url")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Parse", reflect.ValueOf(u.Parse))
+	return m
 }

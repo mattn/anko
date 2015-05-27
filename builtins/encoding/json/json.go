@@ -7,8 +7,9 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("json")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Marshal", reflect.ValueOf(json.Marshal))
 	m.Define("Unmarshal", reflect.ValueOf(json.Unmarshal))
+	return m
 }

@@ -7,8 +7,8 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("filepath")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Join", reflect.ValueOf(f.Join))
 	m.Define("Clean", reflect.ValueOf(f.Join))
 	m.Define("Abs", reflect.ValueOf(f.Abs))
@@ -28,4 +28,5 @@ func Import(env *vm.Env) {
 	m.Define("SplitList", reflect.ValueOf(f.SplitList))
 	m.Define("ToSlash", reflect.ValueOf(f.ToSlash))
 	m.Define("VolumeName", reflect.ValueOf(f.VolumeName))
+	return m
 }

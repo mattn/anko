@@ -7,8 +7,8 @@ import (
 	r "regexp"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("regexp")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Match", reflect.ValueOf(r.Match))
 	m.Define("MatchReader", reflect.ValueOf(r.MatchReader))
 	m.Define("MatchString", reflect.ValueOf(r.MatchString))
@@ -17,4 +17,5 @@ func Import(env *vm.Env) {
 	m.Define("CompilePOSIX", reflect.ValueOf(r.CompilePOSIX))
 	m.Define("MustCompile", reflect.ValueOf(r.MustCompile))
 	m.Define("MustCompilePOSIX", reflect.ValueOf(r.MustCompilePOSIX))
+	return m
 }

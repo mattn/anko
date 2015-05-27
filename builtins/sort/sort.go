@@ -25,8 +25,8 @@ func (p ss) Len() int           { return len(p) }
 func (p ss) Less(i, j int) bool { return p[i].(string) < p[j].(string) }
 func (p ss) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func Import(env *vm.Env) {
-	m := env.NewModule("sort")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Ints", reflect.ValueOf(func(ints []interface{}) []interface{} {
 		s.Sort(is(ints))
 		return ints
@@ -39,5 +39,5 @@ func Import(env *vm.Env) {
 		s.Sort(is(ints))
 		return ints
 	}))
-
+	return m
 }

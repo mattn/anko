@@ -2,14 +2,13 @@
 package path
 
 import (
-	pkg_filepath "github.com/mattn/anko/builtins/path/filepath"
 	"github.com/mattn/anko/vm"
 	pkg "path"
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("path")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Base", reflect.ValueOf(pkg.Base))
 	m.Define("Clean", reflect.ValueOf(pkg.Clean))
 	m.Define("Dir", reflect.ValueOf(pkg.Dir))
@@ -19,6 +18,5 @@ func Import(env *vm.Env) {
 	m.Define("Join", reflect.ValueOf(pkg.Join))
 	m.Define("Match", reflect.ValueOf(pkg.Match))
 	m.Define("Split", reflect.ValueOf(pkg.Split))
-
-	pkg_filepath.Import(m)
+	return m
 }

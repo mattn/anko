@@ -168,11 +168,11 @@ stmt : expr
 		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
 		$$.SetPosition($1.Position())
 	}
-	| expr_lets
+	| expr_many '=' expr_many
 	{
-		$$ = &ast.ExprStmt{Expr: $1}
-		$$.SetPosition($1.Position())
+		$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
 	}
+
 
 stmt_if : stmt_if ELSE IF expr '{' stmts '}'
 	{
@@ -264,7 +264,6 @@ expr_idents :
 expr_lets : expr_many '=' expr_many
 	{
 		$$ = &ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
-		$$.SetPosition($1[0].Position())
 	}
 
 expr_many :

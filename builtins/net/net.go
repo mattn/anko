@@ -4,15 +4,13 @@
 package net
 
 import (
-	pkg_http "github.com/mattn/anko/builtins/net/http"
-	pkg_url "github.com/mattn/anko/builtins/net/url"
 	"github.com/mattn/anko/vm"
 	pkg "net"
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("net")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("CIDRMask", reflect.ValueOf(pkg.CIDRMask))
 	m.Define("Dial", reflect.ValueOf(pkg.Dial))
 	m.Define("DialIP", reflect.ValueOf(pkg.DialIP))
@@ -74,7 +72,5 @@ func Import(env *vm.Env) {
 	m.Define("ResolveUDPAddr", reflect.ValueOf(pkg.ResolveUDPAddr))
 	m.Define("ResolveUnixAddr", reflect.ValueOf(pkg.ResolveUnixAddr))
 	m.Define("SplitHostPort", reflect.ValueOf(pkg.SplitHostPort))
-
-	pkg_http.Import(m)
-	pkg_url.Import(m)
+	return m
 }

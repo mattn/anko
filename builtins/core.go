@@ -10,7 +10,7 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
+func Import(env *vm.Env) *vm.Env {
 	env.Define("len", reflect.ValueOf(func(v interface{}) int64 {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
@@ -121,6 +121,11 @@ func Import(env *vm.Env) {
 		return reflect.TypeOf(v).String()
 	}))
 
+	env.Define("defined", reflect.ValueOf(func(s string) bool {
+		_, err := env.Get(s)
+		return err == nil
+	}))
+
 	env.Define("load", reflect.ValueOf(func(s string) interface{} {
 		body, err := ioutil.ReadFile(s)
 		if err != nil {
@@ -155,4 +160,5 @@ func Import(env *vm.Env) {
 	env.Define("println", reflect.ValueOf(fmt.Println))
 	env.Define("printf", reflect.ValueOf(fmt.Printf))
 
+	return env
 }

@@ -7,8 +7,8 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("math")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Abs", reflect.ValueOf(t.Abs))
 	m.Define("Acos", reflect.ValueOf(t.Acos))
 	m.Define("Acosh", reflect.ValueOf(t.Acosh))
@@ -70,4 +70,5 @@ func Import(env *vm.Env) {
 	m.Define("Y0", reflect.ValueOf(t.Y0))
 	m.Define("Y1", reflect.ValueOf(t.Y1))
 	m.Define("Yn", reflect.ValueOf(t.Yn))
+	return m
 }

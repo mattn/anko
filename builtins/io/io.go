@@ -2,14 +2,13 @@
 package io
 
 import (
-	pkg_ioutil "github.com/mattn/anko/builtins/io/ioutil"
 	"github.com/mattn/anko/vm"
 	pkg "io"
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("io")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Copy", reflect.ValueOf(pkg.Copy))
 	m.Define("CopyN", reflect.ValueOf(pkg.CopyN))
 	m.Define("EOF", reflect.ValueOf(pkg.EOF))
@@ -27,6 +26,5 @@ func Import(env *vm.Env) {
 	m.Define("ReadFull", reflect.ValueOf(pkg.ReadFull))
 	m.Define("TeeReader", reflect.ValueOf(pkg.TeeReader))
 	m.Define("WriteString", reflect.ValueOf(pkg.WriteString))
-
-	pkg_ioutil.Import(m)
+	return m
 }

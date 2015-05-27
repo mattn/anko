@@ -28,8 +28,8 @@ func colorOf(name string) ct.Color {
 	return ct.None
 }
 
-func Import(env *vm.Env) {
-	m := env.NewModule("term")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 
 	m.Define("ChangeColor", reflect.ValueOf(func(fg string, fa bool, rest ...interface{}) {
 		if len(rest) == 2 {
@@ -50,4 +50,5 @@ func Import(env *vm.Env) {
 	m.Define("ResetColor", reflect.ValueOf(func() {
 		ct.ResetColor()
 	}))
+	return m
 }

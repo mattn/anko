@@ -7,10 +7,11 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("ioutil")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("ReadAll", reflect.ValueOf(u.ReadAll))
 	m.Define("ReadDir", reflect.ValueOf(u.ReadDir))
 	m.Define("ReadFile", reflect.ValueOf(u.ReadFile))
 	m.Define("WriteFile", reflect.ValueOf(u.WriteFile))
+	return m
 }

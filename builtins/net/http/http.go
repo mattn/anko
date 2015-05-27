@@ -28,11 +28,12 @@ func (c *Client) Get(args ...reflect.Value) (reflect.Value, error) {
 	return reflect.ValueOf(res), err
 }
 
-func Import(env *vm.Env) {
-	m := env.NewModule("http")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("DefaultClient", reflect.ValueOf(h.DefaultClient))
 	m.Define("NewServeMux", reflect.ValueOf(h.NewServeMux))
 	m.Define("Handle", reflect.ValueOf(h.Handle))
 	m.Define("HandleFunc", reflect.ValueOf(h.HandleFunc))
 	m.Define("ListenAndServe", reflect.ValueOf(h.ListenAndServe))
+	return m
 }

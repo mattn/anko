@@ -2,14 +2,13 @@
 package os
 
 import (
-	pkg_exec "github.com/mattn/anko/builtins/os/exec"
 	"github.com/mattn/anko/vm"
 	pkg "os"
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("os")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Args", reflect.ValueOf(pkg.Args))
 	m.Define("Chdir", reflect.ValueOf(pkg.Chdir))
 	m.Define("Chmod", reflect.ValueOf(pkg.Chmod))
@@ -95,6 +94,5 @@ func Import(env *vm.Env) {
 	m.Define("Symlink", reflect.ValueOf(pkg.Symlink))
 	m.Define("TempDir", reflect.ValueOf(pkg.TempDir))
 	m.Define("Truncate", reflect.ValueOf(pkg.Truncate))
-
-	pkg_exec.Import(m)
+	return m
 }

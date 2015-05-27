@@ -1,3 +1,5 @@
+var term = import("term")
+
 count = func() {
   var n = 0
   return func() {

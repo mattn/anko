@@ -7,8 +7,8 @@ import (
 	"reflect"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("flag")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Arg", reflect.ValueOf(pkg.Arg))
 	m.Define("Args", reflect.ValueOf(pkg.Args))
 	m.Define("Bool", reflect.ValueOf(pkg.Bool))
@@ -44,4 +44,5 @@ func Import(env *vm.Env) {
 	m.Define("Var", reflect.ValueOf(pkg.Var))
 	m.Define("Visit", reflect.ValueOf(pkg.Visit))
 	m.Define("VisitAll", reflect.ValueOf(pkg.VisitAll))
+	return m
 }

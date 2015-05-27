@@ -1,4 +1,7 @@
 #!anko
+
+var term = import("term")
+
 data = [
 "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
 "OOOOOOOOOOOOOOOOOOOOOOOOOOO  OOO",

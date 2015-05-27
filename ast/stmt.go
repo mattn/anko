@@ -117,3 +117,11 @@ type DefaultStmt struct {
 	StmtImpl
 	Stmts []Stmt
 }
+
+// LetsStmt provide multiple statement of let.
+type LetsStmt struct {
+	StmtImpl
+	Lhss     []Expr
+	Operator string
+	Rhss     []Expr
+}

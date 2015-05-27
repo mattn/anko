@@ -8,13 +8,18 @@ import (
 	"fmt"
 	"github.com/daviddengcn/go-colortext"
 	anko_core "github.com/mattn/anko/builtins"
-	anko_encoding "github.com/mattn/anko/builtins/encoding"
+	anko_encoding_json "github.com/mattn/anko/builtins/encoding/json"
 	anko_flag "github.com/mattn/anko/builtins/flag"
 	anko_io "github.com/mattn/anko/builtins/io"
+	anko_io_ioutil "github.com/mattn/anko/builtins/io/ioutil"
 	anko_math "github.com/mattn/anko/builtins/math"
 	anko_net "github.com/mattn/anko/builtins/net"
+	anko_net_http "github.com/mattn/anko/builtins/net/http"
+	anko_net_url "github.com/mattn/anko/builtins/net/url"
 	anko_os "github.com/mattn/anko/builtins/os"
+	anko_os_exec "github.com/mattn/anko/builtins/os/exec"
 	anko_path "github.com/mattn/anko/builtins/path"
+	anko_path_filepath "github.com/mattn/anko/builtins/path/filepath"
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
 	anko_sort "github.com/mattn/anko/builtins/sort"
 	anko_strings "github.com/mattn/anko/builtins/strings"
@@ -89,21 +94,31 @@ func main() {
 	}
 
 	anko_core.Import(env)
-	anko_flag.Import(env)
-	anko_net.Import(env)
-	anko_encoding.Import(env)
-	anko_os.Import(env)
-	anko_io.Import(env)
-	anko_math.Import(env)
-	anko_path.Import(env)
-	anko_regexp.Import(env)
-	anko_sort.Import(env)
-	anko_strings.Import(env)
-	anko_term.Import(env)
 
-	env.Define("defined", reflect.ValueOf(func(s string) bool {
-		_, err := env.Get(s)
-		return err == nil
+	tbl := map[string]func(env *vm.Env) *vm.Env{
+		"encoding/json": anko_encoding_json.Import,
+		"flag":          anko_flag.Import,
+		"io":            anko_io.Import,
+		"io/ioutil":     anko_io_ioutil.Import,
+		"math":          anko_math.Import,
+		"net":           anko_net.Import,
+		"net/http":      anko_net_http.Import,
+		"net/url":       anko_net_url.Import,
+		"os":            anko_os.Import,
+		"os/exec":       anko_os_exec.Import,
+		"path":          anko_path.Import,
+		"path/filepath": anko_path_filepath.Import,
+		"regexp":        anko_regexp.Import,
+		"sort":          anko_sort.Import,
+		"strings":       anko_strings.Import,
+		"term":          anko_term.Import,
+	}
+
+	env.Define("import", reflect.ValueOf(func(s string) interface{} {
+		if loader, ok := tbl[s]; ok {
+			return loader(env)
+		}
+		panic(fmt.Sprintf("package '%s' not found", s))
 	}))
 
 	for {
@@ -139,7 +154,7 @@ func main() {
 
 		if repl {
 			if e, ok := err.(*parser.Error); ok {
-				if e.Pos.Column == len(b) && !e.Fatal  {
+				if e.Pos.Column == len(b) && !e.Fatal {
 					following = true
 					continue
 				}

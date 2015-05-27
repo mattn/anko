@@ -1,6 +1,8 @@
 #!anko
 
-r = net.http.DefaultClient.Get("http://www.google.com")
-b, a = io.ioutil.ReadAll(r[0].Body)
+var http, ioutil = import("net/http"), import("io/ioutil")
+
+r = http.DefaultClient.Get("http://www.google.com")
+b, a = ioutil.ReadAll(r[0].Body)
 println(string(b))
 r[0].Body.Close()

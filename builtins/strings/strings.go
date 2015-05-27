@@ -7,8 +7,8 @@ import (
 	pkg "strings"
 )
 
-func Import(env *vm.Env) {
-	m := env.NewModule("strings")
+func Import(env *vm.Env) *vm.Env {
+	m := env.NewEnv()
 	m.Define("Contains", reflect.ValueOf(pkg.Contains))
 	m.Define("ContainsAny", reflect.ValueOf(pkg.ContainsAny))
 	m.Define("ContainsRune", reflect.ValueOf(pkg.ContainsRune))
@@ -52,4 +52,5 @@ func Import(env *vm.Env) {
 	m.Define("TrimRightFunc", reflect.ValueOf(pkg.TrimRightFunc))
 	m.Define("TrimSpace", reflect.ValueOf(pkg.TrimSpace))
 	m.Define("TrimSuffix", reflect.ValueOf(pkg.TrimSuffix))
+	return m
 }
