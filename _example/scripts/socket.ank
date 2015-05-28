@@ -1,8 +1,8 @@
 #!anko
 
-var os, net, url, ioutil = import("os"), import("net"), import("net/url"), import("io/ioutil")
+var os, net, url, ioutil = import("os"), import("net"), import("net/url"), import("io/ioutil");
 
-func connect(url) {
+func connect(uri) {
   proxy = os.Getenv("http_proxy")
   if proxy != "" {
     u, e = url.Parse(proxy)
@@ -11,7 +11,7 @@ func connect(url) {
     }
     return net.Dial("tcp", u.Host)
   }
-  return net.Dial("tcp", url)
+  return net.Dial("tcp", uri)
 }
 
 c, e = connect("www.google.com:80")
@@ -19,7 +19,7 @@ if e != nil {
   throw e
 }
 c.Write(toBytes("GET http://www.google.com/ HTTP/1.0\r\n\r\n"))
-b, e = ioutil.ReadAll(c);
+b, e = ioutil.ReadAll(c)
 if e != nil {
   throw e
 }
