@@ -106,13 +106,12 @@ retry:
 		}
 	default:
 		switch ch {
-		case -1:
-			tok = EOF
+		case EOF:
+			tok = '\n'
 		case '#':
 			for !isEOL(s.peek()) {
 				s.next()
 			}
-			s.next()
 			goto retry
 		case '!':
 			s.next()
@@ -260,7 +259,7 @@ retry:
 				tok = int(ch)
 				lit = string(ch)
 			}
-		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '\n', '^':
+		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^', '\n':
 			tok = int(ch)
 			lit = string(ch)
 		default:
@@ -292,18 +291,17 @@ func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
 }
 
-// isBrank return true if the rune is empty character..
-func isBrank(ch rune) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n'
+// isBlank return true if the rune is empty character..
+func isBlank(ch rune) bool {
+	return ch == ' ' || ch == '\t' || ch == '\r'
 }
 
 // peek return current rune in the code.
 func (s *Scanner) peek() rune {
-	if !s.reachEOF() {
-		return s.src[s.offset]
-	} else {
-		return -1
+	if s.reachEOF() {
+		return EOF
 	}
+	return s.src[s.offset]
 }
 
 // next move offset to next.
@@ -344,7 +342,7 @@ func (s *Scanner) pos() ast.Position {
 
 // skipBlank move position into non-black character.
 func (s *Scanner) skipBlank() {
-	for isBrank(s.peek()) {
+	for isBlank(s.peek()) {
 		s.next()
 	}
 }
@@ -462,7 +460,8 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	if err != nil {
 		l.e = &Error{Message: fmt.Sprintf("%s", err.Error()), Pos: pos, Fatal: true}
 	}
-	if tok == EOF {
+	//if tok == EOF /*l.s.reachEOF()*/ {
+	if l.s.reachEOF() {
 		return 0
 	}
 	lval.tok = ast.Token{Tok: tok, Lit: lit}
@@ -479,6 +478,7 @@ func (l *Lexer) Error(msg string) {
 
 // Parser provide way to parse the code.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
+	yyErrorVerbose = true
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
 		return nil, l.e

@@ -120,6 +120,50 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return reflect.ValueOf(result), nil
+	case *ast.LetsStmt:
+		rv := NilValue
+		var err error
+		vs := []interface{}{}
+		for _, rhs := range stmt.Rhss {
+			rv, err = invokeExpr(rhs, env)
+			if err != nil {
+				return rv, NewError(rhs, err)
+			}
+			if rv == NilValue {
+				vs = append(vs, nil)
+			} else if rv.IsValid() && rv.CanInterface() {
+				vs = append(vs, rv.Interface())
+			} else {
+				vs = append(vs, nil)
+			}
+		}
+		rvs := reflect.ValueOf(vs)
+		if len(stmt.Lhss) > 1 && rvs.Len() == 1 {
+			item := rvs.Index(0)
+			if item.Kind() == reflect.Interface {
+				item = item.Elem()
+			}
+			if item.Kind() == reflect.Slice {
+				rvs = item
+			}
+		}
+		for i, lhs := range stmt.Lhss {
+			if i >= rvs.Len() {
+				break
+			}
+			v := rvs.Index(i)
+			if v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
+			_, err = invokeLetExpr(lhs, v, env)
+			if err != nil {
+				return rvs, NewError(lhs, err)
+			}
+		}
+		if rvs.Len() == 1 {
+			return rvs.Index(0), nil
+		}
+		return rvs, nil
 	case *ast.IfStmt:
 		// If
 		rv, err := invokeExpr(stmt.If, env)
@@ -376,7 +420,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return rv, nil
 	default:
-		return NilValue, NewStringError(stmt, "Unknown statement")
+		return NilValue, NewStringError(stmt, "unknown statement")
 	}
 }
 
