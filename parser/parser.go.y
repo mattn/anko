@@ -89,7 +89,7 @@ stmts :
 	}
 
 stmt :
-	VAR expr_idents '=' exprs
+	VAR expr_idents '=' expr_many
 	{
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
 		$$.SetPosition($1.Position())
@@ -101,9 +101,6 @@ stmt :
 	| expr_many '=' expr_many
 	{
 		$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
-	}
-	| IDENT
-	{
 	}
 	| BREAK
 	{
@@ -260,9 +257,9 @@ expr_pairs :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| expr_pairs ',' expr_pair
+	| expr_pairs ',' opt_terms expr_pair
 	{
-		$$ = append($1, $3)
+		$$ = append($1, $4)
 	}
 
 expr_idents :
@@ -273,9 +270,9 @@ expr_idents :
 	{
 		$$ = []string{$1.Lit}
 	}
-	| expr_idents ',' IDENT
+	| expr_idents ',' opt_terms IDENT
 	{
-		$$ = append($1, $3.Lit)
+		$$ = append($1, $4.Lit)
 	}
 
 expr_lets : expr_many '=' expr_many
@@ -288,13 +285,13 @@ expr_many :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' expr
+	| exprs ',' opt_terms expr
 	{
-		$$ = append($1, $3)
+		$$ = append($1, $4)
 	}
-	| exprs ',' IDENT
+	| exprs ',' opt_terms IDENT
 	{
-		$$ = append($1, &ast.IdentExpr{Lit: $3.Lit})
+		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
 
 exprs :
@@ -305,13 +302,13 @@ exprs :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' expr
+	| exprs ',' opt_terms expr
 	{
-		$$ = append($1, $3)
+		$$ = append($1, $4)
 	}
-	| exprs ',' IDENT
+	| exprs ',' opt_terms IDENT
 	{
-		$$ = append($1, &ast.IdentExpr{Lit: $3.Lit})
+		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
 
 expr :
@@ -410,15 +407,29 @@ expr :
 		$$ = &ast.FuncExpr{Name: $2.Lit, Args: []string{$4.Lit}, Stmts: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
-	| '[' exprs ']'
+	| '[' opt_terms exprs opt_terms ']'
 	{
-		$$ = &ast.ArrayExpr{Exprs: $2}
+		$$ = &ast.ArrayExpr{Exprs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| '{' expr_pairs '}'
+	| '[' opt_terms exprs ',' opt_terms ']'
+	{
+		$$ = &ast.ArrayExpr{Exprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+	| '{' opt_terms expr_pairs opt_terms '}'
 	{
 		mapExpr := make(map[string]ast.Expr)
-		for _, v := range $2 {
+		for _, v := range $3 {
+			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
+		}
+		$$ = &ast.MapExpr{MapExpr: mapExpr}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+	| '{' opt_terms expr_pairs ',' opt_terms '}'
+	{
+		mapExpr := make(map[string]ast.Expr)
+		for _, v := range $3 {
 			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
 		}
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
