@@ -1,7 +1,7 @@
 // +build !appengine
 
-// Package term implements terminal interface for anko script.
-package term
+// Package colortext implements terminal interface for anko script.
+package colortext
 
 import (
 	"github.com/daviddengcn/go-colortext"

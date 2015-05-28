@@ -10,6 +10,7 @@ import (
 	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding_json "github.com/mattn/anko/builtins/encoding/json"
 	anko_flag "github.com/mattn/anko/builtins/flag"
+	anko_colortext "github.com/mattn/anko/builtins/github.com/daviddengcn/go-colortext"
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_io_ioutil "github.com/mattn/anko/builtins/io/ioutil"
 	anko_math "github.com/mattn/anko/builtins/math"
@@ -23,7 +24,6 @@ import (
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
 	anko_sort "github.com/mattn/anko/builtins/sort"
 	anko_strings "github.com/mattn/anko/builtins/strings"
-	anko_term "github.com/mattn/anko/builtins/term"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 	"github.com/mattn/go-isatty"
@@ -111,7 +111,7 @@ func main() {
 		"regexp":        anko_regexp.Import,
 		"sort":          anko_sort.Import,
 		"strings":       anko_strings.Import,
-		"term":          anko_term.Import,
+		"github.com/daviddengcn/go-colortext": anko_colortext.Import,
 	}
 
 	env.Define("import", reflect.ValueOf(func(s string) interface{} {

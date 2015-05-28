@@ -1,4 +1,4 @@
-var term = import("term")
+var colortext = import("github.com/daviddengcn/go-colortext")
 
 count = func() {
   var n = 0
@@ -11,28 +11,28 @@ count = func() {
 func is(expect, got, name) {
   if (expect == got) {
     printf("%03d: %s: ", count(), name)
-    term.ChangeColor("green", true)
+    colortext.ChangeColor("green", true)
     println("OK")
-    term.ResetColor()
+    colortext.ResetColor()
   } else {
     printf("%03d: %s: %v %v ", count(), name, expect, got)
-    term.ChangeColor("red", true)
+    colortext.ChangeColor("red", true)
     println("NG")
-    term.ResetColor()
+    colortext.ResetColor()
   }
 }
 
 func ok(expect, name) {
   if (expect) {
     printf("%03d: %s: ", count(), name)
-    term.ChangeColor("green", true)
+    colortext.ChangeColor("green", true)
     println("OK")
-    term.ResetColor()
+    colortext.ResetColor()
   } else {
     printf("%03d: %s: ", count(), name)
-    term.ChangeColor("red", true)
+    colortext.ChangeColor("red", true)
     println("NG")
-    term.ResetColor()
+    colortext.ResetColor()
     throw name + ": expected " + expect + " but got " + got
   }
 }
