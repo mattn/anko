@@ -71,9 +71,9 @@ stmts :
 			l.stmts = $$
 		}
 	}
-	| stmt
+	| opt_terms stmt
 	{
-		$$ = []ast.Stmt{$1}
+		$$ = []ast.Stmt{$2}
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
 		}
@@ -132,24 +132,24 @@ stmt :
 		$$ = $1
 		$$.SetPosition($1.Position())
 	}
-	| FOR IDENT IN expr '{' compstmt '}'
-	{
-		$$ = &ast.ForStmt{Var: $2.Lit, Value: $4, Stmts: $6}
-		$$.SetPosition($1.Position())
-	}
 	| FOR '{' compstmt '}'
 	{
 		$$ = &ast.LoopStmt{Stmts: $3}
 		$$.SetPosition($1.Position())
 	}
+	| FOR IDENT IN expr '{' compstmt '}'
+	{
+		$$ = &ast.ForStmt{Var: $2.Lit, Value: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR expr_lets ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+		$$.SetPosition($1.Position())
+	}
 	| FOR expr '{' compstmt '}'
 	{
 		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
-		$$.SetPosition($1.Position())
-	}
-	| FOR expr_lets ';' expr ';' expr '{' compstmt '}' 
-	{
-		$$ = &ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
 		$$.SetPosition($1.Position())
 	}
 	| TRY '{' compstmt '}' CATCH IDENT '{' compstmt '}' FINALLY '{' compstmt '}'
