@@ -61,7 +61,7 @@ var opName = map[string]int{
 
 // Init reset code to scan.
 func (s *Scanner) Init(src string) {
-	s.src = []rune(src + "\n")
+	s.src = []rune(src)
 }
 
 // Scan analyses token, and decide identify or literals.
@@ -107,7 +107,7 @@ retry:
 	default:
 		switch ch {
 		case EOF:
-			tok = '\n'
+			tok = EOF
 		case '#':
 			for !isEOL(s.peek()) {
 				s.next()
@@ -459,10 +459,6 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	tok, lit, pos, err := l.s.Scan()
 	if err != nil {
 		l.e = &Error{Message: fmt.Sprintf("%s", err.Error()), Pos: pos, Fatal: true}
-	}
-	//if tok == EOF /*l.s.reachEOF()*/ {
-	if l.s.reachEOF() {
-		return 0
 	}
 	lval.tok = ast.Token{Tok: tok, Lit: lit}
 	lval.tok.SetPosition(pos)
