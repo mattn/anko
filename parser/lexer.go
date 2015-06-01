@@ -61,7 +61,7 @@ var opName = map[string]int{
 
 // Init reset code to scan.
 func (s *Scanner) Init(src string) {
-	s.src = []rune(src)
+	s.src = []rune(src + "\n")
 }
 
 // Scan analyses token, and decide identify or literals.
