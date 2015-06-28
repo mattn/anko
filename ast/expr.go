@@ -120,6 +120,14 @@ type ItemExpr struct {
 	Index Expr
 }
 
+// SliceExpr provide expression to refer slice of Array.
+type SliceExpr struct {
+	ExprImpl
+	Value Expr
+	Begin Expr
+	End   Expr
+}
+
 // FuncExpr provide function expression.
 type FuncExpr struct {
 	ExprImpl
