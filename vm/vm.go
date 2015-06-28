@@ -981,7 +981,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice || v.Kind() == reflect.String {
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
 			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
 				return NilValue, NewStringError(expr, "Array index should be int")
 			}
@@ -997,6 +997,24 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return NilValue, nil
 			}
 			return v.Slice(ii, ij), nil
+		}
+		if v.Kind() == reflect.String {
+			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			r := []rune(v.String())
+			ii := int(rb.Int())
+			if ii < 0 || ii >= len(r) {
+				return NilValue, nil
+			}
+			ij := int(re.Int())
+			if ij < 0 || ij >= len(r) {
+				return NilValue, nil
+			}
+			return reflect.ValueOf(string(r[ii:ij])), nil
 		}
 		return v, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
