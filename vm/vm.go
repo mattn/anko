@@ -593,7 +593,6 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.Set(rv)
 		}
-
 		return v, nil
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
@@ -627,6 +626,45 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return NilValue, NewStringError(expr, "Map key should be string")
 			}
 			v.SetMapIndex(i, rv)
+			return rv, nil
+		}
+		return v, NewStringError(expr, "Invalid operation")
+	case *ast.SliceExpr:
+		v, err := invokeExpr(lhs.Value, env)
+		if err != nil {
+			return v, NewError(expr, err)
+		}
+		rb, err := invokeExpr(lhs.Begin, env)
+		if err != nil {
+			return rb, NewError(expr, err)
+		}
+		re, err := invokeExpr(lhs.End, env)
+		if err != nil {
+			return re, NewError(expr, err)
+		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			ii := int(rb.Int())
+			if ii < 0 || ii >= v.Len() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			ij := int(re.Int())
+			if ij < 0 || ij >= v.Len() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			vv := v.Slice(ii, ij)
+			if !vv.CanSet() {
+				return NilValue, NewStringError(expr, "Cannot assignable")
+			}
+			vv.Set(rv)
 			return rv, nil
 		}
 		return v, NewStringError(expr, "Invalid operation")
@@ -925,6 +963,58 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return NilValue, nil
 			}
 			return reflect.ValueOf(rs[ii]), nil
+		}
+		return v, NewStringError(expr, "Invalid operation")
+	case *ast.SliceExpr:
+		v, err := invokeExpr(e.Value, env)
+		if err != nil {
+			return v, NewError(expr, err)
+		}
+		rb, err := invokeExpr(e.Begin, env)
+		if err != nil {
+			return rb, NewError(expr, err)
+		}
+		re, err := invokeExpr(e.End, env)
+		if err != nil {
+			return re, NewError(expr, err)
+		}
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
+			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			ii := int(rb.Int())
+			if ii < 0 || ii >= v.Len() {
+				return NilValue, nil
+			}
+			ij := int(re.Int())
+			if ij < 0 || ij >= v.Len() {
+				return NilValue, nil
+			}
+			return v.Slice(ii, ij), nil
+		}
+		if v.Kind() == reflect.String {
+			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
+				return NilValue, NewStringError(expr, "Array index should be int")
+			}
+			r := []rune(v.String())
+			ii := int(rb.Int())
+			if ii < 0 || ii >= len(r) {
+				return NilValue, nil
+			}
+			ij := int(re.Int())
+			if ij < 0 || ij >= len(r) {
+				return NilValue, nil
+			}
+			return reflect.ValueOf(string(r[ii:ij])), nil
 		}
 		return v, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
