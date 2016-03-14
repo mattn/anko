@@ -992,12 +992,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return NilValue, NewStringError(expr, "Array index should be int")
 			}
 			ii := int(rb.Int())
-			if ii < 0 || ii >= v.Len() {
+			if ii < 0 || ii > v.Len() {
 				return NilValue, nil
 			}
 			ij := int(re.Int())
-			if ij < 0 || ij >= v.Len() {
-				return NilValue, nil
+			if ij < 0 || ij > v.Len() {
+				return v, nil
 			}
 			return v.Slice(ii, ij), nil
 		}
