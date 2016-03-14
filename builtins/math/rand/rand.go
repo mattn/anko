@@ -20,7 +20,6 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Intn", reflect.ValueOf(t.Intn))
 	m.Define("NormFloat64", reflect.ValueOf(t.NormFloat64))
 	m.Define("Perm", reflect.ValueOf(t.Perm))
-	m.Define("Read", reflect.ValueOf(t.Read))
 	m.Define("Seed", reflect.ValueOf(t.Seed))
 	m.Define("Uint32", reflect.ValueOf(t.Uint32))
 	return m
