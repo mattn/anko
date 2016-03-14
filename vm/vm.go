@@ -275,6 +275,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if ee != nil {
 			return val, ee
 		}
+		if val.Kind() == reflect.Interface {
+			val = val.Elem()
+		}
 		if val.Kind() != reflect.Array && val.Kind() != reflect.Slice {
 			return NilValue, NewStringError(stmt, "Invalid operation for non-array value")
 		}
