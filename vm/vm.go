@@ -1228,7 +1228,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if f.Kind() != reflect.Func {
 			return f, NewStringError(expr, "Unknown function")
 		}
-		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs}, env)
+		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg}, env)
 	case *ast.CallExpr:
 		f := NilValue
 
@@ -1245,6 +1245,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		_, isReflect := f.Interface().(Func)
 
 		args := []reflect.Value{}
+		l := len(e.SubExprs)
 		for i, expr := range e.SubExprs {
 			arg, err := invokeExpr(expr, env)
 			if err != nil {
@@ -1279,12 +1280,24 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 
 			if !isReflect {
-				args = append(args, arg)
+				if e.VarArg && i == l-1 {
+					for j := 0; j < arg.Len(); j++ {
+						args = append(args, arg.Index(j).Elem())
+					}
+				} else {
+					args = append(args, arg)
+				}
 			} else {
 				if arg.Kind() == reflect.Interface {
 					arg = arg.Elem()
 				}
-				args = append(args, reflect.ValueOf(arg))
+				if e.VarArg && i == l-1 {
+					for j := 0; j < arg.Len(); j++ {
+						args = append(args, reflect.ValueOf(arg.Index(j).Elem()))
+					}
+				} else {
+					args = append(args, reflect.ValueOf(arg))
+				}
 			}
 		}
 		ret := NilValue

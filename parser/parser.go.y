@@ -575,6 +575,11 @@ expr :
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
+	| IDENT '(' exprs VARARG ')'
+	{
+		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3}
@@ -600,7 +605,12 @@ expr :
 		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
 		$$.SetPosition($1.Position())
 	}
-	| expr '(' exprs  ')'
+	| expr '(' exprs VARARG ')'
+	{
+		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
+	| expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
 		$$.SetPosition($1.Position())
