@@ -24,6 +24,7 @@ import (
 	anko_io "github.com/mattn/anko/builtins/io"
 	anko_io_ioutil "github.com/mattn/anko/builtins/io/ioutil"
 	anko_math "github.com/mattn/anko/builtins/math"
+	anko_math_rand "github.com/mattn/anko/builtins/math/rand"
 	anko_net "github.com/mattn/anko/builtins/net"
 	anko_net_http "github.com/mattn/anko/builtins/net/http"
 	anko_net_url "github.com/mattn/anko/builtins/net/url"
@@ -107,6 +108,7 @@ func main() {
 		"io":            anko_io.Import,
 		"io/ioutil":     anko_io_ioutil.Import,
 		"math":          anko_math.Import,
+		"math/rand":     anko_math_rand.Import,
 		"net":           anko_net.Import,
 		"net/http":      anko_net_http.Import,
 		"net/url":       anko_net_url.Import,
