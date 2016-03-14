@@ -6,14 +6,16 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/daviddengcn/go-colortext"
-	"github.com/mattn/anko/parser"
-	"github.com/mattn/anko/vm"
-	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
+
+	"github.com/daviddengcn/go-colortext"
+	"github.com/mattn/anko/parser"
+	"github.com/mattn/anko/vm"
+	"github.com/mattn/go-isatty"
 
 	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding_json "github.com/mattn/anko/builtins/encoding/json"
@@ -163,6 +165,10 @@ func main() {
 					continue
 				}
 				if e.Error() == "unexpected EOF" {
+					following = true
+					continue
+				}
+				if strings.HasPrefix(e.Error(), "syntax error: unexpected $end,") {
 					following = true
 					continue
 				}
