@@ -58,4 +58,17 @@ func cstylefor_with_return_stmt() {
 
 is(5, cstylefor_with_return_stmt(), "C-style for loop with return statement")
 
+resp = {
+    "items": [{
+        "someData": 2,
+    }]
+}
+
+x = 0
+for item in resp.items {
+    x += item.someData
+}
+
+is(2, x, "dereference slice element")
+
 # vim: set ft=anko:
