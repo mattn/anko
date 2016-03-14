@@ -35,6 +35,7 @@ import (
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
 	anko_sort "github.com/mattn/anko/builtins/sort"
 	anko_strings "github.com/mattn/anko/builtins/strings"
+	anko_time "github.com/mattn/anko/builtins/time"
 
 	anko_colortext "github.com/mattn/anko/builtins/github.com/daviddengcn/go-colortext"
 )
@@ -119,6 +120,7 @@ func main() {
 		"regexp":        anko_regexp.Import,
 		"sort":          anko_sort.Import,
 		"strings":       anko_strings.Import,
+		"time":          anko_time.Import,
 		"github.com/daviddengcn/go-colortext": anko_colortext.Import,
 	}
 
