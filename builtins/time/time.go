@@ -19,6 +19,7 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Date", reflect.ValueOf(t.Date))
 	m.Define("Now", reflect.ValueOf(t.Now))
 	m.Define("Parse", reflect.ValueOf(t.Parse))
+	m.Define("ParseDuration", reflect.ValueOf(t.ParseDuration))
 	m.Define("ParseInLocation", reflect.ValueOf(t.ParseInLocation))
 	m.Define("Unix", reflect.ValueOf(t.Unix))
 	m.Define("AfterFunc", reflect.ValueOf(t.AfterFunc))
