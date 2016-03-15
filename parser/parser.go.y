@@ -43,7 +43,7 @@ import (
 	opt_terms              ast.Token
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO
 
 %right '='
 %right '?' ':'
@@ -585,6 +585,16 @@ expr :
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3}
 		$$.SetPosition($1.Position())
 	}
+	| GO IDENT '(' exprs VARARG ')'
+	{
+		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true, Go: true}
+		$$.SetPosition($2.Position())
+	}
+	| GO IDENT '(' exprs ')'
+	{
+		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}
+		$$.SetPosition($2.Position())
+	}
 	| IDENT '[' expr ']'
 	{
 		$$ = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Index: $3}
@@ -614,6 +624,16 @@ expr :
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
 		$$.SetPosition($1.Position())
+	}
+	| GO expr '(' exprs VARARG ')'
+	{
+		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true, Go: true}
+		$$.SetPosition($2.Position())
+	}
+	| GO expr '(' exprs ')'
+	{
+		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
+		$$.SetPosition($2.Position())
 	}
 
 opt_terms : /* none */

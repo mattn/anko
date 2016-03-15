@@ -1228,7 +1228,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if f.Kind() != reflect.Func {
 			return f, NewStringError(expr, "Unknown function")
 		}
-		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg}, env)
+		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
 	case *ast.CallExpr:
 		f := NilValue
 
@@ -1267,6 +1267,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 								for i := range args {
 									args[i] = reflect.ValueOf(args[i])
 								}
+								if e.Go {
+									go func() {
+										rfunc.Call(args)
+									}()
+									return []reflect.Value{}
+								}
 								return rfunc.Call(args)[:it.NumOut()]
 							})
 						}
@@ -1302,7 +1308,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		ret := NilValue
 		var err error
-		func() {
+		fnc := func() {
 			defer func() {
 				if os.Getenv("ANKO_DEBUG") == "" {
 					if ex := recover(); ex != nil {
@@ -1335,7 +1341,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					ret = reflect.ValueOf(result)
 				}
 			}
-		}()
+		}
+		if e.Go {
+			go fnc()
+			return NilValue, nil
+		}
+		fnc()
 		if err != nil {
 			return ret, NewError(expr, err)
 		}

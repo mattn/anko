@@ -57,6 +57,7 @@ var opName = map[string]int{
 	"switch":   SWITCH,
 	"case":     CASE,
 	"default":  DEFAULT,
+	"go":       GO,
 }
 
 // Init reset code to scan.
