@@ -82,11 +82,11 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, ContinueError
 		}
 		rv, err = RunSingleStmt(stmt, env)
+		if err != nil {
+			return rv, err
+		}
 		if _, ok := stmt.(*ast.ReturnStmt); ok {
 			return reflect.ValueOf(rv), ReturnError
-		}
-		if err != nil {
-			return rv, NewError(stmt, err)
 		}
 	}
 	return rv, nil
