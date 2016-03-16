@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("io")
 	m.Define("Copy", reflect.ValueOf(pkg.Copy))
 	m.Define("CopyN", reflect.ValueOf(pkg.CopyN))
 	m.Define("EOF", reflect.ValueOf(pkg.EOF))

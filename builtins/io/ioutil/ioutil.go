@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("iotuil")
 	m.Define("ReadAll", reflect.ValueOf(u.ReadAll))
 	m.Define("ReadDir", reflect.ValueOf(u.ReadDir))
 	m.Define("ReadFile", reflect.ValueOf(u.ReadFile))

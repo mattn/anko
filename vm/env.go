@@ -34,6 +34,24 @@ func (e *Env) NewEnv() *Env {
 	}
 }
 
+func NewPackage(n string) *Env {
+	return &Env{
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: nil,
+		name:   n,
+	}
+}
+
+func (e *Env) NewPackage(n string) *Env {
+	return &Env{
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   n,
+	}
+}
+
 // Destroy delete current scope.
 func (e *Env) Destroy() {
 	if e.parent == nil {
@@ -153,7 +171,26 @@ func (e *Env) DefineType(k string, v reflect.Type) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	e.typ[k] = v
+	global := e
+	name := []string{}
+	for {
+		if global.parent == nil {
+			break
+		}
+		if global.name != "" {
+			name = append(name, global.name)
+		}
+		global = global.parent
+	}
+	for i, j := 0, len(name)-1; i < j; i, j = i+1, j-1 {
+		name[i], name[j] = name[j], name[i]
+	}
+
+	if len(name) > 0 {
+		global.typ[strings.Join(name, ".")+"."+k] = v
+	} else {
+		global.typ[k] = v
+	}
 	return nil
 }
 

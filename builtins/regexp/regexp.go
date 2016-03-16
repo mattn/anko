@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("sort")
 	m.Define("Match", reflect.ValueOf(r.Match))
 	m.Define("MatchReader", reflect.ValueOf(r.MatchReader))
 	m.Define("MatchString", reflect.ValueOf(r.MatchString))

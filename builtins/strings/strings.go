@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("strings")
 	m.Define("Contains", reflect.ValueOf(pkg.Contains))
 	m.Define("ContainsAny", reflect.ValueOf(pkg.ContainsAny))
 	m.Define("ContainsRune", reflect.ValueOf(pkg.ContainsRune))

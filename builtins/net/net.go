@@ -10,7 +10,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("net")
 	m.Define("CIDRMask", reflect.ValueOf(pkg.CIDRMask))
 	m.Define("Dial", reflect.ValueOf(pkg.Dial))
 	m.Define("DialIP", reflect.ValueOf(pkg.DialIP))

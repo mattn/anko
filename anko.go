@@ -30,6 +30,7 @@ import (
 	anko_net_url "github.com/mattn/anko/builtins/net/url"
 	anko_os "github.com/mattn/anko/builtins/os"
 	anko_os_exec "github.com/mattn/anko/builtins/os/exec"
+	anko_os_signal "github.com/mattn/anko/builtins/os/signal"
 	anko_path "github.com/mattn/anko/builtins/path"
 	anko_path_filepath "github.com/mattn/anko/builtins/path/filepath"
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
@@ -115,6 +116,7 @@ func main() {
 		"net/url":       anko_net_url.Import,
 		"os":            anko_os.Import,
 		"os/exec":       anko_os_exec.Import,
+		"os/signal":     anko_os_signal.Import,
 		"path":          anko_path.Import,
 		"path/filepath": anko_path_filepath.Import,
 		"regexp":        anko_regexp.Import,
@@ -126,7 +128,8 @@ func main() {
 
 	env.Define("import", reflect.ValueOf(func(s string) interface{} {
 		if loader, ok := tbl[s]; ok {
-			return loader(env)
+			m := loader(env)
+			return m
 		}
 		panic(fmt.Sprintf("package '%s' not found", s))
 	}))

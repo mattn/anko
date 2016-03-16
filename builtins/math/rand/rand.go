@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("rand")
 	m.Define("ExpFloat64", reflect.ValueOf(t.ExpFloat64))
 	m.Define("Float32", reflect.ValueOf(t.Float32))
 	m.Define("Float64", reflect.ValueOf(t.Float64))

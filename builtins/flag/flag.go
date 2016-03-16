@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("flag")
 	m.Define("Arg", reflect.ValueOf(pkg.Arg))
 	m.Define("Args", reflect.ValueOf(pkg.Args))
 	m.Define("Bool", reflect.ValueOf(pkg.Bool))

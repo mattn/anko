@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("fmt")
 	m.Define("Errorf", reflect.ValueOf(pkg.Errorf))
 	m.Define("Fprint", reflect.ValueOf(pkg.Fprint))
 	m.Define("Fprintf", reflect.ValueOf(pkg.Fprintf))

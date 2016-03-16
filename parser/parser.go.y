@@ -14,6 +14,7 @@ import (
 %type<stmt_default> stmt_default
 %type<stmt_case> stmt_case
 %type<stmt_cases> stmt_cases
+%type<typ> typ
 %type<expr> expr
 %type<exprs> exprs
 %type<expr_many> expr_many
@@ -30,6 +31,7 @@ import (
 	stmt_cases             []ast.Stmt
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
+	typ                    ast.Type
 	expr                   ast.Expr
 	exprs                  []ast.Expr
 	expr_many              []ast.Expr
@@ -59,7 +61,7 @@ import (
 
 %%
 
-compstmt :
+compstmt : opt_terms
 	{
 		$$ = nil
 	}
@@ -296,6 +298,15 @@ expr_many :
 	| exprs ',' opt_terms IDENT
 	{
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
+	}
+
+typ : IDENT
+	{
+		$$ = ast.Type{Name: $1.Lit}
+	}
+	| typ '.' IDENT
+	{
+		$$ = ast.Type{Name: $1.Name + "." + $3.Lit}
 	}
 
 exprs :
@@ -639,24 +650,24 @@ expr :
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN IDENT ')'
+	| MAKE '(' CHAN typ ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4.Lit, SizeExpr: nil}
+		$$ = &ast.MakeChanExpr{Type: $4.Name, SizeExpr: nil}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN IDENT ',' expr ')'
+	| MAKE '(' CHAN typ ',' expr ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4.Lit, SizeExpr: $6}
+		$$ = &ast.MakeChanExpr{Type: $4.Name, SizeExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' ARRAYLIT IDENT ',' expr ')'
+	| MAKE '(' ARRAYLIT typ ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Type: $4.Lit, LenExpr: $6}
+		$$ = &ast.MakeArrayExpr{Type: $4.Name, LenExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' ARRAYLIT IDENT ',' expr ',' expr ')'
+	| MAKE '(' ARRAYLIT typ ',' expr ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Type: $4.Lit, LenExpr: $6, CapExpr: $8}
+		$$ = &ast.MakeArrayExpr{Type: $4.Name, LenExpr: $6, CapExpr: $8}
 		$$.SetPosition($1.Position())
 	}
 	| expr OPCHAN expr

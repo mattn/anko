@@ -29,7 +29,7 @@ func (c *Client) Get(args ...reflect.Value) (reflect.Value, error) {
 }
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("http")
 	m.Define("DefaultClient", reflect.ValueOf(h.DefaultClient))
 	m.Define("NewServeMux", reflect.ValueOf(h.NewServeMux))
 	m.Define("Handle", reflect.ValueOf(h.Handle))

@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("path")
 	m.Define("Base", reflect.ValueOf(pkg.Base))
 	m.Define("Clean", reflect.ValueOf(pkg.Clean))
 	m.Define("Dir", reflect.ValueOf(pkg.Dir))

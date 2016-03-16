@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("os")
 	m.Define("Args", reflect.ValueOf(pkg.Args))
 	m.Define("Chdir", reflect.ValueOf(pkg.Chdir))
 	m.Define("Chmod", reflect.ValueOf(pkg.Chmod))
@@ -94,6 +94,7 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Symlink", reflect.ValueOf(pkg.Symlink))
 	m.Define("TempDir", reflect.ValueOf(pkg.TempDir))
 	m.Define("Truncate", reflect.ValueOf(pkg.Truncate))
+
 	m.DefineType("Signal", reflect.TypeOf(pkg.Signal(nil)))
 	return m
 }

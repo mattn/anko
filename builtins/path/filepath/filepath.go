@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("filepath")
 	m.Define("Join", reflect.ValueOf(f.Join))
 	m.Define("Clean", reflect.ValueOf(f.Join))
 	m.Define("Abs", reflect.ValueOf(f.Abs))

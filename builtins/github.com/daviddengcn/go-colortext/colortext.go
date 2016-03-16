@@ -29,7 +29,7 @@ func colorOf(name string) ct.Color {
 }
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("ct")
 
 	m.Define("ChangeColor", reflect.ValueOf(func(fg string, fa bool, rest ...interface{}) {
 		if len(rest) == 2 {

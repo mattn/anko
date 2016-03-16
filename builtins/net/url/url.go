@@ -10,7 +10,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("url")
 	m.Define("Parse", reflect.ValueOf(u.Parse))
 	return m
 }

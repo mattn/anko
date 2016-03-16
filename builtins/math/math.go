@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("math")
 	m.Define("Abs", reflect.ValueOf(t.Abs))
 	m.Define("Acos", reflect.ValueOf(t.Acos))
 	m.Define("Acosh", reflect.ValueOf(t.Acosh))

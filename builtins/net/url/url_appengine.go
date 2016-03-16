@@ -8,6 +8,6 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	panic("can't import 'net/url'")
+	panic("can't import 'url'")
 	return nil
 }

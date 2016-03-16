@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewEnv()
+	m := env.NewPackage("json")
 	m.Define("Marshal", reflect.ValueOf(json.Marshal))
 	m.Define("Unmarshal", reflect.ValueOf(json.Unmarshal))
 	return m

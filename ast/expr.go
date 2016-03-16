@@ -183,6 +183,10 @@ type ChanExpr struct {
 	Rhs Expr
 }
 
+type Type struct {
+	Name string
+}
+
 type MakeChanExpr struct {
 	ExprImpl
 	Type     string
