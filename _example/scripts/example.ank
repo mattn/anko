@@ -51,8 +51,8 @@ println(1 && 2)
 
 println(bar(1,2,3))
 println("foo")
-println(toBytes("あいう"))
-println(toRunes("あいう"))
+println(toByteSlice("あいう"))
+println(toRuneSlice("あいう"))
 
 a = 1
 func foo() {

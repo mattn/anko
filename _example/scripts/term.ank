@@ -36,7 +36,7 @@ data = [
 ]
 
 for d in data {
-  for b in toRunes(d) {
+  for b in toRuneSlice(d) {
     switch toChar(b) {
     case "O":
       colortext.ChangeColor("none", false, "white", true)
