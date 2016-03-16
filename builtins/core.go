@@ -64,14 +64,6 @@ func Import(env *vm.Env) *vm.Env {
 		return arr
 	}))
 
-	env.Define("toBytes", reflect.ValueOf(func(s string) []byte {
-		return []byte(s)
-	}))
-
-	env.Define("toRunes", reflect.ValueOf(func(s string) []rune {
-		return []rune(s)
-	}))
-
 	env.Define("toString", reflect.ValueOf(func(v interface{}) string {
 		return fmt.Sprint(v)
 	}))
@@ -114,6 +106,14 @@ func Import(env *vm.Env) *vm.Env {
 		return []rune(s)[0]
 	}))
 
+	env.Define("toByteSlice", reflect.ValueOf(func(s string) []byte {
+		return []byte(s)
+	}))
+
+	env.Define("toRuneSlice", reflect.ValueOf(func(s string) []rune {
+		return []rune(s)
+	}))
+
 	env.Define("toBoolSlice", reflect.ValueOf(func(v []interface{}) []bool {
 		var result []bool
 		toSlice(v, &result)
@@ -138,11 +138,7 @@ func Import(env *vm.Env) *vm.Env {
 		return result
 	}))
 
-	env.Define("string", reflect.ValueOf(func(b []byte) string {
-		return string(b)
-	}))
-
-	env.Define("typeof", reflect.ValueOf(func(v interface{}) string {
+	env.Define("typeOf", reflect.ValueOf(func(v interface{}) string {
 		return reflect.TypeOf(v).String()
 	}))
 
