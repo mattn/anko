@@ -95,6 +95,7 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("TempDir", reflect.ValueOf(pkg.TempDir))
 	m.Define("Truncate", reflect.ValueOf(pkg.Truncate))
 
-	m.DefineType("Signal", reflect.TypeOf(pkg.Signal(nil)))
+	var v pkg.Signal
+	m.DefineType("Signal", reflect.TypeOf(&v).Elem())
 	return m
 }

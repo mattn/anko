@@ -610,26 +610,6 @@ expr :
 		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}
 		$$.SetPosition($2.Position())
 	}
-	| IDENT '[' expr ']'
-	{
-		$$ = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Index: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '[' expr ']'
-	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
-		$$.SetPosition($1.Position())
-	}
-	| IDENT '[' expr ':' expr ']'
-	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
-		$$.SetPosition($1.Position())
-	}
-	| expr '[' expr ':' expr ']'
-	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
-		$$.SetPosition($1.Position())
-	}
 	| expr '(' exprs VARARG ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3, VarArg: true}
@@ -648,6 +628,26 @@ expr :
 	| GO expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
+		$$.SetPosition($1.Position())
+	}
+	| IDENT '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Index: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '[' expr ']'
+	{
+		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		$$.SetPosition($1.Position())
+	}
+	| IDENT '[' expr ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
+		$$.SetPosition($1.Position())
+	}
+	| expr '[' expr ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' CHAN typ ')'
