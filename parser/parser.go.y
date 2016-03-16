@@ -43,7 +43,7 @@ import (
 	opt_terms              ast.Token
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHANOF OPCHAN
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN ARRAYLIT
 
 %right '='
 %right '?' ':'
@@ -59,7 +59,11 @@ import (
 
 %%
 
-compstmt : stmts opt_terms
+compstmt :
+	{
+		$$ = nil
+	}
+	| stmts opt_terms
 	{
 		$$ = $1
 	}
@@ -633,12 +637,27 @@ expr :
 	| GO expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
-		$$.SetPosition($2.Position())
+		$$.SetPosition($1.Position())
 	}
-	| CHANOF '(' IDENT ')'
+	| MAKE '(' CHAN IDENT ')'
 	{
-		$$ = &ast.ChanOfExpr{Type: $3.Lit}
-		$$.SetPosition($3.Position())
+		$$ = &ast.MakeChanExpr{Type: $4.Lit, SizeExpr: nil}
+		$$.SetPosition($1.Position())
+	}
+	| MAKE '(' CHAN IDENT ',' expr ')'
+	{
+		$$ = &ast.MakeChanExpr{Type: $4.Lit, SizeExpr: $6}
+		$$.SetPosition($1.Position())
+	}
+	| MAKE '(' ARRAYLIT IDENT ',' expr ')'
+	{
+		$$ = &ast.MakeArrayExpr{Type: $4.Lit, LenExpr: $6}
+		$$.SetPosition($1.Position())
+	}
+	| MAKE '(' ARRAYLIT IDENT ',' expr ',' expr ')'
+	{
+		$$ = &ast.MakeArrayExpr{Type: $4.Lit, LenExpr: $6, CapExpr: $8}
+		$$.SetPosition($1.Position())
 	}
 	| expr OPCHAN expr
 	{

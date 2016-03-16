@@ -30,6 +30,9 @@ var ReturnError = errors.New("Unexpected return statement")
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {
+	if pos == nil {
+		return &Error{Message: err, Pos: ast.Position{1, 1}}
+	}
 	return &Error{Message: err, Pos: pos.Position()}
 }
 
@@ -1369,12 +1372,70 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return rhsV, NewError(expr, err)
 		}
 		return rhsV, nil
-	case *ast.ChanOfExpr:
+	case *ast.MakeChanExpr:
 		typ, err := env.Type(e.Type)
 		if err != nil {
 			return NilValue, err
 		}
-		return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, typ), 1), nil
+		var size int
+		if e.SizeExpr != nil {
+			rv, err := invokeExpr(e.SizeExpr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			size = int(toInt64(rv))
+		}
+		return func() (reflect.Value, error) {
+			defer func() {
+				if os.Getenv("ANKO_DEBUG") == "" {
+					if ex := recover(); ex != nil {
+						if e, ok := ex.(error); ok {
+							err = e
+						} else {
+							err = errors.New(fmt.Sprint(ex))
+						}
+					}
+				}
+			}()
+			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, typ), size), nil
+		}()
+	case *ast.MakeArrayExpr:
+		typ, err := env.Type(e.Type)
+		if err != nil {
+			return NilValue, err
+		}
+		var alen int
+		if e.LenExpr != nil {
+			rv, err := invokeExpr(e.LenExpr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			alen = int(toInt64(rv))
+		}
+		var acap int
+		if e.CapExpr != nil {
+			rv, err := invokeExpr(e.CapExpr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			acap = int(toInt64(rv))
+		} else {
+			acap = alen
+		}
+		return func() (reflect.Value, error) {
+			defer func() {
+				if os.Getenv("ANKO_DEBUG") == "" {
+					if ex := recover(); ex != nil {
+						if e, ok := ex.(error); ok {
+							err = e
+						} else {
+							err = errors.New(fmt.Sprint(ex))
+						}
+					}
+				}
+			}()
+			return reflect.MakeSlice(reflect.SliceOf(typ), alen, acap), nil
+		}()
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
 		if err != nil {

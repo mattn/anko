@@ -1,6 +1,6 @@
 #!anko
 
-c = chanOf(int64)
+c = make(chan int64)
 
 go func() {
   c <- 1

@@ -58,7 +58,8 @@ var opName = map[string]int{
 	"case":     CASE,
 	"default":  DEFAULT,
 	"go":       GO,
-	"chanOf":   CHANOF,
+	"chan":     CHAN,
+	"make":     MAKE,
 }
 
 // Init reset code to scan.
@@ -265,8 +266,15 @@ retry:
 				lit = string(ch)
 			}
 		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^', '\n':
-			tok = int(ch)
-			lit = string(ch)
+			s.next()
+			if ch == '[' && s.peek() == ']' {
+				tok = ARRAYLIT
+				lit = "[]"
+			} else {
+				s.back()
+				tok = int(ch)
+				lit = string(ch)
+			}
 		default:
 			err = fmt.Errorf(`syntax error "%s"`, string(ch))
 			return

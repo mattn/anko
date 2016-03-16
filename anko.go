@@ -164,17 +164,22 @@ func main() {
 
 		if repl {
 			if e, ok := err.(*parser.Error); ok {
-				if e.Pos.Column == len(b) && !e.Fatal {
-					following = true
-					continue
-				}
-				if e.Error() == "unexpected EOF" {
-					following = true
-					continue
-				}
-				if strings.HasPrefix(e.Error(), "syntax error: unexpected $end,") {
-					following = true
-					continue
+				es := e.Error()
+				if strings.HasPrefix(es, "syntax error: unexpected") {
+					if strings.HasPrefix(es, "syntax error: unexpected $end,") {
+						following = true
+						continue
+					}
+				} else {
+					if e.Pos.Column == len(b) && !e.Fatal {
+						println(e.Error())
+						following = true
+						continue
+					}
+					if e.Error() == "unexpected EOF" {
+						following = true
+						continue
+					}
 				}
 			}
 		}

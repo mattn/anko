@@ -177,13 +177,21 @@ type ConstExpr struct {
 	Value string
 }
 
-type ChanOfExpr struct {
-	ExprImpl
-	Type string
-}
-
 type ChanExpr struct {
 	ExprImpl
 	Lhs Expr
 	Rhs Expr
+}
+
+type MakeChanExpr struct {
+	ExprImpl
+	Type     string
+	SizeExpr Expr
+}
+
+type MakeArrayExpr struct {
+	ExprImpl
+	Type    string
+	LenExpr Expr
+	CapExpr Expr
 }
