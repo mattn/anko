@@ -142,6 +142,10 @@ func Import(env *vm.Env) *vm.Env {
 		return reflect.TypeOf(v).String()
 	}))
 
+	env.Define("chanOf", reflect.ValueOf(func(t reflect.Type) reflect.Value {
+		return reflect.MakeChan(t, 1)
+	}))
+
 	env.Define("defined", reflect.ValueOf(func(s string) bool {
 		_, err := env.Get(s)
 		return err == nil
@@ -181,6 +185,10 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("println", reflect.ValueOf(fmt.Println))
 	env.Define("printf", reflect.ValueOf(fmt.Printf))
 
+	env.DefineType("int64", reflect.TypeOf(int64(0)))
+	env.DefineType("float64", reflect.TypeOf(float64(0.0)))
+	env.DefineType("bool", reflect.TypeOf(true))
+	env.DefineType("string", reflect.TypeOf(""))
 	return env
 }
 

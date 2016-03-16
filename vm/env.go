@@ -11,17 +11,27 @@ import (
 type Env struct {
 	name   string
 	env    map[string]reflect.Value
+	typ    map[string]reflect.Type
 	parent *Env
 }
 
 // NewEnv create new global scope.
 func NewEnv() *Env {
-	return &Env{env: make(map[string]reflect.Value), parent: nil}
+	return &Env{
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: nil,
+	}
 }
 
 // NewEnv create new child scope.
 func (e *Env) NewEnv() *Env {
-	return &Env{env: make(map[string]reflect.Value), parent: e, name: e.name}
+	return &Env{
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   e.name,
+	}
 }
 
 // Destroy delete current scope.
@@ -74,6 +84,24 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 }
 
 // Get return value which specified symbol. It go to upper scope until found.
+func (e *Env) Type(k string) (reflect.Type, error) {
+	for {
+		if e.parent == nil {
+			v, ok := e.typ[k]
+			if !ok {
+				return NilType, fmt.Errorf("Undefined type '%s'", k)
+			}
+			return v, nil
+		}
+		if v, ok := e.typ[k]; ok {
+			return v, nil
+		}
+		e = e.parent
+	}
+	return NilType, fmt.Errorf("Undefined type '%s'", k)
+}
+
+// Get return value which specified symbol. It go to upper scope until found.
 func (e *Env) Get(k string) (reflect.Value, error) {
 	for {
 		if e.parent == nil {
@@ -118,6 +146,15 @@ func (e *Env) DefineGlobal(k string, v reflect.Value) error {
 		global = global.parent
 	}
 	return global.Define(k, v)
+}
+
+// Define defines symbol in current scope.
+func (e *Env) DefineType(k string, v reflect.Type) error {
+	if strings.Contains(k, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", k)
+	}
+	e.typ[k] = v
+	return nil
 }
 
 // Define defines symbol in current scope.

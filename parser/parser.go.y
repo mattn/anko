@@ -43,7 +43,7 @@ import (
 	opt_terms              ast.Token
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHANOF OPCHAN
 
 %right '='
 %right '?' ':'
@@ -633,6 +633,21 @@ expr :
 	| GO expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
+		$$.SetPosition($2.Position())
+	}
+	| CHANOF '(' IDENT ')'
+	{
+		$$ = &ast.ChanOfExpr{Type: $3.Lit}
+		$$.SetPosition($3.Position())
+	}
+	| expr OPCHAN expr
+	{
+		$$ = &ast.ChanExpr{Lhs: $1, Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+	| OPCHAN expr
+	{
+		$$ = &ast.ChanExpr{Rhs: $2}
 		$$.SetPosition($2.Position())
 	}
 

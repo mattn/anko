@@ -58,6 +58,7 @@ var opName = map[string]int{
 	"case":     CASE,
 	"default":  DEFAULT,
 	"go":       GO,
+	"chanOf":   CHANOF,
 }
 
 // Init reset code to scan.
@@ -206,6 +207,9 @@ retry:
 		case '<':
 			s.next()
 			switch s.peek() {
+			case '-':
+				tok = OPCHAN
+				lit = "<-"
 			case '=':
 				tok = LE
 				lit = "<="

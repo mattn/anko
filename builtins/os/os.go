@@ -94,5 +94,6 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Symlink", reflect.ValueOf(pkg.Symlink))
 	m.Define("TempDir", reflect.ValueOf(pkg.TempDir))
 	m.Define("Truncate", reflect.ValueOf(pkg.Truncate))
+	m.DefineType("Signal", reflect.TypeOf(pkg.Signal(nil)))
 	return m
 }

@@ -13,6 +13,7 @@ import (
 )
 
 var NilValue = reflect.ValueOf((*interface{})(nil))
+var NilType = reflect.TypeOf((*interface{})(nil))
 var TrueValue = reflect.ValueOf(true)
 var FalseValue = reflect.ValueOf(false)
 
@@ -1368,6 +1369,37 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return rhsV, NewError(expr, err)
 		}
 		return rhsV, nil
+	case *ast.ChanOfExpr:
+		typ, err := env.Type(e.Type)
+		if err != nil {
+			return NilValue, err
+		}
+		return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, typ), 1), nil
+	case *ast.ChanExpr:
+		rhs, err := invokeExpr(e.Rhs, env)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+
+		if e.Lhs == nil {
+			if rhs.Kind() == reflect.Chan {
+				rv, _ := rhs.Recv()
+				return rv, nil
+			}
+		} else {
+			lhs, err := invokeExpr(e.Lhs, env)
+			if err != nil {
+				return NilValue, NewError(expr, err)
+			}
+			if lhs.Kind() == reflect.Chan {
+				lhs.Send(rhs)
+				return NilValue, nil
+			} else if rhs.Kind() == reflect.Chan {
+				rv, _ := rhs.Recv()
+				return invokeLetExpr(e.Lhs, rv, env)
+			}
+		}
+		return NilValue, NewStringError(expr, "Invalid operation for chan")
 	default:
 		return NilValue, NewStringError(expr, "Unknown expression")
 	}
