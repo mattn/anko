@@ -9,46 +9,55 @@ import (
 // Env provides interface to run VM. This mean function scope and blocked-scope.
 // If stack go to blocked-scope, it will make new Env.
 type Env struct {
-	name   string
-	env    map[string]reflect.Value
-	typ    map[string]reflect.Type
-	parent *Env
+	name      string
+	env       map[string]reflect.Value
+	typ       map[string]reflect.Type
+	parent    *Env
+	interrupt *bool
 }
 
 // NewEnv create new global scope.
 func NewEnv() *Env {
+	b := false
+
 	return &Env{
-		env:    make(map[string]reflect.Value),
-		typ:    make(map[string]reflect.Type),
-		parent: nil,
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    nil,
+		interrupt: &b,
 	}
 }
 
 // NewEnv create new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
-		env:    make(map[string]reflect.Value),
-		typ:    make(map[string]reflect.Type),
-		parent: e,
-		name:   e.name,
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    e,
+		name:      e.name,
+		interrupt: e.interrupt,
 	}
 }
 
 func NewPackage(n string) *Env {
+	b := false
+
 	return &Env{
-		env:    make(map[string]reflect.Value),
-		typ:    make(map[string]reflect.Type),
-		parent: nil,
-		name:   n,
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    nil,
+		name:      n,
+		interrupt: &b,
 	}
 }
 
 func (e *Env) NewPackage(n string) *Env {
 	return &Env{
-		env:    make(map[string]reflect.Value),
-		typ:    make(map[string]reflect.Type),
-		parent: e,
-		name:   n,
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    e,
+		name:      n,
+		interrupt: e.interrupt,
 	}
 }
 

@@ -27,6 +27,7 @@ type Error struct {
 var BreakError = errors.New("Unexpected break statement")
 var ContinueError = errors.New("Unexpected continue statement")
 var ReturnError = errors.New("Unexpected return statement")
+var InterruptError = errors.New("Execution interrupted")
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {
@@ -96,8 +97,22 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	return rv, nil
 }
 
-// RunSingleStmt execute one statement in the environment which specified.
+// Interrupts the execution of any running statements in the specified environment.
+//
+// Note that the execution is not instantly aborted: after a call to Interrupt,
+// the current running statement will finish, but the next statement will not run,
+// and instead will return a NilValue and an InterruptError.
+func Interrupt(env *Env) {
+	*(env.interrupt) = true
+}
+
+// RunSingleStmt executes one statement in the specified environment.
 func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
+	if *(env.interrupt) {
+		*(env.interrupt) = false
+		return NilValue, InterruptError
+	}
+
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
