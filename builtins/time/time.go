@@ -1,5 +1,5 @@
 // Package time implements time interface for anko script.
-package math
+package time
 
 import (
 	"github.com/mattn/anko/vm"
@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewPackage("math")
+	m := env.NewPackage("time")
 	m.Define("After", reflect.ValueOf(t.After))
 	m.Define("Sleep", reflect.ValueOf(t.Sleep))
 	m.Define("Tick", reflect.ValueOf(t.Tick))

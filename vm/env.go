@@ -66,7 +66,7 @@ func (e *Env) Destroy() {
 	e.env = nil
 }
 
-// NewEnv create new module scope as global.
+// NewModule create new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
 	e.Define(n, reflect.ValueOf(m))
