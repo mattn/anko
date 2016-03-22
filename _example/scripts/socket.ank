@@ -23,4 +23,4 @@ b, e = ioutil.ReadAll(c)
 if e != nil {
   throw e
 }
-println(string(b))
+printf("%s", b)
