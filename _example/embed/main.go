@@ -2,25 +2,23 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattn/anko/parser"
-	"github.com/mattn/anko/vm"
 	"log"
-	"reflect"
+
+	"github.com/mattn/anko/vm"
 )
 
 func main() {
 	env := vm.NewEnv()
-	env.Define("foo", reflect.ValueOf(1))
 
-	scanner := new(parser.Scanner)
-	scanner.Init(`foo + 1`)
-	stmts, err := parser.Parse(scanner)
+	env.Define("foo", 1)
+	env.Define("bar", func() int {
+		return 2
+	})
+
+	v, err := env.Execute(`foo + bar()`)
 	if err != nil {
 		log.Fatal(err)
 	}
-	v, err := vm.Run(stmts, env)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(v.Interface())
+
+	fmt.Println(v)
 }

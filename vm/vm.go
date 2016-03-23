@@ -3,19 +3,22 @@ package vm
 import (
 	"errors"
 	"fmt"
-	"github.com/mattn/anko/ast"
-	"github.com/mattn/anko/parser"
 	"math"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/parser"
 )
 
-var NilValue = reflect.ValueOf((*interface{})(nil))
-var NilType = reflect.TypeOf((*interface{})(nil))
-var TrueValue = reflect.ValueOf(true)
-var FalseValue = reflect.ValueOf(false)
+var (
+	NilValue   = reflect.ValueOf((*interface{})(nil))
+	NilType    = reflect.TypeOf((*interface{})(nil))
+	TrueValue  = reflect.ValueOf(true)
+	FalseValue = reflect.ValueOf(false)
+)
 
 // Error provides a convenient interface for handling runtime error.
 // It can be Error interface with type cast which can call Pos().
@@ -24,10 +27,12 @@ type Error struct {
 	Pos     ast.Position
 }
 
-var BreakError = errors.New("Unexpected break statement")
-var ContinueError = errors.New("Unexpected continue statement")
-var ReturnError = errors.New("Unexpected return statement")
-var InterruptError = errors.New("Execution interrupted")
+var (
+	BreakError     = errors.New("Unexpected break statement")
+	ContinueError  = errors.New("Unexpected continue statement")
+	ReturnError    = errors.New("Unexpected return statement")
+	InterruptError = errors.New("Execution interrupted")
+)
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {
@@ -37,12 +42,13 @@ func NewStringError(pos ast.Pos, err string) error {
 	return &Error{Message: err, Pos: pos.Position()}
 }
 
-// NewStringError makes error interface with message.
+// NewErrorf makes error interface with message.
 func NewErrorf(pos ast.Pos, format string, args ...interface{}) error {
 	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.Position()}
 }
 
-// NewError makes error interface with message. This doesn't overwrite last error.
+// NewError makes error interface with message.
+// This doesn't overwrite last error.
 func NewError(pos ast.Pos, err error) error {
 	if err == nil {
 		return nil
@@ -59,7 +65,7 @@ func NewError(pos ast.Pos, err error) error {
 	return &Error{Message: err.Error(), Pos: pos.Position()}
 }
 
-// Error return the error message.
+// Error returns the error message.
 func (e *Error) Error() string {
 	return e.Message
 }
@@ -75,7 +81,7 @@ func ToFunc(f Func) reflect.Value {
 	return reflect.ValueOf(f)
 }
 
-// Run execute statements in the environment which specified.
+// Run executes statements in the specified environment.
 func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
@@ -446,7 +452,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	}
 }
 
-// toString convert all reflect.Value-s into string.
+// toString converts all reflect.Value-s into string.
 func toString(v reflect.Value) string {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -460,7 +466,7 @@ func toString(v reflect.Value) string {
 	return fmt.Sprint(v.Interface())
 }
 
-// toBool convert all reflect.Value-s into bool.
+// toBool converts all reflect.Value-s into bool.
 func toBool(v reflect.Value) bool {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -484,7 +490,7 @@ func toBool(v reflect.Value) bool {
 	return false
 }
 
-// toFloat64 convert all reflect.Value-s into float64.
+// toFloat64 converts all reflect.Value-s into float64.
 func toFloat64(v reflect.Value) float64 {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -516,7 +522,7 @@ func isNum(v reflect.Value) bool {
 	return false
 }
 
-// equal return true when lhsV and rhsV is same value.
+// equal returns true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
 	lhsIsNil, rhsIsNil := isNil(lhsV), isNil(rhsV)
 	if lhsIsNil && rhsIsNil {
@@ -545,7 +551,7 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	return reflect.DeepEqual(lhsV, rhsV)
 }
 
-// toInt64 convert all reflect.Value-s into int64.
+// toInt64 converts all reflect.Value-s into int64.
 func toInt64(v reflect.Value) int64 {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -694,7 +700,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 	return NilValue, NewStringError(expr, "Invalid operation")
 }
 
-// invokeExpr evaluate one expression.
+// invokeExpr evaluates one expression.
 func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	switch e := expr.(type) {
 	case *ast.NumberExpr:

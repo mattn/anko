@@ -2,21 +2,21 @@
 package path
 
 import (
-	"github.com/mattn/anko/vm"
 	pkg "path"
-	"reflect"
+
+	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {
 	m := env.NewPackage("path")
-	m.Define("Base", reflect.ValueOf(pkg.Base))
-	m.Define("Clean", reflect.ValueOf(pkg.Clean))
-	m.Define("Dir", reflect.ValueOf(pkg.Dir))
-	m.Define("ErrBadPattern", reflect.ValueOf(pkg.ErrBadPattern))
-	m.Define("Ext", reflect.ValueOf(pkg.Ext))
-	m.Define("IsAbs", reflect.ValueOf(pkg.IsAbs))
-	m.Define("Join", reflect.ValueOf(pkg.Join))
-	m.Define("Match", reflect.ValueOf(pkg.Match))
-	m.Define("Split", reflect.ValueOf(pkg.Split))
+	m.Define("Base", pkg.Base)
+	m.Define("Clean", pkg.Clean)
+	m.Define("Dir", pkg.Dir)
+	m.Define("ErrBadPattern", pkg.ErrBadPattern)
+	m.Define("Ext", pkg.Ext)
+	m.Define("IsAbs", pkg.IsAbs)
+	m.Define("Join", pkg.Join)
+	m.Define("Match", pkg.Match)
+	m.Define("Split", pkg.Split)
 	return m
 }

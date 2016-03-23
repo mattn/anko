@@ -52,7 +52,7 @@ func main() {
 	if len(os.Args) == 2 {
 		pkg = os.Args[1]
 	}
-	paths := []string{filepath.Join(os.Getenv("GOROOT"), "src", "pkg")}
+	paths := []string{filepath.Join(os.Getenv("GOROOT"), "src")}
 	for _, p := range strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator)) {
 		paths = append(paths, filepath.Join(p, "src"))
 	}
