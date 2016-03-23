@@ -2,9 +2,9 @@
 package sort
 
 import (
-	"github.com/mattn/anko/vm"
-	"reflect"
 	s "sort"
+
+	"github.com/mattn/anko/vm"
 )
 
 type is []interface{}
@@ -27,17 +27,17 @@ func (p ss) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func Import(env *vm.Env) *vm.Env {
 	m := env.NewPackage("sort")
-	m.Define("Ints", reflect.ValueOf(func(ints []interface{}) []interface{} {
+	m.Define("Ints", func(ints []interface{}) []interface{} {
 		s.Sort(is(ints))
 		return ints
-	}))
-	m.Define("Float64s", reflect.ValueOf(func(ints []interface{}) []interface{} {
+	})
+	m.Define("Float64s", func(ints []interface{}) []interface{} {
 		s.Sort(is(ints))
 		return ints
-	}))
-	m.Define("Strings", reflect.ValueOf(func(ints []interface{}) []interface{} {
+	})
+	m.Define("Strings", func(ints []interface{}) []interface{} {
 		s.Sort(is(ints))
 		return ints
-	}))
+	})
 	return m
 }

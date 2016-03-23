@@ -2,29 +2,29 @@
 package io
 
 import (
-	"github.com/mattn/anko/vm"
 	pkg "io"
-	"reflect"
+
+	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {
 	m := env.NewPackage("io")
-	m.Define("Copy", reflect.ValueOf(pkg.Copy))
-	m.Define("CopyN", reflect.ValueOf(pkg.CopyN))
-	m.Define("EOF", reflect.ValueOf(pkg.EOF))
-	m.Define("ErrClosedPipe", reflect.ValueOf(pkg.ErrClosedPipe))
-	m.Define("ErrNoProgress", reflect.ValueOf(pkg.ErrNoProgress))
-	m.Define("ErrShortBuffer", reflect.ValueOf(pkg.ErrShortBuffer))
-	m.Define("ErrShortWrite", reflect.ValueOf(pkg.ErrShortWrite))
-	m.Define("ErrUnexpectedEOF", reflect.ValueOf(pkg.ErrUnexpectedEOF))
-	m.Define("LimitReader", reflect.ValueOf(pkg.LimitReader))
-	m.Define("MultiReader", reflect.ValueOf(pkg.MultiReader))
-	m.Define("MultiWriter", reflect.ValueOf(pkg.MultiWriter))
-	m.Define("NewSectionReader", reflect.ValueOf(pkg.NewSectionReader))
-	m.Define("Pipe", reflect.ValueOf(pkg.Pipe))
-	m.Define("ReadAtLeast", reflect.ValueOf(pkg.ReadAtLeast))
-	m.Define("ReadFull", reflect.ValueOf(pkg.ReadFull))
-	m.Define("TeeReader", reflect.ValueOf(pkg.TeeReader))
-	m.Define("WriteString", reflect.ValueOf(pkg.WriteString))
+	m.Define("Copy", pkg.Copy)
+	m.Define("CopyN", pkg.CopyN)
+	m.Define("EOF", pkg.EOF)
+	m.Define("ErrClosedPipe", pkg.ErrClosedPipe)
+	m.Define("ErrNoProgress", pkg.ErrNoProgress)
+	m.Define("ErrShortBuffer", pkg.ErrShortBuffer)
+	m.Define("ErrShortWrite", pkg.ErrShortWrite)
+	m.Define("ErrUnexpectedEOF", pkg.ErrUnexpectedEOF)
+	m.Define("LimitReader", pkg.LimitReader)
+	m.Define("MultiReader", pkg.MultiReader)
+	m.Define("MultiWriter", pkg.MultiWriter)
+	m.Define("NewSectionReader", pkg.NewSectionReader)
+	m.Define("Pipe", pkg.Pipe)
+	m.Define("ReadAtLeast", pkg.ReadAtLeast)
+	m.Define("ReadFull", pkg.ReadFull)
+	m.Define("TeeReader", pkg.TeeReader)
+	m.Define("WriteString", pkg.WriteString)
 	return m
 }
