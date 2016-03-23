@@ -4,6 +4,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+
 	"github.com/mattn/anko/ast"
 )
 
@@ -494,4 +495,12 @@ func Parse(s *Scanner) ([]ast.Stmt, error) {
 		return nil, l.e
 	}
 	return l.stmts, l.e
+}
+
+// ParserSrc provides way to parse the code from source.
+func ParseSrc(src string) ([]ast.Stmt, error) {
+	scanner := &Scanner{
+		src: []rune(src),
+	}
+	return Parse(scanner)
 }
