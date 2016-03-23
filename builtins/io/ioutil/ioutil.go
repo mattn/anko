@@ -2,16 +2,16 @@
 package ioutil
 
 import (
-	"github.com/mattn/anko/vm"
 	u "io/ioutil"
-	"reflect"
+
+	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {
 	m := env.NewPackage("iotuil")
-	m.Define("ReadAll", reflect.ValueOf(u.ReadAll))
-	m.Define("ReadDir", reflect.ValueOf(u.ReadDir))
-	m.Define("ReadFile", reflect.ValueOf(u.ReadFile))
-	m.Define("WriteFile", reflect.ValueOf(u.WriteFile))
+	m.Define("ReadAll", u.ReadAll)
+	m.Define("ReadDir", u.ReadDir)
+	m.Define("ReadFile", u.ReadFile)
+	m.Define("WriteFile", u.WriteFile)
 	return m
 }
