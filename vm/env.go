@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/mattn/anko/parser"
 )
 
 // Env provides interface to run VM. This mean function scope and blocked-scope.
@@ -77,8 +79,12 @@ func (e *Env) Destroy() {
 
 // NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
-	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
-	e.Define(n, reflect.ValueOf(m))
+	m := &Env{
+		env:    make(map[string]reflect.Value),
+		parent: e,
+		name:   n,
+	}
+	e.Define(n, m)
 	return m
 }
 
@@ -95,123 +101,100 @@ func (e *Env) GetName() string {
 // Addr returns pointer value which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Addr(k string) (reflect.Value, error) {
-	for {
-		if e.parent == nil {
-			v, ok := e.env[k]
-			if !ok {
-				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
-			}
-			return v, nil
-		}
-		if v, ok := e.env[k]; ok {
-			return v.Addr(), nil
-		}
-		e = e.parent
+	if v, ok := e.env[k]; ok {
+		return v.Addr(), nil
 	}
-	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+	if e.parent == nil {
+		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+	}
+	return e.parent.Addr(k)
 }
 
 // Type returns type which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Type(k string) (reflect.Type, error) {
-	for {
-		if e.parent == nil {
-			v, ok := e.typ[k]
-			if !ok {
-				return NilType, fmt.Errorf("Undefined type '%s'", k)
-			}
-			return v, nil
-		}
-		if v, ok := e.typ[k]; ok {
-			return v, nil
-		}
-		e = e.parent
+	if v, ok := e.typ[k]; ok {
+		return v, nil
 	}
-	return NilType, fmt.Errorf("Undefined type '%s'", k)
+	if e.parent == nil {
+		return NilType, fmt.Errorf("Undefined type '%s'", k)
+	}
+	return e.parent.Type(k)
 }
 
 // Get returns value which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Get(k string) (reflect.Value, error) {
-	for {
-		if e.parent == nil {
-			v, ok := e.env[k]
-			if !ok {
-				return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
-			}
-			return v, nil
-		}
-		if v, ok := e.env[k]; ok {
-			return v, nil
-		}
-		e = e.parent
+	if v, ok := e.env[k]; ok {
+		return v, nil
 	}
-	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+	if e.parent == nil {
+		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+	}
+	return e.parent.Get(k)
 }
 
 // Set modifies value which specified as symbol. It goes to upper scope until
 // found or returns error.
-func (e *Env) Set(k string, v reflect.Value) error {
-	for {
-		if e.parent == nil {
-			if _, ok := e.env[k]; !ok {
-				return fmt.Errorf("Unknown symbol '%s'", k)
-			}
-			e.env[k] = v
-			return nil
+func (e *Env) Set(k string, v interface{}) error {
+	if _, ok := e.env[k]; ok {
+		val, ok := v.(reflect.Value)
+		if !ok {
+			val = reflect.ValueOf(v)
 		}
-		if _, ok := e.env[k]; ok {
-			e.env[k] = v
-			return nil
-		}
-		e = e.parent
+		e.env[k] = val
+		return nil
 	}
-	return nil
+	if e.parent == nil {
+		return fmt.Errorf("Unknown symbol '%s'", k)
+	}
+	return e.parent.Set(k, v)
 }
 
 // DefineGlobal defines symbol in global scope.
-func (e *Env) DefineGlobal(k string, v reflect.Value) error {
-	global := e
-	for global.parent != nil {
-		global = global.parent
+func (e *Env) DefineGlobal(k string, v interface{}) error {
+	if e.parent == nil {
+		return e.Define(k, v)
 	}
-	return global.Define(k, v)
+	return e.parent.DefineGlobal(k, v)
 }
 
 // DefineType defines type which specifis symbol in global scope.
-func (e *Env) DefineType(k string, v reflect.Type) error {
+func (e *Env) DefineType(k string, t interface{}) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
 	global := e
-	name := []string{}
-	for {
-		if global.parent == nil {
-			break
-		}
+	keys := []string{k}
+	for global.parent != nil {
 		if global.name != "" {
-			name = append(name, global.name)
+			keys = append(keys, global.name)
 		}
 		global = global.parent
 	}
-	for i, j := 0, len(name)-1; i < j; i, j = i+1, j-1 {
-		name[i], name[j] = name[j], name[i]
+	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
+		keys[i], keys[j] = keys[j], keys[i]
 	}
 
-	if len(name) > 0 {
-		global.typ[strings.Join(name, ".")+"."+k] = v
-	} else {
-		global.typ[k] = v
+	typ, ok := t.(reflect.Type)
+	if !ok {
+		typ = reflect.TypeOf(t)
 	}
+	global.typ[strings.Join(keys, ".")] = typ
+
 	return nil
 }
 
 // Define defines symbol in current scope.
-func (e *Env) Define(k string, v reflect.Value) error {
+func (e *Env) Define(k string, v interface{}) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	e.env[k] = v
+	val, ok := v.(reflect.Value)
+	if !ok {
+		val = reflect.ValueOf(v)
+	}
+	e.env[k] = val
 	return nil
 }
 
@@ -223,7 +206,7 @@ func (e *Env) String() string {
 // Dump show symbol values in the scope.
 func (e *Env) Dump() {
 	for k, v := range e.env {
-		fmt.Printf("%v = %v\n", k, v)
+		fmt.Printf("%v = %#v\n", k, v)
 	}
 }
 

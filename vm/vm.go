@@ -3,19 +3,22 @@ package vm
 import (
 	"errors"
 	"fmt"
-	"github.com/mattn/anko/ast"
-	"github.com/mattn/anko/parser"
 	"math"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/parser"
 )
 
-var NilValue = reflect.ValueOf((*interface{})(nil))
-var NilType = reflect.TypeOf((*interface{})(nil))
-var TrueValue = reflect.ValueOf(true)
-var FalseValue = reflect.ValueOf(false)
+var (
+	NilValue   = reflect.ValueOf((*interface{})(nil))
+	NilType    = reflect.TypeOf((*interface{})(nil))
+	TrueValue  = reflect.ValueOf(true)
+	FalseValue = reflect.ValueOf(false)
+)
 
 // Error provides a convenient interface for handling runtime error.
 // It can be Error interface with type cast which can call Pos().
@@ -24,10 +27,12 @@ type Error struct {
 	Pos     ast.Position
 }
 
-var BreakError = errors.New("Unexpected break statement")
-var ContinueError = errors.New("Unexpected continue statement")
-var ReturnError = errors.New("Unexpected return statement")
-var InterruptError = errors.New("Execution interrupted")
+var (
+	BreakError     = errors.New("Unexpected break statement")
+	ContinueError  = errors.New("Unexpected continue statement")
+	ReturnError    = errors.New("Unexpected return statement")
+	InterruptError = errors.New("Execution interrupted")
+)
 
 // NewStringError makes error interface with message.
 func NewStringError(pos ast.Pos, err string) error {

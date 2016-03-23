@@ -43,11 +43,13 @@ import (
 
 const version = "0.0.1"
 
-var fs = flag.NewFlagSet(os.Args[0], 1)
-var e = fs.String("e", "", "One line of program")
-var v = fs.Bool("v", false, "Display version")
+var (
+	fs   = flag.NewFlagSet(os.Args[0], 1)
+	line = fs.String("e", "", "One line of program")
+	v    = fs.Bool("v", false, "Display version")
 
-var istty = isatty.IsTerminal(os.Stdout.Fd())
+	istty = isatty.IsTerminal(os.Stdout.Fd())
+)
 
 func colortext(color ct.Color, bright bool, f func()) {
 	if istty {
@@ -66,25 +68,26 @@ func main() {
 		os.Exit(0)
 	}
 
+	var (
+		code      string
+		b         []byte
+		reader    *bufio.Reader
+		following bool
+		source    string
+	)
+
 	env := vm.NewEnv()
+	interactive := fs.NArg() == 0 && *line == ""
 
-	var code string
-	var b []byte
-	var reader *bufio.Reader
-	var following bool
-	var source string
+	env.Define("args", fs.Args())
 
-	repl := fs.NArg() == 0 && *e == ""
-
-	env.Define("args", reflect.ValueOf(fs.Args()))
-
-	if repl {
+	if interactive {
 		reader = bufio.NewReader(os.Stdin)
 		source = "typein"
 		os.Args = append([]string{os.Args[0]}, fs.Args()...)
 	} else {
-		if *e != "" {
-			b = []byte(*e)
+		if *line != "" {
+			b = []byte(*line)
 			source = "argument"
 		} else {
 			var err error
@@ -95,7 +98,7 @@ func main() {
 				})
 				os.Exit(1)
 			}
-			env.Define("args", reflect.ValueOf(fs.Args()[1:]))
+			env.Define("args", fs.Args()[1:])
 			source = filepath.Clean(fs.Arg(0))
 		}
 		os.Args = fs.Args()
@@ -103,7 +106,7 @@ func main() {
 
 	anko_core.Import(env)
 
-	tbl := map[string]func(env *vm.Env) *vm.Env{
+	pkgs := map[string]func(env *vm.Env) *vm.Env{
 		"encoding/json": anko_encoding_json.Import,
 		"flag":          anko_flag.Import,
 		"fmt":           anko_fmt.Import,
@@ -126,16 +129,16 @@ func main() {
 		"github.com/daviddengcn/go-colortext": anko_colortext.Import,
 	}
 
-	env.Define("import", reflect.ValueOf(func(s string) interface{} {
-		if loader, ok := tbl[s]; ok {
+	env.Define("import", func(s string) interface{} {
+		if loader, ok := pkgs[s]; ok {
 			m := loader(env)
 			return m
 		}
 		panic(fmt.Sprintf("package '%s' not found", s))
-	}))
+	})
 
 	for {
-		if repl {
+		if interactive {
 			colortext(ct.Green, true, func() {
 				if following {
 					fmt.Print("  ")
@@ -159,13 +162,9 @@ func main() {
 			code = string(b)
 		}
 
-		scanner := new(parser.Scanner)
-		scanner.Init(code)
-		stmts, err := parser.Parse(scanner)
+		stmts, err := parser.ParseSrc(code)
 
-		v := vm.NilValue
-
-		if repl {
+		if interactive {
 			if e, ok := err.(*parser.Error); ok {
 				es := e.Error()
 				if strings.HasPrefix(es, "syntax error: unexpected") {
@@ -186,12 +185,14 @@ func main() {
 				}
 			}
 		}
+
 		following = false
 		code = ""
+		v := vm.NilValue
+
 		if err == nil {
 			v, err = vm.Run(stmts, env)
 		}
-
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
@@ -206,13 +207,13 @@ func main() {
 				}
 			})
 
-			if repl {
+			if interactive {
 				continue
 			} else {
 				os.Exit(1)
 			}
 		} else {
-			if repl {
+			if interactive {
 				colortext(ct.Black, true, func() {
 					if v == vm.NilValue || !v.IsValid() {
 						fmt.Println("nil")
