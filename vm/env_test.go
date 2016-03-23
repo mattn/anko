@@ -7,7 +7,8 @@ import (
 
 func TestGet(t *testing.T) {
 	env := NewEnv()
-	env.Define("foo", reflect.ValueOf("bar"))
+	env.Define("foo", "bar")
+
 	v, err := env.Get("foo")
 	if err != nil {
 		t.Fatalf(`Can't Get value for "foo"`)
@@ -22,10 +23,10 @@ func TestGet(t *testing.T) {
 
 func TestDefine(t *testing.T) {
 	env := NewEnv()
-	env.Define("foo", reflect.ValueOf("bar"))
+	env.Define("foo", "bar")
+	sub := env.NewEnv()
 
-	env = env.NewEnv()
-	v, err := env.Get("foo")
+	v, err := sub.Get("foo")
 	if err != nil {
 		t.Fatalf(`Can't Get value for "foo"`)
 	}
@@ -39,12 +40,11 @@ func TestDefine(t *testing.T) {
 
 func TestDefineModify(t *testing.T) {
 	env := NewEnv()
-	env.Define("foo", reflect.ValueOf("bar"))
-	orig := env
+	env.Define("foo", "bar")
+	sub := env.NewEnv()
+	sub.Define("foo", true)
 
-	env = env.NewEnv()
-	env.Define("foo", reflect.ValueOf(true))
-	v, err := env.Get("foo")
+	v, err := sub.Get("foo")
 	if err != nil {
 		t.Fatalf(`Can't Get value for "foo"`)
 	}
@@ -55,7 +55,7 @@ func TestDefineModify(t *testing.T) {
 		t.Fatalf("Expected %v, but %v:", true, v.Bool())
 	}
 
-	v, err = orig.Get("foo")
+	v, err = env.Get("foo")
 	if err != nil {
 		t.Fatalf(`Can't Get value for "foo"`)
 	}
@@ -65,5 +65,39 @@ func TestDefineModify(t *testing.T) {
 	if v.String() != "bar" {
 		t.Fatalf("Expected %v, but %v:", "bar", v.String())
 	}
+}
 
+func TestDefineType(t *testing.T) {
+	env := NewEnv()
+	env.DefineType("int", int(0))
+	sub := env.NewEnv()
+	sub.DefineType("str", "")
+	pkg := env.NewPackage("pkg")
+	pkg.DefineType("Bool", true)
+
+	for _, e := range []*Env{env, sub, pkg} {
+		typ, err := e.Type("int")
+		if err != nil {
+			t.Fatalf(`Can't get Type for "int"`)
+		}
+		if typ.Kind() != reflect.Int {
+			t.Fatalf(`Can't get int Type for "int"`)
+		}
+
+		typ, err = e.Type("str")
+		if err != nil {
+			t.Fatalf(`Can't get Type for "str"`)
+		}
+		if typ.Kind() != reflect.String {
+			t.Fatalf(`Can't get string Type for "str"`)
+		}
+
+		typ, err = e.Type("pkg.Bool")
+		if err != nil {
+			t.Fatalf(`Can't get Type for "pkg.Bool"`)
+		}
+		if typ.Kind() != reflect.Bool {
+			t.Fatalf(`Can't get bool Type for "pkg.Bool"`)
+		}
+	}
 }

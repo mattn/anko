@@ -12,7 +12,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	env.Define("len", reflect.ValueOf(func(v interface{}) int64 {
+	env.Define("len", func(v interface{}) int64 {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
@@ -24,9 +24,9 @@ func Import(env *vm.Env) *vm.Env {
 			panic("Argument #1 should be array")
 		}
 		return int64(rv.Len())
-	}))
+	})
 
-	env.Define("keys", reflect.ValueOf(func(v interface{}) []string {
+	env.Define("keys", func(v interface{}) []string {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
@@ -40,9 +40,9 @@ func Import(env *vm.Env) *vm.Env {
 			keys = append(keys, key.String())
 		}
 		return keys
-	}))
+	})
 
-	env.Define("range", reflect.ValueOf(func(args ...int64) []int64 {
+	env.Define("range", func(args ...int64) []int64 {
 		if len(args) < 1 {
 			panic("Missing arguments")
 		}
@@ -62,96 +62,96 @@ func Import(env *vm.Env) *vm.Env {
 			arr = append(arr, i)
 		}
 		return arr
-	}))
+	})
 
-	env.Define("toString", reflect.ValueOf(func(v interface{}) string {
+	env.Define("toString", func(v interface{}) string {
 		return fmt.Sprint(v)
-	}))
+	})
 
-	env.Define("toInt", reflect.ValueOf(func(v interface{}) int64 {
+	env.Define("toInt", func(v interface{}) int64 {
 		nt := reflect.TypeOf(1)
 		rv := reflect.ValueOf(v)
 		if rv.Type().ConvertibleTo(nt) {
 			return 0
 		}
 		return rv.Convert(nt).Int()
-	}))
+	})
 
-	env.Define("toFloat", reflect.ValueOf(func(v interface{}) float64 {
+	env.Define("toFloat", func(v interface{}) float64 {
 		nt := reflect.TypeOf(1.0)
 		rv := reflect.ValueOf(v)
 		if rv.Type().ConvertibleTo(nt) {
 			return 0.0
 		}
 		return rv.Convert(nt).Float()
-	}))
+	})
 
-	env.Define("toBool", reflect.ValueOf(func(v interface{}) bool {
+	env.Define("toBool", func(v interface{}) bool {
 		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
 		if rv.Type().ConvertibleTo(nt) {
 			return false
 		}
 		return rv.Convert(nt).Bool()
-	}))
+	})
 
-	env.Define("toChar", reflect.ValueOf(func(s rune) string {
+	env.Define("toChar", func(s rune) string {
 		return string(s)
-	}))
+	})
 
-	env.Define("toRune", reflect.ValueOf(func(s string) rune {
+	env.Define("toRune", func(s string) rune {
 		if len(s) == 0 {
 			return 0
 		}
 		return []rune(s)[0]
-	}))
+	})
 
-	env.Define("toByteSlice", reflect.ValueOf(func(s string) []byte {
+	env.Define("toByteSlice", func(s string) []byte {
 		return []byte(s)
-	}))
+	})
 
-	env.Define("toRuneSlice", reflect.ValueOf(func(s string) []rune {
+	env.Define("toRuneSlice", func(s string) []rune {
 		return []rune(s)
-	}))
+	})
 
-	env.Define("toBoolSlice", reflect.ValueOf(func(v []interface{}) []bool {
+	env.Define("toBoolSlice", func(v []interface{}) []bool {
 		var result []bool
 		toSlice(v, &result)
 		return result
-	}))
+	})
 
-	env.Define("toFloatSlice", reflect.ValueOf(func(v []interface{}) []float64 {
+	env.Define("toFloatSlice", func(v []interface{}) []float64 {
 		var result []float64
 		toSlice(v, &result)
 		return result
-	}))
+	})
 
-	env.Define("toIntSlice", reflect.ValueOf(func(v []interface{}) []int64 {
+	env.Define("toIntSlice", func(v []interface{}) []int64 {
 		var result []int64
 		toSlice(v, &result)
 		return result
-	}))
+	})
 
-	env.Define("toStringSlice", reflect.ValueOf(func(v []interface{}) []string {
+	env.Define("toStringSlice", func(v []interface{}) []string {
 		var result []string
 		toSlice(v, &result)
 		return result
-	}))
+	})
 
-	env.Define("typeOf", reflect.ValueOf(func(v interface{}) string {
+	env.Define("typeOf", func(v interface{}) string {
 		return reflect.TypeOf(v).String()
-	}))
+	})
 
-	env.Define("chanOf", reflect.ValueOf(func(t reflect.Type) reflect.Value {
+	env.Define("chanOf", func(t reflect.Type) reflect.Value {
 		return reflect.MakeChan(t, 1)
-	}))
+	})
 
-	env.Define("defined", reflect.ValueOf(func(s string) bool {
+	env.Define("defined", func(s string) bool {
 		_, err := env.Get(s)
 		return err == nil
-	}))
+	})
 
-	env.Define("load", reflect.ValueOf(func(s string) interface{} {
+	env.Define("load", func(s string) interface{} {
 		body, err := ioutil.ReadFile(s)
 		if err != nil {
 			panic(err)
@@ -174,21 +174,21 @@ func Import(env *vm.Env) *vm.Env {
 			return rv.Interface()
 		}
 		return nil
-	}))
+	})
 
-	env.Define("panic", reflect.ValueOf(func(e interface{}) {
+	env.Define("panic", func(e interface{}) {
 		os.Setenv("ANKO_DEBUG", "1")
 		panic(e)
-	}))
+	})
 
-	env.Define("print", reflect.ValueOf(fmt.Print))
-	env.Define("println", reflect.ValueOf(fmt.Println))
-	env.Define("printf", reflect.ValueOf(fmt.Printf))
+	env.Define("print", fmt.Print)
+	env.Define("println", fmt.Println)
+	env.Define("printf", fmt.Printf)
 
-	env.DefineType("int64", reflect.TypeOf(int64(0)))
-	env.DefineType("float64", reflect.TypeOf(float64(0.0)))
-	env.DefineType("bool", reflect.TypeOf(true))
-	env.DefineType("string", reflect.TypeOf(""))
+	env.DefineType("int64", int64(0))
+	env.DefineType("float64", float64(0.0))
+	env.DefineType("bool", true)
+	env.DefineType("string", "")
 	return env
 }
 
