@@ -21,12 +21,12 @@ type Error struct {
 	Fatal    bool
 }
 
-// Error return the error message.
+// Error returns the error message.
 func (e *Error) Error() string {
 	return e.Message
 }
 
-// Scanner store informations for lexer.
+// Scanner stores informations for lexer.
 type Scanner struct {
 	src      []rune
 	offset   int
@@ -62,7 +62,7 @@ var opName = map[string]int{
 	"make":     MAKE,
 }
 
-// Init reset code to scan.
+// Init resets code to scan.
 func (s *Scanner) Init(src string) {
 	s.src = []rune(src)
 }
@@ -284,32 +284,32 @@ retry:
 	return
 }
 
-// isLetter return true if the rune is a letter for identity.
+// isLetter returns true if the rune is a letter for identity.
 func isLetter(ch rune) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
 
-// isDigit return true if the rune is a number.
+// isDigit returns true if the rune is a number.
 func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-// isHex return true if the rune is a hex digits.
+// isHex returns true if the rune is a hex digits.
 func isHex(ch rune) bool {
 	return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')
 }
 
-// isEOL return true if the rune is at end-of-line or end-of-file.
+// isEOL returns true if the rune is at end-of-line or end-of-file.
 func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
 }
 
-// isBlank return true if the rune is empty character..
+// isBlank returns true if the rune is empty character..
 func isBlank(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\r'
 }
 
-// peek return current rune in the code.
+// peek returns current rune in the code.
 func (s *Scanner) peek() rune {
 	if s.reachEOF() {
 		return EOF
@@ -317,7 +317,7 @@ func (s *Scanner) peek() rune {
 	return s.src[s.offset]
 }
 
-// next move offset to next.
+// next moves offset to next.
 func (s *Scanner) next() {
 	if !s.reachEOF() {
 		if s.peek() == '\n' {
@@ -328,39 +328,39 @@ func (s *Scanner) next() {
 	}
 }
 
-// current return the current offset.
+// current returns the current offset.
 func (s *Scanner) current() int {
 	return s.offset
 }
 
-// offset set the offset value.
+// offset sets the offset value.
 func (s *Scanner) set(o int) {
 	s.offset = o
 }
 
-// back move back offset once to top.
+// back moves back offset once to top.
 func (s *Scanner) back() {
 	s.offset--
 }
 
-// reachEOF return true if offset is at end-of-file.
+// reachEOF returns true if offset is at end-of-file.
 func (s *Scanner) reachEOF() bool {
 	return len(s.src) <= s.offset
 }
 
-// pos return the position of current.
+// pos returns the position of current.
 func (s *Scanner) pos() ast.Position {
 	return ast.Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
 }
 
-// skipBlank move position into non-black character.
+// skipBlank moves position into non-black character.
 func (s *Scanner) skipBlank() {
 	for isBlank(s.peek()) {
 		s.next()
 	}
 }
 
-// scanIdentifier return identifier begining at current position.
+// scanIdentifier returns identifier begining at current position.
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
@@ -373,7 +373,7 @@ func (s *Scanner) scanIdentifier() (string, error) {
 	return string(ret), nil
 }
 
-// scanIdentifier return number begining at current position.
+// scanNumber returns number begining at current position.
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
 	ch := s.peek()
@@ -398,7 +398,7 @@ func (s *Scanner) scanNumber() (string, error) {
 	return string(ret), nil
 }
 
-// scanIdentifier return raw-string begining at current position.
+// scanRawString returns raw-string starting at current position.
 func (s *Scanner) scanRawString() (string, error) {
 	var ret []rune
 	for {
@@ -416,7 +416,8 @@ func (s *Scanner) scanRawString() (string, error) {
 	return string(ret), nil
 }
 
-// scanIdentifier return string begining at current position. This handle backslash escaping.
+// scanString returns string starting at current position.
+// This handles backslash escaping.
 func (s *Scanner) scanString(l rune) (string, error) {
 	var ret []rune
 eos:
@@ -458,7 +459,7 @@ eos:
 	return string(ret), nil
 }
 
-// Lexer provide inteface to parse codes.
+// Lexer provides inteface to parse codes.
 type Lexer struct {
 	s     *Scanner
 	lit   string
@@ -467,7 +468,7 @@ type Lexer struct {
 	stmts []ast.Stmt
 }
 
-// Lex scan the token and literals.
+// Lex scans the token and literals.
 func (l *Lexer) Lex(lval *yySymType) int {
 	tok, lit, pos, err := l.s.Scan()
 	if err != nil {
@@ -480,12 +481,12 @@ func (l *Lexer) Lex(lval *yySymType) int {
 	return tok
 }
 
-// Error set parse error.
+// Error sets parse error.
 func (l *Lexer) Error(msg string) {
 	l.e = &Error{Message: msg, Pos: l.pos, Fatal: false}
 }
 
-// Parser provide way to parse the code.
+// Parser provides way to parse the code using Scanner.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	yyErrorVerbose = true
 	l := Lexer{s: s}

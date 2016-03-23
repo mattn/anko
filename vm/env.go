@@ -7,7 +7,7 @@ import (
 )
 
 // Env provides interface to run VM. This mean function scope and blocked-scope.
-// If stack go to blocked-scope, it will make new Env.
+// If stack goes to blocked-scope, it will make new Env.
 type Env struct {
 	name      string
 	env       map[string]reflect.Value
@@ -16,7 +16,7 @@ type Env struct {
 	interrupt *bool
 }
 
-// NewEnv create new global scope.
+// NewEnv creates new global scope.
 func NewEnv() *Env {
 	b := false
 
@@ -28,7 +28,7 @@ func NewEnv() *Env {
 	}
 }
 
-// NewEnv create new child scope.
+// NewEnv creates new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
 		env:       make(map[string]reflect.Value),
@@ -61,7 +61,7 @@ func (e *Env) NewPackage(n string) *Env {
 	}
 }
 
-// Destroy delete current scope.
+// Destroy deletes current scope.
 func (e *Env) Destroy() {
 	if e.parent == nil {
 		return
@@ -75,24 +75,25 @@ func (e *Env) Destroy() {
 	e.env = nil
 }
 
-// NewModule create new module scope as global.
+// NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{env: make(map[string]reflect.Value), parent: e, name: n}
 	e.Define(n, reflect.ValueOf(m))
 	return m
 }
 
-// SetName make a name of the scope. This mean that the scope is module.
+// SetName sets a name of the scope. This means that the scope is module.
 func (e *Env) SetName(n string) {
 	e.name = n
 }
 
-// GetName return module name.
+// GetName returns module name.
 func (e *Env) GetName() string {
 	return e.name
 }
 
-// Get return value which specified symbol. It go to upper scope until found.
+// Addr returns pointer value which specified symbol. It goes to upper scope until
+// found or returns error.
 func (e *Env) Addr(k string) (reflect.Value, error) {
 	for {
 		if e.parent == nil {
@@ -110,7 +111,8 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 }
 
-// Get return value which specified symbol. It go to upper scope until found.
+// Type returns type which specified symbol. It goes to upper scope until
+// found or returns error.
 func (e *Env) Type(k string) (reflect.Type, error) {
 	for {
 		if e.parent == nil {
@@ -128,7 +130,8 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 	return NilType, fmt.Errorf("Undefined type '%s'", k)
 }
 
-// Get return value which specified symbol. It go to upper scope until found.
+// Get returns value which specified symbol. It goes to upper scope until
+// found or returns error.
 func (e *Env) Get(k string) (reflect.Value, error) {
 	for {
 		if e.parent == nil {
@@ -146,8 +149,8 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 	return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 }
 
-// Set modify the value which specified as symbol. If it can't be found in
-// whole. This function return error
+// Set modifies value which specified as symbol. It goes to upper scope until
+// found or returns error.
 func (e *Env) Set(k string, v reflect.Value) error {
 	for {
 		if e.parent == nil {
@@ -166,7 +169,7 @@ func (e *Env) Set(k string, v reflect.Value) error {
 	return nil
 }
 
-// DefineGlobal defines global symbol.
+// DefineGlobal defines symbol in global scope.
 func (e *Env) DefineGlobal(k string, v reflect.Value) error {
 	global := e
 	for global.parent != nil {
@@ -175,7 +178,7 @@ func (e *Env) DefineGlobal(k string, v reflect.Value) error {
 	return global.Define(k, v)
 }
 
-// Define defines symbol in current scope.
+// DefineType defines type which specifis symbol in global scope.
 func (e *Env) DefineType(k string, v reflect.Type) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
