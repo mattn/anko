@@ -65,6 +65,9 @@ func Import(env *vm.Env) *vm.Env {
 	})
 
 	env.Define("toString", func(v interface{}) string {
+		if b, ok := v.([]byte); ok {
+			return string(b)
+		}
 		return fmt.Sprint(v)
 	})
 
