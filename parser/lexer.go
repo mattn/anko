@@ -269,8 +269,17 @@ retry:
 		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^', '\n':
 			s.next()
 			if ch == '[' && s.peek() == ']' {
-				tok = ARRAYLIT
-				lit = "[]"
+				s.next()
+				if isLetter(s.peek()) {
+					s.back()
+					tok = ARRAYLIT
+					lit = "[]"
+				} else {
+					s.back()
+					s.back()
+					tok = int(ch)
+					lit = string(ch)
+				}
 			} else {
 				s.back()
 				tok = int(ch)
