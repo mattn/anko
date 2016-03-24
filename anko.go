@@ -34,6 +34,7 @@ import (
 	anko_path "github.com/mattn/anko/builtins/path"
 	anko_path_filepath "github.com/mattn/anko/builtins/path/filepath"
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
+	anko_runtime "github.com/mattn/anko/builtins/runtime"
 	anko_sort "github.com/mattn/anko/builtins/sort"
 	anko_strings "github.com/mattn/anko/builtins/strings"
 	anko_time "github.com/mattn/anko/builtins/time"
@@ -123,6 +124,7 @@ func main() {
 		"path":          anko_path.Import,
 		"path/filepath": anko_path_filepath.Import,
 		"regexp":        anko_regexp.Import,
+		"runtime":       anko_runtime.Import,
 		"sort":          anko_sort.Import,
 		"strings":       anko_strings.Import,
 		"time":          anko_time.Import,
