@@ -5,7 +5,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -52,8 +54,16 @@ func main() {
 	if len(os.Args) == 2 {
 		pkg = os.Args[1]
 	}
-	paths := []string{filepath.Join(os.Getenv("GOROOT"), "src")}
-	for _, p := range strings.Split(os.Getenv("GOPATH"), string(filepath.ListSeparator)) {
+	b, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
+	paths := []string{filepath.Join(strings.TrimSpace(string(b)), "src")}
+	b, err = exec.Command("go", "env", "GOPATH").CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, p := range strings.Split(strings.TrimSpace(string(b)), string(filepath.ListSeparator)) {
 		paths = append(paths, filepath.Join(p, "src"))
 	}
 	for _, p := range paths {
@@ -104,14 +114,13 @@ package %s
 import (
 	"github.com/mattn/anko/vm"
 	pkg "%s"
-	"reflect"
 )
 
 func Import(env *vm.Env) {
 	m := env.NewModule("%s")
 `, pn, pkg, pn, pkg, pn)
 		for _, k := range keys {
-			fmt.Printf("\t"+`m.Define("%s", reflect.ValueOf(pkg.%s))`+"\n", k, k)
+			fmt.Printf("\t"+`m.Define("%s", pkg.%s)`+"\n", k, k)
 		}
 		fmt.Println("}")
 	}
