@@ -3,11 +3,11 @@
 [![Build Status](https://travis-ci.org/mattn/anko.png?branch=master)](https://travis-ci.org/mattn/anko)
 [![GoDoc](https://godoc.org/github.com/mattn/anko/vm?status.svg)](https://godoc.org/github.com/mattn/anko/vm)
 
+Anko is a scriptable interpreter written in Go.
+
 ![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
 (Picture licensed under CC BY-SA 3.0 by wikipedia)
-
-Anko is a scriptable interpreter written in Go.
 
 ## Installation
 Requires Go.
