@@ -1,19 +1,26 @@
 # anko
 
 [![Build Status](https://travis-ci.org/mattn/anko.png?branch=master)](https://travis-ci.org/mattn/anko)
+[![GoDoc](https://godoc.org/github.com/mattn/anko/vm?status.svg)](https://godoc.org/github.com/mattn/anko/vm)
+
+Anko is a scriptable interpreter written in Go.
 
 ![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
 (Picture licensed under CC BY-SA 3.0 by wikipedia)
 
-Scriptable interpreter written in golang
-
-## Usage
-
+## Installation
+Requires Go.
 ```
+$ go get -u github.com/mattn/anko
+```
+
+## Examples
+
+```bash
 # declare function
-func foo(x){
-  return x + 1
+func plus(n){
+  return n + 1
 }
 
 # declare variables
@@ -21,10 +28,10 @@ x = 1
 y = x + 1
 
 # print values 
-println(x * (y + 2 * x + foo(x) / 2))
+println(x * (y + 2 * x + plus(x) / 2))
 
 # if/else condition
-if foo(y) > 1 {
+if plus(y) > 1 {
   println("こんにちわ世界")
 } else {
   println("Hello, World")
@@ -36,20 +43,43 @@ println(a[2])
 println(len(a))
 
 # map type
-m = {"foo": "bar", "bar": "baz"}
+m = {"foo": "bar", "far": "boo"}
+m.foo = "baz"
 for k in keys(m) {
   println(m[k])
 }
 ```
 
-## Requirements
+See `_examples/scripts` for more examples.
 
-* golang
 
-## Installation
+
+## Usage
+
+Embedding the interpreter into your own program:
+
+```Go
+var env = vm.NewEnv()
+
+env.Define("foo", 1)
+env.Define("bar", func() int {
+	return 2
+})
+
+val, err := env.Execute(`foo + bar()`)
+if err != nil {
+	panic(err)
+}
+
+fmt.Println(val) 
+// output:
+// 3
+```
+
+Running scripts using anko command-line tool:
 
 ```
-$ go get github.com/mattn/anko
+$ anko script.ank
 ```
 
 # License
