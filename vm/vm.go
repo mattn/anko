@@ -1250,6 +1250,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return f, NewError(expr, err)
 		}
+		if f.Kind() == reflect.Interface {
+			f = f.Elem()
+		}
 		if f.Kind() != reflect.Func {
 			return f, NewStringError(expr, "Unknown function")
 		}
