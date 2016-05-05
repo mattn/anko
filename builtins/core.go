@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
@@ -74,28 +76,67 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("toInt", func(v interface{}) int64 {
 		nt := reflect.TypeOf(1)
 		rv := reflect.ValueOf(v)
-		if !rv.Type().ConvertibleTo(nt) {
-			return 0
+		if rv.Type().ConvertibleTo(nt) {
+			return rv.Convert(nt).Int()
 		}
-		return rv.Convert(nt).Int()
+		if rv.Kind() == reflect.String {
+			i, err := strconv.ParseInt(v.(string), 10, 64)
+			if err == nil {
+				return i
+			}
+			f, err := strconv.ParseFloat(v.(string), 64)
+			if err == nil {
+				return int64(f)
+			}
+		}
+		if rv.Kind() == reflect.Bool {
+			if v.(bool) {
+				return 1
+			}
+		}
+		return 0
 	})
 
 	env.Define("toFloat", func(v interface{}) float64 {
 		nt := reflect.TypeOf(1.0)
 		rv := reflect.ValueOf(v)
-		if !rv.Type().ConvertibleTo(nt) {
-			return 0.0
+		if rv.Type().ConvertibleTo(nt) {
+			return rv.Convert(nt).Float()
 		}
-		return rv.Convert(nt).Float()
+		if rv.Kind() == reflect.String {
+			f, err := strconv.ParseFloat(v.(string), 64)
+			if err == nil {
+				return f
+			}
+		}
+		if rv.Kind() == reflect.Bool {
+			if v.(bool) {
+				return 1.0
+			}
+		}
+		return 0.0
 	})
 
 	env.Define("toBool", func(v interface{}) bool {
 		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
-		if !rv.Type().ConvertibleTo(nt) {
-			return false
+		if rv.Type().ConvertibleTo(nt) {
+			return rv.Convert(nt).Bool()
 		}
-		return rv.Convert(nt).Bool()
+		if rv.Type().ConvertibleTo(reflect.TypeOf(1.0)) && rv.Convert(reflect.TypeOf(1.0)).Float() > 0.0 {
+			return true
+		}
+		if rv.Kind() == reflect.String {
+			s := strings.ToLower(v.(string))
+			if s == "y" || s == "yes" {
+				return true
+			}
+			b, err := strconv.ParseBool(s)
+			if err == nil {
+				return b
+			}
+		}
+		return false
 	})
 
 	env.Define("toChar", func(s rune) string {
