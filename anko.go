@@ -19,6 +19,7 @@ import (
 
 	anko_core "github.com/mattn/anko/builtins"
 	anko_encoding_json "github.com/mattn/anko/builtins/encoding/json"
+	anko_errors "github.com/mattn/anko/builtins/errors"
 	anko_flag "github.com/mattn/anko/builtins/flag"
 	anko_fmt "github.com/mattn/anko/builtins/fmt"
 	anko_io "github.com/mattn/anko/builtins/io"
@@ -109,6 +110,7 @@ func main() {
 
 	pkgs := map[string]func(env *vm.Env) *vm.Env{
 		"encoding/json": anko_encoding_json.Import,
+		"errors":        anko_errors.Import,
 		"flag":          anko_flag.Import,
 		"fmt":           anko_fmt.Import,
 		"io":            anko_io.Import,
