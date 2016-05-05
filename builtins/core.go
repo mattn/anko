@@ -74,7 +74,7 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("toInt", func(v interface{}) int64 {
 		nt := reflect.TypeOf(1)
 		rv := reflect.ValueOf(v)
-		if rv.Type().ConvertibleTo(nt) {
+		if !rv.Type().ConvertibleTo(nt) {
 			return 0
 		}
 		return rv.Convert(nt).Int()
@@ -83,7 +83,7 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("toFloat", func(v interface{}) float64 {
 		nt := reflect.TypeOf(1.0)
 		rv := reflect.ValueOf(v)
-		if rv.Type().ConvertibleTo(nt) {
+		if !rv.Type().ConvertibleTo(nt) {
 			return 0.0
 		}
 		return rv.Convert(nt).Float()
@@ -92,7 +92,7 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("toBool", func(v interface{}) bool {
 		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
-		if rv.Type().ConvertibleTo(nt) {
+		if !rv.Type().ConvertibleTo(nt) {
 			return false
 		}
 		return rv.Convert(nt).Bool()
