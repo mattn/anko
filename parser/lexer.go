@@ -397,9 +397,25 @@ func (s *Scanner) scanNumber() (string, error) {
 			s.next()
 		}
 	} else {
-		for isDigit(s.peek()) || s.peek() == '.' || s.peek() == 'e' {
+		for isDigit(s.peek()) || s.peek() == '.' {
 			ret = append(ret, s.peek())
 			s.next()
+		}
+		if s.peek() == 'e' {
+			ret = append(ret, s.peek())
+			s.next()
+			if isDigit(s.peek()) || s.peek() == '+' || s.peek() == '-' {
+				ret = append(ret, s.peek())
+				s.next()
+				for isDigit(s.peek()) || s.peek() == '.' {
+					ret = append(ret, s.peek())
+					s.next()
+				}
+			}
+			for isDigit(s.peek()) || s.peek() == '.' {
+				ret = append(ret, s.peek())
+				s.next()
+			}
 		}
 		if isLetter(s.peek()) {
 			return "", errors.New("identifier starts immediately after numeric literal")
