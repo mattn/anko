@@ -1359,6 +1359,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				}
 				ret = rets[0].Interface().(reflect.Value)
 			} else {
+				for i, expr := range e.SubExprs {
+					if ae, ok := expr.(*ast.AddrExpr); ok {
+						if id, ok := ae.Expr.(*ast.IdentExpr); ok {
+							invokeLetExpr(id, args[i].Elem().Elem(), env)
+						}
+					}
+				}
 				if f.Type().NumOut() == 1 {
 					ret = rets[0]
 				} else {
