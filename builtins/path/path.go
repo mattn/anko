@@ -4,7 +4,7 @@ package path
 import (
 	pkg "path"
 
-	"github.com/mattn/anko/vm"
+	"github.com/leonelquinteros/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {

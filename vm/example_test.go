@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/mattn/anko/parser"
-	"github.com/mattn/anko/vm"
+	"github.com/leonelquinteros/anko/parser"
+	"github.com/leonelquinteros/anko/vm"
 )
 
 func ExampleInterrupt() {
