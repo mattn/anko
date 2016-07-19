@@ -112,7 +112,7 @@ func main() {
 package %s
 
 import (
-	"github.com/leonelquinteros/anko/vm"
+	"github.com/mattn/anko/vm"
 	pkg "%s"
 )
 

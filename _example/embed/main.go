@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/leonelquinteros/anko/vm"
+	"github.com/mattn/anko/vm"
 )
 
 func main() {

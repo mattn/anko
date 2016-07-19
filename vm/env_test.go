@@ -101,3 +101,102 @@ func TestDefineType(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvRaces(t *testing.T) {
+	// Create env
+	env := NewEnv()
+
+	// Define some values in parallel
+	go env.Define("foo", "bar")
+	go env.Define("bar", "foo")
+	go env.Define("one", "two")
+	go env.Define("hello", "there")
+	go env.Define("hey", "ho")
+
+	// Get some values in parallel
+	go func(env *Env, t *testing.T) {
+		_, err := env.Get("foo")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "foo"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		_, err := env.Get("bar")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "bar"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		_, err := env.Get("one")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "one"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		_, err := env.Get("hello")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "hello"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		_, err := env.Get("hey")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "hey"`)
+		}
+	}(env, t)
+
+	// Get subs
+	go func(env *Env, t *testing.T) {
+		sub := env.NewEnv()
+
+		_, err := sub.Get("foo")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "foo"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		sub := env.NewEnv()
+
+		_, err := sub.Get("one")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "one"`)
+		}
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		sub := env.NewEnv()
+
+		_, err := sub.Get("bar")
+		if err != nil {
+			t.Fatalf(`Can't Get value for "bar"`)
+		}
+	}(env, t)
+
+	// Define some types
+	go env.DefineType("int", int(0))
+	go env.DefineType("str", "")
+
+	// Define packages
+	go func(env *Env, t *testing.T) {
+		pkg := env.NewPackage("pkg")
+		pkg.DefineType("Bool", true)
+	}(env, t)
+
+	go func(env *Env, t *testing.T) {
+		pkg := env.NewPackage("pkg2")
+		pkg.DefineType("Bool", true)
+	}(env, t)
+
+	// Get some types
+	go env.Type("int")
+	go env.Type("str")
+	go env.Type("int")
+	go env.Type("str")
+	go env.Type("int")
+	go env.Type("str")
+}

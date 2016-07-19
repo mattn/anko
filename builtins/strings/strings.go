@@ -4,7 +4,7 @@ package strings
 import (
 	pkg "strings"
 
-	"github.com/leonelquinteros/anko/vm"
+	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {

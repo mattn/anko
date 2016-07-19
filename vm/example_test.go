@@ -2,11 +2,11 @@ package vm_test
 
 import (
 	"fmt"
+	"github.com/mattn/anko/parser"
+	"github.com/mattn/anko/vm"
 	"log"
+	"testing"
 	"time"
-
-	"github.com/leonelquinteros/anko/parser"
-	"github.com/leonelquinteros/anko/vm"
 )
 
 func ExampleInterrupt() {
@@ -40,8 +40,18 @@ println("<this should not be printed>")
 		vm.Interrupt(env)
 	}()
 
-	v, err := vm.Run(stmts, env)
-	fmt.Println(v, err)
+	// Run script
+	_, err = vm.Run(stmts, env)
+
+	//v, err := vm.Run(stmts, env)
+	//fmt.Println(v, err)
 	// output:
 	// <nil> Execution interrupted
+}
+
+func TestExampleRaces(t *testing.T) {
+	// Run example several times
+	for i := 0; i < 100; i++ {
+		go ExampleInterrupt()
+	}
 }

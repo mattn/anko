@@ -4,7 +4,7 @@
 package net
 
 import (
-	"github.com/leonelquinteros/anko/vm"
+	"github.com/mattn/anko/vm"
 )
 
 func Import(env *vm.Env) *vm.Env {
