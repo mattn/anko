@@ -2,8 +2,8 @@ package vm_test
 
 import (
 	"fmt"
-	"github.com/mattn/anko/parser"
-	"github.com/mattn/anko/vm"
+	"github.com/leonelquinteros/anko/parser"
+	"github.com/leonelquinteros/anko/vm"
 	"log"
 	"testing"
 	"time"

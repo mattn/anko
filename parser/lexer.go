@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattn/anko/ast"
+	"github.com/leonelquinteros/anko/ast"
 )
 
 const (

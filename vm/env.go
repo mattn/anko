@@ -2,7 +2,7 @@ package vm
 
 import (
 	"fmt"
-	"github.com/mattn/anko/parser"
+	"github.com/leonelquinteros/anko/parser"
 	"reflect"
 	"strings"
 	"sync"
