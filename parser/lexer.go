@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mattn/anko/ast"
+	"github.com/leonelquinteros/anko/ast"
 )
 
 const (
@@ -514,7 +514,6 @@ func (l *Lexer) Error(msg string) {
 
 // Parser provides way to parse the code using Scanner.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
-	yyErrorVerbose = true
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
 		return nil, l.e

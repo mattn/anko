@@ -5,7 +5,7 @@ package colortext
 
 import (
 	"github.com/daviddengcn/go-colortext"
-	"github.com/mattn/anko/vm"
+	"github.com/leonelquinteros/anko/vm"
 )
 
 var ntoc = map[string]ct.Color{
