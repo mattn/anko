@@ -109,15 +109,21 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 // the current running statement will finish, but the next statement will not run,
 // and instead will return a NilValue and an InterruptError.
 func Interrupt(env *Env) {
+	env.Lock()
 	*(env.interrupt) = true
+	env.Unlock()
 }
 
 // RunSingleStmt executes one statement in the specified environment.
 func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
+	env.Lock()
 	if *(env.interrupt) {
 		*(env.interrupt) = false
+		env.Unlock()
+
 		return NilValue, InterruptError
 	}
+	env.Unlock()
 
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:

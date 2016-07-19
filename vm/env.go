@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/mattn/anko/parser"
 )
@@ -16,6 +17,7 @@ type Env struct {
 	typ       map[string]reflect.Type
 	parent    *Env
 	interrupt *bool
+	sync.RWMutex
 }
 
 // NewEnv creates new global scope.
@@ -65,6 +67,9 @@ func (e *Env) NewPackage(n string) *Env {
 
 // Destroy deletes current scope.
 func (e *Env) Destroy() {
+	e.Lock()
+	defer e.Unlock()
+
 	if e.parent == nil {
 		return
 	}
@@ -90,17 +95,25 @@ func (e *Env) NewModule(n string) *Env {
 
 // SetName sets a name of the scope. This means that the scope is module.
 func (e *Env) SetName(n string) {
+	e.Lock()
 	e.name = n
+	e.Unlock()
 }
 
 // GetName returns module name.
 func (e *Env) GetName() string {
+	e.RLock()
+	defer e.RUnlock()
+
 	return e.name
 }
 
 // Addr returns pointer value which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Addr(k string) (reflect.Value, error) {
+	e.RLock()
+	defer e.RUnlock()
+
 	if v, ok := e.env[k]; ok {
 		return v.Addr(), nil
 	}
@@ -113,6 +126,9 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 // Type returns type which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Type(k string) (reflect.Type, error) {
+	e.RLock()
+	defer e.RUnlock()
+
 	if v, ok := e.typ[k]; ok {
 		return v, nil
 	}
@@ -125,6 +141,9 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 // Get returns value which specified symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Get(k string) (reflect.Value, error) {
+	e.RLock()
+	defer e.RUnlock()
+
 	if v, ok := e.env[k]; ok {
 		return v, nil
 	}
@@ -137,6 +156,9 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 // Set modifies value which specified as symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
+	e.Lock()
+	defer e.Unlock()
+
 	if _, ok := e.env[k]; ok {
 		val, ok := v.(reflect.Value)
 		if !ok {
@@ -166,12 +188,16 @@ func (e *Env) DefineType(k string, t interface{}) error {
 	}
 	global := e
 	keys := []string{k}
+
+	e.RLock()
 	for global.parent != nil {
 		if global.name != "" {
 			keys = append(keys, global.name)
 		}
 		global = global.parent
 	}
+	e.RUnlock()
+
 	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
 		keys[i], keys[j] = keys[j], keys[i]
 	}
@@ -180,7 +206,10 @@ func (e *Env) DefineType(k string, t interface{}) error {
 	if !ok {
 		typ = reflect.TypeOf(t)
 	}
+
+	global.Lock()
 	global.typ[strings.Join(keys, ".")] = typ
+	global.Unlock()
 
 	return nil
 }
@@ -194,20 +223,29 @@ func (e *Env) Define(k string, v interface{}) error {
 	if !ok {
 		val = reflect.ValueOf(v)
 	}
+
+	e.Lock()
 	e.env[k] = val
+	e.Unlock()
+
 	return nil
 }
 
 // String return the name of current scope.
 func (e *Env) String() string {
+	e.RLock()
+	defer e.RUnlock()
+
 	return e.name
 }
 
 // Dump show symbol values in the scope.
 func (e *Env) Dump() {
+	e.RLock()
 	for k, v := range e.env {
 		fmt.Printf("%v = %#v\n", k, v)
 	}
+	e.RUnlock()
 }
 
 // Execute parses and runs source in current scope.

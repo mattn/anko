@@ -1,16 +1,16 @@
-package vm_test
+package vm
 
 import (
 	"fmt"
 	"log"
+	"testing"
 	"time"
 
 	"github.com/mattn/anko/parser"
-	"github.com/mattn/anko/vm"
 )
 
-func ExampleInterrupt() {
-	env := vm.NewEnv()
+func testInterrupt() {
+	env := NewEnv()
 
 	var sleepFunc = func(spec string) {
 		if d, err := time.ParseDuration(spec); err != nil {
@@ -37,12 +37,18 @@ println("<this should not be printed>")
 	// Interrupts after 1 second.
 	go func() {
 		time.Sleep(time.Second)
-		vm.Interrupt(env)
+		Interrupt(env)
 	}()
 
-	// Run script
-	v, err := vm.Run(stmts, env)
-	fmt.Println(v, err)
-	// output:
-	// <nil> Execution interrupted
+	_, err = Run(stmts, env)
+	if err != nil {
+		log.Fatal()
+	}
+}
+
+func TestInterruptRaces(t *testing.T) {
+	// Run example several times
+	for i := 0; i < 100; i++ {
+		go testInterrupt()
+	}
 }
