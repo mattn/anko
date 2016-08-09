@@ -166,6 +166,8 @@ func main() {
 			code = string(b)
 		}
 
+		parser.EnableErrorVerbose()
+
 		stmts, err := parser.ParseSrc(code)
 
 		if interactive {
