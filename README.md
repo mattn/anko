@@ -76,6 +76,22 @@ fmt.Println(val)
 // 3
 ```
 
+To import all builtins, allowing the example scripts to work:
+
+```Go
+import anko_core "github.com/mattn/anko/builtins"
+
+var env = vm.NewEnv()
+anko_core.LoadAllBuiltins(env)
+
+_, err := env.Execute(`println("test")`)
+if err != nil {
+	panic(err)
+}
+// output:
+// "test"
+```
+
 Running scripts using anko command-line tool:
 
 ```
