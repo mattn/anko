@@ -516,7 +516,9 @@ func (l *Lexer) Error(msg string) {
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
-		return nil, l.e
+		badline := (l.pos.Line-1)/2
+		e := fmt.Errorf("%s at or before l%d:c%d, symbol '%s'", l.e, badline+1, l.pos.Column, l.lit)
+		return nil, e
 	}
 	return l.stmts, l.e
 }
