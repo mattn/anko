@@ -24,5 +24,11 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Unix", t.Unix)
 	m.Define("AfterFunc", t.AfterFunc)
 	m.Define("NewTimer", t.NewTimer)
+	m.Define("Nanosecond", t.Nanosecond)
+	m.Define("Microsecond", t.Microsecond)
+	m.Define("Millisecond", t.Millisecond)
+	m.Define("Second", t.Second)
+	m.Define("Minute", t.Minute)
+	m.Define("Hour", t.Hour)
 	return m
 }
