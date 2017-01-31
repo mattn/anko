@@ -309,35 +309,66 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if val.Kind() == reflect.Interface {
 			val = val.Elem()
 		}
-		if val.Kind() != reflect.Array && val.Kind() != reflect.Slice {
-			return NilValue, NewStringError(stmt, "Invalid operation for non-array value")
-		}
-		newenv := env.NewEnv()
-		defer newenv.Destroy()
+		if val.Kind() == reflect.Array || val.Kind() == reflect.Slice {
+			newenv := env.NewEnv()
+			defer newenv.Destroy()
 
-		for i := 0; i < val.Len(); i++ {
-			iv := val.Index(i)
-			if val.Index(i).Kind() == reflect.Interface || val.Index(i).Kind() == reflect.Ptr {
-				iv = iv.Elem()
+			for i := 0; i < val.Len(); i++ {
+				iv := val.Index(i)
+				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
+					iv = iv.Elem()
+				}
+				newenv.Define(stmt.Var, iv)
+				rv, err := Run(stmt.Stmts, newenv)
+				if err != nil {
+					if err == BreakError {
+						err = nil
+						break
+					}
+					if err == ContinueError {
+						err = nil
+						continue
+					}
+					if err == ReturnError {
+						return rv, err
+					}
+					return rv, NewError(stmt, err)
+				}
 			}
-			newenv.Define(stmt.Var, iv)
-			rv, err := Run(stmt.Stmts, newenv)
-			if err != nil {
-				if err == BreakError {
-					err = nil
+			return NilValue, nil
+		} else if val.Kind() == reflect.Chan {
+			newenv := env.NewEnv()
+			defer newenv.Destroy()
+
+			for {
+				iv, ok := val.Recv()
+				if !ok {
 					break
 				}
-				if err == ContinueError {
-					err = nil
-					continue
+				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
+					iv = iv.Elem()
 				}
-				if err == ReturnError {
-					return rv, err
+				newenv.Define(stmt.Var, iv)
+				rv, err := Run(stmt.Stmts, newenv)
+				if err != nil {
+					if err == BreakError {
+						err = nil
+						break
+					}
+					if err == ContinueError {
+						err = nil
+						continue
+					}
+					if err == ReturnError {
+						return rv, err
+					}
+					return rv, NewError(stmt, err)
 				}
-				return rv, NewError(stmt, err)
 			}
+			return NilValue, nil
+		} else {
+			return NilValue, NewStringError(stmt, "Invalid operation for non-array value")
 		}
-		return NilValue, nil
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
