@@ -4,6 +4,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"unicode"
 
 	"github.com/mattn/anko/ast"
 )
@@ -299,7 +300,7 @@ retry:
 
 // isLetter returns true if the rune is a letter for identity.
 func isLetter(ch rune) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+	return unicode.IsLetter(ch)
 }
 
 // isDigit returns true if the rune is a number.
