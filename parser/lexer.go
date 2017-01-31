@@ -266,7 +266,11 @@ retry:
 				tok = int(ch)
 				lit = string(ch)
 			}
-		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^', '\n':
+		case '\n':
+			s.next()
+			tok = int(ch)
+			lit = string(ch)
+		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^':
 			s.next()
 			if ch == '[' && s.peek() == ']' {
 				s.next()
