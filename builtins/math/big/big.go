@@ -16,7 +16,8 @@ func Import(env *vm.Env) *vm.Env {
 	m.Define("Jacobi", t.Jacobi)
 	m.Define("MaxBase", t.MaxBase)
 	m.Define("MaxExp", t.MaxExp)
-	m.Define("MaxPrec", t.MaxPrec)
+	// TODO https://github.com/mattn/anko/issues/49
+	//m.Define("MaxPrec", t.MaxPrec)
 	m.Define("MinExp", t.MinExp)
 	m.Define("NewFloat", t.NewFloat)
 	m.Define("NewInt", t.NewInt)
