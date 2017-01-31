@@ -267,7 +267,6 @@ retry:
 				lit = string(ch)
 			}
 		case '\n':
-			s.next()
 			tok = int(ch)
 			lit = string(ch)
 		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^':
