@@ -1493,7 +1493,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				lhs.Send(rhs)
 				return NilValue, nil
 			} else if rhs.Kind() == reflect.Chan {
-				rv, _ := rhs.Recv()
+				rv, ok := rhs.Recv()
+				if !ok {
+					return NilValue, NewErrorf(expr, "Failed to send to channel")
+				}
 				return invokeLetExpr(e.Lhs, rv, env)
 			}
 		}

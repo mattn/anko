@@ -252,6 +252,9 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("print", fmt.Print)
 	env.Define("println", fmt.Println)
 	env.Define("printf", fmt.Printf)
+	env.Define("close", func(e interface{}) {
+		reflect.ValueOf(e).Close()
+	})
 
 	env.DefineType("int64", int64(0))
 	env.DefineType("float64", float64(0.0))
