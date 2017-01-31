@@ -300,7 +300,7 @@ retry:
 
 // isLetter returns true if the rune is a letter for identity.
 func isLetter(ch rune) bool {
-	return unicode.IsLetter(ch)
+	return unicode.IsLetter(ch) || ch == '_'
 }
 
 // isDigit returns true if the rune is a number.
