@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
@@ -204,6 +205,10 @@ func Import(env *vm.Env) *vm.Env {
 		var result []string
 		toSlice(v, &result)
 		return result
+	})
+
+	env.Define("toDuration", func(v int64) time.Duration {
+		return time.Duration(v)
 	})
 
 	env.Define("typeOf", func(v interface{}) string {
