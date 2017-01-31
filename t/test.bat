@@ -2,6 +2,7 @@
 
 setlocal enabledelayedexpansion
 set DIR=%~dp0
+echo building...
 (cd %DIR%.. && go build)
 if !ERRORLEVEL! neq 0 goto error
 echo testing...
