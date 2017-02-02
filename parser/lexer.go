@@ -291,6 +291,8 @@ retry:
 			}
 		default:
 			err = fmt.Errorf(`syntax error "%s"`, string(ch))
+			tok = int(ch)
+			lit = string(ch)
 			return
 		}
 		s.next()

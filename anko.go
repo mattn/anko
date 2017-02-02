@@ -146,12 +146,12 @@ func main() {
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos.Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d:%d %s\n", source, e.Pos.Line, e.Pos.Column, err)
 				} else if e, ok := err.(*parser.Error); ok {
 					if e.Filename != "" {
 						source = e.Filename
 					}
-					fmt.Fprintf(os.Stderr, "%s:%d: %s\n", source, e.Pos.Line, err)
+					fmt.Fprintf(os.Stderr, "%s:%d:%d %s\n", source, e.Pos.Line, e.Pos.Column, err)
 				} else {
 					fmt.Fprintln(os.Stderr, err)
 				}
