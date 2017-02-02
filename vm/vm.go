@@ -841,7 +841,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() != reflect.Ptr {
 			return NilValue, NewStringError(expr, "Cannot deference for the value")
 		}
-		return v.Addr(), nil
+		return v.Elem(), nil
 	case *ast.AddrExpr:
 		v := NilValue
 		var err error
