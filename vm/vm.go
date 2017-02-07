@@ -1406,14 +1406,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						}
 					}
 				}
-				if f.Type().NumOut() == 1 {
+				if f.Type().NumOut() >= 1 {
 					ret = rets[0]
-				} else {
-					var result []interface{}
-					for _, r := range rets {
-						result = append(result, r.Interface())
-					}
-					ret = reflect.ValueOf(result)
 				}
 			}
 		}
