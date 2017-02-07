@@ -1180,9 +1180,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return rvs.Index(0), nil
 		}
 		return rvs, nil
-	//case *ast.NewExpr:
-	//	println("NEW")
-	//	return NilValue, nil
+	case *ast.NewExpr:
+		rt, err := env.Type(e.Type)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+		return reflect.New(rt), nil
 	case *ast.BinOpExpr:
 		lhsV := NilValue
 		rhsV := NilValue
@@ -1440,6 +1443,15 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return rhsV, NewError(expr, err)
 		}
 		return rhsV, nil
+	case *ast.MakeExpr:
+		rt, err := env.Type(e.Type)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+		if rt.Kind() == reflect.Map {
+			return reflect.MakeMap(reflect.MapOf(rt.Key(), rt.Elem())).Convert(rt), nil
+		}
+		return reflect.Zero(rt), nil
 	case *ast.MakeChanExpr:
 		typ, err := env.Type(e.Type)
 		if err != nil {

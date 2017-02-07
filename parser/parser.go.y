@@ -455,9 +455,9 @@ expr :
 		$$ = &ast.ParenExpr{SubExpr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| NEW IDENT '(' exprs ')'
+	| NEW '(' typ ')'
 	{
-		$$ = &ast.NewExpr{Name: $2.Lit, SubExprs: $4}
+		$$ = &ast.NewExpr{Type: $3.Name}
 		$$.SetPosition($1.Position())
 	}
 	| expr '+' expr
@@ -648,6 +648,11 @@ expr :
 	| expr '[' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$.SetPosition($1.Position())
+	}
+	| MAKE '(' typ ')'
+	{
+		$$ = &ast.MakeExpr{Type: $3.Name}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' CHAN typ ')'
