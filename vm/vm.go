@@ -1154,15 +1154,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 		rvs := reflect.ValueOf(vs)
-		if len(e.Lhss) > 1 && rvs.Len() == 1 {
-			item := rvs.Index(0)
-			if item.Kind() == reflect.Interface {
-				item = item.Elem()
-			}
-			if item.Kind() == reflect.Slice {
-				rvs = item
-			}
-		}
 		for i, lhs := range e.Lhss {
 			if i >= rvs.Len() {
 				break
@@ -1175,9 +1166,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return rvs, NewError(lhs, err)
 			}
-		}
-		if rvs.Len() == 1 {
-			return rvs.Index(0), nil
 		}
 		return rvs, nil
 	case *ast.NewExpr:
@@ -1406,11 +1394,15 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						}
 					}
 				}
-				var result []interface{}
-				for _, r := range rets {
-					result = append(result, r.Interface())
+				if f.Type().NumOut() == 1 {
+					ret = rets[0]
+				} else {
+					var result []interface{}
+					for _, r := range rets {
+						result = append(result, r.Interface())
+					}
+					ret = reflect.ValueOf(result)
 				}
-				ret = reflect.ValueOf(result)
 			}
 		}
 		if e.Go {
