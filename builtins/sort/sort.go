@@ -27,17 +27,17 @@ func (p ss) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func Import(env *vm.Env) *vm.Env {
 	m := env.NewPackage("sort")
-	m.Define("Ints", func(ints []interface{}) []interface{} {
-		s.Sort(is(ints))
-		return ints
+	m.Define("Ints", func(arr []interface{}) []interface{} {
+		s.Sort(is(arr))
+		return arr
 	})
-	m.Define("Float64s", func(ints []interface{}) []interface{} {
-		s.Sort(is(ints))
-		return ints
+	m.Define("Float64s", func(arr []interface{}) []interface{} {
+		s.Sort(fs(arr))
+		return arr
 	})
-	m.Define("Strings", func(ints []interface{}) []interface{} {
-		s.Sort(is(ints))
-		return ints
+	m.Define("Strings", func(arr []interface{}) []interface{} {
+		s.Sort(ss(arr))
+		return arr
 	})
 	return m
 }
