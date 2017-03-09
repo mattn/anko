@@ -1,0 +1,9 @@
+sort = import("sort")
+
+is([1,2,3], sort.Ints([3,1,2]), "sort.Ints")
+
+is([1.2,2.5,3.1], sort.Float64s([3.1,1.2,2.5]), "sort.Float64s")
+
+is(["bar","foo"], sort.Strings(["foo", "bar"]), "sort.Strings")
+
+# vim: set ft=anko:
