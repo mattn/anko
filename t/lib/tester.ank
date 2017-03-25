@@ -1,4 +1,6 @@
 var colortext = import("github.com/daviddengcn/go-colortext")
+var exec = import("os/exec")
+var regexp = import("regexp")
 
 count = func() {
   var n = 0
@@ -7,6 +9,14 @@ count = func() {
     return n
   }
 }()
+
+func go18later() {
+  out, err = exec.Command("go", "version").Output()
+  if err {
+    panic(err)
+  }
+  return !regexp.MustCompile("^go version go1\\.[567]").MatchString(toString(out))
+}
 
 func is(expect, got, name) {
   if (expect == got) {
@@ -35,6 +45,12 @@ func ok(expect, name) {
     colortext.ResetColor()
     throw name + ": expected " + expect + " but got " + got
   }
+}
+
+func msg(s) {
+  colortext.ChangeColor("magenta", true)
+  println(s)
+  colortext.ResetColor()
 }
 
 if (len(args) > 0) {
