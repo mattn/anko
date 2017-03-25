@@ -2,7 +2,6 @@
 package sort
 
 import (
-	"reflect"
 	s "sort"
 
 	"github.com/mattn/anko/vm"
@@ -44,19 +43,6 @@ func Import(env *vm.Env) *vm.Env {
 		}
 		return arr
 	})
-	m.Define("Strings", func(arr interface{}) interface{} {
-		if sarr, ok := arr.([]string); ok {
-			s.Strings(sarr)
-		} else {
-			s.Sort(ss(arr.([]interface{})))
-		}
-		return arr
-	})
-	m.Define("Slice", func(arr interface{}, less func(i, j int) reflect.Value) interface{} {
-		s.Slice(arr, func(ii, jj int) bool {
-			return less(ii, jj).Interface().(bool)
-		})
-		return arr
-	})
+	handleGo18(m)
 	return m
 }
