@@ -43,6 +43,14 @@ func Import(env *vm.Env) *vm.Env {
 		}
 		return arr
 	})
+	m.Define("Strings", func(arr interface{}) interface{} {
+		if sarr, ok := arr.([]string); ok {
+			s.Strings(sarr)
+		} else {
+			s.Sort(ss(arr.([]interface{})))
+		}
+		return arr
+	})
 	handleGo18(m)
 	return m
 }
