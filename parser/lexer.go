@@ -62,6 +62,7 @@ var opName = map[string]int{
 	"go":       GO,
 	"chan":     CHAN,
 	"make":     MAKE,
+	"struct":   STRUCT,
 }
 
 // Init resets code to scan.

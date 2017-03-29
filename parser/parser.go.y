@@ -22,6 +22,8 @@ import (
 %type<expr_pair> expr_pair
 %type<expr_pairs> expr_pairs
 %type<expr_idents> expr_idents
+%type<struct_field> struct_field
+%type<struct_fields> struct_fields
 
 %union{
 	compstmt               []ast.Stmt
@@ -43,9 +45,11 @@ import (
 	term                   ast.Token
 	terms                  ast.Token
 	opt_terms              ast.Token
+	struct_field           ast.StructField
+	struct_fields          []ast.StructField
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN ARRAYLIT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE STRUCT TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN ARRAYLIT
 
 %right '='
 %right '?' ':'
@@ -307,6 +311,10 @@ typ : IDENT
 	| typ '.' IDENT
 	{
 		$$ = ast.Type{Name: $1.Name + "." + $3.Lit}
+	}
+	| STRUCT '{' opt_terms struct_fields opt_terms '}'
+	{
+		$$ = ast.Type{Fields: $4}
 	}
 
 exprs :
@@ -684,6 +692,27 @@ expr :
 	{
 		$$ = &ast.ChanExpr{Rhs: $2}
 		$$.SetPosition($2.Position())
+	}
+
+struct_fields :
+	{
+		$$ = nil
+	}
+	| struct_field
+	{
+		$$ = []ast.StructField{$1}
+	}
+	| struct_fields opt_terms struct_field
+	{
+		$$ = append($1, $3)
+	}
+
+struct_field : IDENT typ
+	{
+		$$ = ast.StructField{
+			Name: $1.Lit,
+			Type: $2.Name,
+		}
 	}
 
 opt_terms : /* none */

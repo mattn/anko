@@ -183,7 +183,14 @@ type ChanExpr struct {
 }
 
 type Type struct {
+	Name   string
+	Fields []StructField
+}
+
+type StructField struct {
+	ExprImpl
 	Name string
+	Type string
 }
 
 type MakeExpr struct {
