@@ -3,17 +3,14 @@
 package sort
 
 import (
-	"reflect"
 	s "sort"
 
 	"github.com/mattn/anko/vm"
 )
 
 func handleGo18(m *vm.Env) {
-	m.Define("Slice", func(arr interface{}, less func(i, j int) reflect.Value) interface{} {
-		s.Slice(arr, func(ii, jj int) bool {
-			return less(ii, jj).Interface().(bool)
-		})
+	m.Define("Slice", func(arr interface{}, less func(i, j int) bool) interface{} {
+		s.Slice(arr, less)
 		return arr
 	})
 }

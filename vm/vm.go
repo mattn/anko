@@ -1329,7 +1329,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 									}()
 									return []reflect.Value{}
 								}
-								return rfunc.Call(args)[:it.NumOut()]
+								var rets []reflect.Value
+								for _, v := range rfunc.Call(args)[:it.NumOut()] {
+									rets = append(rets, v.Interface().(reflect.Value))
+								}
+								return rets
 							})
 						}
 					} else if !arg.IsValid() {
