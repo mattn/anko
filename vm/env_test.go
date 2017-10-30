@@ -2,6 +2,7 @@ package vm
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 )
 
@@ -102,16 +103,286 @@ func TestDefineType(t *testing.T) {
 	}
 }
 
-func TestEnvRaces(t *testing.T) {
+func TestEnvRaces1(t *testing.T) {
+	// Test creating same variable in parallel
+
+	env := NewEnv()
+
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(5)
+
+	go func() {
+		<-waitChan
+		err := env.Define("a", "a")
+		if err != nil {
+			t.Fatalf("Unable to Define a, a")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, a")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("a", "b")
+		if err != nil {
+			t.Fatalf("Unable to Define a, b")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, b")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("a", "c")
+		if err != nil {
+			t.Fatalf("Unable to Define a, c")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, c")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("a", "d")
+		if err != nil {
+			t.Fatalf("Unable to Define a, d")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, d")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("a", "e")
+		if err != nil {
+			t.Fatalf("Unable to Define a, e")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, e")
+		}
+		waitGroup.Done()
+	}()
+
+	close(waitChan)
+	waitGroup.Wait()
+
+	_, err := env.Get("a")
+	if err != nil {
+		t.Fatalf("Unable to get value for a")
+	}
+}
+
+func TestEnvRaces2(t *testing.T) {
+	// Test creating different variables in parallel
+
+	env := NewEnv()
+
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(5)
+
+	go func() {
+		<-waitChan
+		err := env.Define("a", "a")
+		if err != nil {
+			t.Fatalf("Unable to Define a, a")
+		}
+		_, err = env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, a")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("b", "b")
+		if err != nil {
+			t.Fatalf("Unable to Define b, b")
+		}
+		_, err = env.Get("b")
+		if err != nil {
+			t.Fatalf("Unable to get value for b, b")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("c", "c")
+		if err != nil {
+			t.Fatalf("Unable to Define c, c")
+		}
+		_, err = env.Get("c")
+		if err != nil {
+			t.Fatalf("Unable to get value for c, c")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("d", "d")
+		if err != nil {
+			t.Fatalf("Unable to Define d, d")
+		}
+		_, err = env.Get("d")
+		if err != nil {
+			t.Fatalf("Unable to get value for d, d")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		err := env.Define("e", "e")
+		if err != nil {
+			t.Fatalf("Unable to Define e, e")
+		}
+		_, err = env.Get("e")
+		if err != nil {
+			t.Fatalf("Unable to get value for e, e")
+		}
+		waitGroup.Done()
+	}()
+
+	close(waitChan)
+	waitGroup.Wait()
+
+	_, err := env.Get("a")
+	if err != nil {
+		t.Fatalf("Unable to get value for a")
+	}
+	_, err = env.Get("b")
+	if err != nil {
+		t.Fatalf("Unable to get value for b")
+	}
+	_, err = env.Get("c")
+	if err != nil {
+		t.Fatalf("Unable to get value for c")
+	}
+	_, err = env.Get("d")
+	if err != nil {
+		t.Fatalf("Unable to get value for d")
+	}
+	_, err = env.Get("e")
+	if err != nil {
+		t.Fatalf("Unable to get value for e")
+	}
+}
+
+func TestEnvRaces3(t *testing.T) {
+	// Test reading different variables in parallel
+
+	env := NewEnv()
+
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(5)
+
+	err := env.Define("a", "a")
+	if err != nil {
+		t.Fatalf("Unable to Define a, a")
+	}
+	err = env.Define("b", "b")
+	if err != nil {
+		t.Fatalf("Unable to Define b, b")
+	}
+	err = env.Define("c", "c")
+	if err != nil {
+		t.Fatalf("Unable to Define c, c")
+	}
+	err = env.Define("d", "d")
+	if err != nil {
+		t.Fatalf("Unable to Define d, d")
+	}
+	err = env.Define("e", "e")
+	if err != nil {
+		t.Fatalf("Unable to Define e, e")
+	}
+
+	go func() {
+		<-waitChan
+		_, err := env.Get("a")
+		if err != nil {
+			t.Fatalf("Unable to get value for a, a")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		_, err := env.Get("b")
+		if err != nil {
+			t.Fatalf("Unable to get value for b, b")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		_, err := env.Get("c")
+		if err != nil {
+			t.Fatalf("Unable to get value for c, c")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		_, err := env.Get("d")
+		if err != nil {
+			t.Fatalf("Unable to get value for d, d")
+		}
+		waitGroup.Done()
+	}()
+	go func() {
+		<-waitChan
+		_, err := env.Get("e")
+		if err != nil {
+			t.Fatalf("Unable to get value for e, e")
+		}
+		waitGroup.Done()
+	}()
+
+	close(waitChan)
+	waitGroup.Wait()
+
+	_, err = env.Get("a")
+	if err != nil {
+		t.Fatalf("Unable to get value for a")
+	}
+	_, err = env.Get("b")
+	if err != nil {
+		t.Fatalf("Unable to get value for b")
+	}
+	_, err = env.Get("c")
+	if err != nil {
+		t.Fatalf("Unable to get value for c")
+	}
+	_, err = env.Get("d")
+	if err != nil {
+		t.Fatalf("Unable to get value for d")
+	}
+	_, err = env.Get("e")
+	if err != nil {
+		t.Fatalf("Unable to get value for e")
+	}
+}
+
+func TestEnvRaces4(t *testing.T) {
 	// Create env
 	env := NewEnv()
 
-	// Define some values in parallel
-	go env.Define("foo", "bar")
-	go env.Define("bar", "foo")
-	go env.Define("one", "two")
-	go env.Define("hello", "there")
-	go env.Define("hey", "ho")
+	// Define some values
+	env.Define("foo", "bar")
+	env.Define("bar", "foo")
+	env.Define("one", "two")
+	env.Define("hello", "there")
+	env.Define("hey", "ho")
 
 	// Get some values in parallel
 	go func(env *Env, t *testing.T) {
