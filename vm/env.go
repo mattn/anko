@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/mattn/anko/parser"
+	"github.com/mohae/deepcopy"
 )
 
 // Env provides interface to run VM. This mean function scope and blocked-scope.
@@ -255,4 +256,18 @@ func (e *Env) Execute(src string) (reflect.Value, error) {
 		return NilValue, err
 	}
 	return Run(stmts, e)
+}
+
+// Copy makes a deep copy of the scope
+func (e *Env) Copy() *Env {
+	b := false
+	envCopy := deepcopy.Copy(e.env).(map[string]reflect.Value)
+	typCopy := deepcopy.Copy(e.typ).(map[string]reflect.Type)
+	c := Env{
+		env:       envCopy,
+		typ:       typCopy,
+		parent:    nil,
+		interrupt: &b,
+	}
+	return &c
 }
