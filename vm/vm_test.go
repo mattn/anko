@@ -41,14 +41,15 @@ println("<this should not be printed>")
 	}()
 
 	_, err = Run(stmts, env)
-	if err != nil {
+	if err != InterruptError {
 		log.Fatal()
 	}
 }
 
 func TestInterruptRaces(t *testing.T) {
-	// Run example several times
+	// Run testInterrupt many times
 	for i := 0; i < 100; i++ {
 		go testInterrupt()
 	}
+	time.Sleep(3 * time.Second)
 }

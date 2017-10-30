@@ -9,6 +9,27 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
+func ExamplePrintHelloWorld() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+println("Hello World :)")
+`
+
+	// Execute script
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("Run error: %v\n", err)
+	}
+
+	// output: Hello World :)
+}
+
 func ExampleInterrupt() {
 	env := vm.NewEnv()
 
@@ -29,9 +50,10 @@ sleep("2s")
 # The next line will not be executed.
 println("<this should not be printed>")
 `
+
 	stmts, err := parser.ParseSrc(script)
 	if err != nil {
-		log.Fatal()
+		log.Fatalf("ParseSrc error: %v\n", err)
 	}
 
 	// Interrupts after 1 second.
@@ -42,7 +64,8 @@ println("<this should not be printed>")
 
 	// Run script
 	v, err := vm.Run(stmts, env)
+
 	fmt.Println(v, err)
-	// output:
-	// <nil> Execution interrupted
+
+	// output: <nil> Execution interrupted
 }
