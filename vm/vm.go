@@ -1091,7 +1091,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					return v, err
 				}
 				if v.Kind() == reflect.Float64 {
-					v = reflect.ValueOf(toFloat64(v) + 1.0)
+					v = reflect.ValueOf(v.Float() + 1.0)
+				} else if v.Kind() == reflect.Int64 {
+					v = reflect.ValueOf(v.Int() + 1)
 				} else {
 					v = reflect.ValueOf(toInt64(v) + 1)
 				}
@@ -1107,7 +1109,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					return v, err
 				}
 				if v.Kind() == reflect.Float64 {
-					v = reflect.ValueOf(toFloat64(v) - 1.0)
+					v = reflect.ValueOf(v.Float() - 1.0)
+				} else if v.Kind() == reflect.Int64 {
+					v = reflect.ValueOf(v.Int() - 1)
 				} else {
 					v = reflect.ValueOf(toInt64(v) - 1)
 				}
@@ -1255,7 +1259,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return lhsV, nil
 		case "**":
 			if lhsV.Kind() == reflect.Float64 {
-				return reflect.ValueOf(math.Pow(toFloat64(lhsV), toFloat64(rhsV))), nil
+				return reflect.ValueOf(math.Pow(lhsV.Float(), toFloat64(rhsV))), nil
 			}
 			return reflect.ValueOf(int64(math.Pow(toFloat64(lhsV), toFloat64(rhsV)))), nil
 		case ">>":
