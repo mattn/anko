@@ -1,473 +1,853 @@
 package vm
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 	"testing"
 )
 
-func TestGet(t *testing.T) {
+func TestExecuteError(t *testing.T) {
 	env := NewEnv()
-	env.Define("foo", "bar")
-
-	v, err := env.Get("foo")
-	if err != nil {
-		t.Fatalf(`Can't Get value for "foo"`)
-	}
-	if v.Kind() != reflect.String {
-		t.Fatalf(`Can't Get string value for "foo"`)
-	}
-	if v.String() != "bar" {
-		t.Fatalf("Expected %v, but %v:", "bar", v.String())
+	script := "a]]"
+	_, err := env.Execute(script)
+	if err == nil {
+		t.Errorf("Execute error - received: %v expected: %v", err, fmt.Errorf("syntax error"))
+	} else if err.Error() != "syntax error" {
+		t.Errorf("Execute error - received: %v expected: %v", err, fmt.Errorf("syntax error"))
 	}
 }
 
-func TestDefine(t *testing.T) {
-	env := NewEnv()
-	env.Define("foo", "bar")
-	sub := env.NewEnv()
+func TestSetError(t *testing.T) {
+	envParent := NewEnv()
+	envChild := envParent.NewEnv()
+	err := envChild.Set("a", "a")
+	if err == nil {
+		t.Errorf("Set error - received: %v expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
+	} else if err.Error() != "Unknown symbol 'a'" {
+		t.Errorf("Set error - received: %v expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
+	}
+}
 
-	v, err := sub.Get("foo")
-	if err != nil {
-		t.Fatalf(`Can't Get value for "foo"`)
+func TestAddrError(t *testing.T) {
+	envParent := NewEnv()
+	envChild := envParent.NewEnv()
+	_, err := envChild.Addr("a")
+	if err == nil {
+		t.Errorf("Addr error - received: %v expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
+	} else if err.Error() != "Undefined symbol 'a'" {
+		t.Errorf("Addr error - received: %v expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
 	}
-	if v.Kind() != reflect.String {
-		t.Fatalf(`Can't Get string value for "foo"`)
+}
+
+func TestDefineAndGet(t *testing.T) {
+	var err error
+	var value reflect.Value
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		varGetValue    interface{}
+		varKind        reflect.Kind
+		defineError    error
+		getError       error
+	}{
+		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
+		{testInfo: " int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16, defineError: nil, getError: nil},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32, defineError: nil, getError: nil},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32, defineError: nil, getError: nil},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64, defineError: nil, getError: nil},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32, defineError: nil, getError: nil},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: (*interface{})(nil), varKind: reflect.Ptr, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
 	}
-	if v.String() != "bar" {
-		t.Fatalf("Expected %v, but %v:", "bar", v.String())
+
+	// DefineAndGet
+	for _, test := range tests {
+		env := NewEnv()
+
+		err = env.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineAndGet %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineAndGet %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = env.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineAndGet %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineAndGet %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		env.Destroy()
 	}
+
+	// DefineAndGet NewPackage
+	for _, test := range tests {
+		env := NewPackage("package")
+
+		err = env.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = env.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineAndGet NewPackage %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineAndGet NewPackage %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		if env.GetName() != "package" {
+			t.Errorf("DefineAndGet NewPackage %v - GetName check - received %#v expected: %#v", test.testInfo, env.GetName(), "package")
+		}
+		if env.String() != "package" {
+			t.Errorf("DefineAndGet NewPackage %v - String check - received %#v expected: %#v", test.testInfo, env.GetName(), "package")
+		}
+
+		env.Destroy()
+	}
+
+	// DefineAndGet NewEnv
+	for _, test := range tests {
+		envParent := NewEnv()
+		envChild := envParent.NewEnv()
+
+		err = envParent.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = envChild.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineAndGet NewEnv %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineAndGet NewEnv %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		envChild.Destroy()
+	}
+
+	// DefineAndGet DefineGlobal
+	for _, test := range tests {
+		envParent := NewEnv()
+		envChild := envParent.NewEnv()
+
+		err = envChild.DefineGlobal(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = envParent.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineAndGet DefineGlobal %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineAndGet DefineGlobal %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		envParent.Destroy()
+	}
+
 }
 
 func TestDefineModify(t *testing.T) {
-	env := NewEnv()
-	env.Define("foo", "bar")
-	sub := env.NewEnv()
-	sub.Define("foo", true)
+	var err error
+	var value reflect.Value
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		varGetValue    interface{}
+		varKind        reflect.Kind
+		defineError    error
+		getError       error
+	}{
+		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+	}
+	changeTests := []struct {
+		varDefineValue interface{}
+		varGetValue    interface{}
+		varKind        reflect.Kind
+		defineError    error
+		getError       error
+	}{
+		{varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
+		{varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
+		{varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
+		{varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+	}
 
-	v, err := sub.Get("foo")
-	if err != nil {
-		t.Fatalf(`Can't Get value for "foo"`)
-	}
-	if v.Kind() != reflect.Bool {
-		t.Fatalf(`Can't Get bool value for "foo"`)
-	}
-	if v.Bool() != true {
-		t.Fatalf("Expected %v, but %v:", true, v.Bool())
+	// DefineModify
+	for _, test := range tests {
+		env := NewEnv()
+
+		err = env.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineModify %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineModify %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = env.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineModify %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineModify %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineModify %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineModify %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		// DefineModify changeTest
+		for _, changeTest := range changeTests {
+			err = env.Set(test.varName, changeTest.varDefineValue)
+			if err != nil && changeTest.defineError != nil {
+				if err.Error() != changeTest.defineError.Error() {
+					t.Errorf("DefineModify changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					continue
+				}
+			} else if err != changeTest.defineError {
+				t.Errorf("DefineModify changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				continue
+			}
+
+			value, err = env.Get(test.varName)
+			if err != nil && changeTest.getError != nil {
+				if err.Error() != changeTest.getError.Error() {
+					t.Errorf("DefineModify changeTest  %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					continue
+				}
+			} else if err != changeTest.getError {
+				t.Errorf("DefineModify changeTest  %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				continue
+			}
+			if value.Kind() != changeTest.varKind {
+				t.Errorf("DefineModify changeTest  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
+				continue
+			}
+			if value.Interface() != changeTest.varGetValue {
+				t.Errorf("DefineModify changeTest  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			}
+		}
+
+		env.Destroy()
 	}
 
-	v, err = env.Get("foo")
-	if err != nil {
-		t.Fatalf(`Can't Get value for "foo"`)
+	// DefineModify envParent
+	for _, test := range tests {
+		envParent := NewEnv()
+		envChild := envParent.NewEnv()
+
+		err = envParent.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineModify envParent %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineModify envParent %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = envChild.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineModify envParent  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineModify envParent  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineModify envParent  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineModify envParent  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		for _, changeTest := range changeTests {
+			err = envParent.Set(test.varName, changeTest.varDefineValue)
+			if err != nil && changeTest.defineError != nil {
+				if err.Error() != changeTest.defineError.Error() {
+					t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					continue
+				}
+			} else if err != changeTest.defineError {
+				t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				continue
+			}
+
+			value, err = envChild.Get(test.varName)
+			if err != nil && changeTest.getError != nil {
+				if err.Error() != changeTest.getError.Error() {
+					t.Errorf("DefineModify envParent changeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					continue
+				}
+			} else if err != changeTest.getError {
+				t.Errorf("ChanDefineModify envParent changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				continue
+			}
+			if value.Kind() != changeTest.varKind {
+				t.Errorf("DefineModify envParent changeTest %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
+				continue
+			}
+			if value.Interface() != changeTest.varGetValue {
+				t.Errorf("DefineModify envParent changeTest %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			}
+		}
+
+		envChild.Destroy()
 	}
-	if v.Kind() != reflect.String {
-		t.Fatalf(`Can't Get string value for "foo"`)
-	}
-	if v.String() != "bar" {
-		t.Fatalf("Expected %v, but %v:", "bar", v.String())
+
+	// DefineModify envChild
+	for _, test := range tests {
+		envParent := NewEnv()
+		envChild := envParent.NewEnv()
+
+		err = envParent.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineModify envChild %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineModify envChild %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		value, err = envChild.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("DefineModify envChild  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("DefineModify envChild  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value.Kind() != test.varKind {
+			t.Errorf("DefineModify envChild  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
+			continue
+		}
+		if value.Interface() != test.varGetValue {
+			t.Errorf("DefineModify envChild  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		}
+
+		for _, changeTest := range changeTests {
+			err = envChild.Set(test.varName, changeTest.varDefineValue)
+			if err != nil && changeTest.defineError != nil {
+				if err.Error() != changeTest.defineError.Error() {
+					t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					continue
+				}
+			} else if err != changeTest.defineError {
+				t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				continue
+			}
+
+			value, err = envChild.Get(test.varName)
+			if err != nil && changeTest.getError != nil {
+				if err.Error() != changeTest.getError.Error() {
+					t.Errorf("DefineModify envChild changeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					continue
+				}
+			} else if err != changeTest.getError {
+				t.Errorf("ChanDefineModify envChild changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				continue
+			}
+			if value.Kind() != changeTest.varKind {
+				t.Errorf("DefineModify envChild changeTest %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
+				continue
+			}
+			if value.Interface() != changeTest.varGetValue {
+				t.Errorf("DefineModify envChild changeTest %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			}
+		}
+
+		envChild.Destroy()
 	}
 }
 
 func TestDefineType(t *testing.T) {
-	env := NewEnv()
-	env.DefineType("int", int(0))
-	sub := env.NewEnv()
-	sub.DefineType("str", "")
-	pkg := env.NewPackage("pkg")
-	pkg.DefineType("Bool", true)
+	var err error
+	var valueType reflect.Type
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		defineError    error
+		typeError      error
+	}{
+		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: nil},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: nil},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: nil},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, typeError: nil},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), defineError: nil, typeError: nil},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), defineError: nil, typeError: nil},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), defineError: nil, typeError: nil},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, typeError: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, typeError: nil},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: (*interface{})(nil), defineError: fmt.Errorf("Unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+	}
 
-	for _, e := range []*Env{env, sub, pkg} {
-		typ, err := e.Type("int")
-		if err != nil {
-			t.Fatalf(`Can't get Type for "int"`)
-		}
-		if typ.Kind() != reflect.Int {
-			t.Fatalf(`Can't get int Type for "int"`)
+	// DefineType
+	for _, test := range tests {
+		env := NewEnv()
+
+		err = env.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineType %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineType %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
 		}
 
-		typ, err = e.Type("str")
-		if err != nil {
-			t.Fatalf(`Can't get Type for "str"`)
+		valueType, err = env.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineType %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineType %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			continue
 		}
-		if typ.Kind() != reflect.String {
-			t.Fatalf(`Can't get string Type for "str"`)
+		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineType %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
-		typ, err = e.Type("pkg.Bool")
-		if err != nil {
-			t.Fatalf(`Can't get Type for "pkg.Bool"`)
+		env.Destroy()
+	}
+
+	// DefineType NewEnv
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = envParent.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineType NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineType NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
 		}
-		if typ.Kind() != reflect.Bool {
-			t.Fatalf(`Can't get bool Type for "pkg.Bool"`)
+
+		valueType, err = envChild.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineType NewEnv %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineType NewEnv %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			continue
 		}
+		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineType NewEnv %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+		envChild.Destroy()
+	}
+
+	// DefineType NewPackage
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewPackage("child")
+
+		err = envParent.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineType NewPackage  %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineType NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		valueType, err = envChild.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineType NewPackage %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineType NewPackage %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineType NewPackage %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		envChild.Destroy()
+	}
+
+	// DefineType NewModule
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewModule("child")
+
+		err = envParent.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineType NewModule %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineType NewModule %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		valueType, err = envChild.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineType NewModule %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineType NewModule %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineType NewModule %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		envChild.Destroy()
 	}
 }
 
-func TestEnvRaces1(t *testing.T) {
+func TestDefineTypeFail(t *testing.T) {
+	var err error
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		defineError    error
+		typeError      error
+	}{
+		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+	}
+
+	// DefineTypeFail
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = envChild.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("TestDefineTypeFail %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("TestDefineTypeFail %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		_, err = envParent.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("TestDefineTypeFail %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("TestDefineTypeFail %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+		}
+
+		envChild.Destroy()
+	}
+}
+
+func TestAddr(t *testing.T) {
+	var err error
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		defineError    error
+		addrError      error
+	}{
+		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, addrError: fmt.Errorf("Unaddressable")},
+	}
+
+	// TestAddr
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = envParent.Define(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("TestAddr %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("TestAddr %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		_, err = envChild.Addr(test.varName)
+		if err != nil && test.addrError != nil {
+			if err.Error() != test.addrError.Error() {
+				t.Errorf("TestAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+				continue
+			}
+		} else if err != test.addrError {
+			t.Errorf("TestAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+			continue
+		}
+
+		envChild.Destroy()
+	}
+}
+
+func TestRaceCreateSameVariable(t *testing.T) {
 	// Test creating same variable in parallel
 
-	env := NewEnv()
-
 	waitChan := make(chan struct{}, 1)
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(5)
 
-	go func() {
-		<-waitChan
-		err := env.Define("a", "a")
-		if err != nil {
-			t.Fatalf("Unable to Define a, a")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, a")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("a", "b")
-		if err != nil {
-			t.Fatalf("Unable to Define a, b")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, b")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("a", "c")
-		if err != nil {
-			t.Fatalf("Unable to Define a, c")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, c")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("a", "d")
-		if err != nil {
-			t.Fatalf("Unable to Define a, d")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, d")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("a", "e")
-		if err != nil {
-			t.Fatalf("Unable to Define a, e")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, e")
-		}
-		waitGroup.Done()
-	}()
+	env := NewEnv()
+
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(i int) {
+			<-waitChan
+			err := env.Define("a", i)
+			if err != nil {
+				t.Errorf("Define error: %v", err)
+			}
+			_, err = env.Get("a")
+			if err != nil {
+				t.Errorf("Get error: %v", err)
+			}
+			waitGroup.Done()
+		}(i)
+	}
 
 	close(waitChan)
 	waitGroup.Wait()
 
 	_, err := env.Get("a")
 	if err != nil {
-		t.Fatalf("Unable to get value for a")
+		t.Error("Get error: %v", err)
 	}
 }
 
-func TestEnvRaces2(t *testing.T) {
+func TestRaceCreateDifferentVariables(t *testing.T) {
 	// Test creating different variables in parallel
 
-	env := NewEnv()
-
 	waitChan := make(chan struct{}, 1)
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(5)
 
-	go func() {
-		<-waitChan
-		err := env.Define("a", "a")
-		if err != nil {
-			t.Fatalf("Unable to Define a, a")
-		}
-		_, err = env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, a")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("b", "b")
-		if err != nil {
-			t.Fatalf("Unable to Define b, b")
-		}
-		_, err = env.Get("b")
-		if err != nil {
-			t.Fatalf("Unable to get value for b, b")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("c", "c")
-		if err != nil {
-			t.Fatalf("Unable to Define c, c")
-		}
-		_, err = env.Get("c")
-		if err != nil {
-			t.Fatalf("Unable to get value for c, c")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("d", "d")
-		if err != nil {
-			t.Fatalf("Unable to Define d, d")
-		}
-		_, err = env.Get("d")
-		if err != nil {
-			t.Fatalf("Unable to get value for d, d")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		err := env.Define("e", "e")
-		if err != nil {
-			t.Fatalf("Unable to Define e, e")
-		}
-		_, err = env.Get("e")
-		if err != nil {
-			t.Fatalf("Unable to get value for e, e")
-		}
-		waitGroup.Done()
-	}()
+	env := NewEnv()
+
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(i int) {
+			<-waitChan
+			err := env.Define(fmt.Sprint(i), i)
+			if err != nil {
+				t.Errorf("Define error: %v", err)
+			}
+			_, err = env.Get(fmt.Sprint(i))
+			if err != nil {
+				t.Errorf("Get error: %v", err)
+			}
+			waitGroup.Done()
+		}(i)
+	}
 
 	close(waitChan)
 	waitGroup.Wait()
 
-	_, err := env.Get("a")
-	if err != nil {
-		t.Fatalf("Unable to get value for a")
-	}
-	_, err = env.Get("b")
-	if err != nil {
-		t.Fatalf("Unable to get value for b")
-	}
-	_, err = env.Get("c")
-	if err != nil {
-		t.Fatalf("Unable to get value for c")
-	}
-	_, err = env.Get("d")
-	if err != nil {
-		t.Fatalf("Unable to get value for d")
-	}
-	_, err = env.Get("e")
-	if err != nil {
-		t.Fatalf("Unable to get value for e")
+	for i := 0; i < 100; i++ {
+		_, err := env.Get(fmt.Sprint(i))
+		if err != nil {
+			t.Errorf("Get error: %v", err)
+		}
 	}
 }
 
-func TestEnvRaces3(t *testing.T) {
+func TestRaceReadDifferentVariables(t *testing.T) {
 	// Test reading different variables in parallel
-
-	env := NewEnv()
 
 	waitChan := make(chan struct{}, 1)
 	var waitGroup sync.WaitGroup
-	waitGroup.Add(5)
 
-	err := env.Define("a", "a")
-	if err != nil {
-		t.Fatalf("Unable to Define a, a")
-	}
-	err = env.Define("b", "b")
-	if err != nil {
-		t.Fatalf("Unable to Define b, b")
-	}
-	err = env.Define("c", "c")
-	if err != nil {
-		t.Fatalf("Unable to Define c, c")
-	}
-	err = env.Define("d", "d")
-	if err != nil {
-		t.Fatalf("Unable to Define d, d")
-	}
-	err = env.Define("e", "e")
-	if err != nil {
-		t.Fatalf("Unable to Define e, e")
+	env := NewEnv()
+
+	for i := 0; i < 100; i++ {
+		err := env.Define(fmt.Sprint(i), i)
+		if err != nil {
+			t.Errorf("Define error: %v", err)
+		}
+		_, err = env.Get(fmt.Sprint(i))
+		if err != nil {
+			t.Errorf("Get error: %v", err)
+		}
 	}
 
-	go func() {
-		<-waitChan
-		_, err := env.Get("a")
-		if err != nil {
-			t.Fatalf("Unable to get value for a, a")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		_, err := env.Get("b")
-		if err != nil {
-			t.Fatalf("Unable to get value for b, b")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		_, err := env.Get("c")
-		if err != nil {
-			t.Fatalf("Unable to get value for c, c")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		_, err := env.Get("d")
-		if err != nil {
-			t.Fatalf("Unable to get value for d, d")
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		<-waitChan
-		_, err := env.Get("e")
-		if err != nil {
-			t.Fatalf("Unable to get value for e, e")
-		}
-		waitGroup.Done()
-	}()
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(i int) {
+			<-waitChan
+			_, err := env.Get(fmt.Sprint(i))
+			if err != nil {
+				t.Errorf("Get error: %v", err)
+			}
+			waitGroup.Done()
+		}(i)
+	}
+
+	close(waitChan)
+	waitGroup.Wait()
+}
+
+func TestRaceSetSameVariable(t *testing.T) {
+	// Test setting same variable in parallel
+
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+
+	env := NewEnv()
+
+	err := env.Define("a", 0)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	_, err = env.Get("a")
+	if err != nil {
+		t.Errorf("Get error: %v", err)
+	}
+
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(i int) {
+			<-waitChan
+			err := env.Set("a", i)
+			if err != nil {
+				t.Errorf("Set error: %v", err)
+			}
+			waitGroup.Done()
+		}(i)
+	}
 
 	close(waitChan)
 	waitGroup.Wait()
 
 	_, err = env.Get("a")
 	if err != nil {
-		t.Fatalf("Unable to get value for a")
+		t.Error("Get error: %v", err)
 	}
-	_, err = env.Get("b")
-	if err != nil {
-		t.Fatalf("Unable to get value for b")
-	}
-	_, err = env.Get("c")
-	if err != nil {
-		t.Fatalf("Unable to get value for c")
-	}
-	_, err = env.Get("d")
-	if err != nil {
-		t.Fatalf("Unable to get value for d")
-	}
-	_, err = env.Get("e")
-	if err != nil {
-		t.Fatalf("Unable to get value for e")
-	}
-}
-
-func TestEnvRaces4(t *testing.T) {
-	// Create env
-	env := NewEnv()
-
-	// Define some values
-	env.Define("foo", "bar")
-	env.Define("bar", "foo")
-	env.Define("one", "two")
-	env.Define("hello", "there")
-	env.Define("hey", "ho")
-
-	// Get some values in parallel
-	go func(env *Env, t *testing.T) {
-		_, err := env.Get("foo")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "foo"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		_, err := env.Get("bar")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "bar"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		_, err := env.Get("one")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "one"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		_, err := env.Get("hello")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "hello"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		_, err := env.Get("hey")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "hey"`)
-		}
-	}(env, t)
-
-	// Get subs
-	go func(env *Env, t *testing.T) {
-		sub := env.NewEnv()
-
-		_, err := sub.Get("foo")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "foo"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		sub := env.NewEnv()
-
-		_, err := sub.Get("one")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "one"`)
-		}
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		sub := env.NewEnv()
-
-		_, err := sub.Get("bar")
-		if err != nil {
-			t.Fatalf(`Can't Get value for "bar"`)
-		}
-	}(env, t)
-
-	// Define some types
-	go env.DefineType("int", int(0))
-	go env.DefineType("str", "")
-
-	// Define packages
-	go func(env *Env, t *testing.T) {
-		pkg := env.NewPackage("pkg")
-		pkg.DefineType("Bool", true)
-	}(env, t)
-
-	go func(env *Env, t *testing.T) {
-		pkg := env.NewPackage("pkg2")
-		pkg.DefineType("Bool", true)
-	}(env, t)
-
-	// Get some types
-	go env.Type("int")
-	go env.Type("str")
-	go env.Type("int")
-	go env.Type("str")
-	go env.Type("int")
-	go env.Type("str")
 }

@@ -115,7 +115,11 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 	defer e.RUnlock()
 
 	if v, ok := e.env[k]; ok {
-		return v.Addr(), nil
+		if v.CanAddr() {
+			return v.Addr(), nil
+		} else {
+			return NilValue, fmt.Errorf("Unaddressable")
+		}
 	}
 	if e.parent == nil {
 		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
