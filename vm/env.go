@@ -260,13 +260,17 @@ func (e *Env) Execute(src string) (reflect.Value, error) {
 
 // Copy makes a deep copy of the scope
 func (e *Env) Copy() *Env {
-	b := false
 	envCopy := deepcopy.Copy(e.env).(map[string]reflect.Value)
 	typCopy := deepcopy.Copy(e.typ).(map[string]reflect.Type)
+	var parentCopy *Env
+	if e.parent != nil {
+		parentCopy = e.parent.Copy()
+	}
+	b := false
 	c := Env{
 		env:       envCopy,
 		typ:       typCopy,
-		parent:    nil,
+		parent:    parentCopy,
 		interrupt: &b,
 	}
 	return &c
