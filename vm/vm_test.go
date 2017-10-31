@@ -2,54 +2,63 @@ package vm
 
 import (
 	"fmt"
-	"log"
+	"sync"
 	"testing"
 	"time"
-
-	"github.com/mattn/anko/parser"
 )
 
-func testInterrupt() {
+func testInterrupt(t *testing.T) {
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+	waitChan := make(chan struct{}, 1)
+
 	env := NewEnv()
+	sleepMillisecond := func() { time.Sleep(time.Millisecond) }
 
-	var sleepFunc = func(spec string) {
-		if d, err := time.ParseDuration(spec); err != nil {
-			panic(err)
-		} else {
-			time.Sleep(d)
-		}
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
 	}
-
-	env.Define("println", fmt.Println)
-	env.Define("sleep", sleepFunc)
+	err = env.Define("sleep", sleepMillisecond)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
 
 	script := `
-sleep("2s")
-# Should interrupt here.
-# The next line will not be executed.
-println("<this should not be printed>")
+# sleep for 10 seconds
+for i = 0; i < 10000; i++ {
+	sleep()
+}
+# Should interrupt before printing the next line
+println("this line should not be printed")
 `
-	stmts, err := parser.ParseSrc(script)
-	if err != nil {
-		log.Fatal()
-	}
 
-	// Interrupts after 1 second.
 	go func() {
-		time.Sleep(time.Second)
-		Interrupt(env)
+		close(waitChan)
+		_, err := env.Execute(script)
+		if err == nil {
+			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+		} else if err.Error() != InterruptError.Error() {
+			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+		}
+		waitGroup.Done()
 	}()
 
-	_, err = Run(stmts, env)
-	if err != InterruptError {
-		log.Fatal()
-	}
+	<-waitChan
+	Interrupt(env)
+
+	waitGroup.Wait()
 }
 
 func TestInterruptRaces(t *testing.T) {
 	// Run testInterrupt many times
+	var waitGroup sync.WaitGroup
 	for i := 0; i < 100; i++ {
-		go testInterrupt()
+		waitGroup.Add(1)
+		go func() {
+			testInterrupt(t)
+			waitGroup.Done()
+		}()
 	}
-	time.Sleep(3 * time.Second)
+	waitGroup.Wait()
 }
