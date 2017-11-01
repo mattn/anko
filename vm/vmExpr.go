@@ -307,10 +307,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		switch e.Operator {
 		case "-":
+			if v.Kind() == reflect.Int64 {
+				return reflect.ValueOf(-v.Int()), nil
+			}
 			if v.Kind() == reflect.Float64 {
 				return reflect.ValueOf(-v.Float()), nil
 			}
-			return reflect.ValueOf(-v.Int()), nil
+			return reflect.ValueOf(-toFloat64(v)), nil
 		case "^":
 			return reflect.ValueOf(^toInt64(v)), nil
 		case "!":
