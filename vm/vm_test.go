@@ -22,7 +22,7 @@ type testStruct struct {
 func TestBasicOperators(t *testing.T) {
 	tests := []testStruct{
 		{script: "]", parseError: fmt.Errorf("syntax error"), runOutput: (*interface{})(nil)},
-		{script: "1 = 2", runError: fmt.Errorf("Invalid operation"), runOutput: []interface{}{interface{}(int64(2))}},
+		{script: "1 = 2", runError: fmt.Errorf("Invalid operation"), runOutput: (*interface{})(nil)},
 
 		{script: "2 + 1", runOutput: int64(3)},
 		{script: "2 - 1", runOutput: int64(1)},
@@ -59,6 +59,7 @@ func TestBasicOperators(t *testing.T) {
 		{script: "a = b", input: map[string]interface{}{"b": int64(2)}, runOutput: int64(2), ouput: map[string]interface{}{"a": int64(2), "b": int64(2)}},
 		{script: "a = b", input: map[string]interface{}{"b": float64(2.1)}, runOutput: float64(2.1), ouput: map[string]interface{}{"a": float64(2.1), "b": float64(2.1)}},
 		{script: "y = z", runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: (*interface{})(nil)},
+		{script: "z.y.x = 1", runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: (*interface{})(nil)},
 
 		{script: "c = a + b", input: map[string]interface{}{"a": int64(2), "b": int64(1)}, runOutput: int64(3), ouput: map[string]interface{}{"c": int64(3)}},
 		{script: "c = a - b", input: map[string]interface{}{"a": int64(2), "b": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"c": int64(1)}},
