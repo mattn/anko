@@ -52,6 +52,7 @@ func TestDefineAndGet(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
 		{testInfo: " int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16, defineError: nil, getError: nil},
 		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32, defineError: nil, getError: nil},
@@ -231,6 +232,7 @@ func TestDefineModify(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
 		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
@@ -464,6 +466,7 @@ func TestDefineType(t *testing.T) {
 		defineError    error
 		typeError      error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, typeError: nil},
 		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: nil},
 		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: nil},
 		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: nil},
@@ -501,7 +504,11 @@ func TestDefineType(t *testing.T) {
 			t.Errorf("DefineType %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
-		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineType %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
@@ -536,7 +543,11 @@ func TestDefineType(t *testing.T) {
 			t.Errorf("DefineType NewEnv %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
-		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineType NewEnv %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewEnv %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 		envChild.Destroy()
@@ -569,7 +580,11 @@ func TestDefineType(t *testing.T) {
 			t.Errorf("DefineType NewPackage %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
-		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineType NewPackage %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewPackage %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
@@ -603,7 +618,11 @@ func TestDefineType(t *testing.T) {
 			t.Errorf("DefineType NewModule %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
-		if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineType NewModule %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewModule %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
@@ -620,6 +639,7 @@ func TestDefineTypeFail(t *testing.T) {
 		defineError    error
 		typeError      error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
 		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
 		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
 		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
@@ -672,6 +692,7 @@ func TestAddr(t *testing.T) {
 		defineError    error
 		addrError      error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, addrError: nil},
 		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, addrError: fmt.Errorf("Unaddressable")},
 		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
@@ -849,5 +870,81 @@ func TestRaceSetSameVariable(t *testing.T) {
 	_, err = env.Get("a")
 	if err != nil {
 		t.Error("Get error: %v", err)
+	}
+}
+
+func TestRaceSetSameVariableNewEnv(t *testing.T) {
+	// Test setting same variable in parallel with NewEnv
+
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+
+	env := NewEnv()
+
+	err := env.Define("a", 0)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	_, err = env.Get("a")
+	if err != nil {
+		t.Errorf("Get error: %v", err)
+	}
+
+	for i := 0; i < 100; i++ {
+		waitGroup.Add(1)
+		go func(i int) {
+			<-waitChan
+			env = env.NewEnv().NewEnv()
+			err := env.Set("a", i)
+			if err != nil {
+				t.Errorf("Set error: %v", err)
+			}
+			waitGroup.Done()
+		}(i)
+	}
+
+	close(waitChan)
+	waitGroup.Wait()
+
+	_, err = env.Get("a")
+	if err != nil {
+		t.Error("Get error: %v", err)
+	}
+}
+
+func BenchmarkDefine(b *testing.B) {
+	var err error
+	env := NewEnv()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err := env.Define("a", 1)
+		if err != nil {
+			b.Errorf("Set error: %v", err)
+		}
+	}
+	b.StopTimer()
+	_, err = env.Get("a")
+	if err != nil {
+		b.Error("Get error: %v", err)
+	}
+}
+
+func BenchmarkSet(b *testing.B) {
+	env := NewEnv()
+	err := env.Define("a", 1)
+	if err != nil {
+		b.Errorf("Define error: %v", err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		err = env.Set("a", 1)
+		if err != nil {
+			b.Errorf("Set error: %v", err)
+		}
+	}
+	b.StopTimer()
+	_, err = env.Get("a")
+	if err != nil {
+		b.Error("Get error: %v", err)
 	}
 }
