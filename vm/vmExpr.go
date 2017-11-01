@@ -91,7 +91,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v.SetMapIndex(i, rv)
 			return rv, nil
 		}
-		return v, NewStringError(expr, "Invalid operation")
+		return NilValue, NewStringError(expr, "Invalid operation")
 	case *ast.SliceExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
@@ -130,7 +130,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			vv.Set(rv)
 			return rv, nil
 		}
-		return v, NewStringError(expr, "Invalid operation")
+		return NilValue, NewStringError(expr, "Invalid operation")
 	}
 	return NilValue, NewStringError(expr, "Invalid operation")
 }
@@ -427,7 +427,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return reflect.ValueOf(rs[ii]), nil
 		}
-		return v, NewStringError(expr, "Invalid operation")
+		return NilValue, NewStringError(expr, "Invalid operation")
 	case *ast.SliceExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -479,7 +479,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return reflect.ValueOf(string(r[ii:ij])), nil
 		}
-		return v, NewStringError(expr, "Invalid operation")
+		return NilValue, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
 		switch e.Operator {
 		case "++":
@@ -670,11 +670,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.ConstExpr:
 		switch e.Value {
 		case "true":
-			return reflect.ValueOf(true), nil
+			return TrueValue, nil
 		case "false":
-			return reflect.ValueOf(false), nil
+			return FalseValue, nil
 		}
-		return reflect.ValueOf(nil), nil
+		return NilValue, nil
 	case *ast.AnonCallExpr:
 		f, err := invokeExpr(e.Expr, env)
 		if err != nil {
