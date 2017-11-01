@@ -115,6 +115,20 @@ func TestBasicOperators(t *testing.T) {
 		{script: "a % 3", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(2), ouput: map[string]interface{}{"a": int64(2)}},
 		{script: "a % 2", input: map[string]interface{}{"a": float64(2.1)}, runOutput: int64(0), ouput: map[string]interface{}{"a": float64(2.1)}},
 		{script: "a % 3", input: map[string]interface{}{"a": float64(2.1)}, runOutput: int64(2), ouput: map[string]interface{}{"a": float64(2.1)}},
+
+		{script: "-a", input: map[string]interface{}{"a": nil}, runOutput: float64(-0), ouput: map[string]interface{}{"a": nil}},
+		{script: "-a", input: map[string]interface{}{"a": "a"}, runOutput: float64(-0), ouput: map[string]interface{}{"a": "a"}},
+		{script: "-a", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(-2), ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "-a", input: map[string]interface{}{"a": float64(2.1)}, runOutput: float64(-2.1), ouput: map[string]interface{}{"a": float64(2.1)}},
+		{script: "^a", input: map[string]interface{}{"a": nil}, runOutput: int64(-1), ouput: map[string]interface{}{"a": nil}},
+		{script: "^a", input: map[string]interface{}{"a": "a"}, runOutput: int64(-1), ouput: map[string]interface{}{"a": "a"}},
+		{script: "^a", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(-3), ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "^a", input: map[string]interface{}{"a": float64(2.1)}, runOutput: int64(-3), ouput: map[string]interface{}{"a": float64(2.1)}},
+		
+		{script: "a * 4", input: map[string]interface{}{"a": "a"}, runOutput: "aaaa", ouput: map[string]interface{}{"a": "a"}},
+		{script: "a * 4.0", input: map[string]interface{}{"a": "a"}, runOutput: float64(0), ouput: map[string]interface{}{"a": "a"}},
+		{script: "!true", runOutput: false},
+		{script: "!1", runOutput: false},
 	}
 	runTests(t, tests)
 }
@@ -146,6 +160,10 @@ func TestComparisonOperators(t *testing.T) {
 		{script: "a == 2", input: map[string]interface{}{"a": nil}, runOutput: false, ouput: map[string]interface{}{"a": nil}},
 		{script: "a == 2.0", input: map[string]interface{}{"a": nil}, runOutput: false, ouput: map[string]interface{}{"a": nil}},
 
+		{script: "1 == 1.0", runOutput: true},
+		{script: "1 != 1.0", runOutput: false},
+		{script: "\"a\" != \"a\"", runOutput: false},
+
 		{script: "a > 2", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
 		{script: "a > 1", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
 		{script: "a < 2", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
@@ -163,6 +181,33 @@ func TestComparisonOperators(t *testing.T) {
 		{script: "a > 1.0", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
 		{script: "a < 2.0", input: map[string]interface{}{"a": float64(2)}, runOutput: false, ouput: map[string]interface{}{"a": float64(2)}},
 		{script: "a < 3.0", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+
+		{script: "a >= 2", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a >= 3", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a <= 2", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a <= 3", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a >= 2.0", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a >= 3.0", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a <= 2.0", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+		{script: "a <= 3.0", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": int64(2)}},
+
+		{script: "a >= 2", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a >= 3", input: map[string]interface{}{"a": float64(2)}, runOutput: false, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a <= 2", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a <= 3", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a >= 2.0", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a >= 3.0", input: map[string]interface{}{"a": float64(2)}, runOutput: false, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a <= 2.0", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+		{script: "a <= 3.0", input: map[string]interface{}{"a": float64(2)}, runOutput: true, ouput: map[string]interface{}{"a": float64(2)}},
+
+		{script: "1 == 1 && 1  == 1", runOutput: true},
+		{script: "1 == 1 && 1  == 2", runOutput: false},
+		{script: "1 == 2 && 1  == 1", runOutput: false},
+		{script: "1 == 2 && 1  == 2", runOutput: false},
+		{script: "1 == 1 || 1  == 1", runOutput: true},
+		{script: "1 == 1 || 1  == 2", runOutput: true},
+		{script: "1 == 2 || 1  == 1", runOutput: true},
+		{script: "1 == 2 || 1  == 2", runOutput: false},
 	}
 	runTests(t, tests)
 }

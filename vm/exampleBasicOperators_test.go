@@ -70,6 +70,17 @@ println(a)
 a = 7 % 3
 println(a)
 
+println("")
+
+a = 2 - (-2)
+println(a)
+a = ^2
+println(a)
+a = "a" * 4
+println(a)
+a = !true
+println(a)
+
 `
 
 	_, err = env.Execute(script)
@@ -101,5 +112,10 @@ println(a)
 	// 16
 	// 2
 	// 1
+	//
+	// 4
+	// -3
+	// aaaa
+	// false
 
 }
