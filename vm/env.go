@@ -160,15 +160,18 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 // Set modifies value which specified as symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
-	e.Lock()
-	defer e.Unlock()
-
-	if _, ok := e.env[k]; ok {
-		val, ok := v.(reflect.Value)
+	e.RLock()
+	_, ok := e.env[k]
+	e.RUnlock()
+	if ok {
+		var val reflect.Value
+		val, ok = v.(reflect.Value)
 		if !ok {
 			val = reflect.ValueOf(v)
 		}
+		e.Lock()
 		e.env[k] = val
+		e.Unlock()
 		return nil
 	}
 	if e.parent == nil {
@@ -223,9 +226,15 @@ func (e *Env) Define(k string, v interface{}) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	val, ok := v.(reflect.Value)
-	if !ok {
-		val = reflect.ValueOf(v)
+	var val reflect.Value
+	if v == nil {
+		val = NilTypeNonPointer
+	} else {
+		var ok bool
+		val, ok = v.(reflect.Value)
+		if !ok {
+			val = reflect.ValueOf(v)
+		}
 	}
 
 	e.Lock()
