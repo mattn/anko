@@ -98,7 +98,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				break
 			}
 			v := rvs.Index(i)
-			if v.Kind() == reflect.Interface {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
