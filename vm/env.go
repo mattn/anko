@@ -165,9 +165,14 @@ func (e *Env) Set(k string, v interface{}) error {
 	e.RUnlock()
 	if ok {
 		var val reflect.Value
-		val, ok = v.(reflect.Value)
-		if !ok {
-			val = reflect.ValueOf(v)
+		if v == nil {
+			val = NilTypeNonPointer
+		} else {
+			var ok bool
+			val, ok = v.(reflect.Value)
+			if !ok {
+				val = reflect.ValueOf(v)
+			}
 		}
 		e.Lock()
 		e.env[k] = val

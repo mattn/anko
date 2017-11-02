@@ -245,6 +245,7 @@ func TestDefineModify(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
+		{varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
 		{varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
 		{varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
 		{varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},

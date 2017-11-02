@@ -124,7 +124,7 @@ func TestBasicOperators(t *testing.T) {
 		{script: "^a", input: map[string]interface{}{"a": "a"}, runOutput: int64(-1), ouput: map[string]interface{}{"a": "a"}},
 		{script: "^a", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(-3), ouput: map[string]interface{}{"a": int64(2)}},
 		{script: "^a", input: map[string]interface{}{"a": float64(2.1)}, runOutput: int64(-3), ouput: map[string]interface{}{"a": float64(2.1)}},
-		
+
 		{script: "a * 4", input: map[string]interface{}{"a": "a"}, runOutput: "aaaa", ouput: map[string]interface{}{"a": "a"}},
 		{script: "a * 4.0", input: map[string]interface{}{"a": "a"}, runOutput: float64(0), ouput: map[string]interface{}{"a": "a"}},
 		{script: "!true", runOutput: false},
