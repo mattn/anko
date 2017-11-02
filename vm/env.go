@@ -166,7 +166,7 @@ func (e *Env) Set(k string, v interface{}) error {
 	if ok {
 		var val reflect.Value
 		if v == nil {
-			val = NilTypeNonPointer
+			val = NilValueNonPointer
 		} else {
 			var ok bool
 			val, ok = v.(reflect.Value)
@@ -233,7 +233,7 @@ func (e *Env) Define(k string, v interface{}) error {
 	}
 	var val reflect.Value
 	if v == nil {
-		val = NilTypeNonPointer
+		val = NilValueNonPointer
 	} else {
 		var ok bool
 		val, ok = v.(reflect.Value)

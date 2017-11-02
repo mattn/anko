@@ -14,7 +14,7 @@ var (
 	NilType           = reflect.TypeOf((*interface{})(nil))
 	TrueValue         = reflect.ValueOf(true)
 	FalseValue        = reflect.ValueOf(false)
-	NilTypeNonPointer = reflect.New(NilType.Elem()).Elem()
+	NilValueNonPointer = reflect.New(NilType.Elem()).Elem()
 )
 
 // Error provides a convenient interface for handling runtime error.
