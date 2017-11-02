@@ -10,11 +10,10 @@ import (
 )
 
 var (
-	NilValue          = reflect.ValueOf((*interface{})(nil))
-	NilType           = reflect.TypeOf((*interface{})(nil))
-	TrueValue         = reflect.ValueOf(true)
-	FalseValue        = reflect.ValueOf(false)
-	NilValueNonPointer = reflect.New(NilType.Elem()).Elem()
+	NilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	NilType    = reflect.TypeOf(nil)
+	TrueValue  = reflect.ValueOf(true)
+	FalseValue = reflect.ValueOf(false)
 )
 
 // Error provides a convenient interface for handling runtime error.

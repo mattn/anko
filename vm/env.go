@@ -166,7 +166,7 @@ func (e *Env) Set(k string, v interface{}) error {
 	if ok {
 		var val reflect.Value
 		if v == nil {
-			val = NilValueNonPointer
+			val = NilValue
 		} else {
 			var ok bool
 			val, ok = v.(reflect.Value)
@@ -214,9 +214,15 @@ func (e *Env) DefineType(k string, t interface{}) error {
 		keys[i], keys[j] = keys[j], keys[i]
 	}
 
-	typ, ok := t.(reflect.Type)
-	if !ok {
-		typ = reflect.TypeOf(t)
+	var typ reflect.Type
+	if t == nil {
+		typ = NilType
+	} else {
+		var ok bool
+		typ, ok = t.(reflect.Type)
+		if !ok {
+			typ = reflect.TypeOf(t)
+		}
 	}
 
 	global.Lock()
@@ -233,7 +239,7 @@ func (e *Env) Define(k string, v interface{}) error {
 	}
 	var val reflect.Value
 	if v == nil {
-		val = NilValueNonPointer
+		val = NilValue
 	} else {
 		var ok bool
 		val, ok = v.(reflect.Value)

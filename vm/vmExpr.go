@@ -346,7 +346,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				rr, err := Run(expr.Stmts, newenv)
 				if err == ReturnError {
 					err = nil
-					rr = rr.Interface().(reflect.Value)
 				}
 				return rr, err
 			}
