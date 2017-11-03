@@ -907,7 +907,7 @@ func TestRaceSetSameVariableNewEnv(t *testing.T) {
 
 func TestRaceDefineAndSetSameVariable(t *testing.T) {
 	// Test defining and setting same variable in parallel
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		raceDefineAndSetSameVariable(t)
 	}
 }
@@ -916,13 +916,14 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 	waitChan := make(chan struct{}, 1)
 	var waitGroup sync.WaitGroup
 
-	env := NewEnv()
+	envParent := NewEnv()
+	envChild := envParent.NewEnv()
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 2; i++ {
 		waitGroup.Add(1)
 		go func() {
 			<-waitChan
-			err := env.Set("a", 1)
+			err := envParent.Set("a", 1)
 			if err != nil && err.Error() != "Unknown symbol 'a'" {
 				t.Errorf("Set error: %v", err)
 			}
@@ -931,7 +932,7 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 		waitGroup.Add(1)
 		go func() {
 			<-waitChan
-			err := env.Define("a", 2)
+			err := envParent.Define("a", 2)
 			if err != nil {
 				t.Errorf("Define error: %v", err)
 			}
@@ -940,9 +941,18 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 		waitGroup.Add(1)
 		go func() {
 			<-waitChan
-			err := env.Set("a", 3)
+			err := envChild.Set("a", 3)
 			if err != nil && err.Error() != "Unknown symbol 'a'" {
 				t.Errorf("Set error: %v", err)
+			}
+			waitGroup.Done()
+		}()
+		waitGroup.Add(1)
+		go func() {
+			<-waitChan
+			err := envChild.Define("a", 4)
+			if err != nil {
+				t.Errorf("Define error: %v", err)
 			}
 			waitGroup.Done()
 		}()
@@ -951,7 +961,11 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 	close(waitChan)
 	waitGroup.Wait()
 
-	_, err := env.Get("a") // value wouldl be 1, 2, or 3 depending on who wins the race
+	_, err := envParent.Get("a") // value of a could be 1, 2, or 3
+	if err != nil {
+		t.Error("Get error: %v", err)
+	}
+	_, err = envChild.Get("a") // value of a could be 3 or 4
 	if err != nil {
 		t.Error("Get error: %v", err)
 	}
