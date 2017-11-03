@@ -903,11 +903,55 @@ func TestRaceSetSameVariableNewEnv(t *testing.T) {
 			waitGroup.Done()
 		}(i)
 	}
+}
+
+func TestRaceDefineAndSetSameVariable(t *testing.T) {
+	// Test defining and setting same variable in parallel
+	for i := 0; i < 10; i++ {
+		raceDefineAndSetSameVariable(t)
+	}
+}
+
+func raceDefineAndSetSameVariable(t *testing.T) {
+	waitChan := make(chan struct{}, 1)
+	var waitGroup sync.WaitGroup
+
+	env := NewEnv()
+
+	for i := 0; i < 10; i++ {
+		waitGroup.Add(1)
+		go func() {
+			<-waitChan
+			err := env.Set("a", 1)
+			if err != nil && err.Error() != "Unknown symbol 'a'" {
+				t.Errorf("Set error: %v", err)
+			}
+			waitGroup.Done()
+		}()
+		waitGroup.Add(1)
+		go func() {
+			<-waitChan
+			err := env.Define("a", 2)
+			if err != nil {
+				t.Errorf("Define error: %v", err)
+			}
+			waitGroup.Done()
+		}()
+		waitGroup.Add(1)
+		go func() {
+			<-waitChan
+			err := env.Set("a", 3)
+			if err != nil && err.Error() != "Unknown symbol 'a'" {
+				t.Errorf("Set error: %v", err)
+			}
+			waitGroup.Done()
+		}()
+	}
 
 	close(waitChan)
 	waitGroup.Wait()
 
-	_, err = env.Get("a")
+	_, err := env.Get("a") // value wouldl be 1, 2, or 3 depending on who wins the race
 	if err != nil {
 		t.Error("Get error: %v", err)
 	}
