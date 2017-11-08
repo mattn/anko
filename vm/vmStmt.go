@@ -253,6 +253,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for {
+				if env.catchInterrupt() {
+					return NilValue, InterruptError
+				}
 				iv, ok := val.Recv()
 				if !ok {
 					break
