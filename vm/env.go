@@ -172,15 +172,23 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 // Set modifies value which specified as symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
-	e.Lock()
-	defer e.Unlock()
-
-	if _, ok := e.env[k]; ok {
-		val, ok := v.(reflect.Value)
-		if !ok {
-			val = reflect.ValueOf(v)
+	e.RLock()
+	_, ok := e.env[k]
+	e.RUnlock()
+	if ok {
+		var val reflect.Value
+		if v == nil {
+			val = NilValue
+		} else {
+			var ok bool
+			val, ok = v.(reflect.Value)
+			if !ok {
+				val = reflect.ValueOf(v)
+			}
 		}
+		e.Lock()
 		e.env[k] = val
+		e.Unlock()
 		return nil
 	}
 	if e.parent == nil {
@@ -218,9 +226,15 @@ func (e *Env) DefineType(k string, t interface{}) error {
 		keys[i], keys[j] = keys[j], keys[i]
 	}
 
-	typ, ok := t.(reflect.Type)
-	if !ok {
-		typ = reflect.TypeOf(t)
+	var typ reflect.Type
+	if t == nil {
+		typ = NilType
+	} else {
+		var ok bool
+		typ, ok = t.(reflect.Type)
+		if !ok {
+			typ = reflect.TypeOf(t)
+		}
 	}
 
 	global.Lock()
@@ -235,9 +249,15 @@ func (e *Env) Define(k string, v interface{}) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	val, ok := v.(reflect.Value)
-	if !ok {
-		val = reflect.ValueOf(v)
+	var val reflect.Value
+	if v == nil {
+		val = NilValue
+	} else {
+		var ok bool
+		val, ok = v.(reflect.Value)
+		if !ok {
+			val = reflect.ValueOf(v)
+		}
 	}
 
 	e.Lock()

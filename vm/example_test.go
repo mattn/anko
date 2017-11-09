@@ -9,44 +9,6 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
-func ExamplePrintHelloWorld() {
-	env := vm.NewEnv()
-
-	err := env.Define("println", fmt.Println)
-	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
-	}
-
-	script := `
-println("Hello World :)")
-`
-
-	_, err = env.Execute(script)
-	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
-	}
-
-	// output: Hello World :)
-}
-
-func ExampleDump() {
-	env := vm.NewEnv()
-
-	err := env.Define("a", "a")
-	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
-	}
-
-	_, err = env.Get("a")
-	if err != nil {
-		log.Fatalf("Get error: %v\n", err)
-	}
-
-	env.Dump()
-
-	// output: a = "a"
-}
-
 func ExampleInterrupt() {
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
@@ -86,4 +48,22 @@ println("this line should not be printed")
 	waitGroup.Wait()
 
 	// output: <nil> Execution interrupted
+}
+
+func ExampleEnv_Dump() {
+	env := vm.NewEnv()
+
+	err := env.Define("a", "a")
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	_, err = env.Get("a")
+	if err != nil {
+		log.Fatalf("Get error: %v\n", err)
+	}
+
+	env.Dump()
+
+	// output: a = "a"
 }

@@ -12,18 +12,19 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
 	for _, stmt := range stmts {
-		if _, ok := stmt.(*ast.BreakStmt); ok {
+		switch stmt.(type) {
+		case *ast.BreakStmt:
 			return NilValue, BreakError
-		}
-		if _, ok := stmt.(*ast.ContinueStmt); ok {
+		case *ast.ContinueStmt:
 			return NilValue, ContinueError
-		}
-		rv, err = RunSingleStmt(stmt, env)
-		if err != nil {
-			return rv, err
-		}
-		if _, ok := stmt.(*ast.ReturnStmt); ok {
-			return reflect.ValueOf(rv), ReturnError
+		case *ast.ReturnStmt:
+			rv, err = RunSingleStmt(stmt, env)
+			return rv, ReturnError
+		default:
+			rv, err = RunSingleStmt(stmt, env)
+			if err != nil {
+				return rv, err
+			}
 		}
 	}
 	return rv, nil
@@ -92,12 +93,12 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				break
 			}
 			v := rvs.Index(i)
-			if v.Kind() == reflect.Interface {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
 			if err != nil {
-				return rvs, NewError(lhs, err)
+				return NilValue, NewError(lhs, err)
 			}
 		}
 		if rvs.Len() == 1 {
@@ -209,7 +210,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err == ReturnError {
 					return rv, err
 				}
-				return rv, NewError(stmt, err)
+				return NilValue, NewError(stmt, err)
 			}
 		}
 		return NilValue, nil
@@ -244,7 +245,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					if err == ReturnError {
 						return rv, err
 					}
-					return rv, NewError(stmt, err)
+					return NilValue, NewError(stmt, err)
 				}
 			}
 			return NilValue, nil
@@ -277,7 +278,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					if err == ReturnError {
 						return rv, err
 					}
-					return rv, NewError(stmt, err)
+					return NilValue, NewError(stmt, err)
 				}
 			}
 			return NilValue, nil
@@ -313,7 +314,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if err == ReturnError {
 					return rv, err
 				}
-				return rv, NewError(stmt, err)
+				return NilValue, NewError(stmt, err)
 			}
 			_, err = invokeExpr(stmt.Expr3, newenv)
 			if err != nil {
@@ -322,7 +323,6 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.ReturnStmt:
-		rvs := []interface{}{}
 		switch len(stmt.Exprs) {
 		case 0:
 			return NilValue, nil
@@ -333,6 +333,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			return rv, nil
 		}
+		rvs := []interface{}{}
 		for _, expr := range stmt.Exprs {
 			rv, err := invokeExpr(expr, env)
 			if err != nil {
@@ -340,7 +341,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 			if isNil(rv) {
 				rvs = append(rvs, nil)
-			} else if rv.IsValid() {
+			} else if rv.IsValid() && rv.CanInterface() {
 				rvs = append(rvs, rv.Interface())
 			} else {
 				rvs = append(rvs, nil)
@@ -380,7 +381,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			case_stmt := ss.(*ast.CaseStmt)
 			cv, err := invokeExpr(case_stmt.Expr, env)
 			if err != nil {
-				return rv, NewError(stmt, err)
+				return NilValue, NewError(stmt, err)
 			}
 			if !equal(rv, cv) {
 				continue

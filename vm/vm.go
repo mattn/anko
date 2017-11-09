@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	NilValue   = reflect.ValueOf((*interface{})(nil))
-	NilType    = reflect.TypeOf((*interface{})(nil))
+	NilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	NilType    = reflect.TypeOf(nil)
 	TrueValue  = reflect.ValueOf(true)
 	FalseValue = reflect.ValueOf(false)
 )
