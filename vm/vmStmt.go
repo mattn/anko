@@ -31,15 +31,9 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 
 // RunSingleStmt executes one statement in the specified environment.
 func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
-	env.Lock()
-	if *(env.interrupt) {
-		*(env.interrupt) = false
-		env.Unlock()
-
+	if env.catchInterrupt() {
 		return NilValue, InterruptError
 	}
-	env.Unlock()
-
 	switch stmt := stmt.(type) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
@@ -189,6 +183,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for {
+			if env.catchInterrupt() {
+				return NilValue, InterruptError
+			}
 			if stmt.Expr != nil {
 				ev, ee := invokeExpr(stmt.Expr, newenv)
 				if ee != nil {
@@ -256,6 +253,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for {
+				if env.catchInterrupt() {
+					return NilValue, InterruptError
+				}
 				iv, ok := val.Recv()
 				if !ok {
 					break
