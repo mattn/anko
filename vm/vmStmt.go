@@ -293,6 +293,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		for {
+			if env.catchInterrupt() {
+				return NilValue, InterruptError
+			}
 			fb, err := invokeExpr(stmt.Expr2, newenv)
 			if err != nil {
 				return NilValue, err
