@@ -8,11 +8,11 @@ import (
 )
 
 type externalResolver struct {
-	entries	map[string]interface{}
+	entries map[string]interface{}
 }
 
 func NewExternalResolver() *externalResolver {
-	return &externalResolver{ entries: make(map[string]interface{}) }
+	return &externalResolver{entries: make(map[string]interface{})}
 }
 
 func (er *externalResolver) Set(name string, value interface{}) {
