@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -25,28 +26,40 @@ func toString(v reflect.Value) string {
 	return fmt.Sprint(v.Interface())
 }
 
-// toBool converts all reflect.Value-s into bool.
-func toBool(v reflect.Value) bool {
+func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
 	if v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
 
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
-		return v.Float() != 0.0
+		return v.Float() != 0.0, nil
 	case reflect.Int, reflect.Int32, reflect.Int64:
-		return v.Int() != 0
+		return v.Int() != 0, nil
 	case reflect.Bool:
-		return v.Bool()
+		return v.Bool(), nil
 	case reflect.String:
-		if v.String() == "true" {
-			return true
+		s := v.String()
+		if !caseSensitive {
+			s = strings.ToLower(s)
+		}
+		if s == "true" {
+			return true, nil
+		} else if s == "false" {
+			return false, nil
 		}
 		if toInt64(v) != 0 {
-			return true
+			return true, nil
 		}
+		return false, errors.New("couldn't convert string to bool")
 	}
-	return false
+	return false, errors.New("unknown type")
+}
+
+// toBool converts all reflect.Value-s into bool.
+func toBool(v reflect.Value) bool {
+	b, _ := tryToBool(v, true)
+	return b
 }
 
 // toFloat64 converts all reflect.Value-s into float64.

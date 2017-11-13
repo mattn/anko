@@ -211,6 +211,17 @@ func TestComparisonOperators(t *testing.T) {
 		{script: "1 == 1 || 1  == 2", runOutput: true},
 		{script: "1 == 2 || 1  == 1", runOutput: true},
 		{script: "1 == 2 || 1  == 2", runOutput: false},
+
+		{script: `true == "true"`, runOutput: true},
+		{script: `true == "TRUE"`, runOutput: true},
+		{script: `true == "True"`, runOutput: true},
+		{script: `true == "false"`, runOutput: false},
+		{script: `true == "foo"`, runOutput: false},
+		{script: `false == "false"`, runOutput: true},
+		{script: `false == "FALSE"`, runOutput: true},
+		{script: `false == "False"`, runOutput: true},
+		{script: `false == "true"`, runOutput: false},
+		{script: `false == "foo"`, runOutput: false},
 	}
 	runTests(t, tests)
 }
