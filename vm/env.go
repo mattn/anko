@@ -9,6 +9,11 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
+type EnvResolver interface {
+	Get(string) (reflect.Value, error)
+	Type(string) (reflect.Type, error)
+}
+
 // Env provides interface to run VM. This mean function scope and blocked-scope.
 // If stack goes to blocked-scope, it will make new Env.
 type Env struct {
@@ -17,6 +22,7 @@ type Env struct {
 	typ       map[string]reflect.Type
 	parent    *Env
 	interrupt *bool
+	external  EnvResolver
 	sync.RWMutex
 }
 
@@ -63,6 +69,10 @@ func (e *Env) NewPackage(n string) *Env {
 		name:      n,
 		interrupt: e.interrupt,
 	}
+}
+
+func (e *Env) SetExternal(res EnvResolver) {
+	e.external = res
 }
 
 // catchInterrupt checks if the interrupt was set
@@ -133,6 +143,14 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 			return NilValue, fmt.Errorf("Unaddressable")
 		}
 	}
+	if e.external != nil {
+		v, err := e.external.Get(k)
+		if err == nil {
+			if v.CanAddr() {
+				return v.Addr(), nil
+			}
+		}
+	}
 	if e.parent == nil {
 		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
@@ -148,6 +166,12 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 	if v, ok := e.typ[k]; ok {
 		return v, nil
 	}
+	if e.external != nil {
+		v, err := e.external.Type(k)
+		if err == nil {
+			return v, nil
+		}
+	}
 	if e.parent == nil {
 		return NilType, fmt.Errorf("Undefined type '%s'", k)
 	}
@@ -162,6 +186,12 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 
 	if v, ok := e.env[k]; ok {
 		return v, nil
+	}
+	if e.external != nil {
+		v, err := e.external.Get(k)
+		if err == nil {
+			return v, nil
+		}
 	}
 	if e.parent == nil {
 		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)

@@ -7,6 +7,96 @@ import (
 	"testing"
 )
 
+type externalResolver struct {
+	entries map[string]interface{}
+}
+
+func NewExternalResolver() *externalResolver {
+	return &externalResolver{entries: make(map[string]interface{})}
+}
+
+func (er *externalResolver) Set(name string, value interface{}) {
+	er.entries[name] = value
+}
+
+func (er *externalResolver) Get(name string) (reflect.Value, error) {
+	if v, ok := er.entries[name]; ok {
+		if v == nil {
+			return NilValue, nil
+		}
+		return reflect.ValueOf(v), nil
+	}
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", name)
+}
+
+func (er *externalResolver) Type(name string) (reflect.Type, error) {
+	if v, ok := er.entries[name]; ok {
+		if v == nil {
+			return NilType, nil
+		}
+		return reflect.TypeOf(v), nil
+	}
+	return NilType, fmt.Errorf("Undefined symbol '%s'", name)
+}
+
+func TestExternal(t *testing.T) {
+	er := NewExternalResolver()
+
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		varGetValue    interface{}
+		varKind        reflect.Kind
+		defineError    error
+		getError       error
+	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
+		{testInfo: "string", varName: "b", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
+		{testInfo: "int16", varName: "c", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16, defineError: nil, getError: nil},
+		{testInfo: "int32", varName: "d", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32, defineError: nil, getError: nil},
+		{testInfo: "int64", varName: "e", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
+		{testInfo: "uint32", varName: "f", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32, defineError: nil, getError: nil},
+		{testInfo: "uint64", varName: "g", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64, defineError: nil, getError: nil},
+		{testInfo: "float32", varName: "h", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32, defineError: nil, getError: nil},
+		{testInfo: "float64", varName: "i", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
+		{testInfo: "bool", varName: "j", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+	}
+
+	// First set all values
+	for _, test := range tests {
+		er.Set(test.varName, test.varDefineValue)
+	}
+
+	// Now create an Env and set the external
+	env := NewEnv()
+	env.SetExternal(er)
+
+	// Now make sure they were stored correctly and can be retrieved from the Env
+	// The Env doesn't know about any of the variables in the test array, but the external resolver does.
+	for _, test := range tests {
+		val, err := env.Get(test.varName)
+		if err != nil {
+			t.Errorf("Execute error - unable to retrieve variable %v from external resolver: %v", test.varName, err)
+		}
+		if val.Interface() != test.varGetValue {
+			t.Errorf("Execute error - received unexpected value %v from external resolver, expected %v", val, test.varGetValue)
+		}
+
+		varType, err := env.Type(test.varName)
+		if err != nil {
+			t.Errorf("Execute error - unable to retrieve type of variable %v from external resolver: %v", test.varName, err)
+		}
+		if varType == nil || test.varDefineValue == nil {
+			if varType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("Execute error - type received: %v expected: %v", varType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if varType.Kind() != test.varKind {
+			t.Errorf("Execute error - received unexpected type %v from external resolver, expected %v", varType, test.varKind)
+		}
+	}
+}
+
 func TestExecuteError(t *testing.T) {
 	env := NewEnv()
 	script := "a]]"
