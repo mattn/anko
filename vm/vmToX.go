@@ -126,12 +126,6 @@ func tryToInt64(v reflect.Value) (int64, error) {
 		if err == nil {
 			return int64(i), nil
 		}
-		// If ParseInt failed, it's possible the string is actually a float
-		// We convert floats to ints above, so let's do that here too
-		f, err := strconv.ParseFloat(s, 64)
-		if err == nil {
-			return int64(f), nil
-		}
 	}
 	return 0, errors.New("couldn't convert to integer")
 }

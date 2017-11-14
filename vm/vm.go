@@ -122,10 +122,9 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 
 	// Compare a string and a number.
-	// This will attempt to convert the string to a float64,
-	// while leaving the other side alone. Code further down
-	// will handle cases where we compare (int == string), which
-	// becomes (int == float) after this step
+	// This will attempt to convert the string to a number,
+	// while leaving the other side alone. Code further
+	// down takes care of converting ints and floats as needed.
 	if isNum(lhsV) && rhsV.Kind() == reflect.String {
 		rhsF, err := tryToFloat64(rhsV)
 		if err != nil {
@@ -134,12 +133,18 @@ func equal(lhsV, rhsV reflect.Value) bool {
 		}
 		rhsV = reflect.ValueOf(rhsF)
 	} else if lhsV.Kind() == reflect.String && isNum(rhsV) {
-		// if LHS is a float, e.g. "1.2", we need to set lhsV to a float64
-		lhsF, err := tryToFloat64(lhsV)
+		// If the LHS is a string formatted as an int, try that before trying float
+		lhsI, err := tryToInt64(lhsV)
 		if err != nil {
-			return false
+			// if LHS is a float, e.g. "1.2", we need to set lhsV to a float64
+			lhsF, err := tryToFloat64(lhsV)
+			if err != nil {
+				return false
+			}
+			lhsV = reflect.ValueOf(lhsF)
+		} else {
+			lhsV = reflect.ValueOf(lhsI)
 		}
-		lhsV = reflect.ValueOf(lhsF)
 	}
 
 	if isNum(lhsV) && isNum(rhsV) {
