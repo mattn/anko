@@ -222,6 +222,17 @@ func TestComparisonOperators(t *testing.T) {
 		{script: `false == "False"`, runOutput: true},
 		{script: `false == "true"`, runOutput: false},
 		{script: `false == "foo"`, runOutput: false},
+
+		{script: `0 == "0"`, runOutput: true},
+		{script: `"1.0" == 1`, runOutput: true},
+		{script: `1 == "1"`, runOutput: true},
+		{script: `0.0 == "0"`, runOutput: true},
+		{script: `0.0 == "0.0"`, runOutput: true},
+		{script: `1.0 == "1.0"`, runOutput: true},
+		{script: `1.2 == "1.2"`, runOutput: true},
+		{script: `1.2 == "1"`, runOutput: false},
+		{script: `"1.1" == 1`, runOutput: false},
+		{script: `0 == "1"`, runOutput: false},
 	}
 	runTests(t, tests)
 }
