@@ -395,3 +395,25 @@ func TestInterruptRaces(t *testing.T) {
 	}
 	waitGroup.Wait()
 }
+
+type TestInterface interface {
+	DoSomething()
+}
+
+func TestTypedNil(t *testing.T) {
+	stmts, err := parser.ParseSrc(`doTest(nil)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	env := NewEnv()
+	err = env.Define("doTest", func(v TestInterface) {
+		if v != nil {
+			t.Fatal("argument should be nil")
+		}
+	})
+	_, err = Run(stmts, env)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
