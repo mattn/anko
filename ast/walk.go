@@ -32,9 +32,10 @@ func WalkExprs(exprs []Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error 
 
 func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	//short circuit out if there are no functions
-	if stmt == nil || sf == nil && ef == nil {
+	if stmt == nil || (sf == nil && ef == nil) {
 		return nil
 	}
+	fmt.Println("STMT:", reflect.TypeOf(stmt))
 	if err := callStmtFunc(stmt, sf); err != nil {
 		return err
 	}
@@ -136,9 +137,10 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 
 func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	//short circuit out if there are no functions
-	if expr == nil || sf == nil && ef == nil {
+	if expr == nil || (sf == nil && ef == nil) {
 		return nil
 	}
+	fmt.Println("EXPR:", reflect.TypeOf(expr))
 	if err := callExprFunc(expr, ef); err != nil {
 		return err
 	}
