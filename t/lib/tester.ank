@@ -43,7 +43,7 @@ func ok(expect, name) {
     colortext.ChangeColor("red", true)
     println("NG")
     colortext.ResetColor()
-    throw name + ": expected " + expect + " but got " + got
+    throw name + ": expected " + expect
   }
 }
 
