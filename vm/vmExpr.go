@@ -605,7 +605,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
 			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() != reflect.Array && rhsV.Kind() != reflect.Slice) {
-				rhsT := rhsV.Type().Elem()
+				rhsT := rhsV.Type()
 				lhsT := lhsV.Type().Elem()
 				if lhsT.Kind() != rhsT.Kind() {
 					if !rhsT.ConvertibleTo(lhsT) {
