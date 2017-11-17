@@ -718,7 +718,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					if arg.Kind().String() == "unsafe.Pointer" {
 						arg = reflect.New(it).Elem()
 					}
-					if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
+					if arg == NilValue {
+						arg = reflect.New(it).Elem()
+					} else if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
 						arg = arg.Convert(it)
 					} else if arg.Kind() == reflect.Func {
 						if _, isFunc := arg.Interface().(Func); isFunc {
