@@ -35,7 +35,6 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	if stmt == nil || (sf == nil && ef == nil) {
 		return nil
 	}
-	fmt.Println("STMT:", reflect.TypeOf(stmt))
 	if err := callStmtFunc(stmt, sf); err != nil {
 		return err
 	}
@@ -140,7 +139,6 @@ func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	if expr == nil || (sf == nil && ef == nil) {
 		return nil
 	}
-	fmt.Println("EXPR:", reflect.TypeOf(expr))
 	if err := callExprFunc(expr, ef); err != nil {
 		return err
 	}
