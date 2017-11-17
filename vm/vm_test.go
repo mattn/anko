@@ -440,3 +440,37 @@ func TestTypedNil(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestSliceConvert(t *testing.T) {
+	env := NewEnv()
+
+	input := []string{"one", "two"}
+	err := env.Define("input", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = env.Execute(`
+	output = []
+	output += input
+	output += [3]
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	value, err := env.Get("output")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if value.Index(0).Interface().(string) != "one" {
+		t.Fatal("want string `one` but got %v", value.Index(0).Interface())
+	}
+	if value.Index(1).Interface().(string) != "two" {
+		t.Fatal("want string `two` but got %v", value.Index(1).Interface())
+	}
+	if value.Index(2).Interface().(int64) != 3 {
+		t.Fatal("want int 3 but got %v", value.Index(2).Interface())
+	}
+}
