@@ -94,7 +94,7 @@ func Import(env *vm.Env) *vm.Env {
 		return int64(rv.Len())
 	})
 
-	env.Define("keys", func(v interface{}) []string {
+	env.Define("keys", func(v interface{}) []reflect.Value {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
@@ -102,12 +102,7 @@ func Import(env *vm.Env) *vm.Env {
 		if rv.Kind() != reflect.Map {
 			panic("Argument #1 should be map")
 		}
-		keys := []string{}
-		mk := rv.MapKeys()
-		for _, key := range mk {
-			keys = append(keys, key.String())
-		}
-		return keys
+		return rv.MapKeys()
 	})
 
 	env.Define("range", func(args ...int64) []int64 {
