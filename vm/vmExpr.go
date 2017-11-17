@@ -605,9 +605,28 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
 			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() != reflect.Array && rhsV.Kind() != reflect.Slice) {
+				rhsT := rhsV.Type()
+				lhsT := lhsV.Type().Elem()
+				if lhsT.Kind() != rhsT.Kind() {
+					if !rhsT.ConvertibleTo(lhsT) {
+						return NilValue, NewStringError(expr, "Unknown operator")
+					}
+					rhsV = rhsV.Convert(lhsT)
+				}
 				return reflect.Append(lhsV, rhsV), nil
 			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() == reflect.Array || rhsV.Kind() == reflect.Slice) {
+				rhsT := rhsV.Type().Elem()
+				lhsT := lhsV.Type().Elem()
+				if lhsT.Kind() != rhsT.Kind() {
+					if !rhsT.ConvertibleTo(lhsT) {
+						return NilValue, NewStringError(expr, "Unknown operator")
+					}
+					for i := 0; i < rhsV.Len(); i++ {
+						lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
+					}
+					return lhsV, nil
+				}
 				return reflect.AppendSlice(lhsV, rhsV), nil
 			}
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
