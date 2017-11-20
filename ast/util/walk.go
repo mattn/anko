@@ -1,17 +1,19 @@
-package ast
+package astutils
 
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/mattn/anko/ast"
 )
 
-type WalkStatementFunc func(Stmt) error
-type WalkExpressionFunc func(Expr) error
+type WalkStatementFunc func(ast.Stmt) error
+type WalkExpressionFunc func(ast.Expr) error
 
 // WalkStmts walks the ASTs associated with stmts calling the statement and expression functions if provided
 // if either function returns an error, the Walk function returns the error
 // The function is useful for validating an AST or prepopulating values prior to running
-func WalkStmts(stmts []Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
+func WalkStmts(stmts []ast.Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	for _, stmt := range stmts {
 		if err := walkStmt(stmt, sf, ef); err != nil {
 			return err
@@ -21,7 +23,7 @@ func WalkStmts(stmts []Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error 
 }
 
 // WalkExprs recursively walkts a list of expressions calling the appropriate function at each
-func WalkExprs(exprs []Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
+func WalkExprs(exprs []ast.Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	for _, expr := range exprs {
 		if err := walkExpr(expr, sf, ef); err != nil {
 			return err
@@ -30,7 +32,7 @@ func WalkExprs(exprs []Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error 
 	return nil
 }
 
-func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
+func walkStmt(stmt ast.Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	//short circuit out if there are no functions
 	if stmt == nil || (sf == nil && ef == nil) {
 		return nil
@@ -39,20 +41,20 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 		return err
 	}
 	switch stmt := stmt.(type) {
-	case *BreakStmt:
-	case *ContinueStmt:
-	case *ReturnStmt:
+	case *ast.BreakStmt:
+	case *ast.ContinueStmt:
+	case *ast.ReturnStmt:
 		return WalkExprs(stmt.Exprs, sf, ef)
-	case *ExprStmt:
+	case *ast.ExprStmt:
 		return walkExpr(stmt.Expr, sf, ef)
-	case *VarStmt:
+	case *ast.VarStmt:
 		return WalkExprs(stmt.Exprs, sf, ef)
-	case *LetsStmt:
+	case *ast.LetsStmt:
 		if err := WalkExprs(stmt.Rhss, sf, ef); err != nil {
 			return err
 		}
 		return WalkExprs(stmt.Lhss, sf, ef)
-	case *IfStmt:
+	case *ast.IfStmt:
 		if err := walkExpr(stmt.If, sf, ef); err != nil {
 			return err
 		}
@@ -65,7 +67,7 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 		if err := WalkStmts(stmt.Else, sf, ef); err != nil {
 			return err
 		}
-	case *TryStmt:
+	case *ast.TryStmt:
 		if err := WalkStmts(stmt.Try, sf, ef); err != nil {
 			return err
 		}
@@ -75,21 +77,21 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 		if err := WalkStmts(stmt.Finally, sf, ef); err != nil {
 			return err
 		}
-	case *LoopStmt:
+	case *ast.LoopStmt:
 		if err := walkExpr(stmt.Expr, sf, ef); err != nil {
 			return err
 		}
 		if err := WalkStmts(stmt.Stmts, sf, ef); err != nil {
 			return err
 		}
-	case *ForStmt:
+	case *ast.ForStmt:
 		if err := walkExpr(stmt.Value, sf, ef); err != nil {
 			return err
 		}
 		if err := WalkStmts(stmt.Stmts, sf, ef); err != nil {
 			return err
 		}
-	case *CForStmt:
+	case *ast.CForStmt:
 		if err := walkExpr(stmt.Expr1, sf, ef); err != nil {
 			return err
 		}
@@ -102,29 +104,29 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 		if err := WalkStmts(stmt.Stmts, sf, ef); err != nil {
 			return err
 		}
-	case *ThrowStmt:
+	case *ast.ThrowStmt:
 		if err := walkExpr(stmt.Expr, sf, ef); err != nil {
 			return err
 		}
-	case *ModuleStmt:
+	case *ast.ModuleStmt:
 		if err := WalkStmts(stmt.Stmts, sf, ef); err != nil {
 			return err
 		}
-	case *SwitchStmt:
+	case *ast.SwitchStmt:
 		if err := walkExpr(stmt.Expr, sf, ef); err != nil {
 			return err
 		}
 		for _, ss := range stmt.Cases {
-			if ssd, ok := ss.(*DefaultStmt); ok {
+			if ssd, ok := ss.(*ast.DefaultStmt); ok {
 				if err := WalkStmts(ssd.Stmts, sf, ef); err != nil {
 					return err
 				}
 				continue
 			}
-			if err := walkExpr(ss.(*CaseStmt).Expr, sf, ef); err != nil {
+			if err := walkExpr(ss.(*ast.CaseStmt).Expr, sf, ef); err != nil {
 				return err
 			}
-			if err := WalkStmts(ss.(*CaseStmt).Stmts, sf, ef); err != nil {
+			if err := WalkStmts(ss.(*ast.CaseStmt).Stmts, sf, ef); err != nil {
 				return err
 			}
 		}
@@ -134,7 +136,7 @@ func walkStmt(stmt Stmt, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	return nil
 }
 
-func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
+func walkExpr(expr ast.Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	//short circuit out if there are no functions
 	if expr == nil || (sf == nil && ef == nil) {
 		return nil
@@ -143,17 +145,17 @@ func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 		return err
 	}
 	switch expr := expr.(type) {
-	case *NumberExpr:
-	case *IdentExpr:
-	case *MemberExpr:
+	case *ast.NumberExpr:
+	case *ast.IdentExpr:
+	case *ast.MemberExpr:
 		return walkExpr(expr.Expr, sf, ef)
-	case *StringExpr:
-	case *ItemExpr:
+	case *ast.StringExpr:
+	case *ast.ItemExpr:
 		if err := walkExpr(expr.Value, sf, ef); err != nil {
 			return err
 		}
 		return walkExpr(expr.Index, sf, ef)
-	case *SliceExpr:
+	case *ast.SliceExpr:
 		if err := walkExpr(expr.Value, sf, ef); err != nil {
 			return err
 		}
@@ -161,51 +163,51 @@ func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 			return err
 		}
 		return walkExpr(expr.End, sf, ef)
-	case *ArrayExpr:
+	case *ast.ArrayExpr:
 		return WalkExprs(expr.Exprs, sf, ef)
-	case *MapExpr:
+	case *ast.MapExpr:
 		for _, expr := range expr.MapExpr {
 			if err := walkExpr(expr, sf, ef); err != nil {
 				return err
 			}
 		}
-	case *DerefExpr:
+	case *ast.DerefExpr:
 		return walkExpr(expr.Expr, sf, ef)
-	case *AddrExpr:
+	case *ast.AddrExpr:
 		return walkExpr(expr.Expr, sf, ef)
-	case *UnaryExpr:
+	case *ast.UnaryExpr:
 		return walkExpr(expr.Expr, sf, ef)
-	case *ParenExpr:
+	case *ast.ParenExpr:
 		return walkExpr(expr.SubExpr, sf, ef)
-	case *FuncExpr:
+	case *ast.FuncExpr:
 		return WalkStmts(expr.Stmts, sf, ef)
-	case *AssocExpr:
+	case *ast.AssocExpr:
 		return walkExpr(expr.Lhs, sf, ef)
-	case *LetExpr:
+	case *ast.LetExpr:
 		if err := walkExpr(expr.Lhs, sf, ef); err != nil {
 			return err
 		}
 		return walkExpr(expr.Rhs, sf, ef)
-	case *LetsExpr:
+	case *ast.LetsExpr:
 		if err := WalkExprs(expr.Lhss, sf, ef); err != nil {
 			return err
 		}
 		return WalkExprs(expr.Rhss, sf, ef)
-	case *NewExpr:
-	case *BinOpExpr:
+	case *ast.NewExpr:
+	case *ast.BinOpExpr:
 		if err := walkExpr(expr.Lhs, sf, ef); err != nil {
 			return err
 		}
 		return walkExpr(expr.Rhs, sf, ef)
-	case *ConstExpr:
-	case *AnonCallExpr:
+	case *ast.ConstExpr:
+	case *ast.AnonCallExpr:
 		if err := walkExpr(expr.Expr, sf, ef); err != nil {
 			return err
 		}
-		return walkExpr(&CallExpr{Func: nil, SubExprs: expr.SubExprs, VarArg: expr.VarArg, Go: expr.Go}, sf, ef)
-	case *CallExpr:
+		return walkExpr(&ast.CallExpr{Func: nil, SubExprs: expr.SubExprs, VarArg: expr.VarArg, Go: expr.Go}, sf, ef)
+	case *ast.CallExpr:
 		return WalkExprs(expr.SubExprs, sf, ef)
-	case *TernaryOpExpr:
+	case *ast.TernaryOpExpr:
 		if err := walkExpr(expr.Expr, sf, ef); err != nil {
 			return err
 		}
@@ -213,15 +215,15 @@ func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 			return err
 		}
 		return walkExpr(expr.Rhs, sf, ef)
-	case *MakeExpr:
-	case *MakeChanExpr:
+	case *ast.MakeExpr:
+	case *ast.MakeChanExpr:
 		return walkExpr(expr.SizeExpr, sf, ef)
-	case *MakeArrayExpr:
+	case *ast.MakeArrayExpr:
 		if err := walkExpr(expr.LenExpr, sf, ef); err != nil {
 			return err
 		}
 		return walkExpr(expr.CapExpr, sf, ef)
-	case *ChanExpr:
+	case *ast.ChanExpr:
 		if err := walkExpr(expr.Rhs, sf, ef); err != nil {
 			return err
 		}
@@ -232,14 +234,14 @@ func walkExpr(expr Expr, sf WalkStatementFunc, ef WalkExpressionFunc) error {
 	return nil
 }
 
-func callStmtFunc(stmt Stmt, sf WalkStatementFunc) error {
+func callStmtFunc(stmt ast.Stmt, sf WalkStatementFunc) error {
 	if stmt == nil || sf == nil {
 		return nil
 	}
 	return sf(stmt)
 }
 
-func callExprFunc(expr Expr, ef WalkExpressionFunc) error {
+func callExprFunc(expr ast.Expr, ef WalkExpressionFunc) error {
 	if expr == nil || ef == nil {
 		return nil
 	}
