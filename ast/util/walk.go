@@ -1,4 +1,4 @@
-package astutils
+package util
 
 import (
 	"fmt"
