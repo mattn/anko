@@ -85,12 +85,6 @@ func Import(env *vm.Env) *vm.Env {
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
-		if rv.Kind() == reflect.String {
-			return int64(len([]byte(rv.String())))
-		}
-		if rv.Kind() != reflect.Array && rv.Kind() != reflect.Slice {
-			panic("Argument #1 should be array")
-		}
 		return int64(rv.Len())
 	})
 
