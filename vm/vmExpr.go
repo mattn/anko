@@ -738,7 +738,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						arg = reflect.New(it).Elem()
 					}
 					if arg == NilValue {
-						arg = reflect.New(it).Elem()
 					} else if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
 						arg = arg.Convert(it)
 					} else if arg.Kind() == reflect.Func {
@@ -779,7 +778,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					args = append(args, arg)
 				}
 			} else {
-				if arg.Kind() == reflect.Interface {
+				if arg.Kind() == reflect.Interface && !arg.IsNil() {
 					arg = arg.Elem()
 				}
 				if e.VarArg && i == l-1 {
