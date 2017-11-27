@@ -285,10 +285,22 @@ func TestReturns(t *testing.T) {
 	runTests(t, tests)
 }
 
-func TestTemp(t *testing.T) {
+func TestArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "a = []", runOutput: []interface{}{}, ouput: map[string]interface{}{"a": []interface{}{}}},
+		{script: "a = [nil]", runOutput: []interface{}{interface{}(nil)}, ouput: map[string]interface{}{"a": []interface{}{interface{}(nil)}}},
+		{script: "a = [true]", runOutput: []interface{}{true}, ouput: map[string]interface{}{"a": []interface{}{true}}},
+		{script: "a = [\"test\"]", runOutput: []interface{}{"test"}, ouput: map[string]interface{}{"a": []interface{}{"test"}}},
+		{script: "a = [1]", runOutput: []interface{}{int64(1)}, ouput: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{script: "a = [1.1]", runOutput: []interface{}{float64(1.1)}, ouput: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+
+		{script: "a = [[]]", runOutput: []interface{}{[]interface{}{}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{}}}},
+		{script: "a = [[nil]]", runOutput: []interface{}{[]interface{}{interface{}(nil)}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{interface{}(nil)}}}},
+		{script: "a = [[true]]", runOutput: []interface{}{[]interface{}{true}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{true}}}},
+		{script: "a = [[\"test\"]]", runOutput: []interface{}{[]interface{}{"test"}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{"test"}}}},
+		{script: "a = [[1]]", runOutput: []interface{}{[]interface{}{int64(1)}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
+		{script: "a = [[1.1]]", runOutput: []interface{}{[]interface{}{float64(1.1)}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{float64(1.1)}}}},
 	}
 	runTests(t, tests)
 }
