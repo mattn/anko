@@ -267,6 +267,11 @@ func TestReturns(t *testing.T) {
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
 
+		{script: "func a(x) { return x}; a(nil)", runOutput: nil},
+		{script: "func a(x) { return x}; a(true)", runOutput: true},
+		{script: "func a(x) { return x}; a(1)", runOutput: int64(1)},
+		{script: "func a(x) { return x}; a(1.1)", runOutput: float64(1.1)},
+
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": true}, runOutput: nil, ouput: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": int64(1)}, runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
@@ -429,28 +434,6 @@ func TestInterruptRaces(t *testing.T) {
 		}()
 	}
 	waitGroup.Wait()
-}
-
-type TestInterface interface {
-	DoSomething()
-}
-
-func TestTypedNil(t *testing.T) {
-	stmts, err := parser.ParseSrc(`doTest(nil)`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	env := NewEnv()
-	err = env.Define("doTest", func(v TestInterface) {
-		if v != nil {
-			t.Fatal("argument should be nil")
-		}
-	})
-	_, err = Run(stmts, env)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestSliceConvert(t *testing.T) {
