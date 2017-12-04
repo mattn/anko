@@ -88,15 +88,17 @@ func Import(env *vm.Env) *vm.Env {
 		return int64(rv.Len())
 	})
 
-	env.Define("keys", func(v interface{}) []reflect.Value {
+	env.Define("keys", func(v interface{}) []string {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
-		if rv.Kind() != reflect.Map {
-			panic("Argument #1 should be map")
+		mapKeysValue := rv.MapKeys()
+		mapKeys := make([]string, len(mapKeysValue))
+		for i := 0; i < len(mapKeysValue); i++ {
+			mapKeys[i] = mapKeysValue[i].String()
 		}
-		return rv.MapKeys()
+		return mapKeys
 	})
 
 	env.Define("range", func(args ...int64) []int64 {
