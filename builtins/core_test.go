@@ -84,6 +84,16 @@ func TestLen(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestKeys(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a = {}; b = keys(a)", runOutput: []string{}, ouput: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: "a = {\"a\":1}; b = keys(a)", runOutput: []string{"a"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
+		{script: "a = {\"a\":1, \"b\":2}; b = keys(a)", runOutput: []string{"a", "b"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": int64(1), "b": int64(2)}}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value reflect.Value
 loop:
