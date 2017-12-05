@@ -587,7 +587,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
-		if lhsV.Kind() == reflect.Interface {
+		if lhsV.Kind() == reflect.Interface && !rhsV.IsNil() {
 			lhsV = lhsV.Elem()
 		}
 		if e.Rhs != nil {
@@ -595,21 +595,18 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, NewError(expr, err)
 			}
-			if rhsV.Kind() == reflect.Interface {
+			if rhsV.Kind() == reflect.Interface && !rhsV.IsNil() {
 				rhsV = rhsV.Elem()
 			}
 		}
 		switch e.Operator {
 		case "+":
-			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
-				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
-			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() != reflect.Array && rhsV.Kind() != reflect.Slice) {
 				rhsT := rhsV.Type()
 				lhsT := lhsV.Type().Elem()
 				if lhsT.Kind() != rhsT.Kind() {
 					if !rhsT.ConvertibleTo(lhsT) {
-						return NilValue, NewStringError(expr, "Unknown operator")
+						return NilValue, NewStringError(expr, "invalid type conversion")
 					}
 					rhsV = rhsV.Convert(lhsT)
 				}
@@ -620,7 +617,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				lhsT := lhsV.Type().Elem()
 				if lhsT.Kind() != rhsT.Kind() {
 					if !rhsT.ConvertibleTo(lhsT) {
-						return NilValue, NewStringError(expr, "Unknown operator")
+						return NilValue, NewStringError(expr, "invalid type conversion")
 					}
 					for i := 0; i < rhsV.Len(); i++ {
 						lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
@@ -628,6 +625,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					return lhsV, nil
 				}
 				return reflect.AppendSlice(lhsV, rhsV), nil
+			}
+			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
+				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
 			}
 			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
@@ -738,7 +738,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						arg = reflect.New(it).Elem()
 					}
 					if arg == NilValue {
-						arg = reflect.New(it).Elem()
 					} else if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
 						arg = arg.Convert(it)
 					} else if arg.Kind() == reflect.Func {
@@ -779,7 +778,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					args = append(args, arg)
 				}
 			} else {
-				if arg.Kind() == reflect.Interface {
+				if arg.Kind() == reflect.Interface && !arg.IsNil() {
 					arg = arg.Elem()
 				}
 				if e.VarArg && i == l-1 {
