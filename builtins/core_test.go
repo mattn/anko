@@ -135,6 +135,11 @@ loop:
 				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
 				continue
 			}
+		} else if value.Kind() == reflect.Func {
+			if !reflect.DeepEqual(value, reflect.ValueOf(test.runOutput)) {
+				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
+				continue
+			}
 		} else {
 			if !reflect.DeepEqual(value.Interface(), test.runOutput) {
 				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
@@ -150,6 +155,11 @@ loop:
 			}
 			if !value.IsValid() || !value.CanInterface() {
 				if !reflect.DeepEqual(value, outputValue) {
+					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
+					continue
+				}
+			} else if value.Kind() == reflect.Func {
+				if !reflect.DeepEqual(value, reflect.ValueOf(outputValue)) {
 					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
 					continue
 				}
