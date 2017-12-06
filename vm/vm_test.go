@@ -613,9 +613,9 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "var a = 1", runOutput: []interface{}{int64(1)}, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "var a, b = 1, 2", runOutput: []interface{}{int64(1), int64(2)}, ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: "var a, b, c = 1, 2, 3", runOutput: []interface{}{int64(1), int64(2), int64(3)}, ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{script: "var a = 1", runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "var a, b = 1, 2", runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{script: "var a, b, c = 1, 2, 3", runOutput: int64(3), ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
 	}
 	runTests(t, tests)
 }
@@ -701,6 +701,12 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 3 { continue } }; return a }; x()", runOutput: int64(3)},
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 4 { continue } }; return a }; x()", runOutput: int64(3)},
 	}
+	runTests(t, tests)
+}
+
+func TestTemp(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{}
 	runTests(t, tests)
 }
 
