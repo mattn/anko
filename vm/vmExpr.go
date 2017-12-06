@@ -541,29 +541,20 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return invokeLetExpr(e.Lhs, rv, env)
 	case *ast.LetsExpr:
-		rv := NilValue
 		var err error
-		vs := []interface{}{}
-		for _, rhs := range e.Rhss {
-			rv, err = invokeExpr(rhs, env)
+		rvs := make([]reflect.Value, len(e.Rhss))
+		for i, rhs := range e.Rhss {
+			rvs[i], err = invokeExpr(rhs, env)
 			if err != nil {
 				return NilValue, NewError(rhs, err)
 			}
-			if rv == NilValue {
-				vs = append(vs, nil)
-			} else if rv.IsValid() && rv.CanInterface() {
-				vs = append(vs, rv.Interface())
-			} else {
-				vs = append(vs, nil)
-			}
 		}
-		rvs := reflect.ValueOf(vs)
 		for i, lhs := range e.Lhss {
-			if i >= rvs.Len() {
+			if i >= len(rvs) {
 				break
 			}
-			v := rvs.Index(i)
-			if v.Kind() == reflect.Interface {
+			v := rvs[i]
+			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
@@ -571,7 +562,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return NilValue, NewError(lhs, err)
 			}
 		}
-		return rvs, nil
+		return rvs[len(rvs)-1], nil
 	case *ast.NewExpr:
 		rt, err := env.Type(e.Type)
 		if err != nil {
