@@ -198,14 +198,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 
 			rv, err := Run(stmt.Stmts, newenv)
-			if err != nil {
+			if err != nil && err != ContinueError {
 				if err == BreakError {
-					err = nil
 					break
-				}
-				if err == ContinueError {
-					err = nil
-					continue
 				}
 				if err == ReturnError {
 					return rv, err
@@ -233,14 +228,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 				newenv.Define(stmt.Var, iv)
 				rv, err := Run(stmt.Stmts, newenv)
-				if err != nil {
+				if err != nil && err != ContinueError {
 					if err == BreakError {
-						err = nil
 						break
-					}
-					if err == ContinueError {
-						err = nil
-						continue
 					}
 					if err == ReturnError {
 						return rv, err
@@ -266,14 +256,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 				newenv.Define(stmt.Var, iv)
 				rv, err := Run(stmt.Stmts, newenv)
-				if err != nil {
+				if err != nil && err != ContinueError {
 					if err == BreakError {
-						err = nil
 						break
-					}
-					if err == ContinueError {
-						err = nil
-						continue
 					}
 					if err == ReturnError {
 						return rv, err
@@ -305,14 +290,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 
 			rv, err := Run(stmt.Stmts, newenv)
-			if err != nil {
+			if err != nil && err != ContinueError {
 				if err == BreakError {
-					err = nil
 					break
-				}
-				if err == ContinueError {
-					err = nil
-					continue
 				}
 				if err == ReturnError {
 					return rv, err
