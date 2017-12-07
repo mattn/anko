@@ -294,28 +294,28 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.ReturnStmt:
+		var err error
+		var rv reflect.Value
 		switch len(stmt.Exprs) {
 		case 0:
-			return NilValue, nil
+			return rv, nil
 		case 1:
-			rv, err := invokeExpr(stmt.Exprs[0], env)
+			rv, err = invokeExpr(stmt.Exprs[0], env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
 			return rv, nil
 		}
-		rvs := []interface{}{}
-		for _, expr := range stmt.Exprs {
-			rv, err := invokeExpr(expr, env)
+		rvs := make([]interface{}, len(stmt.Exprs))
+		for i, expr := range stmt.Exprs {
+			rv, err = invokeExpr(expr, env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
-			if isNil(rv) {
-				rvs = append(rvs, nil)
-			} else if rv.IsValid() && rv.CanInterface() {
-				rvs = append(rvs, rv.Interface())
+			if !rv.IsValid() || !rv.CanInterface() {
+				rvs[i] = nil
 			} else {
-				rvs = append(rvs, nil)
+				rvs[i] = rv.Interface()
 			}
 		}
 		return reflect.ValueOf(rvs), nil

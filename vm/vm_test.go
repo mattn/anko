@@ -294,6 +294,9 @@ func TestIf(t *testing.T) {
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "func aFunc() {return}; aFunc()", runOutput: reflect.Value{}},
+		{script: "func aFunc() {return}; a = aFunc()", runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}}},
+
 		{script: "func aFunc() {return nil}; aFunc()", runOutput: nil},
 		{script: "func aFunc() {return true}; aFunc()", runOutput: true},
 		{script: "func aFunc() {return 1}; aFunc()", runOutput: int64(1)},
@@ -650,16 +653,16 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { return [1, 2] }; for b in x() { if b == 2 { break } }", runOutput: nil},
 		{script: "func x() { return [1, 2, 3] }; for b in x() { if b == 3 { break } }", runOutput: nil},
 
-		{script: "func x() { a = 1; for { if a == 1 { return } } }; x()", runOutput: nil},
+		{script: "func x() { a = 1; for { if a == 1 { return } } }; x()", runOutput: reflect.Value{}},
 		{script: "func x() { a = 1; for { if a == 1 { return nil } } }; x()", runOutput: nil},
 		{script: "func x() { a = 1; for { if a == 1 { return true } } }; x()", runOutput: true},
 		{script: "func x() { a = 1; for { if a == 1 { return 1 } } }; x()", runOutput: int64(1)},
 		{script: "func x() { a = 1; for { if a == 1 { return 1.1 } } }; x()", runOutput: float64(1.1)},
 		{script: "func x() { a = 1; for { if a == 1 { return \"a\" } } }; x()", runOutput: "a"},
 
-		{script: "func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()", runOutput: nil},
+		{script: "func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()", runOutput: reflect.Value{}},
 		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue } } }; x()", runOutput: nil},
-		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()", runOutput: nil},
+		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()", runOutput: reflect.Value{}},
 
 		{script: "for a = 1; nil; nil { if a == 1 { break } }", runOutput: nil},
 		{script: "for a = 1; nil; nil { if a == 2 { break }; a++ }", runOutput: nil},
@@ -701,12 +704,6 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 3 { continue } }; return a }; x()", runOutput: int64(3)},
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 4 { continue } }; return a }; x()", runOutput: int64(3)},
 	}
-	runTests(t, tests)
-}
-
-func TestTemp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{}
 	runTests(t, tests)
 }
 
