@@ -32,7 +32,7 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 
 // RunSingleStmt executes one statement in the specified environment.
 func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
-	if env.catchInterrupt() {
+	if *(env.interrupt) {
 		return NilValue, InterruptError
 	}
 	switch stmt := stmt.(type) {
@@ -43,57 +43,48 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return rv, nil
 	case *ast.VarStmt:
-		rv := NilValue
 		var err error
-		rvs := []reflect.Value{}
-		for _, expr := range stmt.Exprs {
-			rv, err = invokeExpr(expr, env)
+		rvs := make([]reflect.Value, len(stmt.Exprs))
+		for i, expr := range stmt.Exprs {
+			rvs[i], err = invokeExpr(expr, env)
 			if err != nil {
-				return rv, NewError(expr, err)
+				return NilValue, NewError(expr, err)
 			}
-			rvs = append(rvs, rv)
 		}
-		result := []interface{}{}
 		for i, name := range stmt.Names {
-			if i < len(rvs) {
-				env.Define(name, rvs[i])
-				result = append(result, rvs[i].Interface())
+			if i >= len(rvs) {
+				break
 			}
+			env.Define(name, rvs[i])
 		}
-		return reflect.ValueOf(result), nil
+		return rvs[len(rvs)-1], nil
 	case *ast.LetsStmt:
-		rv := NilValue
 		var err error
-		vs := []interface{}{}
-		for _, rhs := range stmt.Rhss {
-			rv, err = invokeExpr(rhs, env)
+		rvs := make([]reflect.Value, len(stmt.Rhss))
+		for i, rhs := range stmt.Rhss {
+			rvs[i], err = invokeExpr(rhs, env)
 			if err != nil {
-				return rv, NewError(rhs, err)
-			}
-			if rv == NilValue {
-				vs = append(vs, nil)
-			} else if rv.IsValid() && rv.CanInterface() {
-				vs = append(vs, rv.Interface())
-			} else {
-				vs = append(vs, nil)
+				return NilValue, NewError(rhs, err)
 			}
 		}
-		rvs := reflect.ValueOf(vs)
-		if len(stmt.Lhss) > 1 && rvs.Len() == 1 {
-			item := rvs.Index(0)
-			if item.Kind() == reflect.Interface {
-				item = item.Elem()
+		if len(stmt.Lhss) > 1 && len(rvs) == 1 {
+			v := rvs[0]
+			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+				v = v.Elem()
 			}
-			if item.Kind() == reflect.Slice {
-				rvs = item
+			if v.IsValid() && v.Kind() == reflect.Slice {
+				rvs = make([]reflect.Value, v.Len())
+				for i := 0; i < v.Len(); i++ {
+					rvs[i] = v.Index(i)
+				}
 			}
 		}
 		for i, lhs := range stmt.Lhss {
-			if i >= rvs.Len() {
+			if i >= len(rvs) {
 				break
 			}
-			v := rvs.Index(i)
-			if v.Kind() == reflect.Interface && !v.IsNil() {
+			v := rvs[i]
+			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
@@ -101,10 +92,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				return NilValue, NewError(lhs, err)
 			}
 		}
-		if rvs.Len() == 1 {
-			return rvs.Index(0), nil
-		}
-		return rvs, nil
+		return rvs[len(rvs)-1], nil
 	case *ast.IfStmt:
 		// If
 		rv, err := invokeExpr(stmt.If, env)
@@ -184,7 +172,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for {
-			if env.catchInterrupt() {
+			if *(env.interrupt) {
 				return NilValue, InterruptError
 			}
 			if stmt.Expr != nil {
@@ -222,6 +210,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for i := 0; i < val.Len(); i++ {
+				if *(env.interrupt) {
+					return NilValue, InterruptError
+				}
 				iv := val.Index(i)
 				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
@@ -244,7 +235,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for {
-				if env.catchInterrupt() {
+				if *(env.interrupt) {
 					return NilValue, InterruptError
 				}
 				iv, ok := val.Recv()
@@ -278,7 +269,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		for {
-			if env.catchInterrupt() {
+			if *(env.interrupt) {
 				return NilValue, InterruptError
 			}
 			fb, err := invokeExpr(stmt.Expr2, newenv)
@@ -306,28 +297,28 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return NilValue, nil
 	case *ast.ReturnStmt:
+		var err error
+		var rv reflect.Value
 		switch len(stmt.Exprs) {
 		case 0:
-			return NilValue, nil
+			return rv, nil
 		case 1:
-			rv, err := invokeExpr(stmt.Exprs[0], env)
+			rv, err = invokeExpr(stmt.Exprs[0], env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
 			return rv, nil
 		}
-		rvs := []interface{}{}
-		for _, expr := range stmt.Exprs {
-			rv, err := invokeExpr(expr, env)
+		rvs := make([]interface{}, len(stmt.Exprs))
+		for i, expr := range stmt.Exprs {
+			rv, err = invokeExpr(expr, env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
-			if isNil(rv) {
-				rvs = append(rvs, nil)
-			} else if rv.IsValid() && rv.CanInterface() {
-				rvs = append(rvs, rv.Interface())
+			if !rv.IsValid() || !rv.CanInterface() {
+				rvs[i] = nil
 			} else {
-				rvs = append(rvs, nil)
+				rvs[i] = rv.Interface()
 			}
 		}
 		return reflect.ValueOf(rvs), nil

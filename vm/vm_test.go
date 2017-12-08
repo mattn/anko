@@ -22,6 +22,7 @@ type testStruct struct {
 
 func TestBasicOperators(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
+	testInput1 := map[string]interface{}{"b": func() {}}
 	tests := []testStruct{
 		{script: "]", parseError: fmt.Errorf("syntax error"), runOutput: nil},
 		{script: "1 = 2", runError: fmt.Errorf("Invalid operation"), runOutput: nil},
@@ -56,10 +57,22 @@ func TestBasicOperators(t *testing.T) {
 		{script: "a = b; b = nil", input: map[string]interface{}{"b": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil, "b": nil}},
 		{script: "a = true", runOutput: true, ouput: map[string]interface{}{"a": true}},
 		{script: "a = false", input: map[string]interface{}{"a": true}, runOutput: false, ouput: map[string]interface{}{"a": false}},
+
+		{script: "a = b", input: map[string]interface{}{"b": reflect.Value{}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}, "b": reflect.Value{}}},
+		{script: "a = b", input: map[string]interface{}{"b": struct{}{}}, runOutput: struct{}{}, ouput: map[string]interface{}{"a": struct{}{}, "b": struct{}{}}},
+		{script: "a = b", input: testInput1, runOutput: testInput1["b"], ouput: map[string]interface{}{"a": testInput1["b"], "b": testInput1["b"]}},
+
+		{script: "a = b", input: map[string]interface{}{"b": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil, "b": nil}},
 		{script: "a = b", input: map[string]interface{}{"b": true}, runOutput: true, ouput: map[string]interface{}{"a": true, "b": true}},
 		{script: "a = b", input: map[string]interface{}{"b": int64(2)}, runOutput: int64(2), ouput: map[string]interface{}{"a": int64(2), "b": int64(2)}},
 		{script: "a = b", input: map[string]interface{}{"b": int64(2)}, runOutput: int64(2), ouput: map[string]interface{}{"a": int64(2), "b": int64(2)}},
 		{script: "a = b", input: map[string]interface{}{"b": float64(2.1)}, runOutput: float64(2.1), ouput: map[string]interface{}{"a": float64(2.1), "b": float64(2.1)}},
+		{script: "a = b", input: map[string]interface{}{"b": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a", "b": "a"}},
+
+		{script: "a, b = 1, 2", input: map[string]interface{}{"a": int64(3)}, runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{script: "a, b, c = 1, 2, 3", input: map[string]interface{}{"a": int64(3)}, runOutput: int64(3), ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{script: "a, b = [1, 2], [3, 4]", runOutput: []interface{}{int64(3), int64(4)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}, "b": []interface{}{int64(3), int64(4)}}},
+
 		{script: "y = z", runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
 		{script: "z.y.x = 1", runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
 
@@ -281,52 +294,85 @@ func TestIf(t *testing.T) {
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "func aFunc() {return}; aFunc()", runOutput: reflect.Value{}},
+		{script: "func aFunc() {return}; a = aFunc()", runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}}},
+
 		{script: "func aFunc() {return nil}; aFunc()", runOutput: nil},
 		{script: "func aFunc() {return true}; aFunc()", runOutput: true},
 		{script: "func aFunc() {return 1}; aFunc()", runOutput: int64(1)},
 		{script: "func aFunc() {return 1.1}; aFunc()", runOutput: float64(1.1)},
+		{script: "func aFunc() {return \"a\"}; aFunc()", runOutput: "a"},
+
+		{script: "func aFunc() {return nil, nil}; aFunc()", runOutput: []interface{}{nil, nil}},
+		{script: "func aFunc() {return true, false}; aFunc()", runOutput: []interface{}{true, false}},
+		{script: "func aFunc() {return 1, 2}; aFunc()", runOutput: []interface{}{int64(1), int64(2)}},
+		{script: "func aFunc() {return 1.1, 2.2}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2)}},
+		{script: "func aFunc() {return \"a\", \"b\"}; aFunc()", runOutput: []interface{}{"a", "b"}},
+
+		{script: "func aFunc() {return [nil]}; aFunc()", runOutput: []interface{}{nil}},
+		{script: "func aFunc() {return [nil, nil]}; aFunc()", runOutput: []interface{}{nil, nil}},
+		{script: "func aFunc() {return [nil, nil, nil]}; aFunc()", runOutput: []interface{}{nil, nil, nil}},
+		{script: "func aFunc() {return [nil, nil], [nil, nil]}; aFunc()", runOutput: []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}},
 
 		{script: "func aFunc() {return [true]}; aFunc()", runOutput: []interface{}{true}},
 		{script: "func aFunc() {return [true, false]}; aFunc()", runOutput: []interface{}{true, false}},
 		{script: "func aFunc() {return [true, false, true]}; aFunc()", runOutput: []interface{}{true, false, true}},
+		{script: "func aFunc() {return [true, false], [false, true]}; aFunc()", runOutput: []interface{}{[]interface{}{true, false}, []interface{}{false, true}}},
 
 		{script: "func aFunc() {return []}; aFunc()", runOutput: []interface{}{}},
 		{script: "func aFunc() {return [1]}; aFunc()", runOutput: []interface{}{int64(1)}},
 		{script: "func aFunc() {return [1, 2]}; aFunc()", runOutput: []interface{}{int64(1), int64(2)}},
 		{script: "func aFunc() {return [1, 2, 3]}; aFunc()", runOutput: []interface{}{int64(1), int64(2), int64(3)}},
+		{script: "func aFunc() {return [1, 2], [3, 4]}; aFunc()", runOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
 
 		{script: "func aFunc() {return [1.1]}; aFunc()", runOutput: []interface{}{float64(1.1)}},
 		{script: "func aFunc() {return [1.1, 2.2]}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2)}},
 		{script: "func aFunc() {return [1.1, 2.2, 3.3]}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2), float64(3.3)}},
+		{script: "func aFunc() {return [1.1, 2.2], [3.3, 4.4]}; aFunc()", runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}},
 
 		{script: "func aFunc() {return [\"a\"]}; aFunc()", runOutput: []interface{}{"a"}},
 		{script: "func aFunc() {return [\"a\", \"b\"]}; aFunc()", runOutput: []interface{}{"a", "b"}},
 		{script: "func aFunc() {return [\"a\", \"b\", \"c\"]}; aFunc()", runOutput: []interface{}{"a", "b", "c"}},
+		{script: "func aFunc() {return [\"a\", \"b\"], [\"c\", \"d\"]}; aFunc()", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}},
+
+		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: []interface{}{interface{}(nil), interface{}(nil)}, ouput: map[string]interface{}{"a": reflect.Value{}}},
 
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
 
 		{script: "func a(x) { return x}; a(nil)", runOutput: nil},
 		{script: "func a(x) { return x}; a(true)", runOutput: true},
 		{script: "func a(x) { return x}; a(1)", runOutput: int64(1)},
 		{script: "func a(x) { return x}; a(1.1)", runOutput: float64(1.1)},
+		{script: "func a(x) { return x}; a(\"a\")", runOutput: "a"},
 
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": true}, runOutput: nil, ouput: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": int64(1)}, runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
 		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": "a"}, runOutput: nil, ouput: map[string]interface{}{"a": "a"}},
 
 		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
 		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
 
 		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
 		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
+
+		{script: "func aFunc() {return nil, nil}; a, b = aFunc()", runOutput: nil, ouput: map[string]interface{}{"a": nil, "b": nil}},
+		{script: "func aFunc() {return true, false}; a, b = aFunc()", runOutput: false, ouput: map[string]interface{}{"a": true, "b": false}},
+		{script: "func aFunc() {return 1, 2}; a, b = aFunc()", runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{script: "func aFunc() {return 1.1, 2.2}; a, b = aFunc()", runOutput: float64(2.2), ouput: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
+		{script: "func aFunc() {return \"a\", \"b\"}; a, b = aFunc()", runOutput: "b", ouput: map[string]interface{}{"a": "a", "b": "b"}},
 	}
 	runTests(t, tests)
 }
@@ -570,9 +616,9 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "var a = 1", runOutput: []interface{}{int64(1)}, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "var a, b = 1, 2", runOutput: []interface{}{int64(1), int64(2)}, ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: "var a, b, c = 1, 2, 3", runOutput: []interface{}{int64(1), int64(2), int64(3)}, ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{script: "var a = 1", runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "var a, b = 1, 2", runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{script: "var a, b, c = 1, 2, 3", runOutput: int64(3), ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
 	}
 	runTests(t, tests)
 }
@@ -607,16 +653,16 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { return [1, 2] }; for b in x() { if b == 2 { break } }", runOutput: nil},
 		{script: "func x() { return [1, 2, 3] }; for b in x() { if b == 3 { break } }", runOutput: nil},
 
-		{script: "func x() { a = 1; for { if a == 1 { return } } }; x()", runOutput: nil},
+		{script: "func x() { a = 1; for { if a == 1 { return } } }; x()", runOutput: reflect.Value{}},
 		{script: "func x() { a = 1; for { if a == 1 { return nil } } }; x()", runOutput: nil},
 		{script: "func x() { a = 1; for { if a == 1 { return true } } }; x()", runOutput: true},
 		{script: "func x() { a = 1; for { if a == 1 { return 1 } } }; x()", runOutput: int64(1)},
 		{script: "func x() { a = 1; for { if a == 1 { return 1.1 } } }; x()", runOutput: float64(1.1)},
 		{script: "func x() { a = 1; for { if a == 1 { return \"a\" } } }; x()", runOutput: "a"},
 
-		{script: "func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()", runOutput: nil},
+		{script: "func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()", runOutput: reflect.Value{}},
 		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue } } }; x()", runOutput: nil},
-		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()", runOutput: nil},
+		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()", runOutput: reflect.Value{}},
 
 		{script: "for a = 1; nil; nil { if a == 1 { break } }", runOutput: nil},
 		{script: "for a = 1; nil; nil { if a == 2 { break }; a++ }", runOutput: nil},
@@ -701,6 +747,11 @@ loop:
 				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
 				continue
 			}
+		} else if value.Kind() == reflect.Func {
+			if !reflect.DeepEqual(value, reflect.ValueOf(test.runOutput)) {
+				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
+				continue
+			}
 		} else {
 			if !reflect.DeepEqual(value.Interface(), test.runOutput) {
 				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
@@ -719,6 +770,11 @@ loop:
 					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
 					continue
 				}
+			} else if value.Kind() == reflect.Func {
+				if !reflect.DeepEqual(value, reflect.ValueOf(outputValue)) {
+					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
+					continue
+				}
 			} else {
 				if !reflect.DeepEqual(value.Interface(), outputValue) {
 					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
@@ -731,58 +787,129 @@ loop:
 	}
 }
 
-func testInterrupt(t *testing.T) {
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
-	waitChan := make(chan struct{}, 1)
-
-	env := NewEnv()
-	sleepMillisecond := func() { time.Sleep(time.Millisecond) }
-
-	err := env.Define("println", fmt.Println)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-	err = env.Define("sleep", sleepMillisecond)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-
-	script := `
-# sleep for 10 seconds
-for i = 0; i < 10000; i++ {
-	sleep()
+func TestInterrupts(t *testing.T) {
+	scripts := []string{
+		`
+closeWaitChan()
+for {
 }
-# Should interrupt before printing the next line
-println("this line should not be printed")
-`
+`,
+		`
+closeWaitChan()
+for {
+	for {
+	}
+}
+`,
+		`
+a = []
+for i = 0; i < 10000; i++ {
+	a += 1
+}
+closeWaitChan()
+for i in a {
+}
+`,
+		`
+a = []
+for i = 0; i < 10000; i++ {
+	a += 1
+}
+closeWaitChan()
+for i in a {
+	for j in a {
+	}
+}
+`,
+		`
+closeWaitChan()
+for i = 0; true; nil {
+}
+`,
+		`
+closeWaitChan()
+for i = 0; true; nil {
+	for j = 0; true; nil {
+	}
+}
+`,
+	}
+	for _, script := range scripts {
+		runInterruptTest(t, script)
+	}
+}
+
+func runInterruptTest(t *testing.T, script string) {
+	waitChan := make(chan struct{}, 1)
+	closeWaitChan := func() {
+		close(waitChan)
+	}
+	env := NewEnv()
+	err := env.Define("closeWaitChan", closeWaitChan)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
 
 	go func() {
-		close(waitChan)
-		_, err := env.Execute(script)
-		if err == nil {
-			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
-		} else if err.Error() != InterruptError.Error() {
-			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
-		}
-		waitGroup.Done()
+		<-waitChan
+		Interrupt(env)
 	}()
 
-	<-waitChan
-	Interrupt(env)
-
-	waitGroup.Wait()
+	_, err = env.Execute(script)
+	if err == nil {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	} else if err.Error() != InterruptError.Error() {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	}
 }
 
-func TestInterruptRaces(t *testing.T) {
-	// Run testInterrupt many times
+func TestInterruptConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
+	env := NewEnv()
+
+	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
-		waitGroup.Add(1)
 		go func() {
-			testInterrupt(t)
+			_, err := env.Execute("for { }")
+			if err == nil {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			} else if err.Error() != InterruptError.Error() {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			}
 			waitGroup.Done()
 		}()
 	}
+	time.Sleep(time.Millisecond)
+	Interrupt(env)
+	waitGroup.Wait()
+
+	_, err := env.Execute("for { }")
+	if err == nil {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	} else if err.Error() != InterruptError.Error() {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	}
+
+	ClearInterrupt(env)
+
+	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
+	if err != nil {
+		t.Errorf("Execute error - received %v expected: %v", err, nil)
+	}
+
+	waitGroup.Add(100)
+	for i := 0; i < 100; i++ {
+		go func() {
+			_, err := env.Execute("for { }")
+			if err == nil {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			} else if err.Error() != InterruptError.Error() {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			}
+			waitGroup.Done()
+		}()
+	}
+	time.Sleep(time.Millisecond)
+	Interrupt(env)
 	waitGroup.Wait()
 }
