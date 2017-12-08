@@ -787,58 +787,129 @@ loop:
 	}
 }
 
-func testInterrupt(t *testing.T) {
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
-	waitChan := make(chan struct{}, 1)
-
-	env := NewEnv()
-	sleepMillisecond := func() { time.Sleep(time.Millisecond) }
-
-	err := env.Define("println", fmt.Println)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-	err = env.Define("sleep", sleepMillisecond)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-
-	script := `
-# sleep for 10 seconds
-for i = 0; i < 10000; i++ {
-	sleep()
+func TestInterrupts(t *testing.T) {
+	scripts := []string{
+		`
+closeWaitChan()
+for {
 }
-# Should interrupt before printing the next line
-println("this line should not be printed")
-`
+`,
+		`
+closeWaitChan()
+for {
+	for {
+	}
+}
+`,
+		`
+a = []
+for i = 0; i < 10000; i++ {
+	a += 1
+}
+closeWaitChan()
+for i in a {
+}
+`,
+		`
+a = []
+for i = 0; i < 10000; i++ {
+	a += 1
+}
+closeWaitChan()
+for i in a {
+	for j in a {
+	}
+}
+`,
+		`
+closeWaitChan()
+for i = 0; true; nil {
+}
+`,
+		`
+closeWaitChan()
+for i = 0; true; nil {
+	for j = 0; true; nil {
+	}
+}
+`,
+	}
+	for _, script := range scripts {
+		runInterruptTest(t, script)
+	}
+}
+
+func runInterruptTest(t *testing.T, script string) {
+	waitChan := make(chan struct{}, 1)
+	closeWaitChan := func() {
+		close(waitChan)
+	}
+	env := NewEnv()
+	err := env.Define("closeWaitChan", closeWaitChan)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
 
 	go func() {
-		close(waitChan)
-		_, err := env.Execute(script)
-		if err == nil {
-			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
-		} else if err.Error() != InterruptError.Error() {
-			t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
-		}
-		waitGroup.Done()
+		<-waitChan
+		Interrupt(env)
 	}()
 
-	<-waitChan
-	Interrupt(env)
-
-	waitGroup.Wait()
+	_, err = env.Execute(script)
+	if err == nil {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	} else if err.Error() != InterruptError.Error() {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	}
 }
 
-func TestInterruptRaces(t *testing.T) {
-	// Run testInterrupt many times
+func TestInterruptConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
+	env := NewEnv()
+
+	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
-		waitGroup.Add(1)
 		go func() {
-			testInterrupt(t)
+			_, err := env.Execute("for { }")
+			if err == nil {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			} else if err.Error() != InterruptError.Error() {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			}
 			waitGroup.Done()
 		}()
 	}
+	time.Sleep(time.Millisecond)
+	Interrupt(env)
+	waitGroup.Wait()
+
+	_, err := env.Execute("for { }")
+	if err == nil {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	} else if err.Error() != InterruptError.Error() {
+		t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+	}
+
+	ClearInterrupt(env)
+
+	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
+	if err != nil {
+		t.Errorf("Execute error - received %v expected: %v", err, nil)
+	}
+
+	waitGroup.Add(100)
+	for i := 0; i < 100; i++ {
+		go func() {
+			_, err := env.Execute("for { }")
+			if err == nil {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			} else if err.Error() != InterruptError.Error() {
+				t.Errorf("Execute error - received %v expected: %v", err, InterruptError)
+			}
+			waitGroup.Done()
+		}()
+	}
+	time.Sleep(time.Millisecond)
+	Interrupt(env)
 	waitGroup.Wait()
 }

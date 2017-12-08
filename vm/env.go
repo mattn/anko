@@ -75,18 +75,6 @@ func (e *Env) SetExternal(res EnvResolver) {
 	e.external = res
 }
 
-// catchInterrupt checks if the interrupt was set
-// if the interrupt was set, it is reset and true is returned
-func (e *Env) catchInterrupt() (caught bool) {
-	e.Lock()
-	if *(e.interrupt) {
-		*(e.interrupt) = false
-		caught = true
-	}
-	e.Unlock()
-	return
-}
-
 // Destroy deletes current scope.
 func (e *Env) Destroy() {
 	e.Lock()

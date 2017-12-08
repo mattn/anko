@@ -32,7 +32,7 @@ func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 
 // RunSingleStmt executes one statement in the specified environment.
 func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
-	if env.catchInterrupt() {
+	if *(env.interrupt) {
 		return NilValue, InterruptError
 	}
 	switch stmt := stmt.(type) {
@@ -172,7 +172,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
 		for {
-			if env.catchInterrupt() {
+			if *(env.interrupt) {
 				return NilValue, InterruptError
 			}
 			if stmt.Expr != nil {
@@ -210,6 +210,9 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for i := 0; i < val.Len(); i++ {
+				if *(env.interrupt) {
+					return NilValue, InterruptError
+				}
 				iv := val.Index(i)
 				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
@@ -232,7 +235,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			defer newenv.Destroy()
 
 			for {
-				if env.catchInterrupt() {
+				if *(env.interrupt) {
 					return NilValue, InterruptError
 				}
 				iv, ok := val.Recv()
@@ -266,7 +269,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, err
 		}
 		for {
-			if env.catchInterrupt() {
+			if *(env.interrupt) {
 				return NilValue, InterruptError
 			}
 			fb, err := invokeExpr(stmt.Expr2, newenv)
