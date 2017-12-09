@@ -202,10 +202,11 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if ee != nil {
 			return val, ee
 		}
-		if val.Kind() == reflect.Interface {
+		if val.Kind() == reflect.Interface && !val.IsNil() {
 			val = val.Elem()
 		}
-		if val.Kind() == reflect.Array || val.Kind() == reflect.Slice {
+		switch val.Kind() {
+		case reflect.Array, reflect.Slice:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
 
@@ -214,7 +215,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					return NilValue, InterruptError
 				}
 				iv := val.Index(i)
-				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
+				if iv.Kind() == reflect.Ptr || (iv.Kind() == reflect.Interface && !iv.IsNil()) {
 					iv = iv.Elem()
 				}
 				newenv.Define(stmt.Var, iv)
@@ -230,7 +231,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 			}
 			return NilValue, nil
-		} else if val.Kind() == reflect.Chan {
+		case reflect.Chan:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
 
@@ -258,8 +259,8 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 			}
 			return NilValue, nil
-		} else {
-			return NilValue, NewStringError(stmt, "Invalid operation for non-array value")
+		default:
+			return NilValue, NewStringError(stmt, "for cannot loop over type "+val.Kind().String())
 		}
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
@@ -298,7 +299,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		return NilValue, nil
 	case *ast.ReturnStmt:
 		var err error
-		var rv reflect.Value
+		rv := NilValue
 		switch len(stmt.Exprs) {
 		case 0:
 			return rv, nil
