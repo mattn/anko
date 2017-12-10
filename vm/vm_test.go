@@ -179,11 +179,36 @@ func TestStrings(t *testing.T) {
 	tests := []testStruct{
 		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', ouput: map[string]interface{}{"a": 'a'}},
 		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support indexing"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("cannot slice type int32"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
 
 		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", ouput: map[string]interface{}{"a": "test"}},
 		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},
 		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: 'e', ouput: map[string]interface{}{"a": "test"}},
 		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},
+
+		{script: "a[1:0]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("invalid slice index"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[-1:2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:-2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+
+		{script: "a[0:0]", input: map[string]interface{}{"a": "test data"}, runOutput: "", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "t", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "te", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "tes", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "test da", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "test dat", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "test data", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+
+		{script: "a[1:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "e", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "es", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "est da", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "est dat", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "est data", ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+
+		{script: "a[:2]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[2:]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), ouput: map[string]interface{}{"a": "test data"}},
 	}
 	runTests(t, tests)
 }

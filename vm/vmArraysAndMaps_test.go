@@ -94,22 +94,52 @@ func TestArrays(t *testing.T) {
 		{script: "a = []; a[0]", runError: fmt.Errorf("index out of range"), runOutput: nil},
 		{script: "a = []; a[-1]", runError: fmt.Errorf("index out of range"), runOutput: nil},
 
-		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": nil}, runError: fmt.Errorf("index should be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
-		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": true}, runError: fmt.Errorf("index should be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": nil}, runError: fmt.Errorf("index must be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": true}, runError: fmt.Errorf("index must be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": int(1)}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": int32(1)}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": float32(1.1)}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": float64(1.1)}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": "1"}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
-		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("index should be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("index must be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 
-		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarBoolP}, runError: fmt.Errorf("index should be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarBoolP}, runError: fmt.Errorf("index must be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarInt32P}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarInt64P}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarFloat32P}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
 		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarFloat64P}, runOutput: int64(2), ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
-		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarStringP}, runError: fmt.Errorf("index should be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+		{script: "b = [1, 2]; b[a]", input: map[string]interface{}{"a": testVarStringP}, runError: fmt.Errorf("index must be a number"), runOutput: nil, ouput: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
+	}
+	runTests(t, tests)
+}
+
+func TestArraySlice(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a = [1, 2, 3]; a[true:2]", runError: fmt.Errorf("index must be a number"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:true]", runError: fmt.Errorf("index must be a number"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[0:0]", runOutput: []interface{}{}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:1]", runOutput: []interface{}{int64(1)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:2]", runOutput: []interface{}{int64(1), int64(2)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:3]", runOutput: []interface{}{int64(1), int64(2), int64(3)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:4]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[1:0]", runError: fmt.Errorf("invalid slice index"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:1]", runOutput: []interface{}{}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:2]", runOutput: []interface{}{int64(2)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:3]", runOutput: []interface{}{int64(2), int64(3)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:4]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[2:1]", runError: fmt.Errorf("invalid slice index"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[2:2]", runOutput: []interface{}{}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[2:3]", runOutput: []interface{}{int64(3)}, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[2:4]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[3:2]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[3:3]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[3:4]", runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 	}
 	runTests(t, tests)
 }
