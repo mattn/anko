@@ -406,7 +406,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case reflect.Array, reflect.Slice, reflect.String:
 			ii, err := tryToInt(i)
 			if err != nil {
-				return NilValue, NewStringError(expr, "index should be a number")
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
 			if ii < 0 || ii >= v.Len() {
 				return NilValue, NewStringError(expr, "index out of range")
@@ -447,42 +447,26 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice, reflect.String:
+			rbi, err := tryToInt(rb)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+			rei, err := tryToInt(re)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			ii := int(rb.Int())
-			if ii < 0 || ii > v.Len() {
-				return NilValue, nil
+			if rbi < 0 || rbi >= v.Len() || rei < 0 || rei > v.Len() {
+				return NilValue, NewStringError(expr, "index out of range")
 			}
-			ij := int(re.Int())
-			if ij < 0 || ij > v.Len() {
-				return v, nil
+			if rbi > rei {
+				return NilValue, NewStringError(expr, "invalid slice index")
 			}
-			return v.Slice(ii, ij), nil
+			return v.Slice(rbi, rei), nil
+		default:
+			return NilValue, NewStringError(expr, "cannot slice type "+v.Kind().String())
 		}
-		if v.Kind() == reflect.String {
-			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
-			}
-			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
-			}
-			r := []rune(v.String())
-			ii := int(rb.Int())
-			if ii < 0 || ii >= len(r) {
-				return NilValue, nil
-			}
-			ij := int(re.Int())
-			if ij < 0 || ij >= len(r) {
-				return NilValue, nil
-			}
-			return reflect.ValueOf(string(r[ii:ij])), nil
-		}
-		return NilValue, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
 		switch e.Operator {
 		case "++":
