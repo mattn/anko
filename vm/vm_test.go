@@ -35,6 +35,8 @@ var (
 	testVarFloat64P = &testVarFloat64
 	testVarString   = "a"
 	testVarStringP  = &testVarString
+	testVarFunc     = func() int64 { return 1 }
+	testVarFuncP    = &testVarFunc
 
 	testVarValueBool    = reflect.ValueOf(true)
 	testVarValueInt32   = reflect.ValueOf(int32(1))
@@ -128,6 +130,12 @@ func TestReturns(t *testing.T) {
 		{script: "func aFunc() {return [\"a\", \"b\", \"c\"]}; aFunc()", runOutput: []interface{}{"a", "b", "c"}},
 		{script: "func aFunc() {return [\"a\", \"b\"], [\"c\", \"d\"]}; aFunc()", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}},
 
+		{script: "func aFunc() {return nil, nil}; aFunc()", runOutput: []interface{}{interface{}(nil), interface{}(nil)}},
+		{script: "func aFunc() {return true, false}; aFunc()", runOutput: []interface{}{true, false}},
+		{script: "func aFunc() {return 1, 2}; aFunc()", runOutput: []interface{}{int64(1), int64(2)}},
+		{script: "func aFunc() {return 1.1, 2.2}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2)}},
+		{script: "func aFunc() {return \"a\", \"b\"}; aFunc()", runOutput: []interface{}{"a", "b"}},
+
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}}},
 
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
@@ -178,6 +186,7 @@ func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("invalid member operation 'b' for type int32"), ouput: map[string]interface{}{"a": 'a'}},
 		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support indexing"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
 		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("cannot slice type int32"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
 
@@ -339,6 +348,113 @@ func TestForLoop(t *testing.T) {
 
 		{script: "a = 1; b = [{\"c\": \"c\"}]; for i in b { a = i }", runOutput: nil, ouput: map[string]interface{}{"a": map[string]interface{}{"c": "c"}, "b": []interface{}{map[string]interface{}{"c": "c"}}}},
 		{script: "a = 1; b = {\"x\": [{\"y\": \"y\"}]};  for i in b.x { a = i }", runOutput: nil, ouput: map[string]interface{}{"a": map[string]interface{}{"y": "y"}, "b": map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "y"}}}}},
+	}
+	runTests(t, tests)
+}
+
+func TestStructs(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a[\"B\"]", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runError: fmt.Errorf("type struct does not support indexing"),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{}}},
+		{script: "a.C", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runError: fmt.Errorf("no member named 'C' for struct"),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{}}},
+
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runOutput: nil,
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: nil, B: nil}},
+			runOutput: nil,
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: nil, B: nil}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: int32(1), B: int32(2)}},
+			runOutput: int32(2),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: int32(1), B: int32(2)}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: int64(1), B: int64(2)}},
+			runOutput: int64(2),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: int64(1), B: int64(2)}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: float32(1.1), B: float32(2.2)}},
+			runOutput: float32(2.2),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: float32(1.1), B: float32(2.2)}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: float64(1.1), B: float64(2.2)}},
+			runOutput: float64(2.2),
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: float64(1.1), B: float64(2.2)}}},
+		{script: "a.B", input: map[string]interface{}{"a": struct {
+			A interface{}
+			B interface{}
+		}{A: "a", B: "b"}},
+			runOutput: "b",
+			ouput: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: "a", B: "b"}}},
+	}
+	runTests(t, tests)
+}
+
+func TestFunctions(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a", input: map[string]interface{}{"a": testVarFunc}, runOutput: testVarFunc, ouput: map[string]interface{}{"a": testVarFunc}},
+		{script: "a()", input: map[string]interface{}{"a": testVarFunc}, runOutput: int64(1), ouput: map[string]interface{}{"a": testVarFunc}},
+		{script: "a", input: map[string]interface{}{"a": testVarFuncP}, runOutput: testVarFuncP, ouput: map[string]interface{}{"a": testVarFuncP}},
+		// TOFIX:
+		// {script: "a()", input: map[string]interface{}{"a": testVarFuncP}, runOutput: int64(1), ouput: map[string]interface{}{"a": testVarFuncP}},
+
+		{script: "module a { func b() { return } }; a.b()", runOutput: nil},
+		{script: "module a { func b() { return nil} }; a.b()", runOutput: nil},
+		{script: "module a { func b() { return 1} }; a.b()", runOutput: int64(1)},
+		{script: "module a { func b() { return 1.1} }; a.b()", runOutput: float64(1.1)},
+		{script: "module a { func b() { return \"a\"} }; a.b()", runOutput: "a"},
 	}
 	runTests(t, tests)
 }

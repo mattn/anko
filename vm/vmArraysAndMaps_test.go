@@ -381,6 +381,13 @@ func TestMaps(t *testing.T) {
 		{script: "a.b", input: map[string]interface{}{"a": map[string]interface{}{"b": float64(1.1)}}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": map[string]interface{}{"b": float64(1.1)}}},
 		{script: "a.b", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "b", ouput: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
+		{script: "a.b", input: map[string]interface{}{"a": map[string]bool{"a": false, "b": true}}, runOutput: true, ouput: map[string]interface{}{"a": map[string]bool{"a": false, "b": true}}},
+		{script: "a.b", input: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(2)}}, runOutput: int32(2), ouput: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(2)}}},
+		{script: "a.b", input: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(2)}}, runOutput: int64(2), ouput: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(2)}}},
+		{script: "a.b", input: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(2.2)}}, runOutput: float32(2.2), ouput: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(2.2)}}},
+		{script: "a.b", input: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(2.2)}}, runOutput: float64(2.2), ouput: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(2.2)}}},
+		{script: "a.b", input: map[string]interface{}{"a": map[string]string{"a": "a", "b": "b"}}, runOutput: "b", ouput: map[string]interface{}{"a": map[string]string{"a": "a", "b": "b"}}},
+
 		{script: "a[\"b\"]", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: "a[\"b\"]", input: map[string]interface{}{"a": map[string]interface{}{"b": reflect.Value{}}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": map[string]interface{}{"b": reflect.Value{}}}},
 		{script: "a[\"b\"]", input: map[string]interface{}{"a": map[string]interface{}{"b": nil}}, runOutput: nil, ouput: map[string]interface{}{"a": map[string]interface{}{"b": nil}}},
