@@ -172,7 +172,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return reflect.ValueOf(a), nil
 	case *ast.MapExpr:
-		m := make(map[string]interface{})
+		m := make(map[string]interface{}, len(e.MapExpr))
 		for k, expr := range e.MapExpr {
 			v, err := invokeExpr(expr, env)
 			if err != nil {
@@ -217,10 +217,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					v = v.Elem()
 				}
 				if v.Kind() == reflect.Struct {
-					m = v.FieldByName(ee.Name)
-					if !m.IsValid() {
-						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					field, found := v.Type().FieldByName(ee.Name)
+					if !found {
+						return NilValue, NewStringError(expr, "no member named '"+ee.Name+"' for struct")
 					}
+					return v.FieldByIndex(field.Index), nil
 				} else if v.Kind() == reflect.Map {
 					// From reflect MapIndex:
 					// It returns the zero Value if key is not found in the map or if v represents a nil map.
@@ -371,25 +372,28 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 
-		m := v.MethodByName(e.Name)
-		if !m.IsValid() {
-			if v.Kind() == reflect.Ptr {
-				v = v.Elem()
-			}
-			if v.Kind() == reflect.Struct {
-				m = v.FieldByName(e.Name)
-				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
-				}
-			} else if v.Kind() == reflect.Map {
-				// From reflect MapIndex:
-				// It returns the zero Value if key is not found in the map or if v represents a nil map.
-				m = v.MapIndex(reflect.ValueOf(e.Name))
-			} else {
-				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
-			}
+		method, found := v.Type().MethodByName(e.Name)
+		if found {
+			return v.Method(method.Index), nil
 		}
-		return m, nil
+
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		switch v.Kind() {
+		case reflect.Struct:
+			field, found := v.Type().FieldByName(e.Name)
+			if !found {
+				return NilValue, NewStringError(expr, "no member named '"+e.Name+"' for struct")
+			}
+			return v.FieldByIndex(field.Index), nil
+		case reflect.Map:
+			// From reflect MapIndex:
+			// It returns the zero Value if key is not found in the map or if v represents a nil map.
+			return v.MapIndex(reflect.ValueOf(e.Name)), nil
+		default:
+			return NilValue, NewStringError(expr, "invalid member operation '"+e.Name+"' for type "+v.Kind().String())
+		}
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
