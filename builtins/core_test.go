@@ -88,8 +88,8 @@ func TestKeys(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: "a = {}; b = keys(a)", runOutput: []string{}, ouput: map[string]interface{}{"a": map[string]interface{}{}}},
-		{script: "a = {\"a\":1}; b = keys(a)", runOutput: []string{"a"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
-		{script: "a = {\"a\":1, \"b\":2}; b = keys(a)", runOutput: []string{"a", "b"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": int64(1), "b": int64(2)}}},
+		{script: "a = {\"a\": nil}; b = keys(a)", runOutput: []string{"a"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
+		{script: "a = {\"a\": 1}; b = keys(a)", runOutput: []string{"a"}, ouput: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
 	}
 	runTests(t, tests)
 }
@@ -142,7 +142,7 @@ loop:
 			}
 		} else {
 			if !reflect.DeepEqual(value.Interface(), test.runOutput) {
-				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
+				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, reflect.ValueOf(test.runOutput), test.script)
 				continue
 			}
 		}
@@ -165,7 +165,7 @@ loop:
 				}
 			} else {
 				if !reflect.DeepEqual(value.Interface(), outputValue) {
-					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
+					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, reflect.ValueOf(outputValue), test.script)
 					continue
 				}
 			}

@@ -12,6 +12,7 @@ import (
 var (
 	NilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	NilType    = reflect.TypeOf(nil)
+	Int32Type  = reflect.TypeOf(int32(1))
 	TrueValue  = reflect.ValueOf(true)
 	FalseValue = reflect.ValueOf(false)
 )
@@ -93,13 +94,18 @@ func ClearInterrupt(env *Env) {
 }
 
 func isNil(v reflect.Value) bool {
-	if !v.IsValid() || v.Kind().String() == "unsafe.Pointer" {
-		return true
+	if !v.IsValid() {
+		return false
 	}
-	if (v.Kind() == reflect.Interface || v.Kind() == reflect.Ptr) && v.IsNil() {
-		return true
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		// from reflect IsNil:
+		// Note that IsNil is not always equivalent to a regular comparison with nil in Go.
+		// For example, if v was created by calling ValueOf with an uninitialized interface variable i, i==nil will be true but v.IsNil will panic as v will be the zero Value.
+		return v.IsNil()
+	default:
+		return false
 	}
-	return false
 }
 
 func isNum(v reflect.Value) bool {

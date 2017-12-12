@@ -14,14 +14,17 @@ func ToFunc(f Func) reflect.Value {
 
 // toString converts all reflect.Value-s into string.
 func toString(v reflect.Value) string {
-	if v.Kind() == reflect.Interface {
-		v = v.Elem()
+	if !v.IsValid() {
+		return "nil"
 	}
-	if v.Kind() == reflect.String {
-		return v.String()
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
 	}
 	if !v.IsValid() {
 		return "nil"
+	}
+	if v.Kind() == reflect.String {
+		return v.String()
 	}
 	return fmt.Sprint(v.Interface())
 }
@@ -34,10 +37,9 @@ func toString(v reflect.Value) string {
 // if set to true, the function only matches on "true" or "false", not
 // e.g. "True" or "FALSE"
 func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
-	if v.Kind() == reflect.Interface {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
-
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
 		return v.Float() != 0.0, nil
@@ -79,7 +81,7 @@ func toFloat64(v reflect.Value) float64 {
 // If it cannot (in the case of a non-numeric string, a struct, etc.)
 // it returns 0.0 and an error.
 func tryToFloat64(v reflect.Value) (float64, error) {
-	if v.Kind() == reflect.Interface {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
 	switch v.Kind() {
@@ -106,7 +108,7 @@ func toInt64(v reflect.Value) int64 {
 // If it cannot (in the case of a non-numeric string, a struct, etc.)
 // it returns 0 and an error.
 func tryToInt64(v reflect.Value) (int64, error) {
-	if v.Kind() == reflect.Interface {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
 	switch v.Kind() {
@@ -124,7 +126,35 @@ func tryToInt64(v reflect.Value) (int64, error) {
 			i, err = strconv.ParseInt(s, 10, 64)
 		}
 		if err == nil {
-			return int64(i), nil
+			return i, nil
+		}
+	}
+	return 0, errors.New("couldn't convert to integer")
+}
+
+// tryToInt attempts to convert a value to an int.
+// If it cannot (in the case of a non-numeric string, a struct, etc.)
+// it returns 0 and an error.
+func tryToInt(v reflect.Value) (int, error) {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+	switch v.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return int(v.Float()), nil
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		return int(v.Int()), nil
+	case reflect.String:
+		s := v.String()
+		var i int64
+		var err error
+		if strings.HasPrefix(s, "0x") {
+			i, err = strconv.ParseInt(s, 16, 64)
+		} else {
+			i, err = strconv.ParseInt(s, 10, 64)
+		}
+		if err == nil {
+			return int(i), nil
 		}
 	}
 	return 0, errors.New("couldn't convert to integer")

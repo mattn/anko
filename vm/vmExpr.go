@@ -222,10 +222,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 					}
 				} else if v.Kind() == reflect.Map {
+					// From reflect MapIndex:
+					// It returns the zero Value if key is not found in the map or if v represents a nil map.
 					m = v.MapIndex(reflect.ValueOf(ee.Name))
-					if !m.IsValid() {
-						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
-					}
 				} else {
 					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 				}
@@ -281,10 +280,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 					}
 				} else if v.Kind() == reflect.Map {
+					// From reflect MapIndex:
+					// It returns the zero Value if key is not found in the map or if v represents a nil map.
 					m = v.MapIndex(reflect.ValueOf(ee.Name))
-					if !m.IsValid() {
-						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
-					}
 				} else {
 					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 				}
@@ -384,10 +382,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 			} else if v.Kind() == reflect.Map {
+				// From reflect MapIndex:
+				// It returns the zero Value if key is not found in the map or if v represents a nil map.
 				m = v.MapIndex(reflect.ValueOf(e.Name))
-				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
-				}
 			} else {
 				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 			}
@@ -405,31 +402,35 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if i.Kind() != reflect.Int && i.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice, reflect.String:
+			ii, err := tryToInt(i)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			ii := int(i.Int())
 			if ii < 0 || ii >= v.Len() {
-				return NilValue, nil
+				return NilValue, NewStringError(expr, "index out of range")
 			}
-			return v.Index(ii), nil
-		}
-		if v.Kind() == reflect.Map {
+			if v.Kind() != reflect.String {
+				return v.Index(ii), nil
+			}
+			v = v.Index(ii)
+			if v.Type().ConvertibleTo(Int32Type) {
+				return v.Convert(Int32Type), nil
+			} else {
+				return NilValue, NewStringError(expr, "invalid type conversion")
+			}
+		case reflect.Map:
 			if i.Kind() != reflect.String {
-				return NilValue, NewStringError(expr, "Map key should be string")
+				return NilValue, NewStringError(expr, "map key must be string type")
 			}
+			// From reflect MapIndex:
+			// It returns the zero Value if key is not found in the map or if v represents a nil map.
 			return v.MapIndex(i), nil
+		default:
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support indexing")
 		}
-		if v.Kind() == reflect.String {
-			rs := []rune(v.Interface().(string))
-			ii := int(i.Int())
-			if ii < 0 || ii >= len(rs) {
-				return NilValue, nil
-			}
-			return reflect.ValueOf(rs[ii]), nil
-		}
-		return NilValue, NewStringError(expr, "Invalid operation")
+
 	case *ast.SliceExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -446,42 +447,26 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice, reflect.String:
+			rbi, err := tryToInt(rb)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+			rei, err := tryToInt(re)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			ii := int(rb.Int())
-			if ii < 0 || ii > v.Len() {
-				return NilValue, nil
+			if rbi < 0 || rbi >= v.Len() || rei < 0 || rei > v.Len() {
+				return NilValue, NewStringError(expr, "index out of range")
 			}
-			ij := int(re.Int())
-			if ij < 0 || ij > v.Len() {
-				return v, nil
+			if rbi > rei {
+				return NilValue, NewStringError(expr, "invalid slice index")
 			}
-			return v.Slice(ii, ij), nil
+			return v.Slice(rbi, rei), nil
+		default:
+			return NilValue, NewStringError(expr, "cannot slice type "+v.Kind().String())
 		}
-		if v.Kind() == reflect.String {
-			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
-			}
-			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
-			}
-			r := []rune(v.String())
-			ii := int(rb.Int())
-			if ii < 0 || ii >= len(r) {
-				return NilValue, nil
-			}
-			ij := int(re.Int())
-			if ij < 0 || ij >= len(r) {
-				return NilValue, nil
-			}
-			return reflect.ValueOf(string(r[ii:ij])), nil
-		}
-		return NilValue, NewStringError(expr, "Invalid operation")
 	case *ast.AssocExpr:
 		switch e.Operator {
 		case "++":
