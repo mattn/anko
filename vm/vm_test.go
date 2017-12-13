@@ -91,9 +91,17 @@ func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("invalid member operation 'b' for type int32"), ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support indexing"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("cannot slice type int32"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support member operation"), ouput: map[string]interface{}{"a": "test"}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support index operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support slice operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
 
 		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", ouput: map[string]interface{}{"a": "test"}},
 		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},

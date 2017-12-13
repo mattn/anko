@@ -13,7 +13,7 @@ func TestStructs(t *testing.T) {
 			A interface{}
 			B interface{}
 		}{}},
-			runError: fmt.Errorf("type struct does not support indexing"),
+			runError: fmt.Errorf("type struct does not support index operation"),
 			ouput: map[string]interface{}{"a": struct {
 				A interface{}
 				B interface{}
