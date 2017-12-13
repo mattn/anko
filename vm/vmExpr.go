@@ -844,6 +844,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
+		if rt == nil {
+			return NilValue, NewStringError(expr, fmt.Sprintf("invalid type for make"))
+		}
 		if rt.Kind() == reflect.Map {
 			return reflect.MakeMap(reflect.MapOf(rt.Key(), rt.Elem())).Convert(rt), nil
 		}
