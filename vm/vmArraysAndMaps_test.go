@@ -470,6 +470,24 @@ func TestMaps(t *testing.T) {
 		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "b"}, runOutput: "b", ouput: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "b"}},
 		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "c"}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "c"}},
 
+		{script: "a.b = true", input: map[string]interface{}{"a": map[string]bool{"a": true, "b": false}}, runOutput: true, ouput: map[string]interface{}{"a": map[string]bool{"a": true, "b": true}}},
+		// TOFIX:
+		//		{script: "a.b = 3", input: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(2)}}, runOutput: int32(3), ouput: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(3)}}},
+		{script: "a.b = 3", input: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(2)}}, runOutput: int64(3), ouput: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(3)}}},
+		// TOFIX:
+		//		{script: "a.b = 3.3", input: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(2.2)}}, runOutput: float32(3.3), ouput: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(3.3)}}},
+		{script: "a.b = 3.3", input: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(2.2)}}, runOutput: float64(3.3), ouput: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(3.3)}}},
+		{script: "a.b = \"c\"", input: map[string]interface{}{"a": map[string]string{"a": "a", "b": "b"}}, runOutput: "c", ouput: map[string]interface{}{"a": map[string]string{"a": "a", "b": "c"}}},
+
+		{script: "a[\"b\"] = true", input: map[string]interface{}{"a": map[string]bool{"a": true, "b": false}}, runOutput: true, ouput: map[string]interface{}{"a": map[string]bool{"a": true, "b": true}}},
+		// TOFIX:
+		//		{script: "a[\"b\"] = 3", input: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(2)}}, runOutput: int32(3), ouput: map[string]interface{}{"a": map[string]int32{"a": int32(1), "b": int32(3)}}},
+		{script: "a[\"b\"] = 3", input: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(2)}}, runOutput: int64(3), ouput: map[string]interface{}{"a": map[string]int64{"a": int64(1), "b": int64(3)}}},
+		// TOFIX:
+		//		{script: "a[\"b\"] = 3.3", input: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(2.2)}}, runOutput: float32(3.3), ouput: map[string]interface{}{"a": map[string]float32{"a": float32(1.1), "b": float32(3.3)}}},
+		{script: "a[\"b\"] = 3.3", input: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(2.2)}}, runOutput: float64(3.3), ouput: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(3.3)}}},
+		{script: "a[\"b\"] = \"c\"", input: map[string]interface{}{"a": map[string]string{"a": "a", "b": "b"}}, runOutput: "c", ouput: map[string]interface{}{"a": map[string]string{"a": "a", "b": "c"}}},
+
 		{script: "make(mapStringBool)", types: map[string]interface{}{"mapStringBool": map[string]bool{}}, runOutput: map[string]bool{}},
 		{script: "make(mapStringInt32)", types: map[string]interface{}{"mapStringInt32": map[string]int32{}}, runOutput: map[string]int32{}},
 		{script: "make(mapStringInt64)", types: map[string]interface{}{"mapStringInt64": map[string]int64{}}, runOutput: map[string]int64{}},
