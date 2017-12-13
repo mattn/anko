@@ -880,13 +880,16 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, err
 		}
+		if typ == nil {
+			return NilValue, NewStringError(expr, fmt.Sprintf("invalid type for make array"))
+		}
 		var alen int
 		if e.LenExpr != nil {
 			rv, err := invokeExpr(e.LenExpr, env)
 			if err != nil {
 				return NilValue, err
 			}
-			alen = int(toInt64(rv))
+			alen = toInt(rv)
 		}
 		var acap int
 		if e.CapExpr != nil {
@@ -894,24 +897,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, err
 			}
-			acap = int(toInt64(rv))
+			acap = toInt(rv)
 		} else {
 			acap = alen
 		}
-		return func() (reflect.Value, error) {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			return reflect.MakeSlice(reflect.SliceOf(typ), alen, acap), nil
-		}()
+		return reflect.MakeSlice(reflect.SliceOf(typ), alen, acap), nil
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
 		if err != nil {
