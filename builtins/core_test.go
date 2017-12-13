@@ -12,6 +12,7 @@ import (
 type testStruct struct {
 	script     string
 	parseError error
+	types      map[string]interface{}
 	input      map[string]interface{}
 	runError   error
 	runOutput  interface{}
@@ -111,6 +112,14 @@ loop:
 
 		env := vm.NewEnv()
 		LoadAllBuiltins(env)
+
+		for typeName, typeValue := range test.types {
+			err = env.DefineType(typeName, typeValue)
+			if err != nil {
+				t.Errorf("DefineType error: %v - typeName: %v - script: %v", err, typeName, test.script)
+				continue loop
+			}
+		}
 
 		for inputName, inputValue := range test.input {
 			err = env.Define(inputName, inputValue)
