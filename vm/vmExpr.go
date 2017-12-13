@@ -34,25 +34,32 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if v.Kind() == reflect.Slice {
 			v = v.Index(0)
 		}
-
 		if !v.IsValid() {
-			return NilValue, NewStringError(expr, "Cannot assignable")
+			return NilValue, NewStringError(expr, "cannot set type invalid")
 		}
-
 		if v.Kind() == reflect.Ptr {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Struct {
-			v = v.FieldByName(lhs.Name)
+		if !v.IsValid() {
+			return NilValue, NewStringError(expr, "cannot set type invalid")
+		}
+
+		switch v.Kind() {
+		case reflect.Struct:
+			field, found := v.Type().FieldByName(lhs.Name)
+			if !found {
+				return NilValue, NewStringError(expr, "no member named '"+lhs.Name+"' for struct")
+			}
+			v = v.FieldByIndex(field.Index)
 			if !v.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+				return NilValue, NewStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 			v.Set(rv)
-		} else if v.Kind() == reflect.Map {
+		case reflect.Map:
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
-		} else {
+		default:
 			if !v.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+				return NilValue, NewStringError(expr, "cannot assign type "+v.Kind().String())
 			}
 			v.Set(rv)
 		}
