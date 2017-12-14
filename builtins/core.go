@@ -247,6 +247,14 @@ func Import(env *vm.Env) *vm.Env {
 		return reflect.TypeOf(v).String()
 	})
 
+	env.Define("kindOf", func(v interface{}) string {
+		typeOf := reflect.TypeOf(v)
+		if typeOf == nil {
+			return "nil"
+		}
+		return typeOf.Kind().String()
+	})
+
 	env.Define("chanOf", func(t reflect.Type) reflect.Value {
 		return reflect.MakeChan(t, 1)
 	})
