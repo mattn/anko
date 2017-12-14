@@ -95,6 +95,29 @@ func TestKeys(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestKindOf(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "kindOf(a)", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: "nil", ouput: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": nil}, runOutput: "nil", ouput: map[string]interface{}{"a": nil}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(nil)}, runOutput: "nil", ouput: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": true}, runOutput: "bool", ouput: map[string]interface{}{"a": true}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": int32(1)}, runOutput: "int32", ouput: map[string]interface{}{"a": int32(1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": int64(1)}, runOutput: "int64", ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": float32(1.1)}, runOutput: "float32", ouput: map[string]interface{}{"a": float32(1.1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": float64(1.1)}, runOutput: "float64", ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": "a"}, runOutput: "string", ouput: map[string]interface{}{"a": "a"}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": 'a'}, runOutput: "int32", ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{}}, runOutput: "slice", ouput: map[string]interface{}{"a": []interface{}{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: "slice", ouput: map[string]interface{}{"a": []interface{}{nil}}},
+
+		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: "map", ouput: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", ouput: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value reflect.Value
 loop:
