@@ -9,6 +9,15 @@ import (
 
 // Run executes statements in the specified environment.
 func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
+	rv, err := run(stmts, env)
+	if err == ReturnError {
+		return rv, nil
+	}
+	return rv, err
+}
+
+// run executes statements in the specified environment.
+func run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 	rv := NilValue
 	var err error
 	for _, stmt := range stmts {
@@ -103,7 +112,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// Then
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
-			rv, err = Run(stmt.Then, newenv)
+			rv, err = run(stmt.Then, newenv)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
@@ -123,7 +132,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 				// ElseIf Then
 				done = true
-				rv, err = Run(stmt_if.Then, env)
+				rv, err = run(stmt_if.Then, env)
 				if err != nil {
 					return rv, NewError(stmt, err)
 				}
@@ -134,7 +143,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// Else
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
-			rv, err = Run(stmt.Else, newenv)
+			rv, err = run(stmt.Else, newenv)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
@@ -143,7 +152,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.TryStmt:
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
-		_, err := Run(stmt.Try, newenv)
+		_, err := run(stmt.Try, newenv)
 		if err != nil {
 			// Catch
 			cenv := env.NewEnv()
@@ -151,7 +160,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			if stmt.Var != "" {
 				cenv.Define(stmt.Var, reflect.ValueOf(err))
 			}
-			_, e1 := Run(stmt.Catch, cenv)
+			_, e1 := run(stmt.Catch, cenv)
 			if e1 != nil {
 				err = NewError(stmt.Catch[0], e1)
 			} else {
@@ -162,7 +171,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// Finally
 			fenv := env.NewEnv()
 			defer fenv.Destroy()
-			_, e2 := Run(stmt.Finally, newenv)
+			_, e2 := run(stmt.Finally, newenv)
 			if e2 != nil {
 				err = NewError(stmt.Finally[0], e2)
 			}
@@ -185,7 +194,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 			}
 
-			rv, err := Run(stmt.Stmts, newenv)
+			rv, err := run(stmt.Stmts, newenv)
 			if err != nil && err != ContinueError {
 				if err == BreakError {
 					break
@@ -219,7 +228,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					iv = iv.Elem()
 				}
 				newenv.Define(stmt.Var, iv)
-				rv, err := Run(stmt.Stmts, newenv)
+				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
 						break
@@ -247,7 +256,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					iv = iv.Elem()
 				}
 				newenv.Define(stmt.Var, iv)
-				rv, err := Run(stmt.Stmts, newenv)
+				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
 						break
@@ -281,7 +290,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				break
 			}
 
-			rv, err := Run(stmt.Stmts, newenv)
+			rv, err := run(stmt.Stmts, newenv)
 			if err != nil && err != ContinueError {
 				if err == BreakError {
 					break
@@ -335,7 +344,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
-		rv, err := Run(stmt.Stmts, newenv)
+		rv, err := run(stmt.Stmts, newenv)
 		if err != nil {
 			return rv, NewError(stmt, err)
 		}
@@ -361,7 +370,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			if !equal(rv, cv) {
 				continue
 			}
-			rv, err = Run(case_stmt.Stmts, env)
+			rv, err = run(case_stmt.Stmts, env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
@@ -369,7 +378,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			break
 		}
 		if !done && default_stmt != nil {
-			rv, err = Run(default_stmt.Stmts, env)
+			rv, err = run(default_stmt.Stmts, env)
 			if err != nil {
 				return rv, NewError(stmt, err)
 			}
