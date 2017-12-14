@@ -9,6 +9,13 @@ import (
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "return", runOutput: nil},
+		{script: "return nil", runOutput: nil},
+		{script: "return true", runOutput: true},
+		{script: "return 1", runOutput: int64(1)},
+		{script: "return 1.1", runOutput: float64(1.1)},
+		{script: "return \"a\"", runOutput: "a"},
+
 		{script: "func aFunc() {return}; aFunc()", runOutput: nil},
 		{script: "func aFunc() {return}; a = aFunc()", runOutput: nil, ouput: map[string]interface{}{"a": nil}},
 

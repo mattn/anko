@@ -163,6 +163,9 @@ func TestMake(t *testing.T) {
 func TestForLoop(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "break", runError: fmt.Errorf("Unexpected break statement")},
+		{script: "continue", runError: fmt.Errorf("Unexpected continue statement")},
+
 		{script: "for { break }", runOutput: nil},
 		{script: "for {a = 1; if a == 1 { break } }", runOutput: nil},
 		{script: "a = 1; for { if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
