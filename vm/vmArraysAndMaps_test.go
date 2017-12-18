@@ -413,6 +413,18 @@ func TestArrayAppendArrays(t *testing.T) {
 		{script: "b = [1, \"a\"]; b += a", input: map[string]interface{}{"a": []string{}}, runOutput: []interface{}{int64(1), "a"}, ouput: map[string]interface{}{"a": []string{}, "b": []interface{}{int64(1), "a"}}},
 		{script: "b = [1, \"a\"]; b += a", input: map[string]interface{}{"a": []string{"a"}}, runOutput: []interface{}{int64(1), "a", "a"}, ouput: map[string]interface{}{"a": []string{"a"}, "b": []interface{}{int64(1), "a", "a"}}},
 		{script: "b = [1, \"a\"]; b += a", input: map[string]interface{}{"a": []string{"a", "b"}}, runOutput: []interface{}{int64(1), "a", "a", "b"}, ouput: map[string]interface{}{"a": []string{"a", "b"}, "b": []interface{}{int64(1), "a", "a", "b"}}},
+
+		{script: "a = []; a += [nil, nil]; a += [nil, nil]", runOutput: []interface{}{interface{}(nil), interface{}(nil), interface{}(nil), interface{}(nil)}, ouput: map[string]interface{}{"a": []interface{}{interface{}(nil), interface{}(nil), interface{}(nil), interface{}(nil)}}},
+		{script: "a = []; a += [true, false]; a += [false, true]", runOutput: []interface{}{interface{}(true), interface{}(false), interface{}(false), interface{}(true)}, ouput: map[string]interface{}{"a": []interface{}{interface{}(true), interface{}(false), interface{}(false), interface{}(true)}}},
+		{script: "a = []; a += [1, 2]; a += [3, 4]", runOutput: []interface{}{interface{}(int64(1)), interface{}(int64(2)), interface{}(int64(3)), interface{}(int64(4))}, ouput: map[string]interface{}{"a": []interface{}{interface{}(int64(1)), interface{}(int64(2)), interface{}(int64(3)), interface{}(int64(4))}}},
+		{script: "a = []; a += [1.1, 2.2]; a += [3.3, 4.4]", runOutput: []interface{}{interface{}(float64(1.1)), interface{}(float64(2.2)), interface{}(float64(3.3)), interface{}(float64(4.4))}, ouput: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1)), interface{}(float64(2.2)), interface{}(float64(3.3)), interface{}(float64(4.4))}}},
+		{script: "a = []; a += [\"a\", \"b\"]; a += [\"c\", \"d\"]", runOutput: []interface{}{interface{}("a"), interface{}("b"), interface{}("c"), interface{}("d")}, ouput: map[string]interface{}{"a": []interface{}{interface{}("a"), interface{}("b"), interface{}("c"), interface{}("d")}}},
+
+		{script: "a = []; a += [[nil, nil]]; a += [[nil, nil]]", runOutput: []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}}},
+		{script: "a = []; a += [[true, false]]; a += [[false, true]]", runOutput: []interface{}{[]interface{}{true, false}, []interface{}{false, true}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{true, false}, []interface{}{false, true}}}},
+		{script: "a = []; a += [[1, 2]]; a += [[3, 4]]", runOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = []; a += [[1.1, 2.2]]; a += [[3.3, 4.4]]", runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}}},
+		{script: "a = []; a += [[\"a\", \"b\"]]; a += [[\"c\", \"d\"]]", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}, ouput: map[string]interface{}{"a": []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}}},
 	}
 	runTests(t, tests)
 }
