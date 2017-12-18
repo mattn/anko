@@ -118,6 +118,16 @@ func TestKindOf(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestStrings(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "strings = import(\"strings\"); a = \" one two \"; b = strings.TrimSpace(a)", runOutput: "one two", ouput: map[string]interface{}{"a": " one two ", "b": "one two"}},
+		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.Split(a, \" \")", runOutput: []string{"a", "b", "c", "d"}, ouput: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c", "d"}}},
+		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.SplitN(a, \" \", 3)", runOutput: []string{"a", "b", "c d"}, ouput: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c d"}}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value reflect.Value
 loop:

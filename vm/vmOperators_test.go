@@ -294,6 +294,24 @@ func TestComparisonOperators(t *testing.T) {
 		{script: "a == b", input: map[string]interface{}{"a": "a", "b": "b"}, runOutput: false, ouput: map[string]interface{}{"a": "a", "b": "b"}},
 		{script: "a == b", input: map[string]interface{}{"a": "b", "b": "a"}, runOutput: false, ouput: map[string]interface{}{"a": "b", "b": "a"}},
 		{script: "a == b", input: map[string]interface{}{"a": "b", "b": "b"}, runOutput: true, ouput: map[string]interface{}{"a": "b", "b": "b"}},
+
+		{script: "a = \"test\"; a == \"test\"", runOutput: true},
+		{script: "a = \"test\"; a[0:1] == \"t\"", runOutput: true},
+		{script: "a = \"test\"; a[0:2] == \"te\"", runOutput: true},
+		{script: "a = \"test\"; a[1:3] == \"es\"", runOutput: true},
+		{script: "a = \"test\"; a[0:4] == \"test\"", runOutput: true},
+
+		// TOFIX:
+		//		{script: "a = \"a b\"; a[1] == ' '", runOutput: true},
+		//		{script: "a = \"test\"; a[0] == 't'", runOutput: true},
+		//		{script: "a = \"test\"; a[1] == 'e'", runOutput: true},
+		//		{script: "a = \"test\"; a[3] == 't'", runOutput: true},
+
+		// TOFIX:
+		//		{script: "a = \"a b\"; a[1] != ' '", runOutput: false},
+		//		{script: "a = \"test\"; a[0] != 't'", runOutput: false},
+		//		{script: "a = \"test\"; a[1] != 'e'", runOutput: false},
+		//		{script: "a = \"test\"; a[3] != 't'", runOutput: false},
 	}
 	runTests(t, tests)
 }
