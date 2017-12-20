@@ -118,6 +118,27 @@ func TestKindOf(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestStrconv(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "strconv = import(\"strconv\"); a = true; b = strconv.FormatBool(a)", runOutput: "true", ouput: map[string]interface{}{"a": true, "b": "true"}},
+		{script: "strconv = import(\"strconv\"); a = 1.1; b = strconv.FormatFloat(a, toRune(\"f\"), -1, 64)", runOutput: "1.1", ouput: map[string]interface{}{"a": float64(1.1), "b": "1.1"}},
+		{script: "strconv = import(\"strconv\"); a = 1; b = strconv.FormatInt(a, 10)", runOutput: "1", ouput: map[string]interface{}{"a": int64(1), "b": "1"}},
+		{script: "strconv = import(\"strconv\"); b = strconv.FormatInt(a, 10)", input: map[string]interface{}{"a": uint64(1)}, runOutput: "1", ouput: map[string]interface{}{"a": uint64(1), "b": "1"}},
+
+		{script: "strconv = import(\"strconv\"); a = \"true\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "true", "b": true, "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"2\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "strconv.ParseBool: parsing \"2\": invalid syntax", ouput: map[string]interface{}{"a": "2", "b": false, "err": "strconv.ParseBool: parsing \"2\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1.1", "b": float64(1.1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "strconv.ParseFloat: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": float64(0), "err": "strconv.ParseFloat: parsing \"a\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1", "b": int64(1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"1.1\": invalid syntax", ouput: map[string]interface{}{"a": "1.1", "b": int64(0), "err": "strconv.ParseInt: parsing \"1.1\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": int64(0), "err": "strconv.ParseInt: parsing \"a\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1", "b": uint64(1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseUint: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": uint64(0), "err": "strconv.ParseUint: parsing \"a\": invalid syntax"}},
+	}
+	runTests(t, tests)
+}
+
 func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{

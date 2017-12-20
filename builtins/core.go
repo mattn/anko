@@ -33,6 +33,7 @@ import (
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
 	anko_runtime "github.com/mattn/anko/builtins/runtime"
 	anko_sort "github.com/mattn/anko/builtins/sort"
+	anko_strconv "github.com/mattn/anko/builtins/strconv"
 	anko_strings "github.com/mattn/anko/builtins/strings"
 	anko_time "github.com/mattn/anko/builtins/time"
 
@@ -64,6 +65,7 @@ func LoadAllBuiltins(env *vm.Env) {
 		"regexp":        anko_regexp.Import,
 		"runtime":       anko_runtime.Import,
 		"sort":          anko_sort.Import,
+		"strconv":       anko_strconv.Import,
 		"strings":       anko_strings.Import,
 		"time":          anko_time.Import,
 		"github.com/daviddengcn/go-colortext": anko_colortext.Import,

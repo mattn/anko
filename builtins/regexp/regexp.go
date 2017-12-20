@@ -1,5 +1,5 @@
 // Package regexp implements regexp interface for anko script.
-package sort
+package regexp
 
 import (
 	r "regexp"
@@ -8,7 +8,7 @@ import (
 )
 
 func Import(env *vm.Env) *vm.Env {
-	m := env.NewPackage("sort")
+	m := env.NewPackage("regexp")
 	m.Define("Match", r.Match)
 	m.Define("MatchReader", r.MatchReader)
 	m.Define("MatchString", r.MatchString)
