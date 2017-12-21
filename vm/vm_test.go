@@ -14,6 +14,7 @@ import (
 type testStruct struct {
 	script     string
 	parseError error
+	types      map[string]interface{}
 	input      map[string]interface{}
 	runError   error
 	runOutput  interface{}
@@ -35,6 +36,8 @@ var (
 	testVarFloat64P = &testVarFloat64
 	testVarString   = "a"
 	testVarStringP  = &testVarString
+	testVarFunc     = func() int64 { return 1 }
+	testVarFuncP    = &testVarFunc
 
 	testVarValueBool    = reflect.ValueOf(true)
 	testVarValueInt32   = reflect.ValueOf(int32(1))
@@ -84,102 +87,21 @@ func TestIf(t *testing.T) {
 	runTests(t, tests)
 }
 
-func TestReturns(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "func aFunc() {return}; aFunc()", runOutput: nil},
-		{script: "func aFunc() {return}; a = aFunc()", runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-
-		{script: "func aFunc() {return nil}; aFunc()", runOutput: nil},
-		{script: "func aFunc() {return true}; aFunc()", runOutput: true},
-		{script: "func aFunc() {return 1}; aFunc()", runOutput: int64(1)},
-		{script: "func aFunc() {return 1.1}; aFunc()", runOutput: float64(1.1)},
-		{script: "func aFunc() {return \"a\"}; aFunc()", runOutput: "a"},
-
-		{script: "func aFunc() {return nil, nil}; aFunc()", runOutput: []interface{}{nil, nil}},
-		{script: "func aFunc() {return true, false}; aFunc()", runOutput: []interface{}{true, false}},
-		{script: "func aFunc() {return 1, 2}; aFunc()", runOutput: []interface{}{int64(1), int64(2)}},
-		{script: "func aFunc() {return 1.1, 2.2}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2)}},
-		{script: "func aFunc() {return \"a\", \"b\"}; aFunc()", runOutput: []interface{}{"a", "b"}},
-
-		{script: "func aFunc() {return [nil]}; aFunc()", runOutput: []interface{}{nil}},
-		{script: "func aFunc() {return [nil, nil]}; aFunc()", runOutput: []interface{}{nil, nil}},
-		{script: "func aFunc() {return [nil, nil, nil]}; aFunc()", runOutput: []interface{}{nil, nil, nil}},
-		{script: "func aFunc() {return [nil, nil], [nil, nil]}; aFunc()", runOutput: []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}},
-
-		{script: "func aFunc() {return [true]}; aFunc()", runOutput: []interface{}{true}},
-		{script: "func aFunc() {return [true, false]}; aFunc()", runOutput: []interface{}{true, false}},
-		{script: "func aFunc() {return [true, false, true]}; aFunc()", runOutput: []interface{}{true, false, true}},
-		{script: "func aFunc() {return [true, false], [false, true]}; aFunc()", runOutput: []interface{}{[]interface{}{true, false}, []interface{}{false, true}}},
-
-		{script: "func aFunc() {return []}; aFunc()", runOutput: []interface{}{}},
-		{script: "func aFunc() {return [1]}; aFunc()", runOutput: []interface{}{int64(1)}},
-		{script: "func aFunc() {return [1, 2]}; aFunc()", runOutput: []interface{}{int64(1), int64(2)}},
-		{script: "func aFunc() {return [1, 2, 3]}; aFunc()", runOutput: []interface{}{int64(1), int64(2), int64(3)}},
-		{script: "func aFunc() {return [1, 2], [3, 4]}; aFunc()", runOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
-
-		{script: "func aFunc() {return [1.1]}; aFunc()", runOutput: []interface{}{float64(1.1)}},
-		{script: "func aFunc() {return [1.1, 2.2]}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2)}},
-		{script: "func aFunc() {return [1.1, 2.2, 3.3]}; aFunc()", runOutput: []interface{}{float64(1.1), float64(2.2), float64(3.3)}},
-		{script: "func aFunc() {return [1.1, 2.2], [3.3, 4.4]}; aFunc()", runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}},
-
-		{script: "func aFunc() {return [\"a\"]}; aFunc()", runOutput: []interface{}{"a"}},
-		{script: "func aFunc() {return [\"a\", \"b\"]}; aFunc()", runOutput: []interface{}{"a", "b"}},
-		{script: "func aFunc() {return [\"a\", \"b\", \"c\"]}; aFunc()", runOutput: []interface{}{"a", "b", "c"}},
-		{script: "func aFunc() {return [\"a\", \"b\"], [\"c\", \"d\"]}; aFunc()", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}},
-
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: reflect.Value{}, ouput: map[string]interface{}{"a": reflect.Value{}}},
-
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
-
-		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: []interface{}{nil, nil}, ouput: map[string]interface{}{"a": reflect.Value{}}},
-		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: []interface{}{nil, nil}, ouput: map[string]interface{}{"a": nil}},
-		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: []interface{}{true, true}, ouput: map[string]interface{}{"a": true}},
-		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": int32(1)}, runOutput: []interface{}{int32(1), int32(1)}, ouput: map[string]interface{}{"a": int32(1)}},
-
-		{script: "func a(x) { return x}; a(nil)", runOutput: nil},
-		{script: "func a(x) { return x}; a(true)", runOutput: true},
-		{script: "func a(x) { return x}; a(1)", runOutput: int64(1)},
-		{script: "func a(x) { return x}; a(1.1)", runOutput: float64(1.1)},
-		{script: "func a(x) { return x}; a(\"a\")", runOutput: "a"},
-
-		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": true}, runOutput: nil, ouput: map[string]interface{}{"a": true}},
-		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": int64(1)}, runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "func aFunc() {return a}; for {aFunc(); break}", input: map[string]interface{}{"a": "a"}, runOutput: nil, ouput: map[string]interface{}{"a": "a"}},
-
-		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
-		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "func aFunc() {for {return a}}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
-
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: true, ouput: map[string]interface{}{"a": true}},
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "func aFunc() {for {if true {return a}}}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
-
-		{script: "func aFunc() {return nil, nil}; a, b = aFunc()", runOutput: nil, ouput: map[string]interface{}{"a": nil, "b": nil}},
-		{script: "func aFunc() {return true, false}; a, b = aFunc()", runOutput: false, ouput: map[string]interface{}{"a": true, "b": false}},
-		{script: "func aFunc() {return 1, 2}; a, b = aFunc()", runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: "func aFunc() {return 1.1, 2.2}; a, b = aFunc()", runOutput: float64(2.2), ouput: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
-		{script: "func aFunc() {return \"a\", \"b\"}; a, b = aFunc()", runOutput: "b", ouput: map[string]interface{}{"a": "a", "b": "b"}},
-	}
-	runTests(t, tests)
-}
-
 func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support indexing"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("cannot slice type int32"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support member operation"), ouput: map[string]interface{}{"a": "test"}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support index operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support slice operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
 
 		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", ouput: map[string]interface{}{"a": "test"}},
 		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},
@@ -223,9 +145,27 @@ func TestVar(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestMake(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "make(nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("invalid type for make")},
+
+		{script: "make(bool)", types: map[string]interface{}{"bool": true}, runOutput: false},
+		{script: "make(int32)", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
+		{script: "make(int64)", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
+		{script: "make(float32)", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
+		{script: "make(float64)", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
+		{script: "make(string)", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+	}
+	runTests(t, tests)
+}
+
 func TestForLoop(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "break", runError: fmt.Errorf("Unexpected break statement")},
+		{script: "continue", runError: fmt.Errorf("Unexpected continue statement")},
+
 		{script: "for { break }", runOutput: nil},
 		{script: "for {a = 1; if a == 1 { break } }", runOutput: nil},
 		{script: "a = 1; for { if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
@@ -364,6 +304,14 @@ loop:
 			err = env.Define(inputName, inputValue)
 			if err != nil {
 				t.Errorf("Define error: %v - inputName: %v - script: %v", err, inputName, test.script)
+				continue loop
+			}
+		}
+
+		for typeName, typeValue := range test.types {
+			err = env.DefineType(typeName, typeValue)
+			if err != nil {
+				t.Errorf("DefineType error: %v - typeName: %v - script: %v", err, typeName, test.script)
 				continue loop
 			}
 		}

@@ -64,6 +64,7 @@ func TestBasicOperators(t *testing.T) {
 		{script: "a = b", input: map[string]interface{}{"b": testVarFloat32P}, runOutput: testVarFloat32P, ouput: map[string]interface{}{"a": testVarFloat32P, "b": testVarFloat32P}},
 		{script: "a = b", input: map[string]interface{}{"b": testVarFloat64P}, runOutput: testVarFloat64P, ouput: map[string]interface{}{"a": testVarFloat64P, "b": testVarFloat64P}},
 		{script: "a = b", input: map[string]interface{}{"b": testVarStringP}, runOutput: testVarStringP, ouput: map[string]interface{}{"a": testVarStringP, "b": testVarStringP}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarFuncP}, runOutput: testVarFuncP, ouput: map[string]interface{}{"a": testVarFuncP, "b": testVarFuncP}},
 
 		{script: "a = b", input: map[string]interface{}{"b": testVarValueBool}, runOutput: true, ouput: map[string]interface{}{"a": true, "b": true}},
 		{script: "a = b", input: map[string]interface{}{"b": testVarValueInt32}, runOutput: int32(1), ouput: map[string]interface{}{"a": int32(1), "b": int32(1)}},
@@ -251,6 +252,14 @@ func TestComparisonOperators(t *testing.T) {
 		{script: `"1.1" == 1`, runOutput: false},
 		{script: `0 == "1"`, runOutput: false},
 
+		{script: "a == b", input: map[string]interface{}{"a": reflect.Value{}, "b": reflect.Value{}}, runOutput: true, ouput: map[string]interface{}{"a": reflect.Value{}, "b": reflect.Value{}}},
+		{script: "a == b", input: map[string]interface{}{"a": reflect.Value{}, "b": true}, runOutput: false, ouput: map[string]interface{}{"a": reflect.Value{}, "b": true}},
+		{script: "a == b", input: map[string]interface{}{"a": true, "b": reflect.Value{}}, runOutput: false, ouput: map[string]interface{}{"a": true, "b": reflect.Value{}}},
+
+		{script: "a == b", input: map[string]interface{}{"a": nil, "b": nil}, runOutput: true, ouput: map[string]interface{}{"a": nil, "b": nil}},
+		{script: "a == b", input: map[string]interface{}{"a": nil, "b": true}, runOutput: false, ouput: map[string]interface{}{"a": nil, "b": true}},
+		{script: "a == b", input: map[string]interface{}{"a": true, "b": nil}, runOutput: false, ouput: map[string]interface{}{"a": true, "b": nil}},
+
 		{script: "a == b", input: map[string]interface{}{"a": false, "b": false}, runOutput: true, ouput: map[string]interface{}{"a": false, "b": false}},
 		{script: "a == b", input: map[string]interface{}{"a": false, "b": true}, runOutput: false, ouput: map[string]interface{}{"a": false, "b": true}},
 		{script: "a == b", input: map[string]interface{}{"a": true, "b": false}, runOutput: false, ouput: map[string]interface{}{"a": true, "b": false}},
@@ -285,6 +294,24 @@ func TestComparisonOperators(t *testing.T) {
 		{script: "a == b", input: map[string]interface{}{"a": "a", "b": "b"}, runOutput: false, ouput: map[string]interface{}{"a": "a", "b": "b"}},
 		{script: "a == b", input: map[string]interface{}{"a": "b", "b": "a"}, runOutput: false, ouput: map[string]interface{}{"a": "b", "b": "a"}},
 		{script: "a == b", input: map[string]interface{}{"a": "b", "b": "b"}, runOutput: true, ouput: map[string]interface{}{"a": "b", "b": "b"}},
+
+		{script: "a = \"test\"; a == \"test\"", runOutput: true},
+		{script: "a = \"test\"; a[0:1] == \"t\"", runOutput: true},
+		{script: "a = \"test\"; a[0:2] == \"te\"", runOutput: true},
+		{script: "a = \"test\"; a[1:3] == \"es\"", runOutput: true},
+		{script: "a = \"test\"; a[0:4] == \"test\"", runOutput: true},
+
+		// TOFIX:
+		//		{script: "a = \"a b\"; a[1] == ' '", runOutput: true},
+		//		{script: "a = \"test\"; a[0] == 't'", runOutput: true},
+		//		{script: "a = \"test\"; a[1] == 'e'", runOutput: true},
+		//		{script: "a = \"test\"; a[3] == 't'", runOutput: true},
+
+		// TOFIX:
+		//		{script: "a = \"a b\"; a[1] != ' '", runOutput: false},
+		//		{script: "a = \"test\"; a[0] != 't'", runOutput: false},
+		//		{script: "a = \"test\"; a[1] != 'e'", runOutput: false},
+		//		{script: "a = \"test\"; a[3] != 't'", runOutput: false},
 	}
 	runTests(t, tests)
 }

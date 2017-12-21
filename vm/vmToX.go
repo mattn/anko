@@ -159,3 +159,9 @@ func tryToInt(v reflect.Value) (int, error) {
 	}
 	return 0, errors.New("couldn't convert to integer")
 }
+
+// toInt converts all reflect.Value-s into int.
+func toInt(v reflect.Value) int {
+	i, _ := tryToInt(v)
+	return i
+}

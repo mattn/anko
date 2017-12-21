@@ -34,27 +34,31 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if v.Kind() == reflect.Slice {
 			v = v.Index(0)
 		}
-
 		if !v.IsValid() {
-			return NilValue, NewStringError(expr, "Cannot assignable")
+			return NilValue, NewStringError(expr, "type invalid does not support member operation")
 		}
-
 		if v.Kind() == reflect.Ptr {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Struct {
-			v = v.FieldByName(lhs.Name)
+		if !v.IsValid() {
+			return NilValue, NewStringError(expr, "type invalid does not support member operation")
+		}
+
+		switch v.Kind() {
+		case reflect.Struct:
+			field, found := v.Type().FieldByName(lhs.Name)
+			if !found {
+				return NilValue, NewStringError(expr, "no member named '"+lhs.Name+"' for struct")
+			}
+			v = v.FieldByIndex(field.Index)
 			if !v.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+				return NilValue, NewStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 			v.Set(rv)
-		} else if v.Kind() == reflect.Map {
+		case reflect.Map:
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
-		} else {
-			if !v.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
-			}
-			v.Set(rv)
+		default:
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
 		return v, nil
 	case *ast.ItemExpr:
@@ -69,29 +73,32 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if i.Kind() != reflect.Int && i.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice:
+			ii, err := tryToInt(i)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			ii := int(i.Int())
 			if ii < 0 || ii >= v.Len() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+				return NilValue, NewStringError(expr, "index out of range")
 			}
-			vv := v.Index(ii)
-			if !vv.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+			v = v.Index(ii)
+			if !v.CanSet() {
+				return NilValue, NewStringError(expr, "index cannot be assigned")
 			}
-			vv.Set(rv)
-			return rv, nil
-		}
-		if v.Kind() == reflect.Map {
+			v.Set(rv)
+		case reflect.Map:
 			if i.Kind() != reflect.String {
-				return NilValue, NewStringError(expr, "Map key should be string")
+				return NilValue, NewStringError(expr, "map key must be string type")
 			}
 			v.SetMapIndex(i, rv)
-			return rv, nil
+		case reflect.String:
+			return NilValue, NewStringError(expr, "type string does not support index operation for assignment")
+		default:
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
-		return NilValue, NewStringError(expr, "Invalid operation")
+		return v, nil
 	case *ast.SliceExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
@@ -108,29 +115,33 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Array || v.Kind() == reflect.Slice {
-			if rb.Kind() != reflect.Int && rb.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+		switch v.Kind() {
+		case reflect.Array, reflect.Slice:
+			rbi, err := tryToInt(rb)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			if re.Kind() != reflect.Int && re.Kind() != reflect.Int64 {
-				return NilValue, NewStringError(expr, "Array index should be int")
+			rei, err := tryToInt(re)
+			if err != nil {
+				return NilValue, NewStringError(expr, "index must be a number")
 			}
-			ii := int(rb.Int())
-			if ii < 0 || ii >= v.Len() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+			if rbi < 0 || rbi >= v.Len() || rei < 0 || rei > v.Len() {
+				return NilValue, NewStringError(expr, "index out of range")
 			}
-			ij := int(re.Int())
-			if ij < 0 || ij >= v.Len() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+			if rbi > rei {
+				return NilValue, NewStringError(expr, "invalid slice index")
 			}
-			vv := v.Slice(ii, ij)
-			if !vv.CanSet() {
-				return NilValue, NewStringError(expr, "Cannot assignable")
+			v = v.Slice(rbi, rei)
+			if !v.CanSet() {
+				return NilValue, NewStringError(expr, "slice cannot be assigned")
 			}
-			vv.Set(rv)
-			return rv, nil
+			v.Set(rv)
+		case reflect.String:
+			return NilValue, NewStringError(expr, "type string does not support slice operation for assignment")
+		default:
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
-		return NilValue, NewStringError(expr, "Invalid operation")
+		return v, nil
 	}
 	return NilValue, NewStringError(expr, "Invalid operation")
 }
@@ -172,7 +183,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return reflect.ValueOf(a), nil
 	case *ast.MapExpr:
-		m := make(map[string]interface{})
+		m := make(map[string]interface{}, len(e.MapExpr))
 		for k, expr := range e.MapExpr {
 			v, err := invokeExpr(expr, env)
 			if err != nil {
@@ -217,10 +228,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 					v = v.Elem()
 				}
 				if v.Kind() == reflect.Struct {
-					m = v.FieldByName(ee.Name)
-					if !m.IsValid() {
-						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
+					field, found := v.Type().FieldByName(ee.Name)
+					if !found {
+						return NilValue, NewStringError(expr, "no member named '"+ee.Name+"' for struct")
 					}
+					return v.FieldByIndex(field.Index), nil
 				} else if v.Kind() == reflect.Map {
 					// From reflect MapIndex:
 					// It returns the zero Value if key is not found in the map or if v represents a nil map.
@@ -341,7 +353,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						newenv.Define(arg, args[i])
 					}
 				}
-				rr, err := Run(expr.Stmts, newenv)
+				rr, err := run(expr.Stmts, newenv)
 				if err == ReturnError {
 					err = nil
 				}
@@ -371,25 +383,28 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 
-		m := v.MethodByName(e.Name)
-		if !m.IsValid() {
-			if v.Kind() == reflect.Ptr {
-				v = v.Elem()
-			}
-			if v.Kind() == reflect.Struct {
-				m = v.FieldByName(e.Name)
-				if !m.IsValid() {
-					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
-				}
-			} else if v.Kind() == reflect.Map {
-				// From reflect MapIndex:
-				// It returns the zero Value if key is not found in the map or if v represents a nil map.
-				m = v.MapIndex(reflect.ValueOf(e.Name))
-			} else {
-				return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
-			}
+		method, found := v.Type().MethodByName(e.Name)
+		if found {
+			return v.Method(method.Index), nil
 		}
-		return m, nil
+
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		switch v.Kind() {
+		case reflect.Struct:
+			field, found := v.Type().FieldByName(e.Name)
+			if !found {
+				return NilValue, NewStringError(expr, "no member named '"+e.Name+"' for struct")
+			}
+			return v.FieldByIndex(field.Index), nil
+		case reflect.Map:
+			// From reflect MapIndex:
+			// It returns the zero Value if key is not found in the map or if v represents a nil map.
+			return v.MapIndex(reflect.ValueOf(e.Name)), nil
+		default:
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
+		}
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -428,7 +443,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			// It returns the zero Value if key is not found in the map or if v represents a nil map.
 			return v.MapIndex(i), nil
 		default:
-			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support indexing")
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
 
 	case *ast.SliceExpr:
@@ -465,7 +480,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return v.Slice(rbi, rei), nil
 		default:
-			return NilValue, NewStringError(expr, "cannot slice type "+v.Kind().String())
+			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
 	case *ast.AssocExpr:
 		switch e.Operator {
@@ -840,6 +855,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
+		if rt == nil {
+			return NilValue, NewStringError(expr, fmt.Sprintf("invalid type for make"))
+		}
 		if rt.Kind() == reflect.Map {
 			return reflect.MakeMap(reflect.MapOf(rt.Key(), rt.Elem())).Convert(rt), nil
 		}
@@ -876,13 +894,16 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, err
 		}
+		if typ == nil {
+			return NilValue, NewStringError(expr, fmt.Sprintf("invalid type for make array"))
+		}
 		var alen int
 		if e.LenExpr != nil {
 			rv, err := invokeExpr(e.LenExpr, env)
 			if err != nil {
 				return NilValue, err
 			}
-			alen = int(toInt64(rv))
+			alen = toInt(rv)
 		}
 		var acap int
 		if e.CapExpr != nil {
@@ -890,24 +911,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if err != nil {
 				return NilValue, err
 			}
-			acap = int(toInt64(rv))
+			acap = toInt(rv)
 		} else {
 			acap = alen
 		}
-		return func() (reflect.Value, error) {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			return reflect.MakeSlice(reflect.SliceOf(typ), alen, acap), nil
-		}()
+		return reflect.MakeSlice(reflect.SliceOf(typ), alen, acap), nil
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
 		if err != nil {

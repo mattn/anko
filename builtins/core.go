@@ -33,6 +33,7 @@ import (
 	anko_regexp "github.com/mattn/anko/builtins/regexp"
 	anko_runtime "github.com/mattn/anko/builtins/runtime"
 	anko_sort "github.com/mattn/anko/builtins/sort"
+	anko_strconv "github.com/mattn/anko/builtins/strconv"
 	anko_strings "github.com/mattn/anko/builtins/strings"
 	anko_time "github.com/mattn/anko/builtins/time"
 
@@ -64,6 +65,7 @@ func LoadAllBuiltins(env *vm.Env) {
 		"regexp":        anko_regexp.Import,
 		"runtime":       anko_runtime.Import,
 		"sort":          anko_sort.Import,
+		"strconv":       anko_strconv.Import,
 		"strings":       anko_strings.Import,
 		"time":          anko_time.Import,
 		"github.com/daviddengcn/go-colortext": anko_colortext.Import,
@@ -245,6 +247,14 @@ func Import(env *vm.Env) *vm.Env {
 
 	env.Define("typeOf", func(v interface{}) string {
 		return reflect.TypeOf(v).String()
+	})
+
+	env.Define("kindOf", func(v interface{}) string {
+		typeOf := reflect.TypeOf(v)
+		if typeOf == nil {
+			return "nil"
+		}
+		return typeOf.Kind().String()
 	})
 
 	env.Define("chanOf", func(t reflect.Type) reflect.Value {

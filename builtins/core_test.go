@@ -12,6 +12,7 @@ import (
 type testStruct struct {
 	script     string
 	parseError error
+	types      map[string]interface{}
 	input      map[string]interface{}
 	runError   error
 	runOutput  interface{}
@@ -94,6 +95,60 @@ func TestKeys(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestKindOf(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "kindOf(a)", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: "nil", ouput: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": nil}, runOutput: "nil", ouput: map[string]interface{}{"a": nil}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(nil)}, runOutput: "nil", ouput: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": true}, runOutput: "bool", ouput: map[string]interface{}{"a": true}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": int32(1)}, runOutput: "int32", ouput: map[string]interface{}{"a": int32(1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": int64(1)}, runOutput: "int64", ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": float32(1.1)}, runOutput: "float32", ouput: map[string]interface{}{"a": float32(1.1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": float64(1.1)}, runOutput: "float64", ouput: map[string]interface{}{"a": float64(1.1)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": "a"}, runOutput: "string", ouput: map[string]interface{}{"a": "a"}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": 'a'}, runOutput: "int32", ouput: map[string]interface{}{"a": 'a'}},
+
+		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{}}, runOutput: "slice", ouput: map[string]interface{}{"a": []interface{}{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: "slice", ouput: map[string]interface{}{"a": []interface{}{nil}}},
+
+		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: "map", ouput: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", ouput: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
+	}
+	runTests(t, tests)
+}
+
+func TestStrconv(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "strconv = import(\"strconv\"); a = true; b = strconv.FormatBool(a)", runOutput: "true", ouput: map[string]interface{}{"a": true, "b": "true"}},
+		{script: "strconv = import(\"strconv\"); a = 1.1; b = strconv.FormatFloat(a, toRune(\"f\"), -1, 64)", runOutput: "1.1", ouput: map[string]interface{}{"a": float64(1.1), "b": "1.1"}},
+		{script: "strconv = import(\"strconv\"); a = 1; b = strconv.FormatInt(a, 10)", runOutput: "1", ouput: map[string]interface{}{"a": int64(1), "b": "1"}},
+		{script: "strconv = import(\"strconv\"); b = strconv.FormatInt(a, 10)", input: map[string]interface{}{"a": uint64(1)}, runOutput: "1", ouput: map[string]interface{}{"a": uint64(1), "b": "1"}},
+
+		{script: "strconv = import(\"strconv\"); a = \"true\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "true", "b": true, "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"2\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "strconv.ParseBool: parsing \"2\": invalid syntax", ouput: map[string]interface{}{"a": "2", "b": false, "err": "strconv.ParseBool: parsing \"2\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1.1", "b": float64(1.1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "strconv.ParseFloat: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": float64(0), "err": "strconv.ParseFloat: parsing \"a\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1", "b": int64(1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"1.1\": invalid syntax", ouput: map[string]interface{}{"a": "1.1", "b": int64(0), "err": "strconv.ParseInt: parsing \"1.1\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": int64(0), "err": "strconv.ParseInt: parsing \"a\": invalid syntax"}},
+		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "<nil>", ouput: map[string]interface{}{"a": "1", "b": uint64(1), "err": "<nil>"}},
+		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseUint: parsing \"a\": invalid syntax", ouput: map[string]interface{}{"a": "a", "b": uint64(0), "err": "strconv.ParseUint: parsing \"a\": invalid syntax"}},
+	}
+	runTests(t, tests)
+}
+
+func TestStrings(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "strings = import(\"strings\"); a = \" one two \"; b = strings.TrimSpace(a)", runOutput: "one two", ouput: map[string]interface{}{"a": " one two ", "b": "one two"}},
+		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.Split(a, \" \")", runOutput: []string{"a", "b", "c", "d"}, ouput: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c", "d"}}},
+		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.SplitN(a, \" \", 3)", runOutput: []string{"a", "b", "c d"}, ouput: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c d"}}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value reflect.Value
 loop:
@@ -111,6 +166,14 @@ loop:
 
 		env := vm.NewEnv()
 		LoadAllBuiltins(env)
+
+		for typeName, typeValue := range test.types {
+			err = env.DefineType(typeName, typeValue)
+			if err != nil {
+				t.Errorf("DefineType error: %v - typeName: %v - script: %v", err, typeName, test.script)
+				continue loop
+			}
+		}
 
 		for inputName, inputValue := range test.input {
 			err = env.Define(inputName, inputValue)

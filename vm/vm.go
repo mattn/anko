@@ -118,6 +118,14 @@ func isNum(v reflect.Value) bool {
 
 // equal returns true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
+	lhsNotValid, rhsVNotValid := !lhsV.IsValid(), !rhsV.IsValid()
+	if lhsNotValid && rhsVNotValid {
+		return true
+	}
+	if (!lhsNotValid && rhsVNotValid) || (lhsNotValid && !rhsVNotValid) {
+		return false
+	}
+
 	lhsIsNil, rhsIsNil := isNil(lhsV), isNil(rhsV)
 	if lhsIsNil && rhsIsNil {
 		return true
@@ -130,9 +138,6 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 	if rhsV.Kind() == reflect.Interface || rhsV.Kind() == reflect.Ptr {
 		rhsV = rhsV.Elem()
-	}
-	if !lhsV.IsValid() || !rhsV.IsValid() {
-		return true
 	}
 
 	// Compare a string and a number.
