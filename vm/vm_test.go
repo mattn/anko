@@ -18,7 +18,7 @@ type testStruct struct {
 	input      map[string]interface{}
 	runError   error
 	runOutput  interface{}
-	ouput      map[string]interface{}
+	output      map[string]interface{}
 }
 
 var (
@@ -50,39 +50,39 @@ var (
 func TestIf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "if true {}", input: map[string]interface{}{"a": nil}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if true {}", input: map[string]interface{}{"a": true}, runOutput: nil, ouput: map[string]interface{}{"a": true}},
-		{script: "if true {}", input: map[string]interface{}{"a": int64(1)}, runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "if true {}", input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "if true {}", input: map[string]interface{}{"a": "a"}, runOutput: nil, ouput: map[string]interface{}{"a": "a"}},
+		{script: "if true {}", input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if true {}", input: map[string]interface{}{"a": true}, runOutput: nil, output: map[string]interface{}{"a": true}},
+		{script: "if true {}", input: map[string]interface{}{"a": int64(1)}, runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "if true {}", input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, output: map[string]interface{}{"a": float64(1.1)}},
+		{script: "if true {}", input: map[string]interface{}{"a": "a"}, runOutput: nil, output: map[string]interface{}{"a": "a"}},
 
-		{script: "if true {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if true {a = true}", input: map[string]interface{}{"a": int64(2)}, runOutput: true, ouput: map[string]interface{}{"a": true}},
-		{script: "if true {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "if true {a = 1.1}", input: map[string]interface{}{"a": int64(2)}, runOutput: float64(1.1), ouput: map[string]interface{}{"a": float64(1.1)}},
-		{script: "if true {a = \"a\"}", input: map[string]interface{}{"a": int64(2)}, runOutput: "a", ouput: map[string]interface{}{"a": "a"}},
+		{script: "if true {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if true {a = true}", input: map[string]interface{}{"a": int64(2)}, runOutput: true, output: map[string]interface{}{"a": true}},
+		{script: "if true {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+		{script: "if true {a = 1.1}", input: map[string]interface{}{"a": int64(2)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
+		{script: "if true {a = \"a\"}", input: map[string]interface{}{"a": int64(2)}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
 
-		{script: "if a == 1 {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "if a == 2 {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "if a == 1 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "if a == 2 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
+		{script: "if a == 2 {a = 1}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+		{script: "if a == 1 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
+		{script: "if a == 2 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 
-		{script: "if a == 1 {a = 1} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), ouput: map[string]interface{}{"a": int64(3)}},
-		{script: "if a == 2 {a = 1} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "if a == 1 {a = 1} else if a == 2 {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), ouput: map[string]interface{}{"a": int64(3)}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else {a = 4}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), ouput: map[string]interface{}{"a": int64(4)}},
+		{script: "if a == 1 {a = 1} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(3)}},
+		{script: "if a == 2 {a = 1} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
+		{script: "if a == 1 {a = 1} else if a == 2 {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(3)}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else {a = 4}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), output: map[string]interface{}{"a": int64(4)}},
 
-		{script: "if a == 1 {a = 1} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if a == 2 {a = nil} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if a == 1 {a = nil} else if a == 3 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "if a == 1 {a = 1} else if a == 2 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = 1} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if a == 2 {a = nil} else {a = 3}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = nil} else if a == 3 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
+		{script: "if a == 1 {a = 1} else if a == 2 {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(5), ouput: map[string]interface{}{"a": int64(5)}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), ouput: map[string]interface{}{"a": int64(4)}},
-		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, ouput: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(5), output: map[string]interface{}{"a": int64(5)}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = nil}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), output: map[string]interface{}{"a": int64(4)}},
+		{script: "if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}", input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 	}
 	runTests(t, tests)
 }
@@ -90,47 +90,47 @@ func TestIf(t *testing.T) {
 func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a", input: map[string]interface{}{"a": 'a'}, runOutput: 'a', output: map[string]interface{}{"a": 'a'}},
+		{script: "a.b", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), output: map[string]interface{}{"a": 'a'}},
+		{script: "a[0]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, output: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, output: map[string]interface{}{"a": 'a'}},
 
-		{script: "a.b = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
-		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, ouput: map[string]interface{}{"a": 'a'}},
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support member operation"), runOutput: nil, output: map[string]interface{}{"a": 'a'}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support index operation"), runOutput: nil, output: map[string]interface{}{"a": 'a'}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": 'a'}, runError: fmt.Errorf("type int32 does not support slice operation"), runOutput: nil, output: map[string]interface{}{"a": 'a'}},
 
-		{script: "a.b = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support member operation"), ouput: map[string]interface{}{"a": "test"}},
-		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support index operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
-		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support slice operation for assignment"), ouput: map[string]interface{}{"a": "test"}},
+		{script: "a.b = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support member operation"), output: map[string]interface{}{"a": "test"}},
+		{script: "a[0] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support index operation for assignment"), output: map[string]interface{}{"a": "test"}},
+		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support slice operation for assignment"), output: map[string]interface{}{"a": "test"}},
 
-		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", ouput: map[string]interface{}{"a": "test"}},
-		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},
-		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: 'e', ouput: map[string]interface{}{"a": "test"}},
-		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: 't', ouput: map[string]interface{}{"a": "test"}},
+		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", output: map[string]interface{}{"a": "test"}},
+		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', output: map[string]interface{}{"a": "test"}},
+		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: 'e', output: map[string]interface{}{"a": "test"}},
+		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: 't', output: map[string]interface{}{"a": "test"}},
 
-		{script: "a[1:0]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("invalid slice index"), ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[-1:2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:-2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:0]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": "test data"}},
+		{script: "a[-1:2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:-2]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
 
-		{script: "a[0:0]", input: map[string]interface{}{"a": "test data"}, runOutput: "", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "t", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "te", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "tes", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "test da", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "test dat", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "test data", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[0:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:0]", input: map[string]interface{}{"a": "test data"}, runOutput: "", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "t", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "te", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "tes", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "test da", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "test dat", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "test data", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[0:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
 
-		{script: "a[1:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "e", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "es", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "est da", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "est dat", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "est data", ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[1:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:1]", input: map[string]interface{}{"a": "test data"}, runOutput: "", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "e", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:3]", input: map[string]interface{}{"a": "test data"}, runOutput: "es", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:7]", input: map[string]interface{}{"a": "test data"}, runOutput: "est da", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:8]", input: map[string]interface{}{"a": "test data"}, runOutput: "est dat", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "est data", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[1:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
 
-		{script: "a[:2]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), ouput: map[string]interface{}{"a": "test data"}},
-		{script: "a[2:]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), ouput: map[string]interface{}{"a": "test data"}},
+		{script: "a[:2]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), output: map[string]interface{}{"a": "test data"}},
+		{script: "a[2:]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), output: map[string]interface{}{"a": "test data"}},
 	}
 	runTests(t, tests)
 }
@@ -138,9 +138,9 @@ func TestStrings(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "var a = 1", runOutput: int64(1), ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "var a, b = 1, 2", runOutput: int64(2), ouput: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: "var a, b, c = 1, 2, 3", runOutput: int64(3), ouput: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{script: "var a = 1", runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+		{script: "var a, b = 1, 2", runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{script: "var a, b, c = 1, 2, 3", runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
 	}
 	runTests(t, tests)
 }
@@ -168,31 +168,31 @@ func TestForLoop(t *testing.T) {
 
 		{script: "for { break }", runOutput: nil},
 		{script: "for {a = 1; if a == 1 { break } }", runOutput: nil},
-		{script: "a = 1; for { if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for { if a == 1 { break }; a++ }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for { if a == 1 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for { if a == 1 { break }; a++ }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
 
-		{script: "a = 1; for { a++; if a == 2 { continue } else { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
-		{script: "a = 1; for { a++; if a == 2 { continue }; if a == 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for { a++; if a == 2 { continue } else { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for { a++; if a == 2 { continue }; if a == 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 
 		{script: "for a in [1] { if a == 1 { break } }", runOutput: nil},
 		{script: "for a in [1, 2] { if a == 2 { break } }", runOutput: nil},
 		{script: "for a in [1, 2, 3] { if a == 3 { break } }", runOutput: nil},
 
-		{script: "a = [1]; for b in a { if b == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: "a = [1, 2]; for b in a { if b == 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
-		{script: "a = [1, 2, 3]; for b in a { if b == 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1]; for b in a { if b == 1 { break } }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{script: "a = [1, 2]; for b in a { if b == 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: "a = [1, 2, 3]; for b in a { if b == 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{script: "a = [1]; b = 0; for c in a { b = c }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
-		{script: "a = [1, 2]; b = 0; for c in a { b = c }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}, "b": int64(2)}},
-		{script: "a = [1, 2, 3]; b = 0; for c in a { b = c }", runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}, "b": int64(3)}},
+		{script: "a = [1]; b = 0; for c in a { b = c }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
+		{script: "a = [1, 2]; b = 0; for c in a { b = c }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}, "b": int64(2)}},
+		{script: "a = [1, 2, 3]; b = 0; for c in a { b = c }", runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}, "b": int64(3)}},
 
-		{script: "a = 1; for a < 2 { a++ }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for a < 3 { a++ }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for a < 2 { a++ }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for a < 3 { a++ }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 
-		{script: "a = 1; for nil { a++; if a > 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for nil { a++; if a > 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for true { a++; if a > 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
-		{script: "a = 1; for true { a++; if a > 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(4)}},
+		{script: "a = 1; for nil { a++; if a > 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for nil { a++; if a > 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for true { a++; if a > 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for true { a++; if a > 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(4)}},
 
 		{script: "func x() { return [1] }; for b in x() { if b == 1 { break } }", runOutput: nil},
 		{script: "func x() { return [1, 2] }; for b in x() { if b == 2 { break } }", runOutput: nil},
@@ -209,8 +209,8 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue } } }; x()", runOutput: nil},
 		{script: "func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()", runOutput: nil},
 
-		{script: "func x() { return [1, 2] }; a = 1; for i in x() { a++ }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
-		{script: "func x() { return [1, 2, 3] }; a = 1; for i in x() { a++ }", runOutput: nil, ouput: map[string]interface{}{"a": int64(4)}},
+		{script: "func x() { return [1, 2] }; a = 1; for i in x() { a++ }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
+		{script: "func x() { return [1, 2, 3] }; a = 1; for i in x() { a++ }", runOutput: nil, output: map[string]interface{}{"a": int64(4)}},
 
 		{script: "for a = 1; nil; nil { if a == 1 { break } }", runOutput: nil},
 		{script: "for a = 1; nil; nil { if a == 2 { break }; a++ }", runOutput: nil},
@@ -224,23 +224,23 @@ func TestForLoop(t *testing.T) {
 		{script: "for a = 1; a < 2; a++ { }", runOutput: nil},
 		{script: "for a = 1; a < 3; a++ { }", runOutput: nil},
 
-		{script: "a = 1; for b = 1; a < 1; a++ { }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 2; a++ { }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for b = 1; a < 3; a++ { }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for b = 1; a < 1; a++ { }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 2; a++ { }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for b = 1; a < 3; a++ { }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 
-		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 1 { continue } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 1 { continue } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 1 { continue } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 1 { continue } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 1 { continue } }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 1 { continue } }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 
-		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 1 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 2 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(1)}},
-		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(2)}},
-		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 3 { break } }", runOutput: nil, ouput: map[string]interface{}{"a": int64(3)}},
+		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 1 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 1 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 1 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 2 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for b = 1; a < 1; a++ {  if a == 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
+		{script: "a = 1; for b = 1; a < 2; a++ {  if a == 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(2)}},
+		{script: "a = 1; for b = 1; a < 3; a++ {  if a == 3 { break } }", runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 
 		{script: "func x() { for a = 1; a < 3; a++ { if a == 1 { return a } } }; x()", runOutput: int64(1)},
 		{script: "func x() { for a = 1; a < 3; a++ { if a == 2 { return a } } }; x()", runOutput: int64(2)},
@@ -252,33 +252,33 @@ func TestForLoop(t *testing.T) {
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 3 { continue } }; return a }; x()", runOutput: int64(3)},
 		{script: "func x() { a = 1; for b = 1; a < 3; a++ { if a == 4 { continue } }; return a }; x()", runOutput: int64(3)},
 
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{reflect.Value{}}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{reflect.Value{}}, "b": reflect.Value{}}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{nil}, "b": nil}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{true}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{true}, "b": true}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{int32(1)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int32(1)}, "b": int32(1)}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{int64(1)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": float32(1.1)}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": float64(1.1)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{reflect.Value{}}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{reflect.Value{}}, "b": reflect.Value{}}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{nil}, "b": nil}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{true}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{true}, "b": true}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{int32(1)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{int32(1)}, "b": int32(1)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{int64(1)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": float32(1.1)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": float64(1.1)}},
 
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}, "b": interface{}(reflect.Value{})}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(nil)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(nil)}, "b": interface{}(nil)}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(true)}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(true)}, "b": interface{}(true)}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}, "b": interface{}(int32(1))}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}, "b": interface{}(int64(1))}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}, "b": interface{}(float32(1.1))}},
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}}, runOutput: nil, ouput: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}, "b": interface{}(float64(1.1))}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}, "b": interface{}(reflect.Value{})}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(nil)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(nil)}, "b": interface{}(nil)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(true)}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(true)}, "b": interface{}(true)}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}, "b": interface{}(int32(1))}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}, "b": interface{}(int64(1))}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}, "b": interface{}(float32(1.1))}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}}, runOutput: nil, output: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}, "b": interface{}(float64(1.1))}},
 
-		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": interface{}([]interface{}{nil})}, runOutput: nil, ouput: map[string]interface{}{"a": interface{}([]interface{}{nil}), "b": nil}},
+		{script: "b = 0; for i in a { b = i }", input: map[string]interface{}{"a": interface{}([]interface{}{nil})}, runOutput: nil, output: map[string]interface{}{"a": interface{}([]interface{}{nil}), "b": nil}},
 
 		{script: "for i in nil { }", runError: fmt.Errorf("for cannot loop over type interface")},
 		{script: "for i in true { }", runError: fmt.Errorf("for cannot loop over type bool")},
 		{script: "a = {}; for i in a { }", runError: fmt.Errorf("for cannot loop over type map")},
-		{script: "for i in a { }", input: map[string]interface{}{"a": reflect.Value{}}, runError: fmt.Errorf("for cannot loop over type invalid"), ouput: map[string]interface{}{"a": reflect.Value{}}},
-		{script: "for i in a { }", input: map[string]interface{}{"a": interface{}(nil)}, runError: fmt.Errorf("for cannot loop over type interface"), ouput: map[string]interface{}{"a": interface{}(nil)}},
-		{script: "for i in a { }", input: map[string]interface{}{"a": interface{}(true)}, runError: fmt.Errorf("for cannot loop over type bool"), ouput: map[string]interface{}{"a": interface{}(true)}},
+		{script: "for i in a { }", input: map[string]interface{}{"a": reflect.Value{}}, runError: fmt.Errorf("for cannot loop over type invalid"), output: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "for i in a { }", input: map[string]interface{}{"a": interface{}(nil)}, runError: fmt.Errorf("for cannot loop over type interface"), output: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "for i in a { }", input: map[string]interface{}{"a": interface{}(true)}, runError: fmt.Errorf("for cannot loop over type bool"), output: map[string]interface{}{"a": interface{}(true)}},
 
-		{script: "a = 1; b = [{\"c\": \"c\"}]; for i in b { a = i }", runOutput: nil, ouput: map[string]interface{}{"a": map[string]interface{}{"c": "c"}, "b": []interface{}{map[string]interface{}{"c": "c"}}}},
-		{script: "a = 1; b = {\"x\": [{\"y\": \"y\"}]};  for i in b.x { a = i }", runOutput: nil, ouput: map[string]interface{}{"a": map[string]interface{}{"y": "y"}, "b": map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "y"}}}}},
+		{script: "a = 1; b = [{\"c\": \"c\"}]; for i in b { a = i }", runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"c": "c"}, "b": []interface{}{map[string]interface{}{"c": "c"}}}},
+		{script: "a = 1; b = {\"x\": [{\"y\": \"y\"}]};  for i in b.x { a = i }", runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"y": "y"}, "b": map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "y"}}}}},
 	}
 	runTests(t, tests)
 }
@@ -343,7 +343,7 @@ loop:
 			}
 		}
 
-		for outputName, outputValue := range test.ouput {
+		for outputName, outputValue := range test.output {
 			value, err = env.Get(outputName)
 			if err != nil {
 				t.Errorf("Get error: %v - outputName: %v - script: %v", err, outputName, test.script)
