@@ -1,4 +1,4 @@
-// Package fmt implements json interface for anko script.
+// Package fmt implements fmt interface for anko script.
 package fmt
 
 import (
