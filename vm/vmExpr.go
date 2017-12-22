@@ -15,11 +15,11 @@ import (
 func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
 	switch lhs := expr.(type) {
 	case *ast.IdentExpr:
-		if env.Set(lhs.Lit, rv) != nil {
+		if env.setValue(lhs.Lit, rv) != nil {
 			if strings.Contains(lhs.Lit, ".") {
 				return NilValue, NewErrorf(expr, "Undefined symbol '%s'", lhs.Lit)
 			}
-			env.Define(lhs.Lit, rv)
+			env.defineValue(lhs.Lit, rv)
 		}
 		return rv, nil
 	case *ast.MemberExpr:
@@ -169,7 +169,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return reflect.ValueOf(i), nil
 	case *ast.IdentExpr:
-		return env.Get(e.Lit)
+		return env.get(e.Lit)
 	case *ast.StringExpr:
 		return reflect.ValueOf(e.Lit), nil
 	case *ast.ArrayExpr:
@@ -197,7 +197,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		var err error
 		switch ee := e.Expr.(type) {
 		case *ast.IdentExpr:
-			v, err = env.Get(ee.Lit)
+			v, err = env.get(ee.Lit)
 			if err != nil {
 				return v, err
 			}
@@ -214,7 +214,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			if v.IsValid() && v.CanInterface() {
 				if vme, ok := v.Interface().(*Env); ok {
-					m, err := vme.Get(ee.Name)
+					m, err := vme.get(ee.Name)
 					if !m.IsValid() || err != nil {
 						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 					}
@@ -256,7 +256,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		var err error
 		switch ee := e.Expr.(type) {
 		case *ast.IdentExpr:
-			v, err = env.Get(ee.Lit)
+			v, err = env.get(ee.Lit)
 			if err != nil {
 				return v, err
 			}
@@ -273,7 +273,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			if v.IsValid() && v.CanInterface() {
 				if vme, ok := v.Interface().(*Env); ok {
-					m, err := vme.Get(ee.Name)
+					m, err := vme.get(ee.Name)
 					if !m.IsValid() || err != nil {
 						return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", ee.Name))
 					}
@@ -347,10 +347,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				}
 				newenv := env.NewEnv()
 				if expr.VarArg {
-					newenv.Define(expr.Args[0], reflect.ValueOf(args))
+					newenv.defineValue(expr.Args[0], reflect.ValueOf(args))
 				} else {
 					for i, arg := range expr.Args {
-						newenv.Define(arg, args[i])
+						newenv.defineValue(arg, args[i])
 					}
 				}
 				rr, err := run(expr.Stmts, newenv)
@@ -360,7 +360,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return rr, err
 			}
 		}(e, env))
-		env.Define(e.Name, f)
+		env.defineValue(e.Name, f)
 		return f, nil
 	case *ast.MemberExpr:
 		v, err := invokeExpr(e.Expr, env)
@@ -375,7 +375,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		if v.IsValid() && v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
-				m, err := vme.Get(e.Name)
+				m, err := vme.get(e.Name)
 				if !m.IsValid() || err != nil {
 					return NilValue, NewStringError(expr, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
@@ -399,9 +399,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return v.FieldByIndex(field.Index), nil
 		case reflect.Map:
-			// From reflect MapIndex:
-			// It returns the zero Value if key is not found in the map or if v represents a nil map.
-			return v.MapIndex(reflect.ValueOf(e.Name)), nil
+			if v.Type().Elem().String() == "interface {}" {
+				v = v.MapIndex(reflect.ValueOf(e.Name))
+				if v.IsValid() && v.CanInterface() && !v.IsNil() {
+					return reflect.ValueOf(v.Interface()), nil
+				}
+				return v, nil
+			} else {
+				// From reflect MapIndex:
+				// It returns the zero Value if key is not found in the map or if v represents a nil map.
+				return v.MapIndex(reflect.ValueOf(e.Name)), nil
+			}
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
@@ -439,9 +447,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if i.Kind() != reflect.String {
 				return NilValue, NewStringError(expr, "map key must be string type")
 			}
-			// From reflect MapIndex:
-			// It returns the zero Value if key is not found in the map or if v represents a nil map.
-			return v.MapIndex(i), nil
+			if v.Type().Elem().String() == "interface {}" {
+				v = v.MapIndex(i)
+				if v.IsValid() && v.CanInterface() && !v.IsNil() {
+					return reflect.ValueOf(v.Interface()), nil
+				}
+				return v, nil
+			} else {
+				// From reflect MapIndex:
+				// It returns the zero Value if key is not found in the map or if v represents a nil map.
+				return v.MapIndex(i), nil
+			}
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
@@ -486,7 +502,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		switch e.Operator {
 		case "++":
 			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
-				v, err := env.Get(alhs.Lit)
+				v, err := env.get(alhs.Lit)
 				if err != nil {
 					return v, err
 				}
@@ -497,14 +513,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				} else {
 					v = reflect.ValueOf(toInt64(v) + 1)
 				}
-				if env.Set(alhs.Lit, v) != nil {
-					env.Define(alhs.Lit, v)
+				if env.setValue(alhs.Lit, v) != nil {
+					env.defineValue(alhs.Lit, v)
 				}
 				return v, nil
 			}
 		case "--":
 			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
-				v, err := env.Get(alhs.Lit)
+				v, err := env.get(alhs.Lit)
 				if err != nil {
 					return v, err
 				}
@@ -515,8 +531,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				} else {
 					v = reflect.ValueOf(toInt64(v) - 1)
 				}
-				if env.Set(alhs.Lit, v) != nil {
-					env.Define(alhs.Lit, v)
+				if env.setValue(alhs.Lit, v) != nil {
+					env.defineValue(alhs.Lit, v)
 				}
 				return v, nil
 			}
@@ -706,7 +722,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			f = e.Func.(reflect.Value)
 		} else {
 			var err error
-			ff, err := env.Get(e.Name)
+			ff, err := env.get(e.Name)
 			if err != nil {
 				return f, err
 			}

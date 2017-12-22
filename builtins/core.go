@@ -285,10 +285,7 @@ func Import(env *vm.Env) *vm.Env {
 		if err != nil {
 			panic(err)
 		}
-		if rv.IsValid() && rv.CanInterface() {
-			return rv.Interface()
-		}
-		return nil
+		return rv
 	})
 
 	env.Define("panic", func(e interface{}) {
