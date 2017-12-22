@@ -98,7 +98,7 @@ func TestKeys(t *testing.T) {
 func TestKindOf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "kindOf(a)", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: "nil", output: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: "struct", output: map[string]interface{}{"a": reflect.Value{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": nil}, runOutput: "nil", output: map[string]interface{}{"a": nil}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(nil)}, runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": true}, runOutput: "bool", output: map[string]interface{}{"a": true}},
@@ -150,7 +150,7 @@ func TestStrings(t *testing.T) {
 }
 
 func runTests(t *testing.T, tests []testStruct) {
-	var value reflect.Value
+	var value interface{}
 loop:
 	for _, test := range tests {
 		stmts, err := parser.ParseSrc(test.script)
@@ -193,19 +193,32 @@ loop:
 			t.Errorf("Run error - received: %v expected: %v - script: %v", err, test.runError, test.script)
 			continue
 		}
-		if !value.IsValid() || !value.CanInterface() {
+
+		switch reflect.ValueOf(value).Kind() {
+		case reflect.Func:
+			// This is best effort to check if functions match, but it could be wrong
+			valueV := reflect.ValueOf(value)
+			runOutputV := reflect.ValueOf(test.runOutput)
+			if !valueV.IsValid() || !runOutputV.IsValid() {
+				if valueV.IsValid() != runOutputV.IsValid() {
+					t.Errorf("Run output - received IsValid: %v - expected IsValid: %v - script: %v", valueV.IsValid(), runOutputV.IsValid(), test.script)
+					continue
+				}
+			} else if valueV.Kind() != runOutputV.Kind() {
+				t.Errorf("Run output - received Kind: %v - expected Kind: %v - script: %v", valueV.Kind(), runOutputV.Kind(), test.script)
+				continue
+			} else if valueV.Type() != runOutputV.Type() {
+				t.Errorf("Run output - received Type: %v - expected Type: %v - script: %v", valueV.Type(), runOutputV.Type(), test.script)
+				continue
+			} else if valueV.Pointer() != runOutputV.Pointer() {
+				// From reflect: If v's Kind is Func, the returned pointer is an underlying code pointer, but not necessarily enough to identify a single function uniquely.
+				t.Errorf("Run output - received Pointer: %v - expected Pointer: %v - script: %v", valueV.Pointer(), runOutputV.Pointer(), test.script)
+				continue
+			}
+		default:
 			if !reflect.DeepEqual(value, test.runOutput) {
-				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
-				continue
-			}
-		} else if value.Kind() == reflect.Func {
-			if !reflect.DeepEqual(value, reflect.ValueOf(test.runOutput)) {
-				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, test.runOutput, test.script)
-				continue
-			}
-		} else {
-			if !reflect.DeepEqual(value.Interface(), test.runOutput) {
-				t.Errorf("Run output - received: %#v expected: %#v - script: %v", value, reflect.ValueOf(test.runOutput), test.script)
+				t.Errorf("Run output - received: %#v - expected: %#v - script: %v", value, test.runOutput, test.script)
+				t.Errorf("received type: %T - expected: %T", value, test.runOutput)
 				continue
 			}
 		}
@@ -216,19 +229,32 @@ loop:
 				t.Errorf("Get error: %v - outputName: %v - script: %v", err, outputName, test.script)
 				continue loop
 			}
-			if !value.IsValid() || !value.CanInterface() {
+
+			switch reflect.ValueOf(value).Kind() {
+			case reflect.Func:
+				// This is best effort to check if functions match, but it could be wrong
+				valueV := reflect.ValueOf(value)
+				outputValueV := reflect.ValueOf(outputValue)
+				if !valueV.IsValid() || !outputValueV.IsValid() {
+					if valueV.IsValid() != outputValueV.IsValid() {
+						t.Errorf("outputName %v - received IsValid: %v - expected IsValid: %v - script: %v", outputName, valueV.IsValid(), outputValueV.IsValid(), test.script)
+						continue
+					}
+				} else if valueV.Kind() != outputValueV.Kind() {
+					t.Errorf("outputName %v - received Kind: %v - expected Kind: %v - script: %v", outputName, valueV.Kind(), outputValueV.Kind(), test.script)
+					continue
+				} else if valueV.Type() != outputValueV.Type() {
+					t.Errorf("outputName %v - received Kind: %v - expected Kind: %v - script: %v", outputName, valueV.Type(), outputValueV.Type(), test.script)
+					continue
+				} else if valueV.Pointer() != outputValueV.Pointer() {
+					// From reflect: If v's Kind is Func, the returned pointer is an underlying code pointer, but not necessarily enough to identify a single function uniquely.
+					t.Errorf("outputName %v - received Pointer: %v - expected Pointer: %v - script: %v", outputName, valueV.Pointer(), outputValueV.Pointer(), test.script)
+					continue
+				}
+			default:
 				if !reflect.DeepEqual(value, outputValue) {
-					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
-					continue
-				}
-			} else if value.Kind() == reflect.Func {
-				if !reflect.DeepEqual(value, reflect.ValueOf(outputValue)) {
-					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, outputValue, test.script)
-					continue
-				}
-			} else {
-				if !reflect.DeepEqual(value.Interface(), outputValue) {
-					t.Errorf("outputName %v - received: %#v expected: %#v - script: %v", outputName, value, reflect.ValueOf(outputValue), test.script)
+					t.Errorf("outputName %v - received: %#v - expected: %#v - script: %v", outputName, value, outputValue, test.script)
+					t.Errorf("received type: %T - expected: %T", value, outputValue)
 					continue
 				}
 			}

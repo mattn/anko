@@ -66,12 +66,12 @@ func TestBasicOperators(t *testing.T) {
 		{script: "a = b", input: map[string]interface{}{"b": testVarStringP}, runOutput: testVarStringP, output: map[string]interface{}{"a": testVarStringP, "b": testVarStringP}},
 		{script: "a = b", input: map[string]interface{}{"b": testVarFuncP}, runOutput: testVarFuncP, output: map[string]interface{}{"a": testVarFuncP, "b": testVarFuncP}},
 
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueBool}, runOutput: true, output: map[string]interface{}{"a": true, "b": true}},
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueInt32}, runOutput: int32(1), output: map[string]interface{}{"a": int32(1), "b": int32(1)}},
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueInt64}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1), "b": int64(1)}},
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueFloat32}, runOutput: float32(1.1), output: map[string]interface{}{"a": float32(1.1), "b": float32(1.1)}},
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueFloat64}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1), "b": float64(1.1)}},
-		{script: "a = b", input: map[string]interface{}{"b": testVarValueString}, runOutput: "a", output: map[string]interface{}{"a": "a", "b": "a"}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueBool}, runOutput: testVarValueBool, output: map[string]interface{}{"a": testVarValueBool, "b": testVarValueBool}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueInt32}, runOutput: testVarValueInt32, output: map[string]interface{}{"a": testVarValueInt32, "b": testVarValueInt32}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueInt64}, runOutput: testVarValueInt64, output: map[string]interface{}{"a": testVarValueInt64, "b": testVarValueInt64}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueFloat32}, runOutput: testVarValueFloat32, output: map[string]interface{}{"a": testVarValueFloat32, "b": testVarValueFloat32}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueFloat64}, runOutput: testVarValueFloat64, output: map[string]interface{}{"a": testVarValueFloat64, "b": testVarValueFloat64}},
+		{script: "a = b", input: map[string]interface{}{"b": testVarValueString}, runOutput: testVarValueString, output: map[string]interface{}{"a": testVarValueString, "b": testVarValueString}},
 
 		{script: "a, b = 1, 2", input: map[string]interface{}{"a": int64(3)}, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{script: "a, b, c = 1, 2, 3", input: map[string]interface{}{"a": int64(3)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},

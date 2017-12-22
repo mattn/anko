@@ -79,7 +79,7 @@ func TestExternal(t *testing.T) {
 		if err != nil {
 			t.Errorf("Execute error - unable to retrieve variable %v from external resolver: %v", test.varName, err)
 		}
-		if val.Interface() != test.varGetValue {
+		if val != test.varGetValue {
 			t.Errorf("Execute error - received unexpected value %v from external resolver, expected %v", val, test.varGetValue)
 		}
 
@@ -132,7 +132,7 @@ func TestAddrError(t *testing.T) {
 
 func TestDefineAndGet(t *testing.T) {
 	var err error
-	var value reflect.Value
+	var value interface{}
 	tests := []struct {
 		testInfo       string
 		varName        string
@@ -180,12 +180,8 @@ func TestDefineAndGet(t *testing.T) {
 			t.Errorf("DefineAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineAndGet %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineAndGet %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineAndGet %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		env.Destroy()
@@ -216,12 +212,8 @@ func TestDefineAndGet(t *testing.T) {
 			t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineAndGet NewPackage %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineAndGet NewPackage %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineAndGet NewPackage %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		if env.GetName() != "package" {
@@ -260,12 +252,8 @@ func TestDefineAndGet(t *testing.T) {
 			t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineAndGet NewEnv %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineAndGet NewEnv %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineAndGet NewEnv %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		envChild.Destroy()
@@ -297,12 +285,8 @@ func TestDefineAndGet(t *testing.T) {
 			t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineAndGet DefineGlobal %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineAndGet DefineGlobal %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineAndGet DefineGlobal %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		envParent.Destroy()
@@ -312,7 +296,7 @@ func TestDefineAndGet(t *testing.T) {
 
 func TestDefineModify(t *testing.T) {
 	var err error
-	var value reflect.Value
+	var value interface{}
 	tests := []struct {
 		testInfo       string
 		varName        string
@@ -367,12 +351,8 @@ func TestDefineModify(t *testing.T) {
 			t.Errorf("DefineModify %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineModify %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineModify %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineModify %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		// DefineModify changeTest
@@ -398,12 +378,8 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("DefineModify changeTest  %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
-			if value.Kind() != changeTest.varKind {
-				t.Errorf("DefineModify changeTest  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
-				continue
-			}
-			if value.Interface() != changeTest.varGetValue {
-				t.Errorf("DefineModify changeTest  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			if value != changeTest.varGetValue {
+				t.Errorf("DefineModify changeTest  %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
 
@@ -436,12 +412,8 @@ func TestDefineModify(t *testing.T) {
 			t.Errorf("DefineModify envParent  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineModify envParent  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineModify envParent  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineModify envParent  %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		for _, changeTest := range changeTests {
@@ -466,12 +438,8 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("ChanDefineModify envParent changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
-			if value.Kind() != changeTest.varKind {
-				t.Errorf("DefineModify envParent changeTest %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
-				continue
-			}
-			if value.Interface() != changeTest.varGetValue {
-				t.Errorf("DefineModify envParent changeTest %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			if value != changeTest.varGetValue {
+				t.Errorf("DefineModify envParent changeTest %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
 
@@ -504,12 +472,8 @@ func TestDefineModify(t *testing.T) {
 			t.Errorf("DefineModify envChild  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
-		if value.Kind() != test.varKind {
-			t.Errorf("DefineModify envChild  %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), test.varKind)
-			continue
-		}
-		if value.Interface() != test.varGetValue {
-			t.Errorf("DefineModify envChild  %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), test.varGetValue)
+		if value != test.varGetValue {
+			t.Errorf("DefineModify envChild  %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
 
 		for _, changeTest := range changeTests {
@@ -534,12 +498,8 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("ChanDefineModify envChild changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
-			if value.Kind() != changeTest.varKind {
-				t.Errorf("DefineModify envChild changeTest %v -  kind check - received %v expected: %v", test.testInfo, value.Kind(), changeTest.varKind)
-				continue
-			}
-			if value.Interface() != changeTest.varGetValue {
-				t.Errorf("DefineModify envChild changeTest %v - value check - received %#v expected: %#v", test.testInfo, value.Interface(), changeTest.varGetValue)
+			if value != changeTest.varGetValue {
+				t.Errorf("DefineModify envChild changeTest %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
 

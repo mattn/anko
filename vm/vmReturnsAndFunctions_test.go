@@ -71,10 +71,14 @@ func TestReturns(t *testing.T) {
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
 		{script: "func aFunc() {return a}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
 
-		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: []interface{}{nil, nil}, output: map[string]interface{}{"a": reflect.Value{}}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: []interface{}{reflect.Value{}, reflect.Value{}}, output: map[string]interface{}{"a": reflect.Value{}}},
 		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": nil}, runOutput: []interface{}{nil, nil}, output: map[string]interface{}{"a": nil}},
 		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": true}, runOutput: []interface{}{true, true}, output: map[string]interface{}{"a": true}},
 		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": int32(1)}, runOutput: []interface{}{int32(1), int32(1)}, output: map[string]interface{}{"a": int32(1)}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": int64(1)}, runOutput: []interface{}{int64(1), int64(1)}, output: map[string]interface{}{"a": int64(1)}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": float32(1.1)}, runOutput: []interface{}{float32(1.1), float32(1.1)}, output: map[string]interface{}{"a": float32(1.1)}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": float64(1.1)}, runOutput: []interface{}{float64(1.1), float64(1.1)}, output: map[string]interface{}{"a": float64(1.1)}},
+		{script: "func aFunc() {return a, a}; aFunc()", input: map[string]interface{}{"a": "a"}, runOutput: []interface{}{"a", "a"}, output: map[string]interface{}{"a": "a"}},
 
 		{script: "func a(x) { return x}; a(nil)", runOutput: nil},
 		{script: "func a(x) { return x}; a(true)", runOutput: true},
@@ -120,6 +124,7 @@ func TestFunctions(t *testing.T) {
 
 		{script: "module a { func b() { return } }; a.b()", runOutput: nil},
 		{script: "module a { func b() { return nil} }; a.b()", runOutput: nil},
+		{script: "module a { func b() { return true} }; a.b()", runOutput: true},
 		{script: "module a { func b() { return 1} }; a.b()", runOutput: int64(1)},
 		{script: "module a { func b() { return 1.1} }; a.b()", runOutput: float64(1.1)},
 		{script: "module a { func b() { return \"a\"} }; a.b()", runOutput: "a"},
