@@ -169,6 +169,8 @@ func TestMake(t *testing.T) {
 		{script: "make(float32)", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
 		{script: "make(float64)", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
 		{script: "make(string)", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+
+		{script: "make(array2x)", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}(nil)},
 	}
 	runTests(t, tests)
 }
