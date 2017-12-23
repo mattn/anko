@@ -83,6 +83,22 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if err != nil {
 				return NilValue, NewStringError(expr, "index must be a number")
 			}
+			if ii == v.Len() {
+				if lhsIe, ok := lhs.Value.(*ast.IdentExpr); ok {
+					// do automatic append
+					if v.Type().Elem().String() == "interface {}" || v.Type().Elem() == rv.Type() {
+						v = reflect.Append(v, rv)
+						env.setValue(lhsIe.Lit, v)
+						return v, nil
+					}
+					if !rv.Type().ConvertibleTo(v.Type().Elem()) {
+						return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
+					}
+					v = reflect.Append(v, rv.Convert(v.Type().Elem()))
+					env.setValue(lhsIe.Lit, v)
+					return v, nil
+				}
+			}
 			if ii < 0 || ii >= v.Len() {
 				return NilValue, NewStringError(expr, "index out of range")
 			}
