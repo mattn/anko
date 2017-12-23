@@ -636,6 +636,10 @@ func TestArraysAndMaps(t *testing.T) {
 		{script: "a = {\"b\": [1]}; a.b", runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{int64(1)}}}},
 		{script: "a = {\"b\": [1.1]}; a.b", runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{float64(1.1)}}}},
 		{script: "a = {\"b\": [\"b\"]}; a.b", runOutput: []interface{}{"b"}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}}}},
+
+		{script: "a", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: map[string][][]interface{}{}, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{script: "a.b = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map member 'b'"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{script: "a[\"b\"] = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map index 'b'"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 	}
 	runTests(t, tests)
 }

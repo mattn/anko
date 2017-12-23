@@ -47,12 +47,6 @@ var (
 	testVarValueString  = reflect.ValueOf("a")
 )
 
-func TestTemp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{}
-	runTests(t, tests)
-}
-
 func TestIf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
