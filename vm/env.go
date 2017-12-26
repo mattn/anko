@@ -168,7 +168,15 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 
 // Get returns value which specified symbol. It goes to upper scope until
 // found or returns error.
-func (e *Env) Get(k string) (reflect.Value, error) {
+func (e *Env) Get(k string) (interface{}, error) {
+	rv, err := e.get(k)
+	if !rv.IsValid() || !rv.CanInterface() {
+		return nil, err
+	}
+	return rv.Interface(), err
+}
+
+func (e *Env) get(k string) (reflect.Value, error) {
 	e.RLock()
 	defer e.RUnlock()
 
@@ -184,43 +192,47 @@ func (e *Env) Get(k string) (reflect.Value, error) {
 	if e.parent == nil {
 		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
-	return e.parent.Get(k)
+	return e.parent.get(k)
 }
 
 // Set modifies value which specified as symbol. It goes to upper scope until
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
+	if v == nil {
+		return e.setValue(k, NilValue)
+	}
+	return e.setValue(k, reflect.ValueOf(v))
+}
+
+func (e *Env) setValue(k string, v reflect.Value) error {
 	e.RLock()
 	_, ok := e.env[k]
 	e.RUnlock()
 	if ok {
-		var val reflect.Value
-		if v == nil {
-			val = NilValue
-		} else {
-			var ok bool
-			val, ok = v.(reflect.Value)
-			if !ok {
-				val = reflect.ValueOf(v)
-			}
-		}
 		e.Lock()
-		e.env[k] = val
+		e.env[k] = v
 		e.Unlock()
 		return nil
 	}
 	if e.parent == nil {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	return e.parent.Set(k, v)
+	return e.parent.setValue(k, v)
 }
 
 // DefineGlobal defines symbol in global scope.
 func (e *Env) DefineGlobal(k string, v interface{}) error {
-	if e.parent == nil {
-		return e.Define(k, v)
+	for e.parent != nil {
+		e = e.parent
 	}
-	return e.parent.DefineGlobal(k, v)
+	return e.Define(k, v)
+}
+
+func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
+	for e.parent != nil {
+		e = e.parent
+	}
+	return e.defineValue(k, v)
 }
 
 // DefineType defines type which specifis symbol in global scope.
@@ -264,22 +276,19 @@ func (e *Env) DefineType(k string, t interface{}) error {
 
 // Define defines symbol in current scope.
 func (e *Env) Define(k string, v interface{}) error {
+	if v == nil {
+		return e.defineValue(k, NilValue)
+	}
+	return e.defineValue(k, reflect.ValueOf(v))
+}
+
+func (e *Env) defineValue(k string, v reflect.Value) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
 	}
-	var val reflect.Value
-	if v == nil {
-		val = NilValue
-	} else {
-		var ok bool
-		val, ok = v.(reflect.Value)
-		if !ok {
-			val = reflect.ValueOf(v)
-		}
-	}
 
 	e.Lock()
-	e.env[k] = val
+	e.env[k] = v
 	e.Unlock()
 
 	return nil
@@ -303,7 +312,7 @@ func (e *Env) Dump() {
 }
 
 // Execute parses and runs source in current scope.
-func (e *Env) Execute(src string) (reflect.Value, error) {
+func (e *Env) Execute(src string) (interface{}, error) {
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
 		return NilValue, err

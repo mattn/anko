@@ -8,12 +8,15 @@ import (
 )
 
 // Run executes statements in the specified environment.
-func Run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
+func Run(stmts []ast.Stmt, env *Env) (interface{}, error) {
 	rv, err := run(stmts, env)
 	if err == ReturnError {
-		return rv, nil
+		err = nil
 	}
-	return rv, err
+	if !rv.IsValid() || !rv.CanInterface() {
+		return nil, err
+	}
+	return rv.Interface(), err
 }
 
 // run executes statements in the specified environment.
@@ -27,10 +30,10 @@ func run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 		case *ast.ContinueStmt:
 			return NilValue, ContinueError
 		case *ast.ReturnStmt:
-			rv, err = RunSingleStmt(stmt, env)
+			rv, err = runSingleStmt(stmt, env)
 			return rv, ReturnError
 		default:
-			rv, err = RunSingleStmt(stmt, env)
+			rv, err = runSingleStmt(stmt, env)
 			if err != nil {
 				return rv, err
 			}
@@ -40,7 +43,16 @@ func run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 }
 
 // RunSingleStmt executes one statement in the specified environment.
-func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
+func RunSingleStmt(stmt ast.Stmt, env *Env) (interface{}, error) {
+	rv, err := runSingleStmt(stmt, env)
+	if !rv.IsValid() || !rv.CanInterface() {
+		return nil, err
+	}
+	return rv.Interface(), err
+}
+
+// runSingleStmt executes one statement in the specified environment.
+func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	if *(env.interrupt) {
 		return NilValue, InterruptError
 	}
@@ -64,7 +76,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			if i >= len(rvs) {
 				break
 			}
-			env.Define(name, rvs[i])
+			env.defineValue(name, rvs[i])
 		}
 		return rvs[len(rvs)-1], nil
 	case *ast.LetsStmt:
@@ -158,7 +170,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			cenv := env.NewEnv()
 			defer cenv.Destroy()
 			if stmt.Var != "" {
-				cenv.Define(stmt.Var, reflect.ValueOf(err))
+				cenv.defineValue(stmt.Var, reflect.ValueOf(err))
 			}
 			_, e1 := run(stmt.Catch, cenv)
 			if e1 != nil {
@@ -227,7 +239,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if iv.Kind() == reflect.Ptr || (iv.Kind() == reflect.Interface && !iv.IsNil()) {
 					iv = iv.Elem()
 				}
-				newenv.Define(stmt.Var, iv)
+				newenv.defineValue(stmt.Var, iv)
 				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
@@ -255,7 +267,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
 				}
-				newenv.Define(stmt.Var, iv)
+				newenv.defineValue(stmt.Var, iv)
 				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
@@ -348,7 +360,7 @@ func RunSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return rv, NewError(stmt, err)
 		}
-		env.DefineGlobal(stmt.Name, reflect.ValueOf(newenv))
+		env.defineGlobalValue(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
 	case *ast.SwitchStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
