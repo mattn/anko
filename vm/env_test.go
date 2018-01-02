@@ -812,7 +812,7 @@ func TestRaceCreateSameVariable(t *testing.T) {
 
 	_, err := env.Get("a")
 	if err != nil {
-		t.Error("Get error: %v", err)
+		t.Errorf("Get error: %v", err)
 	}
 }
 
@@ -1013,11 +1013,11 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 
 	_, err := envParent.Get("a") // value of a could be 1, 2, or 3
 	if err != nil {
-		t.Error("Get error: %v", err)
+		t.Errorf("Get error: %v", err)
 	}
 	_, err = envChild.Get("a") // value of a could be 3 or 4
 	if err != nil {
-		t.Error("Get error: %v", err)
+		t.Errorf("Get error: %v", err)
 	}
 }
 
@@ -1034,7 +1034,7 @@ func BenchmarkDefine(b *testing.B) {
 	b.StopTimer()
 	_, err = env.Get("a")
 	if err != nil {
-		b.Error("Get error: %v", err)
+		b.Errorf("Get error: %v", err)
 	}
 }
 
@@ -1054,6 +1054,6 @@ func BenchmarkSet(b *testing.B) {
 	b.StopTimer()
 	_, err = env.Get("a")
 	if err != nil {
-		b.Error("Get error: %v", err)
+		b.Errorf("Get error: %v", err)
 	}
 }
