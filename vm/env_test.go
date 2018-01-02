@@ -920,7 +920,7 @@ func TestRaceSetSameVariable(t *testing.T) {
 
 	_, err = env.Get("a")
 	if err != nil {
-		t.Error("Get error: %v", err)
+		t.Errorf("Get error: %v", err)
 	}
 }
 
