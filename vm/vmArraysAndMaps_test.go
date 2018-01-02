@@ -241,6 +241,9 @@ func TestMakeArrays(t *testing.T) {
 		{script: "make([]float32A, nil)", types: map[string]interface{}{"float32A": []float32{}}, runOutput: [][]float32{}},
 		{script: "make([]float64A, nil)", types: map[string]interface{}{"float64A": []float64{}}, runOutput: [][]float64{}},
 		{script: "make([]stringA, nil)", types: map[string]interface{}{"stringA": []string{}}, runOutput: [][]string{}},
+
+		{script: "make([]array, 0)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}},
+		{script: "a = make([]array, 0)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": [][]interface{}{}}},
 	}
 	runTests(t, tests)
 }
@@ -559,12 +562,12 @@ func TestMaps(t *testing.T) {
 		{script: "a[0:1]", input: map[string]interface{}{"a": map[string]interface{}{"b": float64(1.1)}}, runError: fmt.Errorf("type map does not support slice operation"), output: map[string]interface{}{"a": map[string]interface{}{"b": float64(1.1)}}},
 		{script: "a[0:1]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runError: fmt.Errorf("type map does not support slice operation"), output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": nil}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": nil}},
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}},
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int32(1)}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int32(1)}},
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int64(1)}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int64(1)}},
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float32(1.1)}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float32(1.1)}},
-		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float64(1.1)}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float64(1.1)}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": nil}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": nil}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int32(1)}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int32(1)}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int64(1)}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": int64(1)}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float32(1.1)}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float32(1.1)}},
+		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float64(1.1)}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": float64(1.1)}},
 		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "b"}, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "b"}},
 		{script: "a[c]", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "c"}, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": "c"}},
 
@@ -592,7 +595,8 @@ func TestMaps(t *testing.T) {
 		{script: "a[\"b\"] = 3.3", input: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(2.2)}}, runOutput: float64(3.3), output: map[string]interface{}{"a": map[string]float64{"a": float64(1.1), "b": float64(3.3)}}},
 		{script: "a[\"b\"] = \"c\"", input: map[string]interface{}{"a": map[string]string{"a": "a", "b": "b"}}, runOutput: "c", output: map[string]interface{}{"a": map[string]string{"a": "a", "b": "c"}}},
 
-		{script: "a[c] = true", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}, runError: fmt.Errorf("map key must be string type"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}},
+		{script: "a[c] = \"x\"", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}, runError: fmt.Errorf("index type bool cannot be used for map index type string"), runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": true}},
+		{script: "a[c] = \"x\"", input: map[string]interface{}{"a": map[bool]interface{}{true: "b"}, "c": true}, runOutput: "x", output: map[string]interface{}{"a": map[bool]interface{}{true: "x"}, "c": true}},
 
 		{script: "a", input: map[string]interface{}{"a": testMap}, runOutput: testMap, output: map[string]interface{}{"a": testMap}},
 		{script: "a.a", input: map[string]interface{}{"a": testMap}, runOutput: nil, output: map[string]interface{}{"a": testMap}},
@@ -623,6 +627,29 @@ func TestMaps(t *testing.T) {
 		{script: "a.e = \"x\"", input: map[string]interface{}{"a": testMap}, runOutput: "x", output: map[string]interface{}{"a": testMap}},
 		{script: "a.e", input: map[string]interface{}{"a": testMap}, runOutput: "x", output: map[string]interface{}{"a": testMap}},
 		{script: "a.e = \"e\"", input: map[string]interface{}{"a": testMap}, runOutput: "e", output: map[string]interface{}{"a": testMap}},
+
+		{script: "a = {\"b\": 1, \"c\": nil}", runOutput: map[string]interface{}{"b": int64(1), "c": nil}, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.b", runOutput: int64(1), output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.c", runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.d", runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+
+		{script: "a = {\"b\": 1, \"c\": nil}; a == nil", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a != nil", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.b == nil", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.b != nil", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.c == nil", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.c != nil", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.d == nil", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.d != nil", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+
+		{script: "a = {\"b\": 1, \"c\": nil}; a == 1", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a != 1", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.b == 1", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.b != 1", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.c == 1", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.c != 1", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.d == 1", runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{script: "a = {\"b\": 1, \"c\": nil}; a.d != 1", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 	}
 	runTests(t, tests)
 }
@@ -698,8 +725,8 @@ func TestArraysAndMaps(t *testing.T) {
 		{script: "b[0] = [\"b\"]; a.b = b", input: map[string]interface{}{"a": map[string][][]interface{}{}, "b": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{"b"}}, output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}{[]interface{}{"b"}}}, "b": [][]interface{}{[]interface{}{"b"}}}},
 
 		{script: "a", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: map[string][][]interface{}{}, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
-		{script: "a.b = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map member 'b'"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
-		{script: "a[\"b\"] = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map index 'b'"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{script: "a.b = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{script: "a[\"b\"] = 1", input: map[string]interface{}{"a": map[string][][]interface{}{}}, runError: fmt.Errorf("type int64 cannot be assigned to type [][]interface {} for map"), runOutput: nil, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 	}
 	runTests(t, tests)
 }
