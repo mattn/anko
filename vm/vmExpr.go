@@ -56,7 +56,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.Set(rv)
 		case reflect.Map:
-			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
+			if v.Type().Elem() != InterfaceType && v.Type().Elem() != rv.Type() {
 				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
 			}
 			if v.IsNil() {
@@ -90,7 +90,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			if ii == v.Len() {
 				// try to do automatic append
-				if v.Type().Elem().String() == "interface {}" || v.Type().Elem() == rv.Type() {
+				if v.Type().Elem() == InterfaceType || v.Type().Elem() == rv.Type() {
 					v = reflect.Append(v, rv)
 					return invokeLetExpr(lhs.Value, v, env)
 				}
@@ -110,7 +110,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v.Set(rv)
 		case reflect.Map:
 			keyType := i.Type()
-			if keyType.String() == "interface {}" && v.Type().Key().String() != "interface {}" {
+			if keyType == InterfaceType && v.Type().Key() != InterfaceType {
 				if i.Elem().IsValid() && !i.Elem().IsNil() {
 					keyType = i.Elem().Type()
 				}
@@ -119,7 +119,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return NilValue, NewStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
 			}
 
-			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
+			if v.Type().Elem() != InterfaceType && v.Type().Elem() != rv.Type() {
 				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
 			}
 			if v.IsNil() {

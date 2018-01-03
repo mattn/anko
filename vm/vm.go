@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	NilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	NilType    = reflect.TypeOf(nil)
-	Int32Type  = reflect.TypeOf(int32(1))
-	TrueValue  = reflect.ValueOf(true)
-	FalseValue = reflect.ValueOf(false)
-	ZeroValue  = reflect.Value{}
+	NilValue      = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	NilType       = reflect.TypeOf(nil)
+	Int32Type     = reflect.TypeOf(int32(1))
+	InterfaceType = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	TrueValue     = reflect.ValueOf(true)
+	FalseValue    = reflect.ValueOf(false)
+	ZeroValue     = reflect.Value{}
 )
 
 // Error provides a convenient interface for handling runtime error.
@@ -198,7 +199,7 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	}
 
 	keyType := key.Type()
-	if keyType.String() == "interface {}" && aMap.Type().Key().String() != "interface {}" {
+	if keyType == InterfaceType && aMap.Type().Key() != InterfaceType {
 		if key.Elem().IsValid() && !key.Elem().IsNil() {
 			keyType = key.Elem().Type()
 		}
@@ -211,7 +212,7 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	// It returns the zero Value if key is not found in the map or if v represents a nil map.
 	value := aMap.MapIndex(key)
 
-	if value.IsValid() && value.CanInterface() && aMap.Type().Elem().String() == "interface {}" && !value.IsNil() {
+	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == InterfaceType && !value.IsNil() {
 		value = reflect.ValueOf(value.Interface())
 	}
 
