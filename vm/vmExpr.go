@@ -59,6 +59,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
 				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
 			}
+			if v.IsNil() {
+				v = reflect.MakeMap(v.Type())
+				v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
+				return invokeLetExpr(lhs.Expr, v, env)
+			}
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
@@ -116,6 +121,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
 				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+			}
+			if v.IsNil() {
+				v = reflect.MakeMap(v.Type())
+				v.SetMapIndex(i, rv)
+				return invokeLetExpr(lhs.Value, v, env)
 			}
 			v.SetMapIndex(i, rv)
 		case reflect.String:
