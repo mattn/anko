@@ -8,7 +8,8 @@ before_install:
     - go get github.com/daviddengcn/go-colortext
 script:
     - go build
-    - ./t/test.sh
     - go test -v ./ast/util
+    - go test -v ./vm
+    - go test -v ./builtins
+    - ./t/test.sh
     - ./anko ./_example/scripts/term.ank
-

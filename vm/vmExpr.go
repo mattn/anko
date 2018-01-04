@@ -56,8 +56,13 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.Set(rv)
 		case reflect.Map:
-			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
-				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map member '"+lhs.Name+"'")
+			if v.Type().Elem() != InterfaceType && v.Type().Elem() != rv.Type() {
+				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+			}
+			if v.IsNil() {
+				v = reflect.MakeMap(v.Type())
+				v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
+				return invokeLetExpr(lhs.Expr, v, env)
 			}
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
 		default:
@@ -84,20 +89,16 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return NilValue, NewStringError(expr, "index must be a number")
 			}
 			if ii == v.Len() {
-				if lhsIe, ok := lhs.Value.(*ast.IdentExpr); ok {
-					// do automatic append
-					if v.Type().Elem().String() == "interface {}" || v.Type().Elem() == rv.Type() {
-						v = reflect.Append(v, rv)
-						env.setValue(lhsIe.Lit, v)
-						return v, nil
-					}
-					if !rv.Type().ConvertibleTo(v.Type().Elem()) {
-						return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
-					}
-					v = reflect.Append(v, rv.Convert(v.Type().Elem()))
-					env.setValue(lhsIe.Lit, v)
-					return v, nil
+				// try to do automatic append
+				if v.Type().Elem() == InterfaceType || v.Type().Elem() == rv.Type() {
+					v = reflect.Append(v, rv)
+					return invokeLetExpr(lhs.Value, v, env)
 				}
+				if !rv.Type().ConvertibleTo(v.Type().Elem()) {
+					return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
+				}
+				v = reflect.Append(v, rv.Convert(v.Type().Elem()))
+				return invokeLetExpr(lhs.Value, v, env)
 			}
 			if ii < 0 || ii >= v.Len() {
 				return NilValue, NewStringError(expr, "index out of range")
@@ -108,11 +109,23 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.Set(rv)
 		case reflect.Map:
-			if i.Kind() != reflect.String {
-				return NilValue, NewStringError(expr, "map key must be string type")
+			keyType := i.Type()
+			if keyType == InterfaceType && v.Type().Key() != InterfaceType {
+				if i.Elem().IsValid() && !i.Elem().IsNil() {
+					keyType = i.Elem().Type()
+				}
 			}
-			if v.Type().Elem().String() != "interface {}" && v.Type().Elem() != rv.Type() {
-				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map index '"+i.String()+"'")
+			if keyType != v.Type().Key() {
+				return NilValue, NewStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
+			}
+
+			if v.Type().Elem() != InterfaceType && v.Type().Elem() != rv.Type() {
+				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+			}
+			if v.IsNil() {
+				v = reflect.MakeMap(v.Type())
+				v.SetMapIndex(i, rv)
+				return invokeLetExpr(lhs.Value, v, env)
 			}
 			v.SetMapIndex(i, rv)
 		case reflect.String:
@@ -421,17 +434,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return v.FieldByIndex(field.Index), nil
 		case reflect.Map:
-			if v.Type().Elem().String() == "interface {}" {
-				v = v.MapIndex(reflect.ValueOf(e.Name))
-				if v.IsValid() && v.CanInterface() && !v.IsNil() {
-					return reflect.ValueOf(v.Interface()), nil
-				}
-				return v, nil
-			} else {
-				// From reflect MapIndex:
-				// It returns the zero Value if key is not found in the map or if v represents a nil map.
-				return v.MapIndex(reflect.ValueOf(e.Name)), nil
-			}
+			v = getMapIndex(reflect.ValueOf(e.Name), v)
+			return v, nil
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
@@ -466,20 +470,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return NilValue, NewStringError(expr, "invalid type conversion")
 			}
 		case reflect.Map:
-			if i.Kind() != reflect.String {
-				return NilValue, NewStringError(expr, "map key must be string type")
-			}
-			if v.Type().Elem().String() == "interface {}" {
-				v = v.MapIndex(i)
-				if v.IsValid() && v.CanInterface() && !v.IsNil() {
-					return reflect.ValueOf(v.Interface()), nil
-				}
-				return v, nil
-			} else {
-				// From reflect MapIndex:
-				// It returns the zero Value if key is not found in the map or if v represents a nil map.
-				return v.MapIndex(i), nil
-			}
+			v = getMapIndex(i, v)
+			return v, nil
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
