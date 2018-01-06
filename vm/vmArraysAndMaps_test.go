@@ -314,8 +314,8 @@ func TestArraySlice(t *testing.T) {
 		{script: "a = [1, 2, 3]; a[2:3]", runOutput: []interface{}{int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[2:4]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{script: "a = [1, 2, 3]; a[3:2]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
-		{script: "a = [1, 2, 3]; a[3:3]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[3:2]", runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[3:3]", runOutput: []interface{}{}},
 		{script: "a = [1, 2, 3]; a[3:4]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
 		{script: "a = [1, 2, 3]; a[true:2] = 4", runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
@@ -325,6 +325,13 @@ func TestArraySlice(t *testing.T) {
 		{script: "a = [1, 2, 3]; a[0:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:0] = 4", runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}},
+		{script: "a = [1, 2, 3]; a = a[2:]", runOutput: []interface{}{int64(3)}},
+		{script: "a = [1, 2, 3]; a = a[1:]", runOutput: []interface{}{int64(2), int64(3)}},
+		{script: "a = [1, 2, 3]; a = a[:1]", runOutput: []interface{}{int64(1)}},
+		{script: "a = [1, 2, 3]; a = a[:2]", runOutput: []interface{}{int64(1), int64(2)}},
+		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}},
 	}
 	runTests(t, tests)
 }

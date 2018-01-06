@@ -139,29 +139,41 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
-		rb, err := invokeExpr(lhs.Begin, env)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		re, err := invokeExpr(lhs.End, env)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
 		switch v.Kind() {
 		case reflect.Array, reflect.Slice:
-			rbi, err := tryToInt(rb)
-			if err != nil {
-				return NilValue, NewStringError(expr, "index must be a number")
+			var rbi, rei int
+			if lhs.Begin != nil {
+				rb, err := invokeExpr(lhs.Begin, env)
+				if err != nil {
+					return NilValue, NewError(expr, err)
+				}
+				rbi, err = tryToInt(rb)
+				if err != nil {
+					return NilValue, NewStringError(expr, "index must be a number")
+				}
+				if rbi < 0 || rbi > v.Len() {
+					return NilValue, NewStringError(expr, "index out of range")
+				}
+			} else {
+				rbi = 0
 			}
-			rei, err := tryToInt(re)
-			if err != nil {
-				return NilValue, NewStringError(expr, "index must be a number")
-			}
-			if rbi < 0 || rbi >= v.Len() || rei < 0 || rei > v.Len() {
-				return NilValue, NewStringError(expr, "index out of range")
+			if lhs.End != nil {
+				re, err := invokeExpr(lhs.End, env)
+				if err != nil {
+					return NilValue, NewError(expr, err)
+				}
+				rei, err = tryToInt(re)
+				if err != nil {
+					return NilValue, NewStringError(expr, "index must be a number")
+				}
+				if rei < 0 || rei > v.Len() {
+					return NilValue, NewStringError(expr, "index out of range")
+				}
+			} else {
+				rei = v.Len()
 			}
 			if rbi > rei {
 				return NilValue, NewStringError(expr, "invalid slice index")
@@ -481,29 +493,41 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
-		rb, err := invokeExpr(e.Begin, env)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		re, err := invokeExpr(e.End, env)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
 		switch v.Kind() {
 		case reflect.Array, reflect.Slice, reflect.String:
-			rbi, err := tryToInt(rb)
-			if err != nil {
-				return NilValue, NewStringError(expr, "index must be a number")
+			var rbi, rei int
+			if e.Begin != nil {
+				rb, err := invokeExpr(e.Begin, env)
+				if err != nil {
+					return NilValue, NewError(expr, err)
+				}
+				rbi, err = tryToInt(rb)
+				if err != nil {
+					return NilValue, NewStringError(expr, "index must be a number")
+				}
+				if rbi < 0 || rbi > v.Len() {
+					return NilValue, NewStringError(expr, "index out of range")
+				}
+			} else {
+				rbi = 0
 			}
-			rei, err := tryToInt(re)
-			if err != nil {
-				return NilValue, NewStringError(expr, "index must be a number")
-			}
-			if rbi < 0 || rbi >= v.Len() || rei < 0 || rei > v.Len() {
-				return NilValue, NewStringError(expr, "index out of range")
+			if e.End != nil {
+				re, err := invokeExpr(e.End, env)
+				if err != nil {
+					return NilValue, NewError(expr, err)
+				}
+				rei, err = tryToInt(re)
+				if err != nil {
+					return NilValue, NewStringError(expr, "index must be a number")
+				}
+				if rei < 0 || rei > v.Len() {
+					return NilValue, NewStringError(expr, "index out of range")
+				}
+			} else {
+				rei = v.Len()
 			}
 			if rbi > rei {
 				return NilValue, NewStringError(expr, "invalid slice index")
