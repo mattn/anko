@@ -129,8 +129,8 @@ func TestStrings(t *testing.T) {
 		{script: "a[1:9]", input: map[string]interface{}{"a": "test data"}, runOutput: "est data", output: map[string]interface{}{"a": "test data"}},
 		{script: "a[1:10]", input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
 
-		{script: "a[:2]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), output: map[string]interface{}{"a": "test data"}},
-		{script: "a[2:]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), output: map[string]interface{}{"a": "test data"}},
+		{script: "a[:2]", input: map[string]interface{}{"a": "test data"}, runOutput: "te", output: map[string]interface{}{"a": "test data"}},
+		{script: "a[2:]", input: map[string]interface{}{"a": "test data"}, runOutput: "st data", output: map[string]interface{}{"a": "test data"}},
 	}
 	runTests(t, tests)
 }

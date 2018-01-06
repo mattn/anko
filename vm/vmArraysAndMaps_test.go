@@ -326,12 +326,12 @@ func TestArraySlice(t *testing.T) {
 		{script: "a = [1, 2, 3]; a[1:0] = 4", runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}},
-		{script: "a = [1, 2, 3]; a = a[2:]", runOutput: []interface{}{int64(3)}},
-		{script: "a = [1, 2, 3]; a = a[1:]", runOutput: []interface{}{int64(2), int64(3)}},
-		{script: "a = [1, 2, 3]; a = a[:1]", runOutput: []interface{}{int64(1)}},
-		{script: "a = [1, 2, 3]; a = a[:2]", runOutput: []interface{}{int64(1), int64(2)}},
-		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}},
+		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}, output: map[string]interface{}{}},
+		{script: "a = [1, 2, 3]; a = a[2:]", runOutput: []interface{}{int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(3)}}},
+		{script: "a = [1, 2, 3]; a = a[1:]", runOutput: []interface{}{int64(2), int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a = a[:1]", runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{script: "a = [1, 2, 3]; a = a[:2]", runOutput: []interface{}{int64(1), int64(2)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{}}},
 	}
 	runTests(t, tests)
 }
