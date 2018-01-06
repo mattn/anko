@@ -645,9 +645,29 @@ expr :
 		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
 		$$.SetPosition($1.Position())
 	}
+	| IDENT '[' expr ':' ']'
+	{
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
+		$$.SetPosition($1.Position())
+	}
+	| IDENT '[' ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
+		$$.SetPosition($1.Position())
+	}
 	| expr '[' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$.SetPosition($1.Position())
+	}
+	| expr '[' expr ':' ']'
+	{
+		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$.SetPosition($1.Position())
+	}
+	| expr '[' ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' typ ')'
