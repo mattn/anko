@@ -108,6 +108,11 @@ func TestStrings(t *testing.T) {
 		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: 'e', output: map[string]interface{}{"a": "test"}},
 		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: 't', output: map[string]interface{}{"a": "test"}},
 
+		{script: "a", input: map[string]interface{}{"a": "a\\b"}, runOutput: "a\\b", output: map[string]interface{}{"a": "a\\b"}},
+		{script: "a", input: map[string]interface{}{"a": "a\\\\b"}, runOutput: "a\\\\b", output: map[string]interface{}{"a": "a\\\\b"}},
+		{script: "a = \"a\\b\"", runOutput: "a\b", output: map[string]interface{}{"a": "a\b"}},
+		{script: "a = \"a\\\\b\"", runOutput: "a\\b", output: map[string]interface{}{"a": "a\\b"}},
+
 		{script: "a[:]", input: map[string]interface{}{"a": "test data"}, parseError: fmt.Errorf("syntax error"), output: map[string]interface{}{"a": "test data"}},
 
 		{script: "a[0:]", input: map[string]interface{}{"a": ""}, runOutput: "", output: map[string]interface{}{"a": ""}},
