@@ -294,9 +294,12 @@ func TestMakeArrays(t *testing.T) {
 func TestArraySlice(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "a = [1, 2, 3]; a[:]", parseError: fmt.Errorf("syntax error")},
+
 		{script: "a = [1, 2, 3]; a[true:2]", runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:true]", runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
+		{script: "a = [1, 2, 3]; a[-1:0]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[0:0]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[0:1]", runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[0:2]", runOutput: []interface{}{int64(1), int64(2)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
@@ -315,23 +318,43 @@ func TestArraySlice(t *testing.T) {
 		{script: "a = [1, 2, 3]; a[2:4]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
 		{script: "a = [1, 2, 3]; a[3:2]", runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
-		{script: "a = [1, 2, 3]; a[3:3]", runOutput: []interface{}{}},
+		{script: "a = [1, 2, 3]; a[3:3]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[3:4]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[4:4]", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[-1:]", runError: fmt.Errorf("index out of range"), runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:]", runOutput: []interface{}{int64(1), int64(2), int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:]", runOutput: []interface{}{int64(2), int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[2:]", runOutput: []interface{}{int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[3:]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[4:]", runError: fmt.Errorf("index out of range"), runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[:-1]", runError: fmt.Errorf("index out of range"), runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:0]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:1]", runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:2]", runOutput: []interface{}{int64(1), int64(2)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:3]", runOutput: []interface{}{int64(1), int64(2), int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:4]", runError: fmt.Errorf("index out of range"), runOutput: nil, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
 		{script: "a = [1, 2, 3]; a[true:2] = 4", runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:true] = 4", runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
 		{script: "a = [1, 2, 3]; a[0:0] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[0:1] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[0:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:0] = 4", runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: "a = [1, 2, 3]; a[1:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}, output: map[string]interface{}{}},
-		{script: "a = [1, 2, 3]; a = a[2:]", runOutput: []interface{}{int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(3)}}},
-		{script: "a = [1, 2, 3]; a = a[1:]", runOutput: []interface{}{int64(2), int64(3)}, output: map[string]interface{}{"a": []interface{}{int64(2), int64(3)}}},
-		{script: "a = [1, 2, 3]; a = a[:1]", runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: "a = [1, 2, 3]; a = a[:2]", runOutput: []interface{}{int64(1), int64(2)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
-		{script: "a = [1, 2, 3]; a = a[3:]", runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{}}},
+		{script: "a = [1, 2, 3]; a[-1:] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[0:] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[1:] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[4:] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: "a = [1, 2, 3]; a[:-1] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:0] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:1] = 4", runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{script: "a = [1, 2, 3]; a[:4] = 4", runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 	}
 	runTests(t, tests)
 }
