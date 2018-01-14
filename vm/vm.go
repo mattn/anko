@@ -4,19 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"unsafe"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/parser"
 )
 
 var (
-	NilValue      = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	NilType       = reflect.TypeOf(nil)
-	Int32Type     = reflect.TypeOf(int32(1))
-	InterfaceType = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-	TrueValue     = reflect.ValueOf(true)
-	FalseValue    = reflect.ValueOf(false)
-	ZeroValue     = reflect.Value{}
+	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	NilType           = reflect.TypeOf(nil)
+	Int32Type         = reflect.TypeOf(int32(1))
+	UnsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
+	InterfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	TrueValue         = reflect.ValueOf(true)
+	FalseValue        = reflect.ValueOf(false)
+	ZeroValue         = reflect.Value{}
 )
 
 // Error provides a convenient interface for handling runtime error.
