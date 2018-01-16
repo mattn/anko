@@ -658,18 +658,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return reflect.Append(lhsV, rhsV), nil
 			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() == reflect.Array || rhsV.Kind() == reflect.Slice) {
-				rhsT := rhsV.Type().Elem()
-				lhsT := lhsV.Type().Elem()
-				if lhsT.Kind() != rhsT.Kind() {
-					if !rhsT.ConvertibleTo(lhsT) {
-						return NilValue, NewStringError(expr, "invalid type conversion")
-					}
-					for i := 0; i < rhsV.Len(); i++ {
-						lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
-					}
-					return lhsV, nil
-				}
-				return reflect.AppendSlice(lhsV, rhsV), nil
+				return appendSlice(e, lhsV, rhsV)
 			}
 			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil

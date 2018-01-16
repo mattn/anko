@@ -219,10 +219,43 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	}
 
 	// Note if the map is of reflect.Value, it will incorectly return nil when zero value
-	// Unware of any other way to do to this to correct that
+	// Unware of any other way for this to be done to correct that
 	if value == ZeroValue {
 		return NilValue
 	}
 
 	return value
+}
+
+func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
+	lhsT := lhsV.Type().Elem()
+	rhsT := rhsV.Type().Elem()
+
+	if lhsT.Kind() == rhsT.Kind() {
+		return reflect.AppendSlice(lhsV, rhsV), nil
+	}
+
+	if rhsT.ConvertibleTo(lhsT) {
+		for i := 0; i < rhsV.Len(); i++ {
+			lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
+		}
+		return lhsV, nil
+	}
+
+	if rhsT != InterfaceType || (lhsT.Kind() != reflect.Array && lhsT.Kind() != reflect.Slice) {
+		return NilValue, NewStringError(expr, "invalid type conversion")
+	}
+
+	for i := 0; i < rhsV.Len(); i++ {
+		value := rhsV.Index(i).Elem()
+		if value.Kind() != reflect.Array && value.Kind() != reflect.Slice {
+			return NilValue, NewStringError(expr, "invalid type conversion")
+		}
+		newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, 1), value)
+		if err != nil {
+			return NilValue, err
+		}
+		lhsV = reflect.Append(lhsV, newSlice)
+	}
+	return lhsV, nil
 }
