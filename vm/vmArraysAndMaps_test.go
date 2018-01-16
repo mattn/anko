@@ -541,6 +541,19 @@ func TestArrayAppendArrays(t *testing.T) {
 		{script: "a = []; a += [[1, 2]]; a += [[3, 4]]", runOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 		{script: "a = []; a += [[1.1, 2.2]]; a += [[3.3, 4.4]]", runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}}},
 		{script: "a = []; a += [[\"a\", \"b\"]]; a += [[\"c\", \"d\"]]", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}}},
+
+		{script: "a = make(array2x); a += [[1, 2]]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}},
+		{script: "a = make(array2x); b = [1, 2]; a += [b]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}},
+		{script: "a = make(array2x); a += [[1, 2],[3, 4]]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
+		{script: "a = make(array2x); b = [1, 2]; a += [b]; b = [3, 4]; a += [b]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
+
+		{script: "a = make(array3x); a += [[[1, 2]]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
+		{script: "a = make(array3x); b = [[1, 2]]; a += [b]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
+		{script: "a = make(array3x); b = [1, 2]; a += [[b]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
+		{script: "a = make(array3x); a += [[[1, 2],[3, 4]]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make(array3x); b = [[1, 2],[3, 4]]; a += [b]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make(array3x); b = [1, 2]; c = [b]; b = [3, 4]; c += [b]; a += [c]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make(array3x); b = [1, 2]; c = []; c += [b]; b = [3, 4]; c += [b]; a += [c]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 	}
 	runTests(t, tests)
 }
