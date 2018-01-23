@@ -389,7 +389,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return func(args ...reflect.Value) (reflect.Value, error) {
 				if !expr.VarArg {
 					if len(args) != len(expr.Args) {
-						return NilValue, NewStringError(expr, "Arguments Number of mismatch")
+						return NilValue, NewStringError(expr, "expected "+fmt.Sprintf("%v", len(expr.Args))+" function arguments but received "+fmt.Sprintf("%v", len(args)))
 					}
 				}
 				newenv := env.NewEnv()
@@ -658,18 +658,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return reflect.Append(lhsV, rhsV), nil
 			}
 			if (lhsV.Kind() == reflect.Array || lhsV.Kind() == reflect.Slice) && (rhsV.Kind() == reflect.Array || rhsV.Kind() == reflect.Slice) {
-				rhsT := rhsV.Type().Elem()
-				lhsT := lhsV.Type().Elem()
-				if lhsT.Kind() != rhsT.Kind() {
-					if !rhsT.ConvertibleTo(lhsT) {
-						return NilValue, NewStringError(expr, "invalid type conversion")
-					}
-					for i := 0; i < rhsV.Len(); i++ {
-						lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
-					}
-					return lhsV, nil
-				}
-				return reflect.AppendSlice(lhsV, rhsV), nil
+				return appendSlice(e, lhsV, rhsV)
 			}
 			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
@@ -750,45 +739,51 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			f = f.Elem()
 		}
 		if f.Kind() != reflect.Func {
-			return f, NewStringError(expr, "Unknown function")
+			return NilValue, NewStringError(expr, "can not call type "+f.Type().String())
 		}
 		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
 	case *ast.CallExpr:
+		var err error
 		f := NilValue
 
 		if e.Func != nil {
 			f = e.Func.(reflect.Value)
 		} else {
-			var err error
-			ff, err := env.get(e.Name)
+			f, err = env.get(e.Name)
 			if err != nil {
-				return f, err
+				return NilValue, err
 			}
-			f = ff
+		}
+		if f.Kind() != reflect.Func {
+			return NilValue, NewStringError(expr, "can not call type "+f.Type().String())
 		}
 		_, isReflect := f.Interface().(Func)
 
+		var arg reflect.Value
 		args := []reflect.Value{}
 		l := len(e.SubExprs)
 		for i, expr := range e.SubExprs {
-			arg, err := invokeExpr(expr, env)
+
+			arg, err = invokeExpr(expr, env)
 			if err != nil {
 				return NilValue, NewError(expr, err)
 			}
 
 			if i < f.Type().NumIn() {
 				if !f.Type().IsVariadic() {
-					it := f.Type().In(i)
-					if arg.Kind().String() == "unsafe.Pointer" {
-						arg = reflect.New(it).Elem()
+					iType := f.Type().In(i)
+					if arg.Kind() == reflect.Interface && !arg.IsNil() {
+						arg = arg.Elem()
 					}
-					if arg == NilValue {
-					} else if arg.Kind() != it.Kind() && arg.IsValid() && arg.Type().ConvertibleTo(it) {
-						arg = arg.Convert(it)
+					if arg.Type() == UnsafePointerType {
+						arg = reflect.New(iType).Elem()
+					}
+					if !arg.IsValid() {
+						arg = reflect.Zero(iType)
 					} else if arg.Kind() == reflect.Func {
 						if _, isFunc := arg.Interface().(Func); isFunc {
 							rfunc := arg
-							arg = reflect.MakeFunc(it, func(args []reflect.Value) []reflect.Value {
+							arg = reflect.MakeFunc(iType, func(args []reflect.Value) []reflect.Value {
 								for i := range args {
 									args[i] = reflect.ValueOf(args[i])
 								}
@@ -799,30 +794,27 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 									return []reflect.Value{}
 								}
 								var rets []reflect.Value
-								for _, v := range rfunc.Call(args)[:it.NumOut()] {
+								for _, v := range rfunc.Call(args)[:iType.NumOut()] {
 									rets = append(rets, v.Interface().(reflect.Value))
 								}
 								return rets
 							})
 						}
-					} else if !arg.IsValid() {
-						arg = reflect.Zero(it)
+					} else if iType != InterfaceType && arg.Type() != iType {
+						if arg.Type().ConvertibleTo(iType) {
+							arg = arg.Convert(iType)
+						} else {
+							return NilValue, NewStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
+						}
 					}
 				}
 			}
+
 			if !arg.IsValid() {
 				arg = NilValue
 			}
 
-			if !isReflect {
-				if e.VarArg && i == l-1 {
-					for j := 0; j < arg.Len(); j++ {
-						args = append(args, arg.Index(j).Elem())
-					}
-				} else {
-					args = append(args, arg)
-				}
-			} else {
+			if isReflect {
 				if arg.Kind() == reflect.Interface && !arg.IsNil() {
 					arg = arg.Elem()
 				}
@@ -833,10 +825,19 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				} else {
 					args = append(args, reflect.ValueOf(arg))
 				}
+			} else {
+				if e.VarArg && i == l-1 {
+					for j := 0; j < arg.Len(); j++ {
+						args = append(args, arg.Index(j).Elem())
+					}
+				} else {
+					args = append(args, arg)
+				}
 			}
+
 		}
+
 		ret := NilValue
-		var err error
 		fnc := func() {
 			defer func() {
 				if os.Getenv("ANKO_DEBUG") == "" {
@@ -867,7 +868,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 						}
 					}
 				}
-				if f.Type().NumOut() == 1 {
+				if f.Type().NumOut() == 0 {
+				} else if f.Type().NumOut() == 1 {
 					ret = rets[0]
 				} else {
 					var result []interface{}
@@ -878,6 +880,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				}
 			}
 		}
+
 		if e.Go {
 			go fnc()
 			return NilValue, nil

@@ -31,6 +31,9 @@ func run(stmts []ast.Stmt, env *Env) (reflect.Value, error) {
 			return NilValue, ContinueError
 		case *ast.ReturnStmt:
 			rv, err = runSingleStmt(stmt, env)
+			if err != nil {
+				return rv, err
+			}
 			return rv, ReturnError
 		default:
 			rv, err = runSingleStmt(stmt, env)

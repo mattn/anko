@@ -4,19 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"unsafe"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/parser"
 )
 
 var (
-	NilValue      = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	NilType       = reflect.TypeOf(nil)
-	Int32Type     = reflect.TypeOf(int32(1))
-	InterfaceType = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-	TrueValue     = reflect.ValueOf(true)
-	FalseValue    = reflect.ValueOf(false)
-	ZeroValue     = reflect.Value{}
+	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	NilType           = reflect.TypeOf(nil)
+	Int32Type         = reflect.TypeOf(int32(1))
+	UnsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
+	InterfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	TrueValue         = reflect.ValueOf(true)
+	FalseValue        = reflect.ValueOf(false)
+	ZeroValue         = reflect.Value{}
 )
 
 // Error provides a convenient interface for handling runtime error.
@@ -217,10 +219,43 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	}
 
 	// Note if the map is of reflect.Value, it will incorectly return nil when zero value
-	// Unware of any other way to do to this to correct that
+	// Unware of any other way for this to be done to correct that
 	if value == ZeroValue {
 		return NilValue
 	}
 
 	return value
+}
+
+func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
+	lhsT := lhsV.Type().Elem()
+	rhsT := rhsV.Type().Elem()
+
+	if lhsT.Kind() == rhsT.Kind() {
+		return reflect.AppendSlice(lhsV, rhsV), nil
+	}
+
+	if rhsT.ConvertibleTo(lhsT) {
+		for i := 0; i < rhsV.Len(); i++ {
+			lhsV = reflect.Append(lhsV, rhsV.Index(i).Convert(lhsT))
+		}
+		return lhsV, nil
+	}
+
+	if rhsT != InterfaceType || (lhsT.Kind() != reflect.Array && lhsT.Kind() != reflect.Slice) {
+		return NilValue, NewStringError(expr, "invalid type conversion")
+	}
+
+	for i := 0; i < rhsV.Len(); i++ {
+		value := rhsV.Index(i).Elem()
+		if value.Kind() != reflect.Array && value.Kind() != reflect.Slice {
+			return NilValue, NewStringError(expr, "invalid type conversion")
+		}
+		newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, 1), value)
+		if err != nil {
+			return NilValue, err
+		}
+		lhsV = reflect.Append(lhsV, newSlice)
+	}
+	return lhsV, nil
 }
