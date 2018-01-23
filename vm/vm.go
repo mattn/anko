@@ -13,7 +13,7 @@ import (
 var (
 	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	NilType           = reflect.TypeOf(nil)
-	Int32Type         = reflect.TypeOf(int32(1))
+	StringType        = reflect.TypeOf("a")
 	UnsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
 	InterfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
 	TrueValue         = reflect.ValueOf(true)

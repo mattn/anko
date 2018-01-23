@@ -476,8 +476,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return v.Index(ii), nil
 			}
 			v = v.Index(ii)
-			if v.Type().ConvertibleTo(Int32Type) {
-				return v.Convert(Int32Type), nil
+			if v.Type().ConvertibleTo(StringType) {
+				return v.Convert(StringType), nil
 			} else {
 				return NilValue, NewStringError(expr, "invalid type conversion")
 			}

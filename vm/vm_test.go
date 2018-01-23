@@ -104,9 +104,11 @@ func TestStrings(t *testing.T) {
 		{script: "a[0:1] = \"a\"", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("type string does not support slice operation for assignment"), output: map[string]interface{}{"a": "test"}},
 
 		{script: "a", input: map[string]interface{}{"a": "test"}, runOutput: "test", output: map[string]interface{}{"a": "test"}},
-		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: 't', output: map[string]interface{}{"a": "test"}},
-		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: 'e', output: map[string]interface{}{"a": "test"}},
-		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: 't', output: map[string]interface{}{"a": "test"}},
+		{script: "a[-1]", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test"}},
+		{script: "a[0]", input: map[string]interface{}{"a": "test"}, runOutput: "t", output: map[string]interface{}{"a": "test"}},
+		{script: "a[1]", input: map[string]interface{}{"a": "test"}, runOutput: "e", output: map[string]interface{}{"a": "test"}},
+		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: "t", output: map[string]interface{}{"a": "test"}},
+		{script: "a[4]", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test"}},
 
 		{script: "a", input: map[string]interface{}{"a": "a\\b"}, runOutput: "a\\b", output: map[string]interface{}{"a": "a\\b"}},
 		{script: "a", input: map[string]interface{}{"a": "a\\\\b"}, runOutput: "a\\\\b", output: map[string]interface{}{"a": "a\\\\b"}},
