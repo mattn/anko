@@ -152,7 +152,9 @@ func TestDefineAndGet(t *testing.T) {
 		{testInfo: "float32", varName: "a", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32, defineError: nil, getError: nil},
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
 		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+
 		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.Interface, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String, defineError: nil, getError: nil},
 	}
 
 	// DefineAndGet

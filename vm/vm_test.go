@@ -112,6 +112,15 @@ func TestStrings(t *testing.T) {
 		{script: "a[3]", input: map[string]interface{}{"a": "test"}, runOutput: "t", output: map[string]interface{}{"a": "test"}},
 		{script: "a[4]", input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test"}},
 
+		{script: "a", input: map[string]interface{}{"a": "\"a\""}, runOutput: "\"a\"", output: map[string]interface{}{"a": "\"a\""}},
+		{script: "a[0]", input: map[string]interface{}{"a": "\"a\""}, runOutput: "\"", output: map[string]interface{}{"a": "\"a\""}},
+		{script: "a[1]", input: map[string]interface{}{"a": "\"a\""}, runOutput: "a", output: map[string]interface{}{"a": "\"a\""}},
+
+		{script: `a = "\"a\""`, runOutput: "\"a\"", output: map[string]interface{}{"a": "\"a\""}},
+		{script: `a = "\"a\""; a`, runOutput: "\"a\"", output: map[string]interface{}{"a": "\"a\""}},
+		{script: `a = "\"a\""; a[0]`, runOutput: "\"", output: map[string]interface{}{"a": "\"a\""}},
+		{script: `a = "\"a\""; a[1]`, runOutput: "a", output: map[string]interface{}{"a": "\"a\""}},
+
 		{script: "a", input: map[string]interface{}{"a": "a\\b"}, runOutput: "a\\b", output: map[string]interface{}{"a": "a\\b"}},
 		{script: "a", input: map[string]interface{}{"a": "a\\\\b"}, runOutput: "a\\\\b", output: map[string]interface{}{"a": "a\\\\b"}},
 		{script: "a = \"a\\b\"", runOutput: "a\b", output: map[string]interface{}{"a": "a\b"}},
