@@ -305,6 +305,7 @@ func Import(env *vm.Env) *vm.Env {
 	env.DefineType("int64", int64(1))
 	env.DefineType("float64", float64(1))
 	env.DefineType("string", "a")
+	env.DefineType("rune", 'a')
 	return env
 }
 
