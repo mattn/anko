@@ -19,6 +19,18 @@ type testStruct struct {
 	output     map[string]interface{}
 }
 
+func TestTypes(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a = make(bool); typeOf(a)", runOutput: "bool"},
+		{script: "a = make(int64); typeOf(a)", runOutput: "int64"},
+		{script: "a = make(float64); typeOf(a)", runOutput: "float64"},
+		{script: "a = make(string); typeOf(a)", runOutput: "string"},
+		{script: "a = make(rune); typeOf(a)", runOutput: "int32"},
+	}
+	runTests(t, tests)
+}
+
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
@@ -100,7 +112,6 @@ func TestKindOf(t *testing.T) {
 	tests := []testStruct{
 		{script: "kindOf(a)", input: map[string]interface{}{"a": reflect.Value{}}, runOutput: "struct", output: map[string]interface{}{"a": reflect.Value{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": nil}, runOutput: "nil", output: map[string]interface{}{"a": nil}},
-		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(nil)}, runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": true}, runOutput: "bool", output: map[string]interface{}{"a": true}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": int32(1)}, runOutput: "int32", output: map[string]interface{}{"a": int32(1)}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": int64(1)}, runOutput: "int64", output: map[string]interface{}{"a": int64(1)}},
@@ -109,11 +120,31 @@ func TestKindOf(t *testing.T) {
 		{script: "kindOf(a)", input: map[string]interface{}{"a": "a"}, runOutput: "string", output: map[string]interface{}{"a": "a"}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": 'a'}, runOutput: "int32", output: map[string]interface{}{"a": 'a'}},
 
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(nil)}, runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(true)}, runOutput: "bool", output: map[string]interface{}{"a": interface{}(true)}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(int32(1))}, runOutput: "int32", output: map[string]interface{}{"a": interface{}(int32(1))}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(int64(1))}, runOutput: "int64", output: map[string]interface{}{"a": interface{}(int64(1))}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(float32(1))}, runOutput: "float32", output: map[string]interface{}{"a": interface{}(float32(1))}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}(float64(1))}, runOutput: "float64", output: map[string]interface{}{"a": interface{}(float64(1))}},
+		{script: "kindOf(a)", input: map[string]interface{}{"a": interface{}("a")}, runOutput: "string", output: map[string]interface{}{"a": interface{}("a")}},
+
 		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{}}, runOutput: "slice", output: map[string]interface{}{"a": []interface{}{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: "slice", output: map[string]interface{}{"a": []interface{}{nil}}},
 
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
+
+		{script: "a = make(interface); kindOf(a)", runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
+	}
+	runTests(t, tests)
+}
+func TestJson(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "json = import(\"encoding/json\"); a = {\"b\": \"b\"}; c, err = json.Marshal(a); if err == nil { return true }", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": []byte("{\"b\":\"b\"}")}},
+		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(a, &b); if err == nil { return true }", input: map[string]interface{}{"a": []byte("{\"b\": \"b\"}")}, runOutput: true, output: map[string]interface{}{"a": []byte("{\"b\": \"b\"}"), "b": map[string]interface{}{"b": "b"}}},
+		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); if err == nil { return true }", input: map[string]interface{}{"a": "{\"b\": \"b\"}"}, runOutput: true, output: map[string]interface{}{"a": "{\"b\": \"b\"}", "b": map[string]interface{}{"b": "b"}}},
+		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); if err == nil { return true }", input: map[string]interface{}{"a": "[[\"1\", \"2\"],[\"3\", \"4\"]]"}, runOutput: true, output: map[string]interface{}{"a": "[[\"1\", \"2\"],[\"3\", \"4\"]]", "b": []interface{}{[]interface{}{"1", "2"}, []interface{}{"3", "4"}}}},
 	}
 	runTests(t, tests)
 }
