@@ -143,9 +143,9 @@ stmt :
 		$$ = &ast.LoopStmt{Stmts: $3}
 		$$.SetPosition($1.Position())
 	}
-	| FOR IDENT IN expr '{' compstmt '}'
+	| FOR expr_idents IN expr '{' compstmt '}'
 	{
-		$$ = &ast.ForStmt{Var: $2.Lit, Value: $4, Stmts: $6}
+		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FOR expr_lets ';' expr ';' expr '{' compstmt '}'

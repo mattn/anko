@@ -242,7 +242,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if iv.Kind() == reflect.Ptr || (iv.Kind() == reflect.Interface && !iv.IsNil()) {
 					iv = iv.Elem()
 				}
-				newenv.defineValue(stmt.Var, iv)
+				newenv.defineValue(stmt.Vars[0], iv)
 				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
@@ -264,7 +264,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if *(env.interrupt) {
 					return NilValue, InterruptError
 				}
-				newenv.defineValue(stmt.Var, keys[i])
+				newenv.defineValue(stmt.Vars[0], keys[i])
+				if len(stmt.Vars) > 1 {
+					newenv.defineValue(stmt.Vars[1], val.MapIndex(keys[i]))
+				}
 				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
@@ -292,7 +295,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				if iv.Kind() == reflect.Interface || iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
 				}
-				newenv.defineValue(stmt.Var, iv)
+				newenv.defineValue(stmt.Vars[0], iv)
 				rv, err := run(stmt.Stmts, newenv)
 				if err != nil && err != ContinueError {
 					if err == BreakError {
