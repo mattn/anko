@@ -255,6 +255,28 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				}
 			}
 			return NilValue, nil
+		case reflect.Map:
+			newenv := env.NewEnv()
+			defer newenv.Destroy()
+
+			keys := val.MapKeys()
+			for i := 0; i < len(keys); i++ {
+				if *(env.interrupt) {
+					return NilValue, InterruptError
+				}
+				newenv.defineValue(stmt.Var, keys[i])
+				rv, err := run(stmt.Stmts, newenv)
+				if err != nil && err != ContinueError {
+					if err == BreakError {
+						break
+					}
+					if err == ReturnError {
+						return rv, err
+					}
+					return NilValue, NewError(stmt, err)
+				}
+			}
+			return NilValue, nil
 		case reflect.Chan:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
