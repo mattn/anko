@@ -110,7 +110,7 @@ type AnonCallExpr struct {
 	Go       bool
 }
 
-// MemberExpr provide expression to refer menber.
+// MemberExpr provide expression to refer member.
 type MemberExpr struct {
 	ExprImpl
 	Expr Expr
