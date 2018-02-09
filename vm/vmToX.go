@@ -29,6 +29,12 @@ func toString(v reflect.Value) string {
 	return fmt.Sprint(v.Interface())
 }
 
+// toBool converts all reflect.Value-s into bool.
+func toBool(v reflect.Value) bool {
+	b, _ := tryToBool(v, true)
+	return b
+}
+
 // tryToBool attempts to convert the value 'v' to a boolean, returning
 // an error if it cannot. When converting a string, the function returns
 // true if the string is the word "true", false if the string is "false",
@@ -41,9 +47,9 @@ func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
 		v = v.Elem()
 	}
 	switch v.Kind() {
-	case reflect.Float32, reflect.Float64:
-		return v.Float() != 0.0, nil
-	case reflect.Int, reflect.Int32, reflect.Int64:
+	case reflect.Float64, reflect.Float32:
+		return v.Float() != 0, nil
+	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return v.Int() != 0, nil
 	case reflect.Bool:
 		return v.Bool(), nil
@@ -65,12 +71,6 @@ func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
 	return false, errors.New("unknown type")
 }
 
-// toBool converts all reflect.Value-s into bool.
-func toBool(v reflect.Value) bool {
-	b, _ := tryToBool(v, true)
-	return b
-}
-
 // toFloat64 converts all reflect.Value-s into float64.
 func toFloat64(v reflect.Value) float64 {
 	f, _ := tryToFloat64(v)
@@ -85,10 +85,16 @@ func tryToFloat64(v reflect.Value) (float64, error) {
 		v = v.Elem()
 	}
 	switch v.Kind() {
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64, reflect.Float32:
 		return v.Float(), nil
-	case reflect.Int, reflect.Int32, reflect.Int64:
+	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return float64(v.Int()), nil
+	case reflect.Bool:
+		if v.Bool() {
+			return 1, nil
+		} else {
+			return 0, nil
+		}
 	case reflect.String:
 		f, err := strconv.ParseFloat(v.String(), 64)
 		if err == nil {
@@ -112,10 +118,16 @@ func tryToInt64(v reflect.Value) (int64, error) {
 		v = v.Elem()
 	}
 	switch v.Kind() {
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64, reflect.Float32:
 		return int64(v.Float()), nil
-	case reflect.Int, reflect.Int32, reflect.Int64:
+	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return v.Int(), nil
+	case reflect.Bool:
+		if v.Bool() {
+			return 1, nil
+		} else {
+			return 0, nil
+		}
 	case reflect.String:
 		s := v.String()
 		var i int64
@@ -132,6 +144,12 @@ func tryToInt64(v reflect.Value) (int64, error) {
 	return 0, errors.New("couldn't convert to integer")
 }
 
+// toInt converts all reflect.Value-s into int.
+func toInt(v reflect.Value) int {
+	i, _ := tryToInt(v)
+	return i
+}
+
 // tryToInt attempts to convert a value to an int.
 // If it cannot (in the case of a non-numeric string, a struct, etc.)
 // it returns 0 and an error.
@@ -140,10 +158,16 @@ func tryToInt(v reflect.Value) (int, error) {
 		v = v.Elem()
 	}
 	switch v.Kind() {
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64, reflect.Float32:
 		return int(v.Float()), nil
-	case reflect.Int, reflect.Int32, reflect.Int64:
+	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return int(v.Int()), nil
+	case reflect.Bool:
+		if v.Bool() {
+			return 1, nil
+		} else {
+			return 0, nil
+		}
 	case reflect.String:
 		s := v.String()
 		var i int64
@@ -158,10 +182,4 @@ func tryToInt(v reflect.Value) (int, error) {
 		}
 	}
 	return 0, errors.New("couldn't convert to integer")
-}
-
-// toInt converts all reflect.Value-s into int.
-func toInt(v reflect.Value) int {
-	i, _ := tryToInt(v)
-	return i
 }
