@@ -54,7 +54,7 @@ func TestWalk(t *testing.T) {
 			if !mainFound && exp.Name == `Main` {
 				mainFound = true
 			} else if mainFound && exp.Name == `Main` {
-				return errors.New("Mail redefined")
+				return errors.New("Main redefined")
 			}
 		}
 		return nil
@@ -97,7 +97,7 @@ func Main() {
 				}
 				mainFound = true
 			} else if mainFound && e.Name == `Main` {
-				return errors.New("Mail redefined")
+				return errors.New("Main redefined")
 			}
 		}
 		return nil
