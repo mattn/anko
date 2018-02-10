@@ -593,7 +593,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		if e.Rhs == nil {
-			// NOTE: fix the Rhs nil in the parser?
+			// TODO: Can this be fixed in the parser so that Rhs is not nil?
 			e.Rhs = &ast.NumberExpr{Lit: "1"}
 		}
 		v, err := invokeExpr(&ast.BinOpExpr{Lhs: e.Lhs, Operator: e.Operator[0:1], Rhs: e.Rhs}, env)
