@@ -175,6 +175,15 @@ func TestFunctions(t *testing.T) {
 		{script: "module a { func b() { return 1.1} }; a.b()", runOutput: float64(1.1)},
 		{script: "module a { func b() { return \"a\"} }; a.b()", runOutput: "a"},
 
+		{script: "if true { module a { func b() { return } } }; a.b()", runOutput: nil},
+		{script: "if true { module a { func b() { return nil} } }; a.b()", runOutput: nil},
+		{script: "if true { module a { func b() { return true} } }; a.b()", runOutput: true},
+		{script: "if true { module a { func b() { return 1} } }; a.b()", runOutput: int64(1)},
+		{script: "if true { module a { func b() { return 1.1} } }; a.b()", runOutput: float64(1.1)},
+		{script: "if true { module a { func b() { return \"a\"} } }; a.b()", runOutput: "a"},
+
+		{script: "if true { module a { func b() { return 1} } }; a.b()", runOutput: int64(1)},
+
 		{script: "a = 1; func b() { a = 2 }; b()", runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
 		{script: "b(a); a", input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2) }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: "func b() { }; go b()", runOutput: nil},

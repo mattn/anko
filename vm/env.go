@@ -136,6 +136,8 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 		if err == nil {
 			if v.CanAddr() {
 				return v.Addr(), nil
+			} else {
+				return NilValue, fmt.Errorf("Unaddressable")
 			}
 		}
 	}

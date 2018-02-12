@@ -361,6 +361,9 @@ func TestForLoop(t *testing.T) {
 		{script: "a = {\"x\": 2, \"y\": 3}; b = 0; for i in a { if i ==  \"x\" { break }; b++ }; if b > 1 { return false } else { return true }", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
 		{script: "a = {\"x\": 2, \"y\": 3}; b = 0; for i in a { if i ==  \"y\" { break }; b++ }; if b > 1 { return false } else { return true }", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
 		{script: "a = {\"x\": 2, \"y\": 3}; b = 1; for i in a { if (i ==  \"x\" || i ==  \"y\") { break }; b++ }; b", runOutput: int64(1), output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": int64(1)}},
+
+		{script: "a = {\"x\": 2}; b = 0; for k, v in a { b = k }; b", runOutput: "x", output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
+		{script: "a = {\"x\": 2}; b = 0; for k, v in a { b = v }; b", runOutput: int64(2), output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": int64(2)}},
 	}
 	runTests(t, tests)
 }

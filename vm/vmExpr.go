@@ -544,15 +544,23 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				if err != nil {
 					return v, err
 				}
-				if v.Kind() == reflect.Float64 {
-					v = reflect.ValueOf(v.Float() + 1.0)
-				} else if v.Kind() == reflect.Int64 {
+				switch v.Kind() {
+				case reflect.Float64, reflect.Float32:
+					v = reflect.ValueOf(v.Float() + 1)
+				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 					v = reflect.ValueOf(v.Int() + 1)
-				} else {
+				case reflect.Bool:
+					if v.Bool() {
+						v = reflect.ValueOf(int64(2))
+					} else {
+						v = reflect.ValueOf(int64(1))
+					}
+				default:
 					v = reflect.ValueOf(toInt64(v) + 1)
 				}
-				if env.setValue(alhs.Lit, v) != nil {
-					env.defineValue(alhs.Lit, v)
+				err = env.setValue(alhs.Lit, v)
+				if err != nil {
+					return v, err
 				}
 				return v, nil
 			}
@@ -562,25 +570,36 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				if err != nil {
 					return v, err
 				}
-				if v.Kind() == reflect.Float64 {
-					v = reflect.ValueOf(v.Float() - 1.0)
-				} else if v.Kind() == reflect.Int64 {
+				switch v.Kind() {
+				case reflect.Float64, reflect.Float32:
+					v = reflect.ValueOf(v.Float() - 1)
+				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 					v = reflect.ValueOf(v.Int() - 1)
-				} else {
+				case reflect.Bool:
+					if v.Bool() {
+						v = reflect.ValueOf(int64(0))
+					} else {
+						v = reflect.ValueOf(int64(-1))
+					}
+				default:
 					v = reflect.ValueOf(toInt64(v) - 1)
 				}
-				if env.setValue(alhs.Lit, v) != nil {
-					env.defineValue(alhs.Lit, v)
+				err = env.setValue(alhs.Lit, v)
+				if err != nil {
+					return v, err
 				}
 				return v, nil
 			}
 		}
 
+		if e.Rhs == nil {
+			// TODO: Can this be fixed in the parser so that Rhs is not nil?
+			e.Rhs = &ast.NumberExpr{Lit: "1"}
+		}
 		v, err := invokeExpr(&ast.BinOpExpr{Lhs: e.Lhs, Operator: e.Operator[0:1], Rhs: e.Rhs}, env)
 		if err != nil {
 			return v, err
 		}
-
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}

@@ -3,99 +3,10 @@ package vm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 )
-
-type externalResolver struct {
-	entries map[string]interface{}
-}
-
-func NewExternalResolver() *externalResolver {
-	return &externalResolver{entries: make(map[string]interface{})}
-}
-
-func (er *externalResolver) Set(name string, value interface{}) {
-	er.entries[name] = value
-}
-
-func (er *externalResolver) Get(name string) (reflect.Value, error) {
-	if v, ok := er.entries[name]; ok {
-		if v == nil {
-			return NilValue, nil
-		}
-		return reflect.ValueOf(v), nil
-	}
-	return NilValue, fmt.Errorf("Undefined symbol '%s'", name)
-}
-
-func (er *externalResolver) Type(name string) (reflect.Type, error) {
-	if v, ok := er.entries[name]; ok {
-		if v == nil {
-			return NilType, nil
-		}
-		return reflect.TypeOf(v), nil
-	}
-	return NilType, fmt.Errorf("Undefined symbol '%s'", name)
-}
-
-func TestExternal(t *testing.T) {
-	er := NewExternalResolver()
-
-	tests := []struct {
-		testInfo       string
-		varName        string
-		varDefineValue interface{}
-		varGetValue    interface{}
-		varKind        reflect.Kind
-		defineError    error
-		getError       error
-	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
-		{testInfo: "string", varName: "b", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
-		{testInfo: "int16", varName: "c", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16, defineError: nil, getError: nil},
-		{testInfo: "int32", varName: "d", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32, defineError: nil, getError: nil},
-		{testInfo: "int64", varName: "e", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
-		{testInfo: "uint32", varName: "f", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32, defineError: nil, getError: nil},
-		{testInfo: "uint64", varName: "g", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64, defineError: nil, getError: nil},
-		{testInfo: "float32", varName: "h", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32, defineError: nil, getError: nil},
-		{testInfo: "float64", varName: "i", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
-		{testInfo: "bool", varName: "j", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
-	}
-
-	// First set all values
-	for _, test := range tests {
-		er.Set(test.varName, test.varDefineValue)
-	}
-
-	// Now create an Env and set the external
-	env := NewEnv()
-	env.SetExternal(er)
-
-	// Now make sure they were stored correctly and can be retrieved from the Env
-	// The Env doesn't know about any of the variables in the test array, but the external resolver does.
-	for _, test := range tests {
-		val, err := env.Get(test.varName)
-		if err != nil {
-			t.Errorf("Execute error - unable to retrieve variable %v from external resolver: %v", test.varName, err)
-		}
-		if val != test.varGetValue {
-			t.Errorf("Execute error - received unexpected value %v from external resolver, expected %v", val, test.varGetValue)
-		}
-
-		varType, err := env.Type(test.varName)
-		if err != nil {
-			t.Errorf("Execute error - unable to retrieve type of variable %v from external resolver: %v", test.varName, err)
-		}
-		if varType == nil || test.varDefineValue == nil {
-			if varType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("Execute error - type received: %v expected: %v", varType, reflect.TypeOf(test.varDefineValue))
-			}
-		} else if varType.Kind() != test.varKind {
-			t.Errorf("Execute error - received unexpected type %v from external resolver, expected %v", varType, test.varKind)
-		}
-	}
-}
 
 func TestExecuteError(t *testing.T) {
 	env := NewEnv()
@@ -130,6 +41,18 @@ func TestAddrError(t *testing.T) {
 	}
 }
 
+func TestGetInvalid(t *testing.T) {
+	env := NewEnv()
+	env.env["a"] = reflect.Value{}
+	value, err := env.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %v expected: %v", value, nil)
+	}
+}
+
 func TestDefineAndGet(t *testing.T) {
 	var err error
 	var value interface{}
@@ -142,19 +65,19 @@ func TestDefineAndGet(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
-		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
-		{testInfo: " int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16, defineError: nil, getError: nil},
-		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32, defineError: nil, getError: nil},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
-		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32, defineError: nil, getError: nil},
-		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64, defineError: nil, getError: nil},
-		{testInfo: "float32", varName: "a", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32, defineError: nil, getError: nil},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
-		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface},
+		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool},
+		{testInfo: " int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
+		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 
 		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.Interface, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
-		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String, defineError: nil, getError: nil},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
 	}
 
 	// DefineAndGet
@@ -308,11 +231,11 @@ func TestDefineModify(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
-		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
-		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface},
+		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
+		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 	}
 	changeTests := []struct {
 		varDefineValue interface{}
@@ -321,11 +244,11 @@ func TestDefineModify(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
-		{varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface, defineError: nil, getError: nil},
-		{varDefineValue: "a", varGetValue: "a", varKind: reflect.String, defineError: nil, getError: nil},
-		{varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64, defineError: nil, getError: nil},
-		{varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64, defineError: nil, getError: nil},
-		{varDefineValue: true, varGetValue: true, varKind: reflect.Bool, defineError: nil, getError: nil},
+		{varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface},
+		{varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
+		{varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64},
+		{varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
+		{varDefineValue: true, varGetValue: true, varKind: reflect.Bool},
 	}
 
 	// DefineModify
@@ -519,16 +442,17 @@ func TestDefineType(t *testing.T) {
 		defineError    error
 		typeError      error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, typeError: nil},
-		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: nil},
-		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: nil},
-		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: nil},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, typeError: nil},
-		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), defineError: nil, typeError: nil},
-		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), defineError: nil, typeError: nil},
-		{testInfo: "float32", varName: "a", varDefineValue: float32(1), defineError: nil, typeError: nil},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, typeError: nil},
-		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, typeError: nil},
+		{testInfo: "nil", varName: "a", varDefineValue: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1)},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1)},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1)},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1)},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1)},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1)},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
+		{testInfo: "string", varName: "a", varDefineValue: "a"},
+
 		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("Unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
 	}
 
@@ -692,16 +616,16 @@ func TestDefineTypeFail(t *testing.T) {
 		defineError    error
 		typeError      error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int16", varName: "a", varDefineValue: int16(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int32", varName: "a", varDefineValue: int32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "float32", varName: "a", varDefineValue: float32(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "nil", varName: "a", varDefineValue: nil, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "string", varName: "a", varDefineValue: "a", typeError: fmt.Errorf("Undefined type 'a'")},
 	}
 
 	// DefineTypeFail
@@ -745,11 +669,11 @@ func TestAddr(t *testing.T) {
 		defineError    error
 		addrError      error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, defineError: nil, addrError: nil},
-		{testInfo: "string", varName: "a", varDefineValue: "a", defineError: nil, addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), defineError: nil, addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "bool", varName: "a", varDefineValue: true, defineError: nil, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "nil", varName: "a", varDefineValue: nil, addrError: nil},
+		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("Unaddressable")},
 	}
 
 	// TestAddr
@@ -778,6 +702,237 @@ func TestAddr(t *testing.T) {
 			}
 		} else if err != test.addrError {
 			t.Errorf("TestAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+			continue
+		}
+
+		envChild.Destroy()
+	}
+}
+
+type externalResolver struct {
+	values map[string]reflect.Value
+	types  map[string]reflect.Type
+}
+
+func NewExternalResolver() *externalResolver {
+	return &externalResolver{values: make(map[string]reflect.Value), types: make(map[string]reflect.Type)}
+}
+
+func (er *externalResolver) SetValue(name string, value interface{}) error {
+	if strings.Contains(name, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", name)
+	}
+
+	if value == nil {
+		er.values[name] = NilValue
+	} else {
+		er.values[name] = reflect.ValueOf(value)
+	}
+	return nil
+}
+
+func (er *externalResolver) Get(name string) (reflect.Value, error) {
+	if v, ok := er.values[name]; ok {
+		return v, nil
+	}
+	return NilValue, fmt.Errorf("Undefined symbol '%s'", name)
+}
+
+func (er *externalResolver) DefineType(name string, t interface{}) error {
+	if strings.Contains(name, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", name)
+	}
+
+	var typ reflect.Type
+	if t == nil {
+		typ = NilType
+	} else {
+		var ok bool
+		typ, ok = t.(reflect.Type)
+		if !ok {
+			typ = reflect.TypeOf(t)
+		}
+	}
+
+	er.types[name] = typ
+	return nil
+}
+
+func (er *externalResolver) Type(name string) (reflect.Type, error) {
+	if v, ok := er.types[name]; ok {
+		return v, nil
+	}
+	return NilType, fmt.Errorf("Undefined symbol '%s'", name)
+}
+
+func TestExternalResolverValueAndGet(t *testing.T) {
+	var err error
+	var value interface{}
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		varGetValue    interface{}
+		varKind        reflect.Kind
+		defineError    error
+		getError       error
+	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface},
+		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), varGetValue: uint64(1), varKind: reflect.Uint64},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), varGetValue: float32(1), varKind: reflect.Float32},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
+		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
+
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.String, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
+	}
+
+	// ExternalResolverSetAndEnvGet
+	for _, test := range tests {
+		er := NewExternalResolver()
+		env := NewEnv()
+		env.SetExternal(er)
+
+		err = er.SetValue(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+		value, err = env.Get(test.varName)
+		if err != nil && test.getError != nil {
+			if err.Error() != test.getError.Error() {
+				t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				continue
+			}
+		} else if err != test.getError {
+			t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			continue
+		}
+		if value != test.varGetValue {
+			t.Errorf("TestExternalResolverValueAndGet %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
+		}
+
+		env.Destroy()
+	}
+}
+
+func TestExternalResolverTypeAndGet(t *testing.T) {
+	var err error
+	var valueType reflect.Type
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		defineError    error
+		typeError      error
+	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1)},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1)},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1)},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1)},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1)},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1)},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
+		{testInfo: "string", varName: "a", varDefineValue: "a"},
+
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("Unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+	}
+
+	// DefineType
+	for _, test := range tests {
+		er := NewExternalResolver()
+		env := NewEnv()
+		env.SetExternal(er)
+
+		err = er.DefineType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		valueType, err = env.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		env.Destroy()
+	}
+
+}
+
+func TestExternalResolverAddr(t *testing.T) {
+	var err error
+	tests := []struct {
+		testInfo       string
+		varName        string
+		varDefineValue interface{}
+		defineError    error
+		addrError      error
+	}{
+		{testInfo: "nil", varName: "a", varDefineValue: nil, addrError: nil},
+		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("Unaddressable")},
+	}
+
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		er := NewExternalResolver()
+		envParent.SetExternal(er)
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = er.SetValue(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		_, err = envChild.Addr(test.varName)
+		if err != nil && test.addrError != nil {
+			if err.Error() != test.addrError.Error() {
+				t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+				continue
+			}
+		} else if err != test.addrError {
+			t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
 			continue
 		}
 
