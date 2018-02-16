@@ -10,6 +10,18 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
+type (
+	// Error provides a convenient interface for handling runtime error.
+	// It can be Error interface with type cast which can call Pos().
+	Error struct {
+		Message string
+		Pos     ast.Position
+	}
+
+	// Func is function interface to reflect functions internaly.
+	Func func(args ...reflect.Value) (reflect.Value, error)
+)
+
 var (
 	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	NilType           = reflect.TypeOf(nil)
@@ -19,16 +31,7 @@ var (
 	TrueValue         = reflect.ValueOf(true)
 	FalseValue        = reflect.ValueOf(false)
 	ZeroValue         = reflect.Value{}
-)
 
-// Error provides a convenient interface for handling runtime error.
-// It can be Error interface with type cast which can call Pos().
-type Error struct {
-	Message string
-	Pos     ast.Position
-}
-
-var (
 	BreakError     = errors.New("Unexpected break statement")
 	ContinueError  = errors.New("Unexpected continue statement")
 	ReturnError    = errors.New("Unexpected return statement")
@@ -70,9 +73,6 @@ func NewError(pos ast.Pos, err error) error {
 func (e *Error) Error() string {
 	return e.Message
 }
-
-// Func is function interface to reflect functions internaly.
-type Func func(args ...reflect.Value) (reflect.Value, error)
 
 func (f Func) String() string {
 	return fmt.Sprintf("[Func: %p]", f)

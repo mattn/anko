@@ -13,9 +13,9 @@ func TestExecuteError(t *testing.T) {
 	script := "a]]"
 	_, err := env.Execute(script)
 	if err == nil {
-		t.Errorf("Execute error - received: %v expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	} else if err.Error() != "syntax error" {
-		t.Errorf("Execute error - received: %v expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	}
 }
 
@@ -24,9 +24,9 @@ func TestSetError(t *testing.T) {
 	envChild := envParent.NewEnv()
 	err := envChild.Set("a", "a")
 	if err == nil {
-		t.Errorf("Set error - received: %v expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
+		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
 	} else if err.Error() != "Unknown symbol 'a'" {
-		t.Errorf("Set error - received: %v expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
+		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
 	}
 }
 
@@ -35,9 +35,9 @@ func TestAddrError(t *testing.T) {
 	envChild := envParent.NewEnv()
 	_, err := envChild.Addr("a")
 	if err == nil {
-		t.Errorf("Addr error - received: %v expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
+		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
 	} else if err.Error() != "Undefined symbol 'a'" {
-		t.Errorf("Addr error - received: %v expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
+		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
 	}
 }
 
@@ -46,10 +46,10 @@ func TestGetInvalid(t *testing.T) {
 	env.env["a"] = reflect.Value{}
 	value, err := env.Get("a")
 	if err != nil {
-		t.Errorf("Get error - received: %v expected: %v", err, nil)
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
 	}
 	if value != nil {
-		t.Errorf("Get value - received: %v expected: %v", value, nil)
+		t.Errorf("Get value - received: %v - expected: %v", value, nil)
 	}
 }
 
@@ -87,22 +87,22 @@ func TestDefineAndGet(t *testing.T) {
 		err = env.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineAndGet %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineAndGet %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineAndGet %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineAndGet %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = env.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineAndGet %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineAndGet %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -119,22 +119,22 @@ func TestDefineAndGet(t *testing.T) {
 		err = env.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineAndGet NewPackage %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = env.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineAndGet NewPackage %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -159,22 +159,22 @@ func TestDefineAndGet(t *testing.T) {
 		err = envParent.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineAndGet NewEnv %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = envChild.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineAndGet NewEnv %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -192,22 +192,22 @@ func TestDefineAndGet(t *testing.T) {
 		err = envChild.DefineGlobal(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineAndGet DefineGlobal %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = envParent.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineAndGet DefineGlobal %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -258,22 +258,22 @@ func TestDefineModify(t *testing.T) {
 		err = env.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineModify %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineModify %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineModify %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineModify %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = env.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineModify %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineModify %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineModify %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineModify %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -285,22 +285,22 @@ func TestDefineModify(t *testing.T) {
 			err = env.Set(test.varName, changeTest.varDefineValue)
 			if err != nil && changeTest.defineError != nil {
 				if err.Error() != changeTest.defineError.Error() {
-					t.Errorf("DefineModify changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					t.Errorf("DefineModify changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 					continue
 				}
 			} else if err != changeTest.defineError {
-				t.Errorf("DefineModify changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				t.Errorf("DefineModify changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 				continue
 			}
 
 			value, err = env.Get(test.varName)
 			if err != nil && changeTest.getError != nil {
 				if err.Error() != changeTest.getError.Error() {
-					t.Errorf("DefineModify changeTest  %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					t.Errorf("DefineModify changeTest  %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 					continue
 				}
 			} else if err != changeTest.getError {
-				t.Errorf("DefineModify changeTest  %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				t.Errorf("DefineModify changeTest  %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
 			if value != changeTest.varGetValue {
@@ -319,22 +319,22 @@ func TestDefineModify(t *testing.T) {
 		err = envParent.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineModify envParent %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineModify envParent %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineModify envParent %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineModify envParent %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = envChild.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineModify envParent  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineModify envParent  %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineModify envParent  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineModify envParent  %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -345,22 +345,22 @@ func TestDefineModify(t *testing.T) {
 			err = envParent.Set(test.varName, changeTest.varDefineValue)
 			if err != nil && changeTest.defineError != nil {
 				if err.Error() != changeTest.defineError.Error() {
-					t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 					continue
 				}
 			} else if err != changeTest.defineError {
-				t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				t.Errorf("DefineModify envParent changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 				continue
 			}
 
 			value, err = envChild.Get(test.varName)
 			if err != nil && changeTest.getError != nil {
 				if err.Error() != changeTest.getError.Error() {
-					t.Errorf("DefineModify envParent changeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					t.Errorf("DefineModify envParent changeTest %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 					continue
 				}
 			} else if err != changeTest.getError {
-				t.Errorf("ChanDefineModify envParent changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				t.Errorf("ChanDefineModify envParent changeTestgeTest %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
 			if value != changeTest.varGetValue {
@@ -379,22 +379,22 @@ func TestDefineModify(t *testing.T) {
 		err = envParent.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineModify envChild %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineModify envChild %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineModify envChild %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineModify envChild %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		value, err = envChild.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("DefineModify envChild  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("DefineModify envChild  %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("DefineModify envChild  %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("DefineModify envChild  %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -405,22 +405,22 @@ func TestDefineModify(t *testing.T) {
 			err = envChild.Set(test.varName, changeTest.varDefineValue)
 			if err != nil && changeTest.defineError != nil {
 				if err.Error() != changeTest.defineError.Error() {
-					t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+					t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 					continue
 				}
 			} else if err != changeTest.defineError {
-				t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v expected: %v", test.testInfo, err, changeTest.defineError)
+				t.Errorf("DefineModify envChild changeTest %v - Set error - received: %v - expected: %v", test.testInfo, err, changeTest.defineError)
 				continue
 			}
 
 			value, err = envChild.Get(test.varName)
 			if err != nil && changeTest.getError != nil {
 				if err.Error() != changeTest.getError.Error() {
-					t.Errorf("DefineModify envChild changeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+					t.Errorf("DefineModify envChild changeTest %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 					continue
 				}
 			} else if err != changeTest.getError {
-				t.Errorf("ChanDefineModify envChild changeTestgeTest %v - Get error - received: %v expected: %v", test.testInfo, err, changeTest.getError)
+				t.Errorf("ChanDefineModify envChild changeTestgeTest %v - Get error - received: %v - expected: %v", test.testInfo, err, changeTest.getError)
 				continue
 			}
 			if value != changeTest.varGetValue {
@@ -463,30 +463,30 @@ func TestDefineType(t *testing.T) {
 		err = env.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineType %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineType %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		valueType, err = env.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("DefineType %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("DefineType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("DefineType %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("DefineType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
 		if valueType == nil || test.varDefineValue == nil {
 			if valueType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("DefineType %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+				t.Errorf("DefineType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 			}
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
-			t.Errorf("DefineType %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			t.Errorf("DefineType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
 		env.Destroy()
@@ -502,30 +502,30 @@ func TestDefineType(t *testing.T) {
 		err = envParent.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineType NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineType NewEnv %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineType NewEnv %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineType NewEnv %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		valueType, err = envChild.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("DefineType NewEnv %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("DefineType NewEnv %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("DefineType NewEnv %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("DefineType NewEnv %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
 		if valueType == nil || test.varDefineValue == nil {
 			if valueType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("DefineType NewEnv %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+				t.Errorf("DefineType NewEnv %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 			}
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
-			t.Errorf("DefineType NewEnv %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			t.Errorf("DefineType NewEnv %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 		envChild.Destroy()
 	}
@@ -539,30 +539,30 @@ func TestDefineType(t *testing.T) {
 		err = envParent.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineType NewPackage  %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineType NewPackage  %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineType NewPackage %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineType NewPackage %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		valueType, err = envChild.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("DefineType NewPackage %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("DefineType NewPackage %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("DefineType NewPackage %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("DefineType NewPackage %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
 		if valueType == nil || test.varDefineValue == nil {
 			if valueType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("DefineType NewPackage %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+				t.Errorf("DefineType NewPackage %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 			}
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
-			t.Errorf("DefineType NewPackage %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			t.Errorf("DefineType NewPackage %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
 		envChild.Destroy()
@@ -577,30 +577,30 @@ func TestDefineType(t *testing.T) {
 		err = envParent.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("DefineType NewModule %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("DefineType NewModule %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("DefineType NewModule %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("DefineType NewModule %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		valueType, err = envChild.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("DefineType NewModule %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("DefineType NewModule %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("DefineType NewModule %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("DefineType NewModule %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
 		if valueType == nil || test.varDefineValue == nil {
 			if valueType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("DefineType NewModule %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+				t.Errorf("DefineType NewModule %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 			}
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
-			t.Errorf("DefineType NewModule %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			t.Errorf("DefineType NewModule %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
 		envChild.Destroy()
@@ -638,22 +638,22 @@ func TestDefineTypeFail(t *testing.T) {
 		err = envChild.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("TestDefineTypeFail %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("TestDefineTypeFail %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("TestDefineTypeFail %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("TestDefineTypeFail %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		_, err = envParent.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("TestDefineTypeFail %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("TestDefineTypeFail %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("TestDefineTypeFail %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("TestDefineTypeFail %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 		}
 
 		envChild.Destroy()
@@ -686,22 +686,22 @@ func TestAddr(t *testing.T) {
 		err = envParent.Define(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("TestAddr %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("TestAddr %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("TestAddr %v - Define error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("TestAddr %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		_, err = envChild.Addr(test.varName)
 		if err != nil && test.addrError != nil {
 			if err.Error() != test.addrError.Error() {
-				t.Errorf("TestAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+				t.Errorf("TestAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 				continue
 			}
 		} else if err != test.addrError {
-			t.Errorf("TestAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+			t.Errorf("TestAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 			continue
 		}
 
@@ -801,21 +801,21 @@ func TestExternalResolverValueAndGet(t *testing.T) {
 		err = er.SetValue(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("TestExternalResolverValueAndGet %v - SetValue error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 		value, err = env.Get(test.varName)
 		if err != nil && test.getError != nil {
 			if err.Error() != test.getError.Error() {
-				t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+				t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 				continue
 			}
 		} else if err != test.getError {
-			t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v expected: %v", test.testInfo, err, test.getError)
+			t.Errorf("TestExternalResolverValueAndGet %v - Get error - received: %v - expected: %v", test.testInfo, err, test.getError)
 			continue
 		}
 		if value != test.varGetValue {
@@ -859,30 +859,30 @@ func TestExternalResolverTypeAndGet(t *testing.T) {
 		err = er.DefineType(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("TestExternalResolverTypeAndGet %v - DefineType error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		valueType, err = env.Type(test.varName)
 		if err != nil && test.typeError != nil {
 			if err.Error() != test.typeError.Error() {
-				t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+				t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 				continue
 			}
 		} else if err != test.typeError {
-			t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v expected: %v", test.testInfo, err, test.typeError)
+			t.Errorf("TestExternalResolverTypeAndGet %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 			continue
 		}
 		if valueType == nil || test.varDefineValue == nil {
 			if valueType != reflect.TypeOf(test.varDefineValue) {
-				t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+				t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 			}
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
-			t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
 
 		env.Destroy()
@@ -917,22 +917,22 @@ func TestExternalResolverAddr(t *testing.T) {
 		err = er.SetValue(test.varName, test.varDefineValue)
 		if err != nil && test.defineError != nil {
 			if err.Error() != test.defineError.Error() {
-				t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+				t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 				continue
 			}
 		} else if err != test.defineError {
-			t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v expected: %v", test.testInfo, err, test.defineError)
+			t.Errorf("TestExternalResolverAddr %v - SetValue error - received: %v - expected: %v", test.testInfo, err, test.defineError)
 			continue
 		}
 
 		_, err = envChild.Addr(test.varName)
 		if err != nil && test.addrError != nil {
 			if err.Error() != test.addrError.Error() {
-				t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+				t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 				continue
 			}
 		} else if err != test.addrError {
-			t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v expected: %v", test.testInfo, err, test.addrError)
+			t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 			continue
 		}
 

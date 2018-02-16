@@ -49,6 +49,7 @@ func (e *Env) NewEnv() *Env {
 	}
 }
 
+// NewPackage creates a new env with a name
 func NewPackage(n string) *Env {
 	b := false
 
@@ -61,6 +62,7 @@ func NewPackage(n string) *Env {
 	}
 }
 
+// NewPackage creates a new env with a name under the parent env
 func (e *Env) NewPackage(n string) *Env {
 	return &Env{
 		env:       make(map[string]reflect.Value),

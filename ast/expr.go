@@ -164,12 +164,6 @@ type AssocExpr struct {
 	Rhs      Expr
 }
 
-// NewExpr provide expression to make new instance.
-type NewExpr struct {
-	ExprImpl
-	Type string
-}
-
 // ConstExpr provide expression for constant variable.
 type ConstExpr struct {
 	ExprImpl
@@ -184,6 +178,12 @@ type ChanExpr struct {
 
 type Type struct {
 	Name string
+}
+
+// NewExpr provide expression to make new instance.
+type NewExpr struct {
+	ExprImpl
+	Type string
 }
 
 type MakeExpr struct {

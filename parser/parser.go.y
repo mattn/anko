@@ -300,7 +300,8 @@ expr_many :
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
 
-typ : IDENT
+typ : 
+	IDENT
 	{
 		$$ = ast.Type{Name: $1.Lit}
 	}
@@ -454,11 +455,6 @@ expr :
 	{
 		$$ = &ast.ParenExpr{SubExpr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-	| NEW '(' typ ')'
-	{
-		$$ = &ast.NewExpr{Type: $3.Name}
-		$$.SetPosition($1.Position())
 	}
 	| expr '+' expr
 	{
@@ -670,6 +666,11 @@ expr :
 		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 		$$.SetPosition($1.Position())
 	}
+	| NEW '(' typ ')'
+	{
+		$$ = &ast.NewExpr{Type: $3.Name}
+		$$.SetPosition($1.Position())
+	}
 	| MAKE '(' typ ')'
 	{
 		$$ = &ast.MakeExpr{Type: $3.Name}
@@ -683,6 +684,11 @@ expr :
 	| MAKE '(' CHAN typ ',' expr ')'
 	{
 		$$ = &ast.MakeChanExpr{Type: $4.Name, SizeExpr: $6}
+		$$.SetPosition($1.Position())
+	}
+	| MAKE '(' ARRAYLIT typ ')'
+	{
+		$$ = &ast.MakeArrayExpr{Type: $4.Name}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' ARRAYLIT typ ',' expr ')'
