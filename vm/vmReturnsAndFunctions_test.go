@@ -161,6 +161,8 @@ func TestFunctions(t *testing.T) {
 		{script: "a = [func () { return nil}]; func b(c) { return c() }; b(a[1])", runError: fmt.Errorf("index out of range")},
 		{script: "a = nil; func b(c) { }; b()", runError: fmt.Errorf("expected 1 function arguments but received 0"), output: map[string]interface{}{"a": nil}},
 		{script: "a = nil; func b(c) { }; b(a, a)", runError: fmt.Errorf("expected 1 function arguments but received 2"), output: map[string]interface{}{"a": nil}},
+		// TOFIX: Causes panic
+		// {script: "a = {}; a.missing()", runError: fmt.Errorf("expected 1 function arguments but received 2"), output: map[string]interface{}{"a": nil}},
 
 		{script: "a", input: map[string]interface{}{"a": testVarFunc}, runOutput: testVarFunc, output: map[string]interface{}{"a": testVarFunc}},
 		{script: "a()", input: map[string]interface{}{"a": testVarFunc}, runOutput: int64(1), output: map[string]interface{}{"a": testVarFunc}},

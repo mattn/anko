@@ -978,9 +978,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		if dimensions < 1 {
 			if t.Kind() == reflect.Map {
-				return reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())), nil
+				// note creating slice as work around to create map
+				// just doing MakeMap can give incorrect type for defined types
+				value := reflect.MakeSlice(reflect.SliceOf(t), 0, 1)
+				value = reflect.Append(value, reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())))
+				return value.Index(0), nil
 			}
 			return reflect.Zero(t), nil
+
 		}
 
 		var alen int
