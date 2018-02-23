@@ -823,6 +823,83 @@ func TestAddr(t *testing.T) {
 	}
 }
 
+func TestAddPackage(t *testing.T) {
+	// empty
+	env := NewEnv()
+	env.AddPackage("empty", map[string]interface{}{}, map[string]interface{}{})
+	value, err := env.Execute("empty")
+	if err != nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
+	}
+	switch data := value.(type) {
+	case *Env:
+		if data.name != "empty" {
+			t.Errorf("AddPackage value - received: %#v - expected: %#v", value, env.env["empty"])
+		} else if len(data.env) != 0 {
+			t.Errorf("AddPackage value - received: %#v - expected: %#v", value, env.env["empty"])
+		} else if len(data.typ) != 0 {
+			t.Errorf("AddPackage value - received: %#v - expected: %#v", value, env.env["empty"])
+		}
+	default:
+		t.Errorf("AddPackage value - received: %#v - expected: %#v", value, env.env["empty"])
+	}
+
+	// bad package name
+	env = NewEnv()
+	_, err = env.AddPackage("bad.package.name", map[string]interface{}{}, map[string]interface{}{})
+	if err == nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'bad.package.name'")
+	} else {
+		if err.Error() != "Unknown symbol 'bad.package.name'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'bad.package.name'")
+		}
+	}
+
+	// bad method name
+	env = NewEnv()
+	_, err = env.AddPackage("badMethodName", map[string]interface{}{"a.b": "a"}, map[string]interface{}{})
+	if err == nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+	} else {
+		if err.Error() != "Unknown symbol 'a.b'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		}
+	}
+
+	// bad type name
+	env = NewEnv()
+	_, err = env.AddPackage("badTypeName", map[string]interface{}{}, map[string]interface{}{"a.b": "a"})
+	if err == nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+	} else {
+		if err.Error() != "Unknown symbol 'a.b'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		}
+	}
+
+	// method
+	env = NewEnv()
+	env.AddPackage("strings", map[string]interface{}{"ToLower": strings.ToLower}, map[string]interface{}{})
+	value, err = env.Execute("strings.ToLower(\"TEST\")")
+	if err != nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
+	}
+	if value != "test" {
+		t.Errorf("AddPackage value - received: %v - expected: %v", value, int(4))
+	}
+
+	// type
+	env = NewEnv()
+	env.AddPackage("test", map[string]interface{}{}, map[string]interface{}{"array2x": [][]interface{}{}})
+	value, err = env.Execute("a = make(\"test.array2x\"); a += [[1]]")
+	if err != nil {
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
+	}
+	if !reflect.DeepEqual(value, [][]interface{}{[]interface{}{int64(1)}}) {
+		t.Errorf("AddPackage value - received: %#v - expected: %#v", value, [][]interface{}{[]interface{}{int64(1)}})
+	}
+}
+
 type externalResolver struct {
 	values map[string]reflect.Value
 	types  map[string]reflect.Type

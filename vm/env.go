@@ -73,6 +73,32 @@ func (e *Env) NewPackage(n string) *Env {
 	}
 }
 
+// AddPackage creates a new env with a name that has methods and types in it. Created under the parent env
+func (e *Env) AddPackage(name string, methods map[string]interface{}, types map[string]interface{}) (*Env, error) {
+	if strings.Contains(name, ".") {
+		return nil, fmt.Errorf("Unknown symbol '%s'", name)
+	}
+	var err error
+	pack := e.NewPackage(name)
+
+	for methodName, methodValue := range methods {
+		err = pack.Define(methodName, methodValue)
+		if err != nil {
+			return pack, err
+		}
+	}
+	for typeName, typeValue := range types {
+		err = pack.DefineType(typeName, typeValue)
+		if err != nil {
+			return pack, err
+		}
+	}
+
+	// can ignore error from Define because of check at the start of the function
+	e.Define(name, pack)
+	return pack, nil
+}
+
 func (e *Env) SetExternal(res EnvResolver) {
 	e.external = res
 }
