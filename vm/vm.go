@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 
 	"github.com/mattn/anko/ast"
@@ -105,7 +106,8 @@ func isNil(v reflect.Value) bool {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
 		// from reflect IsNil:
 		// Note that IsNil is not always equivalent to a regular comparison with nil in Go.
-		// For example, if v was created by calling ValueOf with an uninitialized interface variable i, i==nil will be true but v.IsNil will panic as v will be the zero Value.
+		// For example, if v was created by calling ValueOf with an uninitialized interface variable i,
+		// i==nil will be true but v.IsNil will panic as v will be the zero Value.
 		return v.IsNil()
 	default:
 		return false
@@ -114,7 +116,9 @@ func isNil(v reflect.Value) bool {
 
 func isNum(v reflect.Value) bool {
 	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr, reflect.Float32, reflect.Float64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Float32, reflect.Float64:
 		return true
 	}
 	return false
@@ -227,11 +231,11 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	return value
 }
 
-func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
+func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
 	lhsT := lhsV.Type().Elem()
 	rhsT := rhsV.Type().Elem()
 
-	if lhsT.Kind() == rhsT.Kind() {
+	if lhsT == rhsT {
 		return reflect.AppendSlice(lhsV, rhsV), nil
 	}
 
@@ -242,20 +246,68 @@ func appendSlice(expr *ast.BinOpExpr, lhsV reflect.Value, rhsV reflect.Value) (r
 		return lhsV, nil
 	}
 
-	if rhsT != InterfaceType || (lhsT.Kind() != reflect.Array && lhsT.Kind() != reflect.Slice) {
+	leftHasSubArray := lhsT.Kind() == reflect.Slice || lhsT.Kind() == reflect.Array
+	rightHasSubArray := rhsT.Kind() == reflect.Slice || rhsT.Kind() == reflect.Array
+
+	if leftHasSubArray != rightHasSubArray && lhsT != InterfaceType && rhsT != InterfaceType {
 		return NilValue, NewStringError(expr, "invalid type conversion")
 	}
 
-	for i := 0; i < rhsV.Len(); i++ {
-		value := rhsV.Index(i).Elem()
-		if value.Kind() != reflect.Array && value.Kind() != reflect.Slice {
-			return NilValue, NewStringError(expr, "invalid type conversion")
+	if !leftHasSubArray && !rightHasSubArray {
+		for i := 0; i < rhsV.Len(); i++ {
+			value := rhsV.Index(i)
+			if rhsT == InterfaceType {
+				value = value.Elem()
+			}
+			if lhsT == value.Type() {
+				lhsV = reflect.Append(lhsV, value)
+			} else if value.Type().ConvertibleTo(lhsT) {
+				lhsV = reflect.Append(lhsV, value.Convert(lhsT))
+			} else {
+				return NilValue, NewStringError(expr, "invalid type conversion")
+			}
 		}
-		newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, 1), value)
-		if err != nil {
-			return NilValue, err
-		}
-		lhsV = reflect.Append(lhsV, newSlice)
+		return lhsV, nil
 	}
-	return lhsV, nil
+
+	if (leftHasSubArray || lhsT == InterfaceType) && (rightHasSubArray || rhsT == InterfaceType) {
+		for i := 0; i < rhsV.Len(); i++ {
+			value := rhsV.Index(i)
+			if rhsT == InterfaceType {
+				value = value.Elem()
+				if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
+					return NilValue, NewStringError(expr, "invalid type conversion")
+				}
+			}
+			newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, value.Len()), value)
+			if err != nil {
+				return NilValue, err
+			}
+			lhsV = reflect.Append(lhsV, newSlice)
+		}
+		return lhsV, nil
+	}
+
+	return NilValue, NewStringError(expr, "invalid type conversion")
+}
+
+func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, error) {
+	v, err := invokeExpr(nameExpr, env)
+	if err != nil {
+		return NilType, err
+	}
+	nameSplit := strings.SplitN(toString(v), ".", 2)
+	for len(nameSplit) > 1 {
+		e, found := env.env[nameSplit[0]]
+		if !found {
+			return NilType, fmt.Errorf("no namespace called: %v", nameSplit[0])
+		}
+		env = e.Interface().(*Env)
+		nameSplit = strings.SplitN(nameSplit[1], ".", 2)
+	}
+	t, err := env.Type(nameSplit[0])
+	if err != nil {
+		return NilType, err
+	}
+	return t, nil
 }

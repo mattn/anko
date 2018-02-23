@@ -176,30 +176,31 @@ type ChanExpr struct {
 	Rhs Expr
 }
 
-type Type struct {
-	Name string
-}
-
 // NewExpr provide expression to make new instance.
 type NewExpr struct {
 	ExprImpl
-	Type string
+	Type Expr
 }
 
 type MakeExpr struct {
 	ExprImpl
-	Type string
+	Type Expr
 }
 
 type MakeChanExpr struct {
 	ExprImpl
-	Type     string
+	Type     Expr
 	SizeExpr Expr
+}
+
+type ArrayCount struct {
+	Count int
 }
 
 type MakeArrayExpr struct {
 	ExprImpl
-	Type    string
-	LenExpr Expr
-	CapExpr Expr
+	Dimensions int
+	Type       Expr
+	LenExpr    Expr
+	CapExpr    Expr
 }

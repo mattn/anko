@@ -605,6 +605,120 @@ func TestDefineType(t *testing.T) {
 
 		envChild.Destroy()
 	}
+
+	// DefineGlobalType
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = envChild.DefineGlobalType(test.varName, test.varDefineValue)
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineGlobalType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineGlobalType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		valueType, err = envParent.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineGlobalType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineGlobalType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineGlobalType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineGlobalType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		valueType, err = envChild.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineGlobalType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineGlobalType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineGlobalType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineGlobalType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		envChild.Destroy()
+	}
+
+	// DefineGlobalReflectType
+	for _, test := range tests {
+		envParent := NewEnv()
+		envParent.SetName("parent")
+		envChild := envParent.NewEnv()
+		envChild.SetName("child")
+
+		err = envChild.DefineGlobalReflectType(test.varName, reflect.TypeOf(test.varDefineValue))
+		if err != nil && test.defineError != nil {
+			if err.Error() != test.defineError.Error() {
+				t.Errorf("DefineGlobalReflectType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
+				continue
+			}
+		} else if err != test.defineError {
+			t.Errorf("DefineGlobalReflectType %v - Define error - received: %v - expected: %v", test.testInfo, err, test.defineError)
+			continue
+		}
+
+		valueType, err = envParent.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineGlobalReflectType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineGlobalReflectType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineGlobalReflectType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineGlobalReflectType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		valueType, err = envChild.Type(test.varName)
+		if err != nil && test.typeError != nil {
+			if err.Error() != test.typeError.Error() {
+				t.Errorf("DefineGlobalReflectType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+				continue
+			}
+		} else if err != test.typeError {
+			t.Errorf("DefineGlobalReflectType %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
+			continue
+		}
+		if valueType == nil || test.varDefineValue == nil {
+			if valueType != reflect.TypeOf(test.varDefineValue) {
+				t.Errorf("DefineGlobalReflectType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+			}
+		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
+			t.Errorf("DefineGlobalReflectType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
+		}
+
+		envChild.Destroy()
+	}
 }
 
 func TestDefineTypeFail(t *testing.T) {

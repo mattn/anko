@@ -22,11 +22,11 @@ type testStruct struct {
 func TestTypes(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "a = make(bool); typeOf(a)", runOutput: "bool"},
-		{script: "a = make(int64); typeOf(a)", runOutput: "int64"},
-		{script: "a = make(float64); typeOf(a)", runOutput: "float64"},
-		{script: "a = make(string); typeOf(a)", runOutput: "string"},
-		{script: "a = make(rune); typeOf(a)", runOutput: "int32"},
+		{script: "a = make(\"bool\"); typeOf(a)", runOutput: "bool"},
+		{script: "a = make(\"int64\"); typeOf(a)", runOutput: "int64"},
+		{script: "a = make(\"float64\"); typeOf(a)", runOutput: "float64"},
+		{script: "a = make(\"string\"); typeOf(a)", runOutput: "string"},
+		{script: "a = make(\"rune\"); typeOf(a)", runOutput: "int32"},
 	}
 	runTests(t, tests)
 }
@@ -134,7 +134,7 @@ func TestKindOf(t *testing.T) {
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
-		{script: "a = make(interface); kindOf(a)", runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "a = make(\"interface\"); kindOf(a)", runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
 	}
 	runTests(t, tests)
 }

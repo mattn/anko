@@ -208,19 +208,38 @@ func TestModule(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestNew(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "new(1++)", runError: fmt.Errorf("Invalid operation")},
+
+		{script: "new(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for new")},
+
+		{script: "a = new(\"bool\"); *a", types: map[string]interface{}{"bool": true}, runOutput: false},
+		{script: "a = new(\"int32\"); *a", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
+		{script: "a = new(\"int64\"); *a", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
+		{script: "a = new(\"float32\"); *a", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
+		{script: "a = new(\"float64\"); *a", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
+		{script: "a = new(\"string\"); *a", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+	}
+	runTests(t, tests)
+}
+
 func TestMake(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "make(nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("invalid type for make")},
+		{script: "make(1++)", runError: fmt.Errorf("Invalid operation")},
+		{script: "make(\"a.b\")", types: map[string]interface{}{"a": true}, runError: fmt.Errorf("no namespace called: a")},
+		{script: "make(\"a.b\")", types: map[string]interface{}{"b": true}, runError: fmt.Errorf("no namespace called: a")},
 
-		{script: "make(bool)", types: map[string]interface{}{"bool": true}, runOutput: false},
-		{script: "make(int32)", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
-		{script: "make(int64)", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
-		{script: "make(float32)", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
-		{script: "make(float64)", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
-		{script: "make(string)", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+		{script: "make(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		{script: "make(array2x)", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}(nil)},
+		{script: "make(\"bool\")", types: map[string]interface{}{"bool": true}, runOutput: false},
+		{script: "make(\"int32\")", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
+		{script: "make(\"int64\")", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
+		{script: "make(\"float32\")", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
+		{script: "make(\"float64\")", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
+		{script: "make(\"string\")", types: map[string]interface{}{"string": "a"}, runOutput: ""},
 	}
 	runTests(t, tests)
 }
@@ -634,4 +653,20 @@ func TestInterruptConcurrency(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	Interrupt(env)
 	waitGroup.Wait()
+}
+
+func TestRunSingleStmt(t *testing.T) {
+	stmts, err := parser.ParseSrc("a = 1")
+	if err != nil {
+		t.Errorf("ParseSrc error - received %v expected: %v", err, nil)
+	}
+
+	env := NewEnv()
+	value, err := RunSingleStmt(stmts[0], env)
+	if err != nil {
+		t.Errorf("RunSingleStmt  error - received %v expected: %v", err, nil)
+	}
+	if value != int64(1) {
+		t.Errorf("RunSingleStmt  value - received %v expected: %v", value, int64(1))
+	}
 }

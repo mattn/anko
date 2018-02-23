@@ -239,45 +239,6 @@ func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
 	return e.defineValue(k, v)
 }
 
-// DefineType defines type which specifis symbol in global scope.
-func (e *Env) DefineType(k string, t interface{}) error {
-	if strings.Contains(k, ".") {
-		return fmt.Errorf("Unknown symbol '%s'", k)
-	}
-	global := e
-	keys := []string{k}
-
-	e.RLock()
-	for global.parent != nil {
-		if global.name != "" {
-			keys = append(keys, global.name)
-		}
-		global = global.parent
-	}
-	e.RUnlock()
-
-	for i, j := 0, len(keys)-1; i < j; i, j = i+1, j-1 {
-		keys[i], keys[j] = keys[j], keys[i]
-	}
-
-	var typ reflect.Type
-	if t == nil {
-		typ = NilType
-	} else {
-		var ok bool
-		typ, ok = t.(reflect.Type)
-		if !ok {
-			typ = reflect.TypeOf(t)
-		}
-	}
-
-	global.Lock()
-	global.typ[strings.Join(keys, ".")] = typ
-	global.Unlock()
-
-	return nil
-}
-
 // Define defines symbol in current scope.
 func (e *Env) Define(k string, v interface{}) error {
 	if v == nil {
@@ -293,6 +254,51 @@ func (e *Env) defineValue(k string, v reflect.Value) error {
 
 	e.Lock()
 	e.env[k] = v
+	e.Unlock()
+
+	return nil
+}
+
+// DefineType defines type which specifis symbol in global scope.
+func (e *Env) DefineGlobalType(k string, t interface{}) error {
+	for e.parent != nil {
+		e = e.parent
+	}
+	return e.DefineType(k, t)
+}
+
+// DefineGlobalReflectType defines type which specifis symbol in global scope.
+func (e *Env) DefineGlobalReflectType(k string, t reflect.Type) error {
+	for e.parent != nil {
+		e = e.parent
+	}
+	return e.DefineReflectType(k, t)
+}
+
+// DefineType defines type which specifis symbol in local scope.
+func (e *Env) DefineType(k string, t interface{}) error {
+	var typ reflect.Type
+	if t == nil {
+		typ = NilType
+	} else {
+		var ok bool
+		typ, ok = t.(reflect.Type)
+		if !ok {
+			typ = reflect.TypeOf(t)
+		}
+	}
+
+	return e.DefineReflectType(k, typ)
+}
+
+// DefineReflectType defines type which specifis symbol in local scope.
+func (e *Env) DefineReflectType(k string, t reflect.Type) error {
+	if strings.Contains(k, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", k)
+	}
+
+	e.Lock()
+	e.typ[k] = t
 	e.Unlock()
 
 	return nil

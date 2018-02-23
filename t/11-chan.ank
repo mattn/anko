@@ -1,4 +1,4 @@
-c = make(chan int64)
+c = make(chan "int64")
 r = []
 
 go func() {

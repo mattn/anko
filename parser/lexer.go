@@ -259,7 +259,7 @@ retry:
 				if s.peek() == '.' {
 					tok = VARARG
 				} else {
-					err = fmt.Errorf(`syntax error "%s"`, "..")
+					err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
 					return
 				}
 			} else {
@@ -267,30 +267,11 @@ retry:
 				tok = int(ch)
 				lit = string(ch)
 			}
-		case '\n':
+		case '\n', '(', ')', ':', ';', '%', '?', '{', '}', '[', ']', ',', '^':
 			tok = int(ch)
 			lit = string(ch)
-		case '(', ')', ':', ';', '%', '?', '{', '}', ',', '[', ']', '^':
-			s.next()
-			if ch == '[' && s.peek() == ']' {
-				s.next()
-				if isLetter(s.peek()) {
-					s.back()
-					tok = ARRAYLIT
-					lit = "[]"
-				} else {
-					s.back()
-					s.back()
-					tok = int(ch)
-					lit = string(ch)
-				}
-			} else {
-				s.back()
-				tok = int(ch)
-				lit = string(ch)
-			}
 		default:
-			err = fmt.Errorf(`syntax error "%s"`, string(ch))
+			err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
 			tok = int(ch)
 			lit = string(ch)
 			return
@@ -504,7 +485,7 @@ type Lexer struct {
 func (l *Lexer) Lex(lval *yySymType) int {
 	tok, lit, pos, err := l.s.Scan()
 	if err != nil {
-		l.e = &Error{Message: fmt.Sprintf("%s", err.Error()), Pos: pos, Fatal: true}
+		l.e = &Error{Message: err.Error(), Pos: pos, Fatal: true}
 	}
 	lval.tok = ast.Token{Tok: tok, Lit: lit}
 	lval.tok.SetPosition(pos)

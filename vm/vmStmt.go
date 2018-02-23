@@ -230,7 +230,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			val = val.Elem()
 		}
 		switch val.Kind() {
-		case reflect.Array, reflect.Slice:
+		case reflect.Slice, reflect.Array:
 			newenv := env.NewEnv()
 			defer newenv.Destroy()
 

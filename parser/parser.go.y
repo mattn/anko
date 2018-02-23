@@ -14,7 +14,6 @@ import (
 %type<stmt_default> stmt_default
 %type<stmt_case> stmt_case
 %type<stmt_cases> stmt_cases
-%type<typ> typ
 %type<expr> expr
 %type<exprs> exprs
 %type<expr_many> expr_many
@@ -22,6 +21,7 @@ import (
 %type<expr_pair> expr_pair
 %type<expr_pairs> expr_pairs
 %type<expr_idents> expr_idents
+%type<array_count> array_count
 
 %union{
 	compstmt               []ast.Stmt
@@ -31,7 +31,6 @@ import (
 	stmt_cases             []ast.Stmt
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
-	typ                    ast.Type
 	expr                   ast.Expr
 	exprs                  []ast.Expr
 	expr_many              []ast.Expr
@@ -43,9 +42,10 @@ import (
 	term                   ast.Token
 	terms                  ast.Token
 	opt_terms              ast.Token
+	array_count     ast.ArrayCount
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN ARRAYLIT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN
 
 %right '='
 %right '?' ':'
@@ -61,7 +61,8 @@ import (
 
 %%
 
-compstmt : opt_terms
+compstmt : 
+	opt_terms
 	{
 		$$ = nil
 	}
@@ -249,6 +250,16 @@ stmt_default :
 		$$ = &ast.DefaultStmt{Stmts: $4}
 	}
 
+array_count :
+	array_count '[' ']'
+	{
+		$$ = ast.ArrayCount{Count: $1.Count + 1}
+	}
+	| '[' ']'
+	{
+		$$ = ast.ArrayCount{Count: 1}
+	}
+
 expr_pair :
 	STRING ':' expr
 	{
@@ -298,16 +309,6 @@ expr_many :
 	| exprs ',' opt_terms IDENT
 	{
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
-	}
-
-typ : 
-	IDENT
-	{
-		$$ = ast.Type{Name: $1.Lit}
-	}
-	| typ '.' IDENT
-	{
-		$$ = ast.Type{Name: $1.Name + "." + $3.Lit}
 	}
 
 exprs :
@@ -666,39 +667,39 @@ expr :
 		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 		$$.SetPosition($1.Position())
 	}
-	| NEW '(' typ ')'
+	| NEW '(' expr ')'
 	{
-		$$ = &ast.NewExpr{Type: $3.Name}
+		$$ = &ast.NewExpr{Type: $3}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' typ ')'
+	| MAKE '(' CHAN expr ')'
 	{
-		$$ = &ast.MakeExpr{Type: $3.Name}
+		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: nil}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN typ ')'
+	| MAKE '(' CHAN expr ',' expr ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4.Name, SizeExpr: nil}
+		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN typ ',' expr ')'
+	| MAKE '(' expr ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4.Name, SizeExpr: $6}
+		$$ = &ast.MakeExpr{Type: $3}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' ARRAYLIT typ ')'
+	| MAKE '(' array_count expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Type: $4.Name}
+		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count, Type: $4}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' ARRAYLIT typ ',' expr ')'
+	| MAKE '(' array_count expr ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Type: $4.Name, LenExpr: $6}
+		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' ARRAYLIT typ ',' expr ',' expr ')'
+	| MAKE '(' array_count expr ',' expr ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Type: $4.Name, LenExpr: $6, CapExpr: $8}
+		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
 		$$.SetPosition($1.Position())
 	}
 	| expr OPCHAN expr

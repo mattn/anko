@@ -154,10 +154,10 @@ func TestReturns(t *testing.T) {
 func TestFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "a = nil; a()", runError: fmt.Errorf("can not call type interface {}"), output: map[string]interface{}{"a": nil}},
-		{script: "a = true; a()", runError: fmt.Errorf("can not call type bool"), output: map[string]interface{}{"a": true}},
-		{script: "a = nil; b = func c(d) { return d == nil }; c = nil; c(a)", runError: fmt.Errorf("can not call type interface {}"), output: map[string]interface{}{"a": nil}},
-		{script: "a = [true]; func b(c) { return c() }; b(a)", runError: fmt.Errorf("can not call type []interface {}")},
+		{script: "a = nil; a()", runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
+		{script: "a = true; a()", runError: fmt.Errorf("cannot call type bool"), output: map[string]interface{}{"a": true}},
+		{script: "a = nil; b = func c(d) { return d == nil }; c = nil; c(a)", runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
+		{script: "a = [true]; func b(c) { return c() }; b(a)", runError: fmt.Errorf("cannot call type []interface {}")},
 		{script: "a = [func () { return nil}]; func b(c) { return c() }; b(a[1])", runError: fmt.Errorf("index out of range")},
 		{script: "a = nil; func b(c) { }; b()", runError: fmt.Errorf("expected 1 function arguments but received 0"), output: map[string]interface{}{"a": nil}},
 		{script: "a = nil; func b(c) { }; b(a, a)", runError: fmt.Errorf("expected 1 function arguments but received 2"), output: map[string]interface{}{"a": nil}},
