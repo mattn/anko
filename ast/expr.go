@@ -182,11 +182,6 @@ type NewExpr struct {
 	Type Expr
 }
 
-type MakeExpr struct {
-	ExprImpl
-	Type Expr
-}
-
 type MakeChanExpr struct {
 	ExprImpl
 	Type     Expr
@@ -197,7 +192,7 @@ type ArrayCount struct {
 	Count int
 }
 
-type MakeArrayExpr struct {
+type MakeExpr struct {
 	ExprImpl
 	Dimensions int
 	Type       Expr

@@ -2047,21 +2047,21 @@ yydefault:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:691
 		{
-			yyVAL.expr = &ast.MakeArrayExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr}
+			yyVAL.expr = &ast.MakeExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 123:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		//line parser.go.y:696
 		{
-			yyVAL.expr = &ast.MakeArrayExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr, LenExpr: yyDollar[6].expr}
+			yyVAL.expr = &ast.MakeExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr, LenExpr: yyDollar[6].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 124:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		//line parser.go.y:701
 		{
-			yyVAL.expr = &ast.MakeArrayExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr, LenExpr: yyDollar[6].expr, CapExpr: yyDollar[8].expr}
+			yyVAL.expr = &ast.MakeExpr{Dimensions: yyDollar[3].array_count.Count, Type: yyDollar[4].expr, LenExpr: yyDollar[6].expr, CapExpr: yyDollar[8].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 125:

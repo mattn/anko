@@ -954,7 +954,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return rhsV, nil
 	case *ast.NewExpr:
-		t, err := getTypeFromExpr(env, e.Type)
+		t, _, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
@@ -964,7 +964,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 
 		return reflect.New(t), nil
 	case *ast.MakeExpr:
-		t, err := getTypeFromExpr(env, e.Type)
+		t, dimensions, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
@@ -972,21 +972,15 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, NewErrorf(expr, "type cannot be nil for make")
 		}
 
-		if t.Kind() == reflect.Map {
-			return reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())).Convert(t), nil
-		}
-		return reflect.Zero(t), nil
-	case *ast.MakeArrayExpr:
-		t, err := getTypeFromExpr(env, e.Type)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		if t == nil {
-			return NilValue, NewErrorf(expr, "type cannot be nil for make array")
-		}
-
-		for i := 1; i < e.Dimensions; i++ {
+		dimensions += e.Dimensions
+		for i := 1; i < dimensions; i++ {
 			t = reflect.SliceOf(t)
+		}
+		if dimensions < 1 {
+			if t.Kind() == reflect.Map {
+				return reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())), nil
+			}
+			return reflect.Zero(t), nil
 		}
 
 		var alen int
@@ -1011,7 +1005,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 
 		return reflect.MakeSlice(reflect.SliceOf(t), alen, acap), nil
 	case *ast.MakeChanExpr:
-		t, err := getTypeFromExpr(env, e.Type)
+		t, _, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}

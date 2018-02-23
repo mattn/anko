@@ -689,17 +689,17 @@ expr :
 	}
 	| MAKE '(' array_count expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count, Type: $4}
+		$$ = &ast.MakeExpr{Dimensions: $3.Count, Type: $4}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' array_count expr ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
+		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' array_count expr ',' expr ',' expr ')'
 	{
-		$$ = &ast.MakeArrayExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
+		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
 		$$.SetPosition($1.Position())
 	}
 	| expr OPCHAN expr

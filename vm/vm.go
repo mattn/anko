@@ -291,23 +291,37 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 	return NilValue, NewStringError(expr, "invalid type conversion")
 }
 
-func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, error) {
+func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, int, error) {
+	dimensions := 0
 	v, err := invokeExpr(nameExpr, env)
 	if err != nil {
-		return NilType, err
+		return NilType, dimensions, err
 	}
-	nameSplit := strings.SplitN(toString(v), ".", 2)
+	typeString := toString(v)
+	for len(typeString) > 2 && typeString[:2] == "[]" {
+		dimensions++
+		typeString = typeString[2:]
+	}
+	env, typeString, err = getEnvFromString(env, typeString)
+	if err != nil {
+		return NilType, dimensions, err
+	}
+	t, err := env.Type(typeString)
+	if err != nil {
+		return NilType, dimensions, err
+	}
+	return t, dimensions, nil
+}
+
+func getEnvFromString(env *Env, name string) (*Env, string, error) {
+	nameSplit := strings.SplitN(name, ".", 2)
 	for len(nameSplit) > 1 {
 		e, found := env.env[nameSplit[0]]
 		if !found {
-			return NilType, fmt.Errorf("no namespace called: %v", nameSplit[0])
+			return nil, "", fmt.Errorf("no namespace called: %v", nameSplit[0])
 		}
 		env = e.Interface().(*Env)
 		nameSplit = strings.SplitN(nameSplit[1], ".", 2)
 	}
-	t, err := env.Type(nameSplit[0])
-	if err != nil {
-		return NilType, err
-	}
-	return t, nil
+	return env, nameSplit[0], nil
 }
