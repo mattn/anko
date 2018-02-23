@@ -976,38 +976,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())).Convert(t), nil
 		}
 		return reflect.Zero(t), nil
-	case *ast.MakeChanExpr:
-		t, err := getTypeFromExpr(env, e.Type)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		if t == nil {
-			return NilValue, NewErrorf(expr, "type cannot be nil for make chan")
-		}
-
-		var size int
-		if e.SizeExpr != nil {
-			rv, err := invokeExpr(e.SizeExpr, env)
-			if err != nil {
-				return NilValue, err
-			}
-			size = int(toInt64(rv))
-		}
-
-		return func() (reflect.Value, error) {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
-		}()
 	case *ast.MakeArrayExpr:
 		t, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
@@ -1042,6 +1010,38 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		return reflect.MakeSlice(reflect.SliceOf(t), alen, acap), nil
+	case *ast.MakeChanExpr:
+		t, err := getTypeFromExpr(env, e.Type)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+		if t == nil {
+			return NilValue, NewErrorf(expr, "type cannot be nil for make chan")
+		}
+
+		var size int
+		if e.SizeExpr != nil {
+			rv, err := invokeExpr(e.SizeExpr, env)
+			if err != nil {
+				return NilValue, err
+			}
+			size = int(toInt64(rv))
+		}
+
+		return func() (reflect.Value, error) {
+			defer func() {
+				if os.Getenv("ANKO_DEBUG") == "" {
+					if ex := recover(); ex != nil {
+						if e, ok := ex.(error); ok {
+							err = e
+						} else {
+							err = errors.New(fmt.Sprint(ex))
+						}
+					}
+				}
+			}()
+			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
+		}()
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
 		if err != nil {
