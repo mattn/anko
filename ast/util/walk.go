@@ -213,10 +213,9 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 			return err
 		}
 		return walkExpr(expr.Rhs, f)
-	case *ast.MakeExpr:
 	case *ast.MakeChanExpr:
 		return walkExpr(expr.SizeExpr, f)
-	case *ast.MakeArrayExpr:
+	case *ast.MakeExpr:
 		if err := walkExpr(expr.LenExpr, f); err != nil {
 			return err
 		}
