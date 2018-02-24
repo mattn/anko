@@ -11,5 +11,6 @@ script:
     - go test -v ./ast/util
     - go test -v ./vm
     - go test -v ./builtins
+    - go test -v ./packages
     - ./t/test.sh
     - ./anko ./_example/scripts/term.ank
