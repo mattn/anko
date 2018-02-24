@@ -8,8 +8,6 @@ import (
 
 func init() {
 	Packages["net/url"] = map[string]interface{}{
-		"PathEscape":      url.PathEscape,
-		"PathUnescape":    url.PathUnescape,
 		"QueryEscape":     url.QueryEscape,
 		"QueryUnescape":   url.QueryUnescape,
 		"Parse":           url.Parse,
