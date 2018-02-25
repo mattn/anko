@@ -2,8 +2,4 @@
 
 package packages
 
-import (
-	"os"
-)
-
 func osNotAppEngine() {}
