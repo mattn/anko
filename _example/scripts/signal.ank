@@ -2,7 +2,7 @@
 
 var os, signal, time = import("os"), import("os/signal"), import("time")
 
-c = make(chan os.Signal, 1)
+c = make(chan "os.Signal", 1)
 signal.Notify(c, os.Interrupt)
 go func() {
    <-c
