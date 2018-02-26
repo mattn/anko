@@ -244,6 +244,18 @@ func TestMake(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestMakeType(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "make(type \"a\", true)", runOutput: reflect.TypeOf(true)},
+		{script: "a = make(type \"a\", true)", runOutput: reflect.TypeOf(true), output: map[string]interface{}{"a": reflect.TypeOf(true)}},
+		{script: "make(type \"a\", true); a = make([]\"a\")", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
+		{script: "make(type \"a\", make([]\"bool\"))", runOutput: reflect.TypeOf([]bool{})},
+		{script: "make(type \"a\", make([]\"bool\")); a = make(\"a\")", runOutput: []bool(nil), output: map[string]interface{}{"a": []bool(nil)}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:

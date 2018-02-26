@@ -199,3 +199,9 @@ type MakeExpr struct {
 	LenExpr    Expr
 	CapExpr    Expr
 }
+
+type MakeTypeExpr struct {
+	ExprImpl
+	Name Expr
+	Type Expr
+}

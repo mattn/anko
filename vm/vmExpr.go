@@ -739,6 +739,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, NewError(expr, err)
 		}
 		return rhsV, nil
+
 	case *ast.NewExpr:
 		t, _, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
@@ -749,6 +750,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		return reflect.New(t), nil
+
 	case *ast.MakeExpr:
 		t, dimensions, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
@@ -795,6 +797,30 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		return reflect.MakeSlice(reflect.SliceOf(t), alen, acap), nil
+
+	case *ast.MakeTypeExpr:
+		nameV, err := invokeExpr(e.Name, env)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+		var name string
+		env, name, err = getEnvFromString(env, toString(nameV))
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+
+		typeV, err := invokeExpr(e.Type, env)
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+
+		err = env.DefineReflectType(name, typeV.Type())
+		if err != nil {
+			return NilValue, NewError(expr, err)
+		}
+
+		return reflect.ValueOf(typeV.Type()), nil
+
 	case *ast.MakeChanExpr:
 		t, _, err := getTypeFromExpr(env, e.Type)
 		if err != nil {
@@ -827,6 +853,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}()
 			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
 		}()
+
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
 		if err != nil {
@@ -856,6 +883,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		return NilValue, NewStringError(expr, "Invalid operation for chan")
+
 	default:
 		return NilValue, NewStringError(expr, "Unknown expression")
 	}
