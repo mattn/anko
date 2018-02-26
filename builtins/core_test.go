@@ -126,73 +126,6 @@ func TestKindOf(t *testing.T) {
 	}
 	runTests(t, tests)
 }
-func TestJson(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "json = import(\"encoding/json\"); a = {\"b\": \"b\"}; c, err = json.Marshal(a); if err == nil { return true }", runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": []byte("{\"b\":\"b\"}")}},
-		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(a, &b); if err == nil { return true }", input: map[string]interface{}{"a": []byte("{\"b\": \"b\"}")}, runOutput: true, output: map[string]interface{}{"a": []byte("{\"b\": \"b\"}"), "b": map[string]interface{}{"b": "b"}}},
-		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); if err == nil { return true }", input: map[string]interface{}{"a": "{\"b\": \"b\"}"}, runOutput: true, output: map[string]interface{}{"a": "{\"b\": \"b\"}", "b": map[string]interface{}{"b": "b"}}},
-		{script: "json = import(\"encoding/json\"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); if err == nil { return true }", input: map[string]interface{}{"a": "[[\"1\", \"2\"],[\"3\", \"4\"]]"}, runOutput: true, output: map[string]interface{}{"a": "[[\"1\", \"2\"],[\"3\", \"4\"]]", "b": []interface{}{[]interface{}{"1", "2"}, []interface{}{"3", "4"}}}},
-	}
-	runTests(t, tests)
-}
-
-func TestRegexp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^simple$\"); re.MatchString(\"simple\")", runOutput: true},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^simple$\"); re.MatchString(\"no match\")", runOutput: false},
-
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^simple$", "b": "simple"}, runOutput: true, output: map[string]interface{}{"a": "^simple$", "b": "simple"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^simple$", "b": "no match"}, runOutput: false, output: map[string]interface{}{"a": "^simple$", "b": "no match"}},
-
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.String()", runOutput: "^a\\.\\d+\\.b$"},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.MatchString(\"a.1.b\")", runOutput: true},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.MatchString(\"a.22.b\")", runOutput: true},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.MatchString(\"a.333.b\")", runOutput: true},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.MatchString(\"no match\")", runOutput: false},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(\"^a\\\\.\\\\d+\\\\.b$\"); re.MatchString(\"a+1+b\")", runOutput: false},
-
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.String()", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}, runOutput: "^a\\.\\d+\\.b$", output: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}, runOutput: false, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}},
-		{script: "regexp = import(\"regexp\"); re = regexp.MustCompile(a); re.MatchString(b)", input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}, runOutput: false, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}},
-	}
-	runTests(t, tests)
-}
-
-func TestStrconv(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "strconv = import(\"strconv\"); a = true; b = strconv.FormatBool(a)", runOutput: "true", output: map[string]interface{}{"a": true, "b": "true"}},
-		{script: "strconv = import(\"strconv\"); a = 1.1; b = strconv.FormatFloat(a, toRune(\"f\"), -1, 64)", runOutput: "1.1", output: map[string]interface{}{"a": float64(1.1), "b": "1.1"}},
-		{script: "strconv = import(\"strconv\"); a = 1; b = strconv.FormatInt(a, 10)", runOutput: "1", output: map[string]interface{}{"a": int64(1), "b": "1"}},
-		{script: "strconv = import(\"strconv\"); b = strconv.FormatInt(a, 10)", input: map[string]interface{}{"a": uint64(1)}, runOutput: "1", output: map[string]interface{}{"a": uint64(1), "b": "1"}},
-
-		{script: "strconv = import(\"strconv\"); a = \"true\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "<nil>", output: map[string]interface{}{"a": "true", "b": true, "err": "<nil>"}},
-		{script: "strconv = import(\"strconv\"); a = \"2\"; b, err = strconv.ParseBool(a); err = toString(err)", runOutput: "strconv.ParseBool: parsing \"2\": invalid syntax", output: map[string]interface{}{"a": "2", "b": false, "err": "strconv.ParseBool: parsing \"2\": invalid syntax"}},
-		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "<nil>", output: map[string]interface{}{"a": "1.1", "b": float64(1.1), "err": "<nil>"}},
-		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseFloat(a, 64); err = toString(err)", runOutput: "strconv.ParseFloat: parsing \"a\": invalid syntax", output: map[string]interface{}{"a": "a", "b": float64(0), "err": "strconv.ParseFloat: parsing \"a\": invalid syntax"}},
-		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "<nil>", output: map[string]interface{}{"a": "1", "b": int64(1), "err": "<nil>"}},
-		{script: "strconv = import(\"strconv\"); a = \"1.1\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"1.1\": invalid syntax", output: map[string]interface{}{"a": "1.1", "b": int64(0), "err": "strconv.ParseInt: parsing \"1.1\": invalid syntax"}},
-		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseInt(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseInt: parsing \"a\": invalid syntax", output: map[string]interface{}{"a": "a", "b": int64(0), "err": "strconv.ParseInt: parsing \"a\": invalid syntax"}},
-		{script: "strconv = import(\"strconv\"); a = \"1\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "<nil>", output: map[string]interface{}{"a": "1", "b": uint64(1), "err": "<nil>"}},
-		{script: "strconv = import(\"strconv\"); a = \"a\"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)", runOutput: "strconv.ParseUint: parsing \"a\": invalid syntax", output: map[string]interface{}{"a": "a", "b": uint64(0), "err": "strconv.ParseUint: parsing \"a\": invalid syntax"}},
-	}
-	runTests(t, tests)
-}
-
-func TestStrings(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "strings = import(\"strings\"); a = \" one two \"; b = strings.TrimSpace(a)", runOutput: "one two", output: map[string]interface{}{"a": " one two ", "b": "one two"}},
-		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.Split(a, \" \")", runOutput: []string{"a", "b", "c", "d"}, output: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c", "d"}}},
-		{script: "strings = import(\"strings\"); a = \"a b c d\"; b = strings.SplitN(a, \" \", 3)", runOutput: []string{"a", "b", "c d"}, output: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c d"}}},
-	}
-	runTests(t, tests)
-}
 
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
@@ -210,7 +143,7 @@ loop:
 		}
 
 		env := vm.NewEnv()
-		LoadAllBuiltins(env)
+		Import(env)
 
 		for typeName, typeValue := range test.types {
 			err = env.DefineType(typeName, typeValue)
