@@ -19,18 +19,6 @@ type testStruct struct {
 	output     map[string]interface{}
 }
 
-func TestTypes(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: "a = make(\"bool\"); typeOf(a)", runOutput: "bool"},
-		{script: "a = make(\"int64\"); typeOf(a)", runOutput: "int64"},
-		{script: "a = make(\"float64\"); typeOf(a)", runOutput: "float64"},
-		{script: "a = make(\"string\"); typeOf(a)", runOutput: "string"},
-		{script: "a = make(\"rune\"); typeOf(a)", runOutput: "int32"},
-	}
-	runTests(t, tests)
-}
-
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{

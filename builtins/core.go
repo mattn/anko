@@ -300,12 +300,6 @@ func Import(env *vm.Env) *vm.Env {
 		reflect.ValueOf(e).Close()
 	})
 
-	env.DefineType("interface", reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type())
-	env.DefineType("bool", true)
-	env.DefineType("int64", int64(1))
-	env.DefineType("float64", float64(1))
-	env.DefineType("string", "a")
-	env.DefineType("rune", 'a')
 	return env
 }
 

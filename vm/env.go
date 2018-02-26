@@ -26,13 +26,40 @@ type Env struct {
 	sync.RWMutex
 }
 
+var basicTypes = []struct {
+	name string
+	typ  reflect.Type
+}{
+	{name: "interface", typ: reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()},
+	{name: "bool", typ: reflect.TypeOf(true)},
+	{name: "string", typ: reflect.TypeOf("a")},
+	{name: "int", typ: reflect.TypeOf(int(1))},
+	{name: "int32", typ: reflect.TypeOf(int32(1))},
+	{name: "int64", typ: reflect.TypeOf(int64(1))},
+	{name: "uint", typ: reflect.TypeOf(uint(1))},
+	{name: "uint32", typ: reflect.TypeOf(uint32(1))},
+	{name: "uint64", typ: reflect.TypeOf(uint64(1))},
+	{name: "byte", typ: reflect.TypeOf(byte(1))},
+	{name: "rune", typ: reflect.TypeOf('a')},
+	{name: "float32", typ: reflect.TypeOf(float32(1))},
+	{name: "float64", typ: reflect.TypeOf(float64(1))},
+}
+
+func newBasicTypes() map[string]reflect.Type {
+	types := make(map[string]reflect.Type, len(basicTypes))
+	for i := 0; i < len(basicTypes); i++ {
+		types[basicTypes[i].name] = basicTypes[i].typ
+	}
+	return types
+}
+
 // NewEnv creates new global scope.
 func NewEnv() *Env {
 	b := false
 
 	return &Env{
 		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
+		typ:       newBasicTypes(),
 		parent:    nil,
 		interrupt: &b,
 	}
@@ -285,7 +312,7 @@ func (e *Env) defineValue(k string, v reflect.Value) error {
 	return nil
 }
 
-// DefineType defines type which specifis symbol in global scope.
+// DefineGlobalType defines type which specifis symbol in global scope.
 func (e *Env) DefineGlobalType(k string, t interface{}) error {
 	for e.parent != nil {
 		e = e.parent

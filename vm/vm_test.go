@@ -215,12 +215,12 @@ func TestNew(t *testing.T) {
 
 		{script: "new(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for new")},
 
-		{script: "a = new(\"bool\"); *a", types: map[string]interface{}{"bool": true}, runOutput: false},
-		{script: "a = new(\"int32\"); *a", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
-		{script: "a = new(\"int64\"); *a", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
-		{script: "a = new(\"float32\"); *a", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
-		{script: "a = new(\"float64\"); *a", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
-		{script: "a = new(\"string\"); *a", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+		{script: "a = new(\"bool\"); *a", runOutput: false},
+		{script: "a = new(\"int32\"); *a", runOutput: int32(0)},
+		{script: "a = new(\"int64\"); *a", runOutput: int64(0)},
+		{script: "a = new(\"float32\"); *a", runOutput: float32(0)},
+		{script: "a = new(\"float64\"); *a", runOutput: float64(0)},
+		{script: "a = new(\"string\"); *a", runOutput: ""},
 	}
 	runTests(t, tests)
 }
@@ -234,12 +234,12 @@ func TestMake(t *testing.T) {
 
 		{script: "make(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		{script: "make(\"bool\")", types: map[string]interface{}{"bool": true}, runOutput: false},
-		{script: "make(\"int32\")", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(0)},
-		{script: "make(\"int64\")", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(0)},
-		{script: "make(\"float32\")", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(0)},
-		{script: "make(\"float64\")", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(0)},
-		{script: "make(\"string\")", types: map[string]interface{}{"string": "a"}, runOutput: ""},
+		{script: "make(\"bool\")", runOutput: false},
+		{script: "make(\"int32\")", runOutput: int32(0)},
+		{script: "make(\"int64\")", runOutput: int64(0)},
+		{script: "make(\"float32\")", runOutput: float32(0)},
+		{script: "make(\"float64\")", runOutput: float64(0)},
+		{script: "make(\"string\")", runOutput: ""},
 	}
 	runTests(t, tests)
 }
