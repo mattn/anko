@@ -13,7 +13,7 @@ func init() {
 		"Equal":          bytes.Equal,
 		"EqualFold":      bytes.EqualFold,
 		"Fields":         bytes.Fields,
-		"Fields":         bytes.FieldsFunc,
+		"FieldsFunc":     bytes.FieldsFunc,
 		"HasPrefix":      bytes.HasPrefix,
 		"HasSuffix":      bytes.HasSuffix,
 		"Index":          bytes.Index,
