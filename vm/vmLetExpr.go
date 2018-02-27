@@ -46,10 +46,14 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return NilValue, NewStringError(expr, "no member named '"+lhs.Name+"' for struct")
 			}
 			v = v.FieldByIndex(field.Index)
+			// From reflect CanSet:
+			// A Value can be changed only if it is addressable and was not obtained by the use of unexported struct fields.
+			// Often a struct has to be passed as a pointer to be set
 			if !v.CanSet() {
 				return NilValue, NewStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 			v.Set(rv)
+
 		case reflect.Map:
 			if v.Type().Elem() != InterfaceType && v.Type().Elem() != rv.Type() {
 				return NilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
@@ -60,10 +64,12 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return invokeLetExpr(lhs.Expr, v, env)
 			}
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
+
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
 		return v, nil
+
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {

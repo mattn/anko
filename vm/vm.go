@@ -325,3 +325,46 @@ func getEnvFromString(env *Env, name string) (*Env, string, error) {
 	}
 	return env, nameSplit[0], nil
 }
+
+func MakeValue(t reflect.Type) (reflect.Value, error) {
+	// fmt.Println(t.Kind())
+	switch t.Kind() {
+	case reflect.Chan:
+		return reflect.MakeChan(t, 0), nil
+	case reflect.Func:
+		return NilValue, fmt.Errorf("Func not yet implemented")
+	case reflect.Map:
+		// note creating slice as work around to create map
+		// just doing MakeMap can give incorrect type for defined types
+		value := reflect.MakeSlice(reflect.SliceOf(t), 0, 1)
+		value = reflect.Append(value, reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())))
+		return value.Index(0), nil
+	case reflect.Ptr:
+		ptrV := reflect.New(t.Elem())
+		v, err := MakeValue(t.Elem())
+		if err != nil {
+			return NilValue, err
+		}
+		if !ptrV.Elem().CanSet() {
+			return NilValue, fmt.Errorf("type " + t.String() + " cannot be assigned")
+		}
+		ptrV.Elem().Set(v)
+		return ptrV, nil
+	case reflect.Slice:
+		return reflect.MakeSlice(t, 0, 0), nil
+	case reflect.Struct:
+		structV := reflect.New(t).Elem()
+		for i := 0; i < structV.NumField(); i++ {
+			v, err := MakeValue(structV.Field(i).Type())
+			if err != nil {
+				return NilValue, err
+			}
+			if !structV.Field(i).CanSet() {
+				return NilValue, fmt.Errorf("struct member '" + t.Field(i).Name + "' cannot be assigned")
+			}
+			structV.Field(i).Set(v)
+		}
+		return structV, nil
+	}
+	return reflect.Zero(t), nil
+}

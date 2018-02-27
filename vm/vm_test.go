@@ -251,7 +251,7 @@ func TestMakeType(t *testing.T) {
 		{script: "a = make(type \"a\", true)", runOutput: reflect.TypeOf(true), output: map[string]interface{}{"a": reflect.TypeOf(true)}},
 		{script: "make(type \"a\", true); a = make([]\"a\")", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
 		{script: "make(type \"a\", make([]\"bool\"))", runOutput: reflect.TypeOf([]bool{})},
-		{script: "make(type \"a\", make([]\"bool\")); a = make(\"a\")", runOutput: []bool(nil), output: map[string]interface{}{"a": []bool(nil)}},
+		{script: "make(type \"a\", make([]\"bool\")); a = make(\"a\")", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
 	}
 	runTests(t, tests)
 }

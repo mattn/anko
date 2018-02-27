@@ -267,7 +267,7 @@ func TestMakeArrays(t *testing.T) {
 		{script: "make([][]\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 		{script: "make([][][]\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		{script: "make(\"array2x\")", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}(nil)},
+		{script: "make(\"array2x\")", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{}},
 
 		{script: "make([]\"bool\")", runOutput: []bool{}},
 		{script: "make([]\"int32\")", runOutput: []int32{}},
@@ -1030,8 +1030,8 @@ func TestMakeArraysData(t *testing.T) {
 	if err != nil {
 		t.Errorf("Run error - received %v - expected: %v", err, nil)
 	}
-	if !reflect.DeepEqual(value, []string(nil)) {
-		t.Errorf("Run value - received %#v - expected: %#v", value, []string(nil))
+	if !reflect.DeepEqual(value, []string{}) {
+		t.Errorf("Run value - received %#v - expected: %#v", value, []string{})
 	}
 
 	a := value.([]string)

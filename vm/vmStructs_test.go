@@ -214,18 +214,76 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: int64(1), B: int64(2)}}},
 
-		// TOFIX:
-		//		{script: "a.B = 3", input: map[string]interface{}{
-		//			"a": struct {
-		//				A interface{}
-		//				B interface{}
-		//			}{A: int64(1), B: int64(2)},
-		//		},
-		//			runOutput: int64(3),
-		//			output: map[string]interface{}{"a": struct {
-		//				A interface{}
-		//				B interface{}
-		//			}{A: int64(1), B: int64(3)}}},
+		{script: "a.B = 3", input: map[string]interface{}{"a": &struct {
+			A interface{}
+			B interface{}
+		}{A: int64(1), B: int64(2)}},
+			runOutput: int64(3),
+			output: map[string]interface{}{"a": &struct {
+				A interface{}
+				B interface{}
+			}{A: int64(1), B: int64(3)}}},
+
+		{script: "a.B = 3; a = *a", input: map[string]interface{}{"a": &struct {
+			A interface{}
+			B interface{}
+		}{A: int64(1), B: int64(2)}},
+			runOutput: struct {
+				A interface{}
+				B interface{}
+			}{A: int64(1), B: int64(3)},
+			output: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: int64(1), B: int64(3)}}},
+	}
+	runTests(t, tests)
+}
+
+func TestMakeStructs(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "make(\"struct\")", types: map[string]interface{}{"struct": &struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runOutput: &struct {
+				A interface{}
+				B interface{}
+			}{}},
+
+		{script: "a = make(\"struct\")", types: map[string]interface{}{"struct": &struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runOutput: &struct {
+				A interface{}
+				B interface{}
+			}{},
+			output: map[string]interface{}{"a": &struct {
+				A interface{}
+				B interface{}
+			}{}}},
+
+		{script: "a = make(\"struct\"); a.A = 3; a.B = 4;", types: map[string]interface{}{"struct": &struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runOutput: int64(4),
+			output: map[string]interface{}{"a": &struct {
+				A interface{}
+				B interface{}
+			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
+
+		{script: "a = make(\"struct\"); a = *a; a.A = 3; a.B = 4;", types: map[string]interface{}{"struct": &struct {
+			A interface{}
+			B interface{}
+		}{}},
+			runOutput: int64(4),
+			output: map[string]interface{}{"a": struct {
+				A interface{}
+				B interface{}
+			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 	}
 	runTests(t, tests)
 }
