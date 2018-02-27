@@ -204,28 +204,30 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return v, nil
 	case *ast.FuncExpr:
-		f := reflect.ValueOf(func(expr *ast.FuncExpr, env *Env) Func {
-			return func(args ...reflect.Value) (reflect.Value, error) {
-				if !expr.VarArg {
-					if len(args) != len(expr.Args) {
-						return NilValue, NewStringError(expr, "expected "+fmt.Sprintf("%v", len(expr.Args))+" function arguments but received "+fmt.Sprintf("%v", len(args)))
+		f := reflect.ValueOf(
+			func(expr *ast.FuncExpr, env *Env) Func {
+				return func(args ...reflect.Value) (reflect.Value, error) {
+					if !expr.VarArg {
+						if len(expr.Args) != len(args) {
+							return NilValue, NewStringError(expr, fmt.Sprintf("expected %v function arguments but received %v", len(expr.Args), len(args)))
+						}
 					}
-				}
-				newenv := env.NewEnv()
-				if expr.VarArg {
-					newenv.defineValue(expr.Args[0], reflect.ValueOf(args))
-				} else {
-					for i, arg := range expr.Args {
-						newenv.defineValue(arg, args[i])
+					newenv := env.NewEnv()
+					if expr.VarArg {
+						newenv.defineValue(expr.Args[0], reflect.ValueOf(args))
+					} else {
+						for i, arg := range expr.Args {
+							newenv.defineValue(arg, args[i])
+						}
 					}
+					rv, err := run(expr.Stmts, newenv)
+					if err == ReturnError {
+						err = nil
+					}
+					return rv, err
 				}
-				rr, err := run(expr.Stmts, newenv)
-				if err == ReturnError {
-					err = nil
-				}
-				return rr, err
-			}
-		}(e, env))
+			}(e, env),
+		)
 		env.defineValue(e.Name, f)
 		return f, nil
 	case *ast.MemberExpr:
@@ -765,15 +767,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			t = reflect.SliceOf(t)
 		}
 		if dimensions < 1 {
-			if t.Kind() == reflect.Map {
-				// note creating slice as work around to create map
-				// just doing MakeMap can give incorrect type for defined types
-				value := reflect.MakeSlice(reflect.SliceOf(t), 0, 1)
-				value = reflect.Append(value, reflect.MakeMap(reflect.MapOf(t.Key(), t.Elem())))
-				return value.Index(0), nil
+			v, err := MakeValue(t)
+			if err != nil {
+				return NilValue, NewError(expr, err)
 			}
-			return reflect.Zero(t), nil
-
+			return v, nil
 		}
 
 		var alen int
