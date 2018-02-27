@@ -251,13 +251,16 @@ stmt_default :
 	}
 
 array_count :
-	array_count '[' ']'
 	{
-		$$ = ast.ArrayCount{Count: $1.Count + 1}
+		$$ = ast.ArrayCount{Count: 0}
 	}
 	| '[' ']'
 	{
 		$$ = ast.ArrayCount{Count: 1}
+	}
+	| array_count '[' ']'
+	{
+		$$.Count = $$.Count + 1
 	}
 
 expr_pair :
@@ -680,11 +683,6 @@ expr :
 	| MAKE '(' CHAN expr ',' expr ')'
 	{
 		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: $6}
-		$$.SetPosition($1.Position())
-	}
-	| MAKE '(' expr ')'
-	{
-		$$ = &ast.MakeExpr{Type: $3}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' array_count expr ')'
