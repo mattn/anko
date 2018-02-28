@@ -15,6 +15,7 @@ import (
 // invokeExpr evaluates one expression.
 func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	switch e := expr.(type) {
+
 	case *ast.NumberExpr:
 		if strings.Contains(e.Lit, ".") || strings.Contains(e.Lit, "e") {
 			v, err := strconv.ParseFloat(e.Lit, 64)
@@ -34,10 +35,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, NewError(expr, err)
 		}
 		return reflect.ValueOf(i), nil
+
 	case *ast.IdentExpr:
 		return env.get(e.Lit)
+
 	case *ast.StringExpr:
 		return reflect.ValueOf(e.Lit), nil
+
 	case *ast.ArrayExpr:
 		a := make([]interface{}, len(e.Exprs))
 		for i, expr := range e.Exprs {
@@ -48,6 +52,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			a[i] = arg.Interface()
 		}
 		return reflect.ValueOf(a), nil
+
 	case *ast.MapExpr:
 		m := make(map[string]interface{}, len(e.MapExpr))
 		for k, expr := range e.MapExpr {
@@ -58,15 +63,18 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			m[k] = v.Interface()
 		}
 		return reflect.ValueOf(m), nil
+
 	case *ast.DerefExpr:
 		v := NilValue
 		var err error
 		switch ee := e.Expr.(type) {
+
 		case *ast.IdentExpr:
 			v, err = env.get(ee.Lit)
 			if err != nil {
 				return v, err
 			}
+
 		case *ast.MemberExpr:
 			v, err := invokeExpr(ee.Expr, env)
 			if err != nil {
@@ -117,15 +125,18 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return NilValue, NewStringError(expr, "Cannot deference for the value")
 		}
 		return v.Elem(), nil
+
 	case *ast.AddrExpr:
 		v := NilValue
 		var err error
 		switch ee := e.Expr.(type) {
+
 		case *ast.IdentExpr:
 			v, err = env.get(ee.Lit)
 			if err != nil {
 				return v, err
 			}
+
 		case *ast.MemberExpr:
 			v, err := invokeExpr(ee.Expr, env)
 			if err != nil {
@@ -176,6 +187,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return reflect.ValueOf(&i), nil
 		}
 		return v.Addr(), nil
+
 	case *ast.UnaryExpr:
 		v, err := invokeExpr(e.Expr, env)
 		if err != nil {
@@ -197,39 +209,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		default:
 			return NilValue, NewStringError(e, "Unknown operator ''")
 		}
+
 	case *ast.ParenExpr:
 		v, err := invokeExpr(e.SubExpr, env)
 		if err != nil {
 			return NilValue, NewError(expr, err)
 		}
 		return v, nil
-	case *ast.FuncExpr:
-		f := reflect.ValueOf(
-			func(expr *ast.FuncExpr, env *Env) Func {
-				return func(args ...reflect.Value) (reflect.Value, error) {
-					if !expr.VarArg {
-						if len(expr.Args) != len(args) {
-							return NilValue, NewStringError(expr, fmt.Sprintf("expected %v function arguments but received %v", len(expr.Args), len(args)))
-						}
-					}
-					newenv := env.NewEnv()
-					if expr.VarArg {
-						newenv.defineValue(expr.Args[0], reflect.ValueOf(args))
-					} else {
-						for i, arg := range expr.Args {
-							newenv.defineValue(arg, args[i])
-						}
-					}
-					rv, err := run(expr.Stmts, newenv)
-					if err == ReturnError {
-						err = nil
-					}
-					return rv, err
-				}
-			}(e, env),
-		)
-		env.defineValue(e.Name, f)
-		return f, nil
+
 	case *ast.MemberExpr:
 		v, err := invokeExpr(e.Expr, env)
 		if err != nil {
@@ -272,6 +259,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
+
 	case *ast.ItemExpr:
 		v, err := invokeExpr(e.Value, env)
 		if err != nil {
@@ -357,6 +345,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		default:
 			return NilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
+
 	case *ast.AssocExpr:
 		switch e.Operator {
 		case "++":
@@ -425,6 +414,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			v = v.Elem()
 		}
 		return invokeLetExpr(e.Lhs, v, env)
+
 	case *ast.LetExpr:
 		rv, err := invokeExpr(e.Rhs, env)
 		if err != nil {
@@ -434,6 +424,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			rv = rv.Elem()
 		}
 		return invokeLetExpr(e.Lhs, rv, env)
+
 	case *ast.LetsExpr:
 		var err error
 		rvs := make([]reflect.Value, len(e.Rhss))
@@ -457,6 +448,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 		}
 		return rvs[len(rvs)-1], nil
+
 	case *ast.BinOpExpr:
 		lhsV := NilValue
 		rhsV := NilValue
@@ -556,6 +548,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		default:
 			return NilValue, NewStringError(expr, "Unknown operator")
 		}
+
 	case *ast.ConstExpr:
 		switch e.Value {
 		case "true":
@@ -564,166 +557,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return FalseValue, nil
 		}
 		return NilValue, nil
-	case *ast.AnonCallExpr:
-		f, err := invokeExpr(e.Expr, env)
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		if f.Kind() == reflect.Interface {
-			f = f.Elem()
-		}
-		if f.Kind() != reflect.Func {
-			return NilValue, NewStringError(expr, "cannot call type "+f.Type().String())
-		}
-		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
-	case *ast.CallExpr:
-		var err error
-		f := NilValue
 
-		if e.Func != nil {
-			f = e.Func.(reflect.Value)
-		} else {
-			f, err = env.get(e.Name)
-			if err != nil {
-				return NilValue, err
-			}
-		}
-		if f.Kind() != reflect.Func {
-			return NilValue, NewStringError(expr, "cannot call type "+f.Type().String())
-		}
-		_, isReflect := f.Interface().(Func)
-
-		var arg reflect.Value
-		args := []reflect.Value{}
-		l := len(e.SubExprs)
-		for i, expr := range e.SubExprs {
-
-			arg, err = invokeExpr(expr, env)
-			if err != nil {
-				return NilValue, NewError(expr, err)
-			}
-
-			if i < f.Type().NumIn() {
-				if !f.Type().IsVariadic() {
-					iType := f.Type().In(i)
-					if arg.Kind() == reflect.Interface && !arg.IsNil() {
-						arg = arg.Elem()
-					}
-					if arg.Type() == UnsafePointerType {
-						arg = reflect.New(iType).Elem()
-					}
-					if !arg.IsValid() {
-						arg = reflect.Zero(iType)
-					} else if arg.Kind() == reflect.Func {
-						if _, isFunc := arg.Interface().(Func); isFunc {
-							rfunc := arg
-							arg = reflect.MakeFunc(iType, func(args []reflect.Value) []reflect.Value {
-								for i := range args {
-									args[i] = reflect.ValueOf(args[i])
-								}
-								if e.Go {
-									go func() {
-										rfunc.Call(args)
-									}()
-									return []reflect.Value{}
-								}
-								var rets []reflect.Value
-								for _, v := range rfunc.Call(args)[:iType.NumOut()] {
-									rets = append(rets, v.Interface().(reflect.Value))
-								}
-								return rets
-							})
-						}
-					} else if iType != InterfaceType && arg.Type() != iType {
-						if arg.Type().ConvertibleTo(iType) {
-							arg = arg.Convert(iType)
-						} else {
-							return NilValue, NewStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
-						}
-					}
-				}
-			}
-
-			if !arg.IsValid() {
-				arg = NilValue
-			}
-
-			if isReflect {
-				if arg.Kind() == reflect.Interface && !arg.IsNil() {
-					arg = arg.Elem()
-				}
-				if e.VarArg && i == l-1 {
-					for j := 0; j < arg.Len(); j++ {
-						args = append(args, reflect.ValueOf(arg.Index(j).Elem()))
-					}
-				} else {
-					args = append(args, reflect.ValueOf(arg))
-				}
-			} else {
-				if e.VarArg && i == l-1 {
-					for j := 0; j < arg.Len(); j++ {
-						args = append(args, arg.Index(j).Elem())
-					}
-				} else {
-					args = append(args, arg)
-				}
-			}
-
-		}
-
-		ret := NilValue
-		fnc := func() {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			if f.Kind() == reflect.Interface {
-				f = f.Elem()
-			}
-			rets := f.Call(args)
-			if isReflect {
-				ev := rets[1].Interface()
-				if ev != nil {
-					err = ev.(error)
-				}
-				ret = rets[0].Interface().(reflect.Value)
-			} else {
-				for i, expr := range e.SubExprs {
-					if ae, ok := expr.(*ast.AddrExpr); ok {
-						if id, ok := ae.Expr.(*ast.IdentExpr); ok {
-							invokeLetExpr(id, args[i].Elem().Elem(), env)
-						}
-					}
-				}
-				if f.Type().NumOut() == 0 {
-				} else if f.Type().NumOut() == 1 {
-					ret = rets[0]
-				} else {
-					var result []interface{}
-					for _, r := range rets {
-						result = append(result, r.Interface())
-					}
-					ret = reflect.ValueOf(result)
-				}
-			}
-		}
-
-		if e.Go {
-			go fnc()
-			return NilValue, nil
-		}
-		fnc()
-		if err != nil {
-			return NilValue, NewError(expr, err)
-		}
-		return ret, nil
 	case *ast.TernaryOpExpr:
 		rv, err := invokeExpr(e.Expr, env)
 		if err != nil {
@@ -881,6 +715,15 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		return NilValue, NewStringError(expr, "Invalid operation for chan")
+
+	case *ast.FuncExpr:
+		return FuncExpr(e, env)
+
+	case *ast.AnonCallExpr:
+		return AnonCallExpr(e, env)
+
+	case *ast.CallExpr:
+		return CallExpr(e, env)
 
 	default:
 		return NilValue, NewStringError(expr, "Unknown expression")

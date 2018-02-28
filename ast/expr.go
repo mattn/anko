@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"reflect"
+)
+
 // Expr provides all of interfaces for expression.
 type Expr interface {
 	Pos
@@ -94,7 +98,7 @@ type TernaryOpExpr struct {
 // CallExpr provide calling expression.
 type CallExpr struct {
 	ExprImpl
-	Func     interface{}
+	Func     reflect.Value
 	Name     string
 	SubExprs []Expr
 	VarArg   bool
