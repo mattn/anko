@@ -285,6 +285,7 @@ func (e *Env) DefineGlobal(k string, v interface{}) error {
 	return e.Define(k, v)
 }
 
+// defineGlobalValue defines symbol in global scope.
 func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
 	for e.parent != nil {
 		e = e.parent
@@ -300,6 +301,7 @@ func (e *Env) Define(k string, v interface{}) error {
 	return e.defineValue(k, reflect.ValueOf(v))
 }
 
+// defineValue defines symbol in current scope.
 func (e *Env) defineValue(k string, v reflect.Value) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
@@ -312,7 +314,7 @@ func (e *Env) defineValue(k string, v reflect.Value) error {
 	return nil
 }
 
-// DefineGlobalType defines type which specifis symbol in global scope.
+// DefineGlobalType defines type in global scope.
 func (e *Env) DefineGlobalType(k string, t interface{}) error {
 	for e.parent != nil {
 		e = e.parent
@@ -320,7 +322,7 @@ func (e *Env) DefineGlobalType(k string, t interface{}) error {
 	return e.DefineType(k, t)
 }
 
-// DefineGlobalReflectType defines type which specifis symbol in global scope.
+// DefineGlobalReflectType defines type in global scope.
 func (e *Env) DefineGlobalReflectType(k string, t reflect.Type) error {
 	for e.parent != nil {
 		e = e.parent
@@ -328,7 +330,7 @@ func (e *Env) DefineGlobalReflectType(k string, t reflect.Type) error {
 	return e.DefineReflectType(k, t)
 }
 
-// DefineType defines type which specifis symbol in local scope.
+// DefineType defines type in current scope.
 func (e *Env) DefineType(k string, t interface{}) error {
 	var typ reflect.Type
 	if t == nil {
@@ -344,7 +346,7 @@ func (e *Env) DefineType(k string, t interface{}) error {
 	return e.DefineReflectType(k, typ)
 }
 
-// DefineReflectType defines type which specifis symbol in local scope.
+// DefineReflectType defines type in current scope.
 func (e *Env) DefineReflectType(k string, t reflect.Type) error {
 	if strings.Contains(k, ".") {
 		return fmt.Errorf("Unknown symbol '%s'", k)
@@ -368,6 +370,8 @@ func (e *Env) String() string {
 // Dump show symbol values in the scope.
 func (e *Env) Dump() {
 	e.RLock()
+	fmt.Printf("Name: %v\n", e.name)
+	fmt.Printf("Has parent: %v\n", e.parent != nil)
 	for k, v := range e.env {
 		fmt.Printf("%v = %#v\n", k, v)
 	}

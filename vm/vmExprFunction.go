@@ -9,13 +9,13 @@ import (
 	"github.com/mattn/anko/ast"
 )
 
-func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
+func funcExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 	f := reflect.ValueOf(
 		func(e *ast.FuncExpr, env *Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
 				if !e.VarArg {
 					if len(e.Params) != len(args) {
-						return nilValue, newStringError(e, fmt.Sprintf("expected %v function arguments but received %v", len(e.Params), len(args)))
+						return nilValue, newStringError(e, fmt.Sprintf("function wants %v arguments but received %v", len(e.Params), len(args)))
 					}
 				}
 				newenv := env.NewEnv()
@@ -38,7 +38,7 @@ func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 	return f, nil
 }
 
-func AnonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
+func anonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 	f, err := invokeExpr(e.Expr, env)
 	if err != nil {
 		return nilValue, newError(e, err)
@@ -52,7 +52,7 @@ func AnonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 	return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
 }
 
-func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
+func callExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 	var err error
 	f := e.Func
 

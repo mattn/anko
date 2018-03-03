@@ -24,11 +24,11 @@ type (
 )
 
 var (
-	nilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	nilType           = reflect.TypeOf(nil)
 	stringType        = reflect.TypeOf("a")
 	unsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
 	interfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+    nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	trueValue         = reflect.ValueOf(true)
 	falseValue        = reflect.ValueOf(false)
 	zeroValue         = reflect.Value{}
@@ -327,12 +327,11 @@ func getEnvFromString(env *Env, name string) (*Env, string, error) {
 }
 
 func makeValue(t reflect.Type) (reflect.Value, error) {
-	// fmt.Println(t.Kind())
 	switch t.Kind() {
 	case reflect.Chan:
 		return reflect.MakeChan(t, 0), nil
 	case reflect.Func:
-		return nilValue, fmt.Errorf("Func not yet implemented")
+		return reflect.MakeFunc(t, nil), nil
 	case reflect.Map:
 		// note creating slice as work around to create map
 		// just doing MakeMap can give incorrect type for defined types

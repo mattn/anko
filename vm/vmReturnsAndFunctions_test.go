@@ -29,7 +29,6 @@ func TestReturns(t *testing.T) {
 		{script: "b()", input: map[string]interface{}{"b": func() float64 { return float64(1.1) }}, runOutput: float64(1.1)},
 		{script: "b()", input: map[string]interface{}{"b": func() string { return "a" }}, runOutput: "a"},
 
-		{script: "b(a)", input: map[string]interface{}{"a": reflect.Value{}, "b": func(c reflect.Value) reflect.Value { return c }}, runOutput: reflect.Value{}, output: map[string]interface{}{"a": reflect.Value{}}},
 		{script: "b(a)", input: map[string]interface{}{"a": nil, "b": func(c interface{}) interface{} { return c }}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 		{script: "b(a)", input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c }}, runOutput: true, output: map[string]interface{}{"a": true}},
 		{script: "b(a)", input: map[string]interface{}{"a": int32(1), "b": func(c int32) int32 { return c }}, runOutput: int32(1), output: map[string]interface{}{"a": int32(1)}},
@@ -44,6 +43,13 @@ func TestReturns(t *testing.T) {
 		{script: "b(a)", input: map[string]interface{}{"a": float64(1.25), "b": func(c float32) float32 { return c }}, runOutput: float32(1.25), output: map[string]interface{}{"a": float64(1.25)}},
 		{script: "b(a)", input: map[string]interface{}{"a": float32(1.25), "b": func(c float64) float64 { return c }}, runOutput: float64(1.25), output: map[string]interface{}{"a": float32(1.25)}},
 		{script: "b(a)", input: map[string]interface{}{"a": true, "b": func(c string) string { return c }}, runError: fmt.Errorf("argument type bool cannot be used for function argument type string"), output: map[string]interface{}{"a": true}},
+
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueBool, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueBool, output: map[string]interface{}{"a": testVarValueBool}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueInt32, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueInt32, output: map[string]interface{}{"a": testVarValueInt32}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueInt64, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueInt64, output: map[string]interface{}{"a": testVarValueInt64}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueFloat32, output: map[string]interface{}{"a": testVarValueFloat32}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueFloat64, output: map[string]interface{}{"a": testVarValueFloat64}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueString, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueString, output: map[string]interface{}{"a": testVarValueString}},
 
 		{script: "func aFunc() {}; aFunc()", runOutput: nil},
 		{script: "func aFunc() {return}; aFunc()", runOutput: nil},
@@ -154,15 +160,25 @@ func TestReturns(t *testing.T) {
 func TestFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "a()", input: map[string]interface{}{"a": reflect.Value{}}, runError: fmt.Errorf("cannot call type reflect.Value")},
 		{script: "a = nil; a()", runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
 		{script: "a = true; a()", runError: fmt.Errorf("cannot call type bool"), output: map[string]interface{}{"a": true}},
 		{script: "a = nil; b = func c(d) { return d == nil }; c = nil; c(a)", runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
+		{script: "a = [true]; a()", runError: fmt.Errorf("cannot call type []interface {}")},
 		{script: "a = [true]; func b(c) { return c() }; b(a)", runError: fmt.Errorf("cannot call type []interface {}")},
+		// {script: "a = {}; a.missing()", runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": map[string]interface{}{}}},
+
+		{script: "func a(b) { }; a()", runError: fmt.Errorf("function wants 1 arguments but received 0")},
+		{script: "func a(b) { }; a(true, true)", runError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{script: "func a(b, c) { }; a()", runError: fmt.Errorf("function wants 2 arguments but received 0")},
+		{script: "func a(b, c) { }; a(true)", runError: fmt.Errorf("function wants 2 arguments but received 1")},
+		{script: "func a(b, c) { }; a(true, true, true)", runError: fmt.Errorf("function wants 2 arguments but received 3")},
+
+		{script: "func a() { return \"a\" }; a.b()", runError: fmt.Errorf("type func does not support member operation")},
 		{script: "a = [func () { return nil}]; func b(c) { return c() }; b(a[1])", runError: fmt.Errorf("index out of range")},
-		{script: "a = nil; func b(c) { }; b()", runError: fmt.Errorf("expected 1 function arguments but received 0"), output: map[string]interface{}{"a": nil}},
-		{script: "a = nil; func b(c) { }; b(a, a)", runError: fmt.Errorf("expected 1 function arguments but received 2"), output: map[string]interface{}{"a": nil}},
-		// TOFIX: Causes panic
-		// {script: "a = {}; a.missing()", runError: fmt.Errorf("expected 1 function arguments but received 2"), output: map[string]interface{}{"a": nil}},
+		{script: "func a() { return \"a\" }; b()", runError: fmt.Errorf("Undefined symbol 'b'")},
+		{script: " func a() { return \"a\" }; 1++()", runError: fmt.Errorf("Invalid operation")},
+		{script: " func a(b) { return b }; a(1++)", runError: fmt.Errorf("Invalid operation")},
 
 		{script: "a", input: map[string]interface{}{"a": testVarFunc}, runOutput: testVarFunc, output: map[string]interface{}{"a": testVarFunc}},
 		{script: "a()", input: map[string]interface{}{"a": testVarFunc}, runOutput: int64(1), output: map[string]interface{}{"a": testVarFunc}},
@@ -190,7 +206,6 @@ func TestFunctions(t *testing.T) {
 		{script: "b(a); a", input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2) }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: "func b() { }; go b()", runOutput: nil},
 
-		{script: "b(a)", input: map[string]interface{}{"a": reflect.Value{}, "b": func(c reflect.Value) bool { return c == reflect.Value{} }}, runOutput: true, output: map[string]interface{}{"a": reflect.Value{}}},
 		{script: "b(a)", input: map[string]interface{}{"a": nil, "b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": nil}},
 		{script: "b(a)", input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": true}},
 		{script: "b(a)", input: map[string]interface{}{"a": int32(1), "b": func(c int32) bool { return c == 1 }}, runOutput: true, output: map[string]interface{}{"a": int32(1)}},
@@ -198,6 +213,13 @@ func TestFunctions(t *testing.T) {
 		{script: "b(a)", input: map[string]interface{}{"a": float32(1.1), "b": func(c float32) bool { return c == 1.1 }}, runOutput: true, output: map[string]interface{}{"a": float32(1.1)}},
 		{script: "b(a)", input: map[string]interface{}{"a": float64(1.1), "b": func(c float64) bool { return c == 1.1 }}, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
 		{script: "b(a)", input: map[string]interface{}{"a": "a", "b": func(c string) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": "a"}},
+
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueBool, "b": func(c reflect.Value) bool { return c == testVarValueBool }}, runOutput: true, output: map[string]interface{}{"a": testVarValueBool}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueInt32, "b": func(c reflect.Value) bool { return c == testVarValueInt32 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueInt32}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueInt64, "b": func(c reflect.Value) bool { return c == testVarValueInt64 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueInt64}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c reflect.Value) bool { return c == testVarValueFloat32 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueFloat32}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c reflect.Value) bool { return c == testVarValueFloat64 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueFloat64}},
+		{script: "b(a)", input: map[string]interface{}{"a": testVarValueString, "b": func(c reflect.Value) bool { return c == testVarValueString }}, runOutput: true, output: map[string]interface{}{"a": testVarValueString}},
 
 		{script: "x(a, b, c, d, e, f, g)", input: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g",
 			"x": func(a interface{}, b bool, c int32, d int64, e float32, f float64, g string) bool {
@@ -307,6 +329,36 @@ func TestFunctions(t *testing.T) {
 		{script: "a = {\"b\": 1}; func c(d) { return d.b }; c(a)", runOutput: int64(1)},
 		{script: "a = {\"b\": 1.1}; func c(d) { return d.b }; c(a)", runOutput: float64(1.1)},
 		{script: "a = {\"b\": \"a\"}; func c(d) { return d.b }; c(a)", runOutput: "a"},
+
+		{script: "a = func() { return func(c) { return c + \"c\"} }; a()(\"a\")", runOutput: "ac"},
+		{script: "a = func() { return func(c) { return c + \"c\"} }(); a(\"a\")", runOutput: "ac"},
+		{script: "a = func() { return func(c) { return c + \"c\"} }()(\"a\")", runOutput: "ac"},
+		{script: "func() { return func(c) { return c + \"c\"} }()(\"a\")", runOutput: "ac"},
+
+		{script: "a = func(b) { return func() { return b + \"c\"} }; b = a(\"a\"); b()", runOutput: "ac"},
+		{script: "a = func(b) { return func() { return b + \"c\"} }(\"a\"); a()", runOutput: "ac"},
+		{script: "a = func(b) { return func() { return b + \"c\"} }(\"a\")()", runOutput: "ac"},
+		{script: "func(b) { return func() { return b + \"c\"} }(\"a\")()", runOutput: "ac"},
+
+		{script: "a = func(b) { return func(c) { return b[c] } }; b = a({\"x\": \"x\"}); b(\"x\")", runOutput: "x"},
+		{script: "a = func(b) { return func(c) { return b[c] } }({\"x\": \"x\"}); a(\"x\")", runOutput: "x"},
+		{script: "a = func(b) { return func(c) { return b[c] } }({\"x\": \"x\"})(\"x\")", runOutput: "x"},
+		{script: "func(b) { return func(c) { return b[c] } }({\"x\": \"x\"})(\"x\")", runOutput: "x"},
+
+		{script: "a = func(b) { return func(c) { return b[c] } }; x = {\"y\": \"y\"}; b = a(x); x = {\"y\": \"y\"}; b(\"y\")", runOutput: "y"},
+		{script: "a = func(b) { return func(c) { return b[c] } }; x = {\"y\": \"y\"}; b = a(x); x.y = \"z\"; b(\"y\")", runOutput: "z"},
+
+		{script: " func a() { return \"a\" }; a()", runOutput: "a"},
+		{script: "a = func a() { return \"a\" }; a = func() { return \"b\" }; a()", runOutput: "b"},
+		{script: "a = \"a.b\"; func a() { return \"a\" }; a()", runOutput: "a"},
+
+		{script: "a = func() { b = \"b\"; return func() { b += \"c\" } }(); a()", runOutput: "bc"},
+		{script: "a = func() { b = \"b\"; return func() { b += \"c\"; return b} }(); a()", runOutput: "bc"},
+		{script: "a = func(b) { return func(c) { return func(d) { return d + \"d\" }(c) + \"c\" }(b) + \"b\" }(\"a\")", runOutput: "adcb"},
+		{script: "a = func(b) { return \"b\" + func(c) { return \"c\" + func(d) { return \"d\" + d  }(c) }(b) }(\"a\")", runOutput: "bcda"},
+		{script: "a = func(b) { return b + \"b\" }; a( func(c) { return c + \"c\" }(\"a\") )", runOutput: "acb"},
+
+		{script: "a = func(x, y) { return func() { x(y) } }; b = a(func (z) { return z + \"z\" }, \"b\"); b()", runOutput: "bz"},
 	}
 	runTests(t, tests)
 }

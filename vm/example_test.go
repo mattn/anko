@@ -52,6 +52,7 @@ println("this line should not be printed")
 
 func ExampleEnv_Dump() {
 	env := vm.NewEnv()
+	env.SetName("myName")
 
 	err := env.Define("a", "a")
 	if err != nil {
@@ -65,5 +66,8 @@ func ExampleEnv_Dump() {
 
 	env.Dump()
 
-	// output: a = "a"
+	// output:
+	// Name: myName
+	// Has parent: false
+	// a = "a"
 }
