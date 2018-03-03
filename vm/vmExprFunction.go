@@ -14,15 +14,15 @@ func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 		func(e *ast.FuncExpr, env *Env) Func {
 			return func(args ...reflect.Value) (reflect.Value, error) {
 				if !e.VarArg {
-					if len(e.Args) != len(args) {
-						return NilValue, NewStringError(e, fmt.Sprintf("expected %v function arguments but received %v", len(e.Args), len(args)))
+					if len(e.Params) != len(args) {
+						return nilValue, NewStringError(e, fmt.Sprintf("expected %v function arguments but received %v", len(e.Params), len(args)))
 					}
 				}
 				newenv := env.NewEnv()
 				if e.VarArg {
-					newenv.defineValue(e.Args[0], reflect.ValueOf(args))
+					newenv.defineValue(e.Params[0], reflect.ValueOf(args))
 				} else {
-					for i, arg := range e.Args {
+					for i, arg := range e.Params {
 						newenv.defineValue(arg, args[i])
 					}
 				}
@@ -41,13 +41,13 @@ func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 func AnonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 	f, err := invokeExpr(e.Expr, env)
 	if err != nil {
-		return NilValue, NewError(e, err)
+		return nilValue, NewError(e, err)
 	}
 	if f.Kind() == reflect.Interface {
 		f = f.Elem()
 	}
 	if f.Kind() != reflect.Func {
-		return NilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
 	}
 	return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
 }
@@ -59,19 +59,19 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 	if !f.IsValid() {
 		f, err = env.get(e.Name)
 		if err != nil {
-			return NilValue, err
+			return nilValue, err
 		}
 	}
 
 	if !f.IsValid() {
-		return NilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
 	}
 	if f.Kind() == reflect.Interface && !f.IsNil() {
 		f = f.Elem()
 	}
 
 	if f.Kind() != reflect.Func {
-		return NilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
 	}
 
 	_, isReflect := f.Interface().(Func)
@@ -83,7 +83,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 
 		arg, err = invokeExpr(expr, env)
 		if err != nil {
-			return NilValue, NewError(expr, err)
+			return nilValue, NewError(expr, err)
 		}
 
 		if i < f.Type().NumIn() {
@@ -92,7 +92,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 				if arg.Kind() == reflect.Interface && !arg.IsNil() {
 					arg = arg.Elem()
 				}
-				if arg.Type() == UnsafePointerType {
+				if arg.Type() == unsafePointerType {
 					arg = reflect.New(iType).Elem()
 				}
 				if !arg.IsValid() {
@@ -117,18 +117,18 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 							return rets
 						})
 					}
-				} else if iType != InterfaceType && arg.Type() != iType {
+				} else if iType != interfaceType && arg.Type() != iType {
 					if arg.Type().ConvertibleTo(iType) {
 						arg = arg.Convert(iType)
 					} else {
-						return NilValue, NewStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
+						return nilValue, NewStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
 					}
 				}
 			}
 		}
 
 		if !arg.IsValid() {
-			arg = NilValue
+			arg = nilValue
 		}
 
 		if isReflect {
@@ -154,7 +154,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 
 	}
 
-	ret := NilValue
+	ret := nilValue
 	fnc := func() {
 		defer func() {
 			if os.Getenv("ANKO_DEBUG") == "" {
@@ -200,11 +200,11 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 
 	if e.Go {
 		go fnc()
-		return NilValue, nil
+		return nilValue, nil
 	}
 	fnc()
 	if err != nil {
-		return NilValue, NewError(e, err)
+		return nilValue, NewError(e, err)
 	}
 	return ret, nil
 }

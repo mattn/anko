@@ -1659,28 +1659,28 @@ yydefault:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		//line parser.go.y:411
 		{
-			yyVAL.expr = &ast.FuncExpr{Args: yyDollar[3].expr_idents, Stmts: yyDollar[6].compstmt}
+			yyVAL.expr = &ast.FuncExpr{Params: yyDollar[3].expr_idents, Stmts: yyDollar[6].compstmt}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 69:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		//line parser.go.y:416
 		{
-			yyVAL.expr = &ast.FuncExpr{Args: yyDollar[3].expr_idents, Stmts: yyDollar[7].compstmt, VarArg: true}
+			yyVAL.expr = &ast.FuncExpr{Params: yyDollar[3].expr_idents, Stmts: yyDollar[7].compstmt, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 70:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		//line parser.go.y:421
 		{
-			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Args: yyDollar[4].expr_idents, Stmts: yyDollar[7].compstmt}
+			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Params: yyDollar[4].expr_idents, Stmts: yyDollar[7].compstmt}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 71:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		//line parser.go.y:426
 		{
-			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Args: yyDollar[4].expr_idents, Stmts: yyDollar[8].compstmt, VarArg: true}
+			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Params: yyDollar[4].expr_idents, Stmts: yyDollar[8].compstmt, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 72:

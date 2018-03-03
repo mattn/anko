@@ -141,7 +141,7 @@ type FuncExpr struct {
 	ExprImpl
 	Name   string
 	Stmts  []Stmt
-	Args   []string
+	Params  []string
 	VarArg bool
 }
 

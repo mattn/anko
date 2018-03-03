@@ -409,22 +409,22 @@ expr :
 	}
 	| FUNC '(' expr_idents ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Args: $3, Stmts: $6}
+		$$ = &ast.FuncExpr{Params: $3, Stmts: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Args: $3, Stmts: $7, VarArg: true}
+		$$ = &ast.FuncExpr{Params: $3, Stmts: $7, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC IDENT '(' expr_idents ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Name: $2.Lit, Args: $4, Stmts: $7}
+		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $7}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC IDENT '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Name: $2.Lit, Args: $4, Stmts: $8, VarArg: true}
+		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
 	| '[' opt_terms exprs opt_terms ']'

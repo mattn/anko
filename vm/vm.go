@@ -24,14 +24,14 @@ type (
 )
 
 var (
-	NilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	NilType           = reflect.TypeOf(nil)
-	StringType        = reflect.TypeOf("a")
-	UnsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
-	InterfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-	TrueValue         = reflect.ValueOf(true)
-	FalseValue        = reflect.ValueOf(false)
-	ZeroValue         = reflect.Value{}
+	nilValue          = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	nilType           = reflect.TypeOf(nil)
+	stringType        = reflect.TypeOf("a")
+	unsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
+	interfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	trueValue         = reflect.ValueOf(true)
+	falseValue        = reflect.ValueOf(false)
+	zeroValue         = reflect.Value{}
 
 	BreakError     = errors.New("Unexpected break statement")
 	ContinueError  = errors.New("Unexpected continue statement")
@@ -83,7 +83,7 @@ func (f Func) String() string {
 // This includes all parent & child environments.
 // Note that the execution is not instantly aborted: after a call to Interrupt,
 // the current running statement will finish, but the next statement will not run,
-// and instead will return a NilValue and an InterruptError.
+// and instead will return a nilValue and an InterruptError.
 func Interrupt(env *Env) {
 	env.Lock()
 	*(env.interrupt) = true
@@ -201,31 +201,31 @@ func equal(lhsV, rhsV reflect.Value) bool {
 
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	if !aMap.IsValid() || aMap.IsNil() {
-		return NilValue
+		return nilValue
 	}
 
 	keyType := key.Type()
-	if keyType == InterfaceType && aMap.Type().Key() != InterfaceType {
+	if keyType == interfaceType && aMap.Type().Key() != interfaceType {
 		if key.Elem().IsValid() && !key.Elem().IsNil() {
 			keyType = key.Elem().Type()
 		}
 	}
 	if keyType != aMap.Type().Key() {
-		return NilValue
+		return nilValue
 	}
 
 	// From reflect MapIndex:
 	// It returns the zero Value if key is not found in the map or if v represents a nil map.
 	value := aMap.MapIndex(key)
 
-	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == InterfaceType && !value.IsNil() {
+	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == interfaceType && !value.IsNil() {
 		value = reflect.ValueOf(value.Interface())
 	}
 
 	// Note if the map is of reflect.Value, it will incorectly return nil when zero value
 	// Unware of any other way for this to be done to correct that
-	if value == ZeroValue {
-		return NilValue
+	if value == zeroValue {
+		return nilValue
 	}
 
 	return value
@@ -249,14 +249,14 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 	leftHasSubArray := lhsT.Kind() == reflect.Slice || lhsT.Kind() == reflect.Array
 	rightHasSubArray := rhsT.Kind() == reflect.Slice || rhsT.Kind() == reflect.Array
 
-	if leftHasSubArray != rightHasSubArray && lhsT != InterfaceType && rhsT != InterfaceType {
-		return NilValue, NewStringError(expr, "invalid type conversion")
+	if leftHasSubArray != rightHasSubArray && lhsT != interfaceType && rhsT != interfaceType {
+		return nilValue, NewStringError(expr, "invalid type conversion")
 	}
 
 	if !leftHasSubArray && !rightHasSubArray {
 		for i := 0; i < rhsV.Len(); i++ {
 			value := rhsV.Index(i)
-			if rhsT == InterfaceType {
+			if rhsT == interfaceType {
 				value = value.Elem()
 			}
 			if lhsT == value.Type() {
@@ -264,38 +264,38 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 			} else if value.Type().ConvertibleTo(lhsT) {
 				lhsV = reflect.Append(lhsV, value.Convert(lhsT))
 			} else {
-				return NilValue, NewStringError(expr, "invalid type conversion")
+				return nilValue, NewStringError(expr, "invalid type conversion")
 			}
 		}
 		return lhsV, nil
 	}
 
-	if (leftHasSubArray || lhsT == InterfaceType) && (rightHasSubArray || rhsT == InterfaceType) {
+	if (leftHasSubArray || lhsT == interfaceType) && (rightHasSubArray || rhsT == interfaceType) {
 		for i := 0; i < rhsV.Len(); i++ {
 			value := rhsV.Index(i)
-			if rhsT == InterfaceType {
+			if rhsT == interfaceType {
 				value = value.Elem()
 				if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
-					return NilValue, NewStringError(expr, "invalid type conversion")
+					return nilValue, NewStringError(expr, "invalid type conversion")
 				}
 			}
 			newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, value.Len()), value)
 			if err != nil {
-				return NilValue, err
+				return nilValue, err
 			}
 			lhsV = reflect.Append(lhsV, newSlice)
 		}
 		return lhsV, nil
 	}
 
-	return NilValue, NewStringError(expr, "invalid type conversion")
+	return nilValue, NewStringError(expr, "invalid type conversion")
 }
 
 func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, int, error) {
 	dimensions := 0
 	v, err := invokeExpr(nameExpr, env)
 	if err != nil {
-		return NilType, dimensions, err
+		return nilType, dimensions, err
 	}
 	typeString := toString(v)
 	for len(typeString) > 2 && typeString[:2] == "[]" {
@@ -304,11 +304,11 @@ func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, int, error) {
 	}
 	env, typeString, err = getEnvFromString(env, typeString)
 	if err != nil {
-		return NilType, dimensions, err
+		return nilType, dimensions, err
 	}
 	t, err := env.Type(typeString)
 	if err != nil {
-		return NilType, dimensions, err
+		return nilType, dimensions, err
 	}
 	return t, dimensions, nil
 }
@@ -332,7 +332,7 @@ func MakeValue(t reflect.Type) (reflect.Value, error) {
 	case reflect.Chan:
 		return reflect.MakeChan(t, 0), nil
 	case reflect.Func:
-		return NilValue, fmt.Errorf("Func not yet implemented")
+		return nilValue, fmt.Errorf("Func not yet implemented")
 	case reflect.Map:
 		// note creating slice as work around to create map
 		// just doing MakeMap can give incorrect type for defined types
@@ -343,10 +343,10 @@ func MakeValue(t reflect.Type) (reflect.Value, error) {
 		ptrV := reflect.New(t.Elem())
 		v, err := MakeValue(t.Elem())
 		if err != nil {
-			return NilValue, err
+			return nilValue, err
 		}
 		if !ptrV.Elem().CanSet() {
-			return NilValue, fmt.Errorf("type " + t.String() + " cannot be assigned")
+			return nilValue, fmt.Errorf("type " + t.String() + " cannot be assigned")
 		}
 		ptrV.Elem().Set(v)
 		return ptrV, nil
@@ -357,10 +357,10 @@ func MakeValue(t reflect.Type) (reflect.Value, error) {
 		for i := 0; i < structV.NumField(); i++ {
 			v, err := MakeValue(structV.Field(i).Type())
 			if err != nil {
-				return NilValue, err
+				return nilValue, err
 			}
 			if !structV.Field(i).CanSet() {
-				return NilValue, fmt.Errorf("struct member '" + t.Field(i).Name + "' cannot be assigned")
+				return nilValue, fmt.Errorf("struct member '" + t.Field(i).Name + "' cannot be assigned")
 			}
 			structV.Field(i).Set(v)
 		}

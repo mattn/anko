@@ -183,7 +183,7 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 		if v.CanAddr() {
 			return v.Addr(), nil
 		} else {
-			return NilValue, fmt.Errorf("Unaddressable")
+			return nilValue, fmt.Errorf("Unaddressable")
 		}
 	}
 	if e.external != nil {
@@ -192,12 +192,12 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 			if v.CanAddr() {
 				return v.Addr(), nil
 			} else {
-				return NilValue, fmt.Errorf("Unaddressable")
+				return nilValue, fmt.Errorf("Unaddressable")
 			}
 		}
 	}
 	if e.parent == nil {
-		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+		return nilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
 	return e.parent.Addr(k)
 }
@@ -218,7 +218,7 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 		}
 	}
 	if e.parent == nil {
-		return NilType, fmt.Errorf("Undefined type '%s'", k)
+		return nilType, fmt.Errorf("Undefined type '%s'", k)
 	}
 	return e.parent.Type(k)
 }
@@ -247,7 +247,7 @@ func (e *Env) get(k string) (reflect.Value, error) {
 		}
 	}
 	if e.parent == nil {
-		return NilValue, fmt.Errorf("Undefined symbol '%s'", k)
+		return nilValue, fmt.Errorf("Undefined symbol '%s'", k)
 	}
 	return e.parent.get(k)
 }
@@ -256,7 +256,7 @@ func (e *Env) get(k string) (reflect.Value, error) {
 // found or returns error.
 func (e *Env) Set(k string, v interface{}) error {
 	if v == nil {
-		return e.setValue(k, NilValue)
+		return e.setValue(k, nilValue)
 	}
 	return e.setValue(k, reflect.ValueOf(v))
 }
@@ -295,7 +295,7 @@ func (e *Env) defineGlobalValue(k string, v reflect.Value) error {
 // Define defines symbol in current scope.
 func (e *Env) Define(k string, v interface{}) error {
 	if v == nil {
-		return e.defineValue(k, NilValue)
+		return e.defineValue(k, nilValue)
 	}
 	return e.defineValue(k, reflect.ValueOf(v))
 }
@@ -332,7 +332,7 @@ func (e *Env) DefineGlobalReflectType(k string, t reflect.Type) error {
 func (e *Env) DefineType(k string, t interface{}) error {
 	var typ reflect.Type
 	if t == nil {
-		typ = NilType
+		typ = nilType
 	} else {
 		var ok bool
 		typ, ok = t.(reflect.Type)
@@ -378,7 +378,7 @@ func (e *Env) Dump() {
 func (e *Env) Execute(src string) (interface{}, error) {
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
-		return NilValue, err
+		return nilValue, err
 	}
 	return Run(stmts, e)
 }

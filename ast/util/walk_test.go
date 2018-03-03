@@ -92,7 +92,7 @@ func Main() {
 			}
 		case *ast.FuncExpr:
 			if !mainFound && e.Name == `Main` {
-				if len(e.Args) != 0 {
+				if len(e.Params) != 0 {
 					return errors.New("Too many args to main")
 				}
 				mainFound = true

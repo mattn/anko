@@ -915,7 +915,7 @@ func (er *externalResolver) SetValue(name string, value interface{}) error {
 	}
 
 	if value == nil {
-		er.values[name] = NilValue
+		er.values[name] = nilValue
 	} else {
 		er.values[name] = reflect.ValueOf(value)
 	}
@@ -926,7 +926,7 @@ func (er *externalResolver) Get(name string) (reflect.Value, error) {
 	if v, ok := er.values[name]; ok {
 		return v, nil
 	}
-	return NilValue, fmt.Errorf("Undefined symbol '%s'", name)
+	return nilValue, fmt.Errorf("Undefined symbol '%s'", name)
 }
 
 func (er *externalResolver) DefineType(name string, t interface{}) error {
@@ -936,7 +936,7 @@ func (er *externalResolver) DefineType(name string, t interface{}) error {
 
 	var typ reflect.Type
 	if t == nil {
-		typ = NilType
+		typ = nilType
 	} else {
 		var ok bool
 		typ, ok = t.(reflect.Type)
@@ -953,7 +953,7 @@ func (er *externalResolver) Type(name string) (reflect.Type, error) {
 	if v, ok := er.types[name]; ok {
 		return v, nil
 	}
-	return NilType, fmt.Errorf("Undefined symbol '%s'", name)
+	return nilType, fmt.Errorf("Undefined symbol '%s'", name)
 }
 
 func TestExternalResolverValueAndGet(t *testing.T) {
