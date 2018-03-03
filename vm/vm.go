@@ -39,22 +39,22 @@ var (
 	InterruptError = errors.New("Execution interrupted")
 )
 
-// NewStringError makes error interface with message.
-func NewStringError(pos ast.Pos, err string) error {
+// newStringError makes error interface with message.
+func newStringError(pos ast.Pos, err string) error {
 	if pos == nil {
 		return &Error{Message: err, Pos: ast.Position{1, 1}}
 	}
 	return &Error{Message: err, Pos: pos.Position()}
 }
 
-// NewErrorf makes error interface with message.
-func NewErrorf(pos ast.Pos, format string, args ...interface{}) error {
+// newErrorf makes error interface with message.
+func newErrorf(pos ast.Pos, format string, args ...interface{}) error {
 	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.Position()}
 }
 
-// NewError makes error interface with message.
+// newError makes error interface with message.
 // This doesn't overwrite last error.
-func NewError(pos ast.Pos, err error) error {
+func newError(pos ast.Pos, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -250,7 +250,7 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 	rightHasSubArray := rhsT.Kind() == reflect.Slice || rhsT.Kind() == reflect.Array
 
 	if leftHasSubArray != rightHasSubArray && lhsT != interfaceType && rhsT != interfaceType {
-		return nilValue, NewStringError(expr, "invalid type conversion")
+		return nilValue, newStringError(expr, "invalid type conversion")
 	}
 
 	if !leftHasSubArray && !rightHasSubArray {
@@ -264,7 +264,7 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 			} else if value.Type().ConvertibleTo(lhsT) {
 				lhsV = reflect.Append(lhsV, value.Convert(lhsT))
 			} else {
-				return nilValue, NewStringError(expr, "invalid type conversion")
+				return nilValue, newStringError(expr, "invalid type conversion")
 			}
 		}
 		return lhsV, nil
@@ -276,7 +276,7 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 			if rhsT == interfaceType {
 				value = value.Elem()
 				if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
-					return nilValue, NewStringError(expr, "invalid type conversion")
+					return nilValue, newStringError(expr, "invalid type conversion")
 				}
 			}
 			newSlice, err := appendSlice(expr, reflect.MakeSlice(lhsT, 0, value.Len()), value)
@@ -288,7 +288,7 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 		return lhsV, nil
 	}
 
-	return nilValue, NewStringError(expr, "invalid type conversion")
+	return nilValue, newStringError(expr, "invalid type conversion")
 }
 
 func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, int, error) {
@@ -326,7 +326,7 @@ func getEnvFromString(env *Env, name string) (*Env, string, error) {
 	return env, nameSplit[0], nil
 }
 
-func MakeValue(t reflect.Type) (reflect.Value, error) {
+func makeValue(t reflect.Type) (reflect.Value, error) {
 	// fmt.Println(t.Kind())
 	switch t.Kind() {
 	case reflect.Chan:
@@ -341,7 +341,7 @@ func MakeValue(t reflect.Type) (reflect.Value, error) {
 		return value.Index(0), nil
 	case reflect.Ptr:
 		ptrV := reflect.New(t.Elem())
-		v, err := MakeValue(t.Elem())
+		v, err := makeValue(t.Elem())
 		if err != nil {
 			return nilValue, err
 		}
@@ -355,7 +355,7 @@ func MakeValue(t reflect.Type) (reflect.Value, error) {
 	case reflect.Struct:
 		structV := reflect.New(t).Elem()
 		for i := 0; i < structV.NumField(); i++ {
-			v, err := MakeValue(structV.Field(i).Type())
+			v, err := makeValue(structV.Field(i).Type())
 			if err != nil {
 				return nilValue, err
 			}

@@ -12,7 +12,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 	case *ast.IdentExpr:
 		if env.setValue(lhs.Lit, rv) != nil {
 			if strings.Contains(lhs.Lit, ".") {
-				return nilValue, NewErrorf(expr, "Undefined symbol '%s'", lhs.Lit)
+				return nilValue, newErrorf(expr, "Undefined symbol '%s'", lhs.Lit)
 			}
 			env.defineValue(lhs.Lit, rv)
 		}
@@ -20,7 +20,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 	case *ast.MemberExpr:
 		v, err := invokeExpr(lhs.Expr, env)
 		if err != nil {
-			return nilValue, NewError(expr, err)
+			return nilValue, newError(expr, err)
 		}
 
 		if v.Kind() == reflect.Interface {
@@ -30,33 +30,33 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v = v.Index(0)
 		}
 		if !v.IsValid() {
-			return nilValue, NewStringError(expr, "type invalid does not support member operation")
+			return nilValue, newStringError(expr, "type invalid does not support member operation")
 		}
 		if v.Kind() == reflect.Ptr {
 			v = v.Elem()
 		}
 		if !v.IsValid() {
-			return nilValue, NewStringError(expr, "type invalid does not support member operation")
+			return nilValue, newStringError(expr, "type invalid does not support member operation")
 		}
 
 		switch v.Kind() {
 		case reflect.Struct:
 			field, found := v.Type().FieldByName(lhs.Name)
 			if !found {
-				return nilValue, NewStringError(expr, "no member named '"+lhs.Name+"' for struct")
+				return nilValue, newStringError(expr, "no member named '"+lhs.Name+"' for struct")
 			}
 			v = v.FieldByIndex(field.Index)
 			// From reflect CanSet:
 			// A Value can be changed only if it is addressable and was not obtained by the use of unexported struct fields.
 			// Often a struct has to be passed as a pointer to be set
 			if !v.CanSet() {
-				return nilValue, NewStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
+				return nilValue, newStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 			v.Set(rv)
 
 		case reflect.Map:
 			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				return nilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
 			}
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
@@ -66,18 +66,18 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
 
 		default:
-			return nilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support member operation")
+			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support member operation")
 		}
 		return v, nil
 
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
-			return nilValue, NewError(expr, err)
+			return nilValue, newError(expr, err)
 		}
 		i, err := invokeExpr(lhs.Index, env)
 		if err != nil {
-			return nilValue, NewError(expr, err)
+			return nilValue, newError(expr, err)
 		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
@@ -87,7 +87,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		case reflect.Slice, reflect.Array:
 			ii, err := tryToInt(i)
 			if err != nil {
-				return nilValue, NewStringError(expr, "index must be a number")
+				return nilValue, newStringError(expr, "index must be a number")
 			}
 
 			if ii == v.Len() {
@@ -101,7 +101,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 					return invokeLetExpr(lhs.Value, v, env)
 				}
 				if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
-					return nilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
+					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
 				}
 
 				newSlice := reflect.MakeSlice(v.Type().Elem(), 0, rv.Len())
@@ -114,11 +114,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 
 			if ii < 0 || ii >= v.Len() {
-				return nilValue, NewStringError(expr, "index out of range")
+				return nilValue, newStringError(expr, "index out of range")
 			}
 			v = v.Index(ii)
 			if !v.CanSet() {
-				return nilValue, NewStringError(expr, "index cannot be assigned")
+				return nilValue, newStringError(expr, "index cannot be assigned")
 			}
 
 			if v.Type() == rv.Type() {
@@ -131,7 +131,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 
 			if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
-				return nilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for array index")
+				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for array index")
 			}
 
 			newSlice := reflect.MakeSlice(v.Type(), 0, rv.Len())
@@ -149,11 +149,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				}
 			}
 			if keyType != v.Type().Key() {
-				return nilValue, NewStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
+				return nilValue, newStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
 			}
 
 			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				return nilValue, NewStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
 			}
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
@@ -163,15 +163,15 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v.SetMapIndex(i, rv)
 
 		case reflect.String:
-			return nilValue, NewStringError(expr, "type string does not support index operation for assignment")
+			return nilValue, newStringError(expr, "type string does not support index operation for assignment")
 		default:
-			return nilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support index operation")
+			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
 		return v, nil
 	case *ast.SliceExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
-			return nilValue, NewError(expr, err)
+			return nilValue, newError(expr, err)
 		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
@@ -182,14 +182,14 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if lhs.Begin != nil {
 				rb, err := invokeExpr(lhs.Begin, env)
 				if err != nil {
-					return nilValue, NewError(expr, err)
+					return nilValue, newError(expr, err)
 				}
 				rbi, err = tryToInt(rb)
 				if err != nil {
-					return nilValue, NewStringError(expr, "index must be a number")
+					return nilValue, newStringError(expr, "index must be a number")
 				}
 				if rbi < 0 || rbi > v.Len() {
-					return nilValue, NewStringError(expr, "index out of range")
+					return nilValue, newStringError(expr, "index out of range")
 				}
 			} else {
 				rbi = 0
@@ -197,32 +197,32 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if lhs.End != nil {
 				re, err := invokeExpr(lhs.End, env)
 				if err != nil {
-					return nilValue, NewError(expr, err)
+					return nilValue, newError(expr, err)
 				}
 				rei, err = tryToInt(re)
 				if err != nil {
-					return nilValue, NewStringError(expr, "index must be a number")
+					return nilValue, newStringError(expr, "index must be a number")
 				}
 				if rei < 0 || rei > v.Len() {
-					return nilValue, NewStringError(expr, "index out of range")
+					return nilValue, newStringError(expr, "index out of range")
 				}
 			} else {
 				rei = v.Len()
 			}
 			if rbi > rei {
-				return nilValue, NewStringError(expr, "invalid slice index")
+				return nilValue, newStringError(expr, "invalid slice index")
 			}
 			v = v.Slice(rbi, rei)
 			if !v.CanSet() {
-				return nilValue, NewStringError(expr, "slice cannot be assigned")
+				return nilValue, newStringError(expr, "slice cannot be assigned")
 			}
 			v.Set(rv)
 		case reflect.String:
-			return nilValue, NewStringError(expr, "type string does not support slice operation for assignment")
+			return nilValue, newStringError(expr, "type string does not support slice operation for assignment")
 		default:
-			return nilValue, NewStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
+			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
 		return v, nil
 	}
-	return nilValue, NewStringError(expr, "Invalid operation")
+	return nilValue, newStringError(expr, "Invalid operation")
 }

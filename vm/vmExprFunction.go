@@ -15,7 +15,7 @@ func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 			return func(args ...reflect.Value) (reflect.Value, error) {
 				if !e.VarArg {
 					if len(e.Params) != len(args) {
-						return nilValue, NewStringError(e, fmt.Sprintf("expected %v function arguments but received %v", len(e.Params), len(args)))
+						return nilValue, newStringError(e, fmt.Sprintf("expected %v function arguments but received %v", len(e.Params), len(args)))
 					}
 				}
 				newenv := env.NewEnv()
@@ -41,13 +41,13 @@ func FuncExpr(e *ast.FuncExpr, env *Env) (reflect.Value, error) {
 func AnonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 	f, err := invokeExpr(e.Expr, env)
 	if err != nil {
-		return nilValue, NewError(e, err)
+		return nilValue, newError(e, err)
 	}
 	if f.Kind() == reflect.Interface {
 		f = f.Elem()
 	}
 	if f.Kind() != reflect.Func {
-		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, newStringError(e, "cannot call type "+f.Type().String())
 	}
 	return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
 }
@@ -64,14 +64,14 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 	}
 
 	if !f.IsValid() {
-		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, newStringError(e, "cannot call type "+f.Type().String())
 	}
 	if f.Kind() == reflect.Interface && !f.IsNil() {
 		f = f.Elem()
 	}
 
 	if f.Kind() != reflect.Func {
-		return nilValue, NewStringError(e, "cannot call type "+f.Type().String())
+		return nilValue, newStringError(e, "cannot call type "+f.Type().String())
 	}
 
 	_, isReflect := f.Interface().(Func)
@@ -83,7 +83,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 
 		arg, err = invokeExpr(expr, env)
 		if err != nil {
-			return nilValue, NewError(expr, err)
+			return nilValue, newError(expr, err)
 		}
 
 		if i < f.Type().NumIn() {
@@ -121,7 +121,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 					if arg.Type().ConvertibleTo(iType) {
 						arg = arg.Convert(iType)
 					} else {
-						return nilValue, NewStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
+						return nilValue, newStringError(expr, "argument type "+arg.Type().String()+" cannot be used for function argument type "+iType.String())
 					}
 				}
 			}
@@ -204,7 +204,7 @@ func CallExpr(e *ast.CallExpr, env *Env) (reflect.Value, error) {
 	}
 	fnc()
 	if err != nil {
-		return nilValue, NewError(e, err)
+		return nilValue, newError(e, err)
 	}
 	return ret, nil
 }
