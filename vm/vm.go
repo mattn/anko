@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"unsafe"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/parser"
@@ -18,20 +17,23 @@ type (
 		Message string
 		Pos     ast.Position
 	}
-
-	// Func is function interface to reflect functions internaly.
-	Func func(args ...reflect.Value) (reflect.Value, error)
 )
 
 var (
-	nilType           = reflect.TypeOf(nil)
-	stringType        = reflect.TypeOf("a")
-	unsafePointerType = reflect.TypeOf(unsafe.Pointer(uintptr(1)))
-	interfaceType     = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-    nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
-	trueValue         = reflect.ValueOf(true)
-	falseValue        = reflect.ValueOf(false)
-	zeroValue         = reflect.Value{}
+	nilType               = reflect.TypeOf(nil)
+	stringType            = reflect.TypeOf("a")
+	interfaceType         = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	interfaceSliceType    = reflect.TypeOf([]interface{}{})
+	reflectValueType      = reflect.TypeOf(reflect.Value{})
+	reflectValueSliceType = reflect.TypeOf([]reflect.Value{})
+	errorType             = reflect.ValueOf([]error{nil}).Index(0).Type()
+	vmErrorType           = reflect.TypeOf(&Error{})
+
+	nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	trueValue                 = reflect.ValueOf(true)
+	falseValue                = reflect.ValueOf(false)
+	zeroValue                 = reflect.Value{}
+	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
 	BreakError     = errors.New("Unexpected break statement")
 	ContinueError  = errors.New("Unexpected continue statement")
@@ -73,10 +75,6 @@ func newError(pos ast.Pos, err error) error {
 // Error returns the error message.
 func (e *Error) Error() string {
 	return e.Message
-}
-
-func (f Func) String() string {
-	return fmt.Sprintf("[Func: %p]", f)
 }
 
 // Interrupts the execution of any running statements in the specified environment.
@@ -365,5 +363,5 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 		}
 		return structV, nil
 	}
-	return reflect.Zero(t), nil
+	return reflect.New(t).Elem(), nil
 }

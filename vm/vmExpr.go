@@ -439,7 +439,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				break
 			}
 			v := rvs[i]
-			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
