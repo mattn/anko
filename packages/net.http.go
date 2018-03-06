@@ -20,9 +20,9 @@ func init() {
 		"SetCookie":         http.SetCookie,
 	}
 	PackageTypes["net/http"] = map[string]interface{}{
-		"Client":    http.Client{},
-		"Cookie":    http.Cookie{},
-		"Request":   http.Request{},
-		"Response":  http.Response{},
+		"Client":   http.Client{},
+		"Cookie":   http.Cookie{},
+		"Request":  http.Request{},
+		"Response": http.Response{},
 	}
 }
