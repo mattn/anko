@@ -256,6 +256,72 @@ func TestMakeType(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestLen(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a = \"\"; len(a)", runOutput: int64(0)},
+		{script: "a = \"test\"; len(a)", runOutput: int64(4)},
+		{script: "a = []; len(a)", runOutput: int64(0)},
+		{script: "a = [nil]; len(a)", runOutput: int64(1)},
+		{script: "a = [true]; len(a)", runOutput: int64(1)},
+		{script: "a = [\"test\"]; len(a)", runOutput: int64(1)},
+		{script: "a = [1]; len(a)", runOutput: int64(1)},
+		{script: "a = [1.1]; len(a)", runOutput: int64(1)},
+
+		{script: "a = [[]]; len(a)", runOutput: int64(1)},
+		{script: "a = [[nil]]; len(a)", runOutput: int64(1)},
+		{script: "a = [[true]]; len(a)", runOutput: int64(1)},
+		{script: "a = [[\"test\"]]; len(a)", runOutput: int64(1)},
+		{script: "a = [[1]]; len(a)", runOutput: int64(1)},
+		{script: "a = [[1.1]]; len(a)", runOutput: int64(1)},
+
+		{script: "a = [[]]; len(a[0])", runOutput: int64(0)},
+		{script: "a = [[nil]]; len(a[0])", runOutput: int64(1)},
+		{script: "a = [[true]]; len(a[0])", runOutput: int64(1)},
+		{script: "a = [[\"test\"]]; len(a[0])", runOutput: int64(1)},
+		{script: "a = [[1]]; len(a[0])", runOutput: int64(1)},
+		{script: "a = [[1.1]]; len(a[0])", runOutput: int64(1)},
+
+		{script: "len(a)", input: map[string]interface{}{"a": "a"}, runOutput: int64(1), output: map[string]interface{}{"a": "a"}},
+		{script: "len(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: int64(0), output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: "len(a)", input: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}, runOutput: int64(1), output: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}},
+		{script: "len(a[\"test\"])", input: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}, runOutput: int64(4), output: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}},
+
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{}}, runOutput: int64(0), output: map[string]interface{}{"a": []interface{}{}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{nil}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{true}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{true}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{"test"}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{"test"}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{int32(1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int32(1)}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{int64(1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
+		{script: "len(a)", input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+
+		{script: "len(a[0])", input: map[string]interface{}{"a": []interface{}{"test"}}, runOutput: int64(4), output: map[string]interface{}{"a": []interface{}{"test"}}},
+
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: int64(0), output: map[string]interface{}{"a": [][]interface{}{}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{nil}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{nil}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{int32(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int32(1)}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{float32(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float32(1.1)}}}},
+		{script: "len(a)", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
+
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{nil}}, runOutput: int64(0), output: map[string]interface{}{"a": [][]interface{}{nil}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{int32(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int32(1)}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{float32(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float32(1.1)}}}},
+		{script: "len(a[0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
+
+		{script: "len(a[0][0])", input: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}, runOutput: int64(4), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"test"}}}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:

@@ -13,14 +13,6 @@ import (
 
 // Import defines core language builtins - len, range, println,  etc.
 func Import(env *vm.Env) *vm.Env {
-	env.Define("len", func(v interface{}) int64 {
-		rv := reflect.ValueOf(v)
-		if rv.Kind() == reflect.Interface {
-			rv = rv.Elem()
-		}
-		return int64(rv.Len())
-	})
-
 	env.Define("keys", func(v interface{}) []string {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {

@@ -63,6 +63,7 @@ var opName = map[string]int{
 	"chan":     CHAN,
 	"make":     MAKE,
 	"type":     TYPE,
+	"len":     LEN,
 }
 
 // Init resets code to scan.

@@ -576,6 +576,22 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return rhsV, nil
 
+	case *ast.LenExpr:
+		rv, err := invokeExpr(e.Expr, env)
+		if err != nil {
+			return nilValue, newError(e.Expr, err)
+		}
+
+		if rv.Kind() == reflect.Interface && !rv.IsNil() {
+			rv = rv.Elem()
+		}
+
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array, reflect.Map, reflect.String, reflect.Chan:
+			return reflect.ValueOf(int64(rv.Len())), nil
+		}
+		return nilValue, newStringError(e, "type "+rv.Kind().String()+" does not support len operation")
+
 	case *ast.NewExpr:
 		t, _, err := getTypeFromExpr(env, e.Type)
 		if err != nil {

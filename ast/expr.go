@@ -209,3 +209,9 @@ type MakeTypeExpr struct {
 	Name Expr
 	Type Expr
 }
+
+// LenExpr provide expression to get length of array, map, etc.
+type LenExpr struct {
+	ExprImpl
+	Expr Expr
+}
