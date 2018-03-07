@@ -509,6 +509,10 @@ func TestFunctionConvertions(t *testing.T) {
 		// params Variadic arg !Variadic
 		{script: "a(true)", input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, runOutput: []interface{}{true}},
 		{script: "b = func(c){ return c }; a(\"x\", b)", input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, runOutput: "x"},
+		{script: "b = make(\"struct\"); b.A = func (c, d) { return c == d }; b.A(2, 2)", types: map[string]interface{}{"struct": &struct {
+			A func(int, int) bool
+		}{}},
+			runOutput: true},
 
 		// TODO: add more tests
 	}

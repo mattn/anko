@@ -54,8 +54,16 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 
 			if v.Type() == interfaceType || v.Type() == rv.Type() {
-			v.Set(rv)
+				v.Set(rv)
 				return v, nil
+			}
+
+			if v.Kind() == reflect.Func && rv.Kind() == reflect.Func {
+				rv, err = convertReflectValueToType(rv, v.Type())
+				if err == nil {
+					v.Set(rv)
+					return v, nil
+				}
 			}
 
 			return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for struct")
