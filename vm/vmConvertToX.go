@@ -28,7 +28,7 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 	if !rv.IsValid() {
 		return makeValue(rt)
 	}
-	if rv.Type() == rt || rt == interfaceType {
+	if rt == interfaceType || rv.Type() == rt  {
 		return rv, nil
 	}
 	if rv.Type().ConvertibleTo(rt) {
