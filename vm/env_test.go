@@ -891,7 +891,7 @@ func TestAddPackage(t *testing.T) {
 	// type
 	env = NewEnv()
 	env.AddPackage("test", map[string]interface{}{}, map[string]interface{}{"array2x": [][]interface{}{}})
-	value, err = env.Execute("a = make(\"test.array2x\"); a += [[1]]")
+	value, err = env.Execute("a = make(test.array2x); a += [[1]]")
 	if err != nil {
 		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
 	}

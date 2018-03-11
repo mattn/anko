@@ -21,6 +21,7 @@ import (
 %type<expr_pair> expr_pair
 %type<expr_pairs> expr_pairs
 %type<expr_idents> expr_idents
+%type<expr_type> expr_type
 %type<array_count> array_count
 
 %union{
@@ -38,6 +39,7 @@ import (
 	expr_pair              ast.Expr
 	expr_pairs             []ast.Expr
 	expr_idents            []string
+	expr_type            string
 	tok                    ast.Token
 	term                   ast.Token
 	terms                  ast.Token
@@ -293,6 +295,16 @@ expr_idents :
 	| expr_idents ',' opt_terms IDENT
 	{
 		$$ = append($1, $4.Lit)
+	}
+
+expr_type :
+	IDENT
+	{
+		$$ = $1.Lit
+	}
+	| expr_type '.' IDENT
+	{
+		$$ = $$ + "." + $3.Lit
 	}
 
 expr_lets : expr_many '=' expr_many
@@ -675,39 +687,39 @@ expr :
 		$$ = &ast.LenExpr{Expr: $3}
 		$$.SetPosition($1.Position())
 	}
-	| NEW '(' expr ')'
+	| NEW '(' expr_type ')'
 	{
 		$$ = &ast.NewExpr{Type: $3}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN expr ')'
+	| MAKE '(' CHAN expr_type ')'
 	{
 		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: nil}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN expr ',' expr ')'
+	| MAKE '(' CHAN expr_type ',' expr ')'
 	{
 		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' array_count expr ')'
+	| MAKE '(' array_count expr_type ')'
 	{
 		$$ = &ast.MakeExpr{Dimensions: $3.Count, Type: $4}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' array_count expr ',' expr ')'
+	| MAKE '(' array_count expr_type ',' expr ')'
 	{
 		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' array_count expr ',' expr ',' expr ')'
+	| MAKE '(' array_count expr_type ',' expr ',' expr ')'
 	{
 		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' TYPE expr ',' expr ')'
+	| MAKE '(' TYPE IDENT ',' expr ')'
 	{
-		$$ = &ast.MakeTypeExpr{Name: $4, Type: $6}
+		$$ = &ast.MakeTypeExpr{Name: $4.Lit, Type: $6}
 		$$.SetPosition($1.Position())
 	}
 	| expr OPCHAN expr

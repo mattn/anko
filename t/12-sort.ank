@@ -1,21 +1,21 @@
 sort = import("sort")
 
-a = make([]"int")
-b = make([]"int")
+a = make([]int)
+b = make([]int)
 a += [1, 2, 3]
 b += [3, 1, 2]
 sort.Ints(b)
 is(a, b, "sort.Ints")
 
-a = make([]"float64")
-b = make([]"float64")
+a = make([]float64)
+b = make([]float64)
 a += [1.1, 2.2, 3.3]
 b += [3.3, 1.1, 2.2]
 sort.Float64s(b)
 is(a, b, "sort.Float64s")
 
-a = make([]"string")
-b = make([]"string")
+a = make([]string)
+b = make([]string)
 a += ["a", "b", "c", "d"]
 b += ["b", "d", "a", "c"]
 sort.Strings(b)

@@ -211,16 +211,15 @@ func TestModule(t *testing.T) {
 func TestNew(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "new(1++)", runError: fmt.Errorf("Invalid operation")},
+		{script: "new(foo)", runError: fmt.Errorf("Undefined type 'foo'")},
+		{script: "new(nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for new")},
 
-		{script: "new(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for new")},
-
-		{script: "a = new(\"bool\"); *a", runOutput: false},
-		{script: "a = new(\"int32\"); *a", runOutput: int32(0)},
-		{script: "a = new(\"int64\"); *a", runOutput: int64(0)},
-		{script: "a = new(\"float32\"); *a", runOutput: float32(0)},
-		{script: "a = new(\"float64\"); *a", runOutput: float64(0)},
-		{script: "a = new(\"string\"); *a", runOutput: ""},
+		{script: "a = new(bool); *a", runOutput: false},
+		{script: "a = new(int32); *a", runOutput: int32(0)},
+		{script: "a = new(int64); *a", runOutput: int64(0)},
+		{script: "a = new(float32); *a", runOutput: float32(0)},
+		{script: "a = new(float64); *a", runOutput: float64(0)},
+		{script: "a = new(string); *a", runOutput: ""},
 	}
 	runTests(t, tests)
 }
@@ -228,18 +227,18 @@ func TestNew(t *testing.T) {
 func TestMake(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "make(1++)", runError: fmt.Errorf("Invalid operation")},
-		{script: "make(\"a.b\")", types: map[string]interface{}{"a": true}, runError: fmt.Errorf("no namespace called: a")},
-		{script: "make(\"a.b\")", types: map[string]interface{}{"b": true}, runError: fmt.Errorf("no namespace called: a")},
+		{script: "make(foo)", runError: fmt.Errorf("Undefined type 'foo'")},
+		{script: "make(a.b)", types: map[string]interface{}{"a": true}, runError: fmt.Errorf("no namespace called: a")},
+		{script: "make(a.b)", types: map[string]interface{}{"b": true}, runError: fmt.Errorf("no namespace called: a")},
 
-		{script: "make(\"nilT\")", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
+		{script: "make(nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		{script: "make(\"bool\")", runOutput: false},
-		{script: "make(\"int32\")", runOutput: int32(0)},
-		{script: "make(\"int64\")", runOutput: int64(0)},
-		{script: "make(\"float32\")", runOutput: float32(0)},
-		{script: "make(\"float64\")", runOutput: float64(0)},
-		{script: "make(\"string\")", runOutput: ""},
+		{script: "make(bool)", runOutput: false},
+		{script: "make(int32)", runOutput: int32(0)},
+		{script: "make(int64)", runOutput: int64(0)},
+		{script: "make(float32)", runOutput: float32(0)},
+		{script: "make(float64)", runOutput: float64(0)},
+		{script: "make(string)", runOutput: ""},
 	}
 	runTests(t, tests)
 }
@@ -247,11 +246,13 @@ func TestMake(t *testing.T) {
 func TestMakeType(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "make(type \"a\", true)", runOutput: reflect.TypeOf(true)},
-		{script: "a = make(type \"a\", true)", runOutput: reflect.TypeOf(true), output: map[string]interface{}{"a": reflect.TypeOf(true)}},
-		{script: "make(type \"a\", true); a = make([]\"a\")", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
-		{script: "make(type \"a\", make([]\"bool\"))", runOutput: reflect.TypeOf([]bool{})},
-		{script: "make(type \"a\", make([]\"bool\")); a = make(\"a\")", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
+		{script: "make(type a, 1++)", runError: fmt.Errorf("Invalid operation")},
+
+		{script: "make(type a, true)", runOutput: reflect.TypeOf(true)},
+		{script: "a = make(type a, true)", runOutput: reflect.TypeOf(true), output: map[string]interface{}{"a": reflect.TypeOf(true)}},
+		{script: "make(type a, true); a = make([]a)", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
+		{script: "make(type a, make([]bool))", runOutput: reflect.TypeOf([]bool{})},
+		{script: "make(type a, make([]bool)); a = make(a)", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}}},
 	}
 	runTests(t, tests)
 }
@@ -259,6 +260,9 @@ func TestMakeType(t *testing.T) {
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "len(1++)", runError: fmt.Errorf("Invalid operation")},
+		{script: "len(true)", runError: fmt.Errorf("type bool does not support len operation")},
+
 		{script: "a = \"\"; len(a)", runOutput: int64(0)},
 		{script: "a = \"test\"; len(a)", runOutput: int64(4)},
 		{script: "a = []; len(a)", runOutput: int64(0)},

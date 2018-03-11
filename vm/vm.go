@@ -289,26 +289,16 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 	return nilValue, newStringError(expr, "invalid type conversion")
 }
 
-func getTypeFromExpr(env *Env, nameExpr ast.Expr) (reflect.Type, int, error) {
-	dimensions := 0
-	v, err := invokeExpr(nameExpr, env)
+func getTypeFromString(env *Env, name string) (reflect.Type, error) {
+	env, typeString, err := getEnvFromString(env, name)
 	if err != nil {
-		return nilType, dimensions, err
-	}
-	typeString := toString(v)
-	for len(typeString) > 2 && typeString[:2] == "[]" {
-		dimensions++
-		typeString = typeString[2:]
-	}
-	env, typeString, err = getEnvFromString(env, typeString)
-	if err != nil {
-		return nilType, dimensions, err
+		return nilType, err
 	}
 	t, err := env.Type(typeString)
 	if err != nil {
-		return nilType, dimensions, err
+		return nilType,  err
 	}
-	return t, dimensions, nil
+	return t,  nil
 }
 
 func getEnvFromString(env *Env, name string) (*Env, string, error) {

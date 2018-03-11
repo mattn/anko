@@ -243,7 +243,7 @@ func TestStructs(t *testing.T) {
 func TestMakeStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "make(\"struct\")", types: map[string]interface{}{"struct": &struct {
+		{script: "make(struct)", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -252,7 +252,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}},
 
-		{script: "a = make(\"struct\")", types: map[string]interface{}{"struct": &struct {
+		{script: "a = make(struct)", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -265,7 +265,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}}},
 
-		{script: "a = make(\"struct\"); a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
+		{script: "a = make(struct); a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -275,7 +275,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{script: "a = make(\"struct\"); a = *a; a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
+		{script: "a = make(struct); a = *a; a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -285,12 +285,12 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{script: "a = make(\"struct\"); a.A = func () { return 1 }; a.A()", types: map[string]interface{}{"struct": &struct {
+		{script: "a = make(struct); a.A = func () { return 1 }; a.A()", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
 			runOutput: int64(1)},
-		{script: "a = make(\"struct\"); a.A = func () { return 1 }; a = *a; a.A()", types: map[string]interface{}{"struct": &struct {
+		{script: "a = make(struct); a.A = func () { return 1 }; a = *a; a.A()", types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},

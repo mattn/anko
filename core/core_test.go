@@ -56,7 +56,7 @@ func TestKindOf(t *testing.T) {
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: "kindOf(a)", input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
-		{script: "a = make(\"interface\"); kindOf(a)", runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
+		{script: "a = make(interface); kindOf(a)", runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
 	}
 	runTests(t, tests)
 }

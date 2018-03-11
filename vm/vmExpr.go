@@ -228,6 +228,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Slice {
 			v = v.Index(0)
 		}
+		if !v.IsValid() {
+			return nilValue, newStringError(e, "type invalid does not support member operation")
+		}
 		if v.IsValid() && v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
 				m, err := vme.get(e.Name)
@@ -593,7 +596,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return nilValue, newStringError(e, "type "+rv.Kind().String()+" does not support len operation")
 
 	case *ast.NewExpr:
-		t, _, err := getTypeFromExpr(env, e.Type)
+		t, err := getTypeFromString(env, e.Type)
 		if err != nil {
 			return nilValue, newError(e, err)
 		}
@@ -604,7 +607,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return reflect.New(t), nil
 
 	case *ast.MakeExpr:
-		t, dimensions, err := getTypeFromExpr(env, e.Type)
+		t, err := getTypeFromString(env, e.Type)
 		if err != nil {
 			return nilValue, newError(e, err)
 		}
@@ -612,11 +615,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return nilValue, newErrorf(expr, "type cannot be nil for make")
 		}
 
-		dimensions += e.Dimensions
-		for i := 1; i < dimensions; i++ {
+		for i := 1; i < e.Dimensions; i++ {
 			t = reflect.SliceOf(t)
 		}
-		if dimensions < 1 {
+		if e.Dimensions < 1 {
 			v, err := makeValue(t)
 			if err != nil {
 				return nilValue, newError(e, err)
@@ -647,30 +649,22 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return reflect.MakeSlice(reflect.SliceOf(t), alen, acap), nil
 
 	case *ast.MakeTypeExpr:
-		nameV, err := invokeExpr(e.Name, env)
-		if err != nil {
-			return nilValue, newError(e.Name, err)
-		}
-		var name string
-		env, name, err = getEnvFromString(env, toString(nameV))
+		rv, err := invokeExpr(e.Type, env)
 		if err != nil {
 			return nilValue, newError(e, err)
 		}
-
-		typeV, err := invokeExpr(e.Type, env)
-		if err != nil {
-			return nilValue, newError(e.Type, err)
+		if !rv.IsValid() || rv.Type() == nil {
+			return nilValue, newErrorf(expr, "type cannot be nil for make type")
 		}
 
-		err = env.DefineReflectType(name, typeV.Type())
-		if err != nil {
-			return nilValue, newError(e, err)
-		}
+		// if e.Name has a dot in it, it should give a syntax error
+		// so no needs to check err
+		env.DefineReflectType(e.Name, rv.Type())
 
-		return reflect.ValueOf(typeV.Type()), nil
+		return reflect.ValueOf(rv.Type()), nil
 
 	case *ast.MakeChanExpr:
-		t, _, err := getTypeFromExpr(env, e.Type)
+		t, err := getTypeFromString(env, e.Type)
 		if err != nil {
 			return nilValue, newError(e, err)
 		}

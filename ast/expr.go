@@ -141,7 +141,7 @@ type FuncExpr struct {
 	ExprImpl
 	Name   string
 	Stmts  []Stmt
-	Params  []string
+	Params []string
 	VarArg bool
 }
 
@@ -183,12 +183,12 @@ type ChanExpr struct {
 // NewExpr provide expression to make new instance.
 type NewExpr struct {
 	ExprImpl
-	Type Expr
+	Type string
 }
 
 type MakeChanExpr struct {
 	ExprImpl
-	Type     Expr
+	Type     string
 	SizeExpr Expr
 }
 
@@ -199,14 +199,14 @@ type ArrayCount struct {
 type MakeExpr struct {
 	ExprImpl
 	Dimensions int
-	Type       Expr
+	Type       string
 	LenExpr    Expr
 	CapExpr    Expr
 }
 
 type MakeTypeExpr struct {
 	ExprImpl
-	Name Expr
+	Name string
 	Type Expr
 }
 
