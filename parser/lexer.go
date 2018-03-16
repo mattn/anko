@@ -359,7 +359,7 @@ func (s *Scanner) skipBlank() {
 	}
 }
 
-// scanIdentifier returns identifier begining at current position.
+// scanIdentifier returns identifier beginning at current position.
 func (s *Scanner) scanIdentifier() (string, error) {
 	var ret []rune
 	for {
@@ -372,7 +372,7 @@ func (s *Scanner) scanIdentifier() (string, error) {
 	return string(ret), nil
 }
 
-// scanNumber returns number begining at current position.
+// scanNumber returns number beginning at current position.
 func (s *Scanner) scanNumber() (string, error) {
 	var ret []rune
 	ch := s.peek()
