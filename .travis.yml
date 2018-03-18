@@ -14,7 +14,7 @@ before_install:
 
 script:
     - go build
-    - goverage test -v -coverprofile=coverage.txt -covermode=atomic ./ast/util ./vm ./core ./packages
+    - goverage -v -coverprofile=coverage.txt -covermode=atomic ./ast/util ./vm ./core ./packages
     - ./t/test.sh
     - ./anko ./_example/scripts/term.ank
 
