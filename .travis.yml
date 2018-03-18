@@ -10,11 +10,12 @@ env:
   secure: "fDvhg26qfqZaVKyCc3cXFgh9zzTDvqC9RUTAqkAo/okVgBl2PNaGT+9V3/9chzyRjV42MRSJbhupv8AysnKAVfAmH3HsJnlEm4+eef62wKwkMIgsg1ll1ZFaYZxCR29B/teUix1fI5dNKovIrb5IM3Zm/ePzrMu/4UMEAbcVsPY="
 
 before_install:
+    - go get -u github.com/haya14busa/goverage
     - go get github.com/daviddengcn/go-colortext
 
 script:
     - go build
-    - go test -v  -coverprofile=coverage.txt -covermode=atomic ./ast/util ./vm ./core ./packages
+    - goverage test -v -coverprofile=coverage.txt -covermode=atomic ./ast/util ./vm ./core ./packages
     - ./t/test.sh
     - ./anko ./_example/scripts/term.ank
 
