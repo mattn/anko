@@ -6,7 +6,7 @@ go:
   - tip
 
 env:
-  secure: "fDvhg26qfqZaVKyCc3cXFgh9zzTDvqC9RUTAqkAo/okVgBl2PNaGT+9V3/9chzyRjV42MRSJbhupv8AysnKAVfAmH3HsJnlEm4+eef62wKwkMIgsg1ll1ZFaYZxCR29B/teUix1fI5dNKovIrb5IM3Zm/ePzrMu/4UMEAbcVsPY="
+  secure: "ELC4rD8nn2l5T48WYbTfcbwGGBmNxl7LAu05hgx5AB9/KA+oD3oBKIJkZqD512gJ31Gtyla/hG9QOgU7LikfWdpGuJjVILy01ZqtgP5SSKsrTdlln1D5pK1ZyHJNrEPevb3W5PYn9ahHnjKGtpobXj4/E0sCXfRPH67jv9hffYs="
 
 before_install:
     - go get -u github.com/haya14busa/goverage
