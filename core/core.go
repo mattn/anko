@@ -11,7 +11,7 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
-// Import defines core language builtins - len, range, println,  etc.
+// Import defines core language builtins - keys, range, println,  etc.
 func Import(env *vm.Env) *vm.Env {
 	env.Define("keys", func(v interface{}) []string {
 		rv := reflect.ValueOf(v)
