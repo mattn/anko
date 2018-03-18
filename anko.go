@@ -11,12 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/daviddengcn/go-colortext"
+	"github.com/mattn/anko/core"
+	"github.com/mattn/anko/packages"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
-	"github.com/mattn/go-isatty"
 
-	anko_core "github.com/mattn/anko/builtins"
+	"github.com/daviddengcn/go-colortext"
+	"github.com/mattn/go-isatty"
 )
 
 const version = "0.0.1"
@@ -82,7 +83,9 @@ func main() {
 		os.Args = fs.Args()
 	}
 
-	anko_core.LoadAllBuiltins(env)
+	core.Import(env)
+	AddPackageColortext()
+	packages.DefineImport(env)
 
 	for {
 		if interactive {

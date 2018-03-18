@@ -2,9 +2,12 @@ package vm
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/mattn/anko/parser"
 )
 
 var (
@@ -92,13 +95,6 @@ func TestArrays(t *testing.T) {
 		{script: "a[1]", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runOutput: float64(2.2), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
 		{script: "a[1]", input: map[string]interface{}{"a": []string{"a", "b"}}, runOutput: "b", output: map[string]interface{}{"a": []string{"a", "b"}}},
 
-		{script: "a[2]", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []bool{true, false}}},
-		{script: "a[2]", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int32{1, 2}}},
-		{script: "a[2]", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int64{1, 2}}},
-		{script: "a[2]", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
-		{script: "a[2]", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
-		{script: "a[2]", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []string{"a", "b"}}},
-
 		{script: "a[0]", input: map[string]interface{}{"a": []bool{}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []bool{}}},
 		{script: "a[0]", input: map[string]interface{}{"a": []int32{}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int32{}}},
 		{script: "a[0]", input: map[string]interface{}{"a": []int64{}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int64{}}},
@@ -107,41 +103,11 @@ func TestArrays(t *testing.T) {
 		{script: "a[0]", input: map[string]interface{}{"a": []string{}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []string{}}},
 
 		{script: "a[1] = true", input: map[string]interface{}{"a": []bool{true, false}}, runOutput: true, output: map[string]interface{}{"a": []bool{true, true}}},
-		// TOFIX:
-		//		{script: "a[1] = 3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: int32(3), output: map[string]interface{}{"a": []int32{1, 3}}},
+		{script: "a[1] = 3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int32{1, 3}}},
 		{script: "a[1] = 3", input: map[string]interface{}{"a": []int64{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int64{1, 3}}},
-		// TOFIX:
-		//		{script: "a[1] = 3.3", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runOutput: float32(3.3), output: map[string]interface{}{"a": []float32{1.1, 3.3}}},
+		{script: "a[1] = 3.3", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float32{1.1, 3.3}}},
 		{script: "a[1] = 3.3", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float64{1.1, 3.3}}},
 		{script: "a[1] = \"c\"", input: map[string]interface{}{"a": []string{"a", "b"}}, runOutput: "c", output: map[string]interface{}{"a": []string{"a", "c"}}},
-
-		{script: "a[2] = true", input: map[string]interface{}{"a": []bool{true, false}}, runOutput: true, output: map[string]interface{}{"a": []bool{true, false, true}}},
-		{script: "a[2] = 3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int32{1, 2, 3}}},
-		{script: "a[2] = 3", input: map[string]interface{}{"a": []int64{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int64{1, 2, 3}}},
-		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float32{1.1, 2.2, 3.3}}},
-		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float64{1.1, 2.2, 3.3}}},
-		{script: "a[2] = \"c\"", input: map[string]interface{}{"a": []string{"a", "b"}}, runOutput: "c", output: map[string]interface{}{"a": []string{"a", "b", "c"}}},
-
-		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []int32{1, 2, 3}}},
-		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []int64{1, 2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []int64{1, 2, 3}}},
-
-		{script: "a[3] = true", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []bool{true, false}}},
-		{script: "a[3] = 4", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int32{1, 2}}},
-		{script: "a[3] = 4", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int64{1, 2}}},
-		{script: "a[3] = 4.4", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
-		{script: "a[3] = 4.4", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
-		{script: "a[3] = \"d\"", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []string{"a", "b"}}},
-
-		{script: "a[2] = nil", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("type interface {} cannot be assigned to type bool for array index"), output: map[string]interface{}{"a": []bool{true, false}}},
-		{script: "a[2] = nil", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("type interface {} cannot be assigned to type int32 for array index"), output: map[string]interface{}{"a": []int32{1, 2}}},
-		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("type string cannot be assigned to type int32 for array index"), output: map[string]interface{}{"a": []int32{1, 2}}},
-		{script: "a[2] = true", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("type bool cannot be assigned to type int64 for array index"), output: map[string]interface{}{"a": []int64{1, 2}}},
-		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("type string cannot be assigned to type int64 for array index"), output: map[string]interface{}{"a": []int64{1, 2}}},
-		{script: "a[2] = true", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("type bool cannot be assigned to type float32 for array index"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
-		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("type string cannot be assigned to type float64 for array index"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
-		{script: "a[2] = nil", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type interface {} cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
-		{script: "a[2] = true", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type bool cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
-		{script: "a[2] = 1.1", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type float64 cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
 
 		{script: "a = []; a[0]", runError: fmt.Errorf("index out of range")},
 		{script: "a = []; a[-1]", runError: fmt.Errorf("index out of range")},
@@ -174,20 +140,6 @@ func TestArrays(t *testing.T) {
 		{script: "b = [1, 2]; b[a] = 3", input: map[string]interface{}{"a": float64(1.1)}, runOutput: int64(3), output: map[string]interface{}{"b": []interface{}{int64(1), int64(3)}}},
 		{script: "b = [1, 2]; b[a] = 3", input: map[string]interface{}{"a": "1"}, runOutput: int64(3), output: map[string]interface{}{"b": []interface{}{int64(1), int64(3)}}},
 		{script: "b = [1, 2]; b[a] = 3", input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"b": []interface{}{int64(1), int64(2)}}},
-
-		{script: "a", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": [][]interface{}{}}},
-		{script: "a[0] = []", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{}}}},
-		{script: "a[0] = [nil]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{nil}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
-		{script: "a[0] = [true]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{true}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
-		{script: "a[0] = [1]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
-		{script: "a[0] = [1.1]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
-		{script: "a[0] = [\"b\"]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{"b"}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"b"}}}},
-
-		{script: "a[0] = [nil]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: nil, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
-		{script: "a[0] = [true]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: true, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
-		{script: "a[0] = [1]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
-		{script: "a[0] = [1.1]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: float64(1.1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
-		{script: "a[0] = [\"b\"]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: "b", output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"b"}}}},
 
 		{script: "a", input: map[string]interface{}{"a": testArrayEmpty}, runOutput: testArrayEmpty, output: map[string]interface{}{"a": testArrayEmpty}},
 		{script: "a += []", input: map[string]interface{}{"a": testArrayEmpty}, runOutput: []interface{}(nil), output: map[string]interface{}{"a": testArrayEmpty}},
@@ -222,6 +174,82 @@ func TestArrays(t *testing.T) {
 		{script: "a[4]", input: map[string]interface{}{"a": testArray}, runOutput: "x", output: map[string]interface{}{"a": testArray}},
 		{script: "a[4] = \"a\"", input: map[string]interface{}{"a": testArray}, runOutput: "a", output: map[string]interface{}{"a": testArray}},
 		{script: "a[4]", input: map[string]interface{}{"a": testArray}, runOutput: "a", output: map[string]interface{}{"a": testArray}},
+
+		{script: "a[0][0] = true", input: map[string]interface{}{"a": []interface{}{[]string{"a"}}}, runError: fmt.Errorf("type bool cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []interface{}{[]string{"a"}}}},
+		{script: "a[0][0] = \"a\"", input: map[string]interface{}{"a": []interface{}{[]bool{true}}}, runError: fmt.Errorf("type string cannot be assigned to type bool for array index"), output: map[string]interface{}{"a": []interface{}{[]bool{true}}}},
+
+		{script: "a[0][0] = b[0][0]", input: map[string]interface{}{"a": []interface{}{[]bool{true}}, "b": []interface{}{[]string{"b"}}}, runError: fmt.Errorf("type string cannot be assigned to type bool for array index"), output: map[string]interface{}{"a": []interface{}{[]bool{true}}}},
+		{script: "b[0][0] = a[0][0]", input: map[string]interface{}{"a": []interface{}{[]bool{true}}, "b": []interface{}{[]string{"b"}}}, runError: fmt.Errorf("type bool cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []interface{}{[]bool{true}}}},
+
+		{script: "a = make([][]bool); a[0] =  make([]bool); a[0] = [true, 1]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][]bool{[]bool{}}}},
+		{script: "a = make([][]bool); a[0] =  make([]bool); a[0] = [true, false]", runOutput: []interface{}{true, false}, output: map[string]interface{}{"a": [][]bool{[]bool{true, false}}}},
+
+		{script: "a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, 1]]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][][]bool{[][]bool{[]bool{}}}}},
+		{script: "a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, false]]", runOutput: []interface{}{[]interface{}{true, false}}, output: map[string]interface{}{"a": [][][]bool{[][]bool{[]bool{true, false}}}}},
+	}
+	runTests(t, tests)
+}
+
+func TestArraysAutoAppend(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: "a[2]", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a[2]", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int32{1, 2}}},
+		{script: "a[2]", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int64{1, 2}}},
+		{script: "a[2]", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
+		{script: "a[2]", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
+		{script: "a[2]", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []string{"a", "b"}}},
+
+		{script: "a[2] = true", input: map[string]interface{}{"a": []bool{true, false}}, runOutput: true, output: map[string]interface{}{"a": []bool{true, false, true}}},
+		{script: "a[2] = 3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int32{1, 2, 3}}},
+		{script: "a[2] = 3", input: map[string]interface{}{"a": []int64{1, 2}}, runOutput: int64(3), output: map[string]interface{}{"a": []int64{1, 2, 3}}},
+		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float32{1.1, 2.2, 3.3}}},
+		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []float64{1.1, 2.2, 3.3}}},
+		{script: "a[2] = \"c\"", input: map[string]interface{}{"a": []string{"a", "b"}}, runOutput: "c", output: map[string]interface{}{"a": []string{"a", "b", "c"}}},
+
+		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []int32{1, 2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []int32{1, 2, 3}}},
+		{script: "a[2] = 3.3", input: map[string]interface{}{"a": []int64{1, 2}}, runOutput: float64(3.3), output: map[string]interface{}{"a": []int64{1, 2, 3}}},
+
+		{script: "a[3] = true", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a[3] = 4", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int32{1, 2}}},
+		{script: "a[3] = 4", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []int64{1, 2}}},
+		{script: "a[3] = 4.4", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
+		{script: "a[3] = 4.4", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
+		{script: "a[3] = \"d\"", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []string{"a", "b"}}},
+
+		{script: "a[2] = nil", input: map[string]interface{}{"a": []bool{true, false}}, runError: fmt.Errorf("type interface {} cannot be assigned to type bool for array index"), output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a[2] = nil", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("type interface {} cannot be assigned to type int32 for array index"), output: map[string]interface{}{"a": []int32{1, 2}}},
+		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []int32{1, 2}}, runError: fmt.Errorf("type string cannot be assigned to type int32 for array index"), output: map[string]interface{}{"a": []int32{1, 2}}},
+		{script: "a[2] = true", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("type bool cannot be assigned to type int64 for array index"), output: map[string]interface{}{"a": []int64{1, 2}}},
+		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []int64{1, 2}}, runError: fmt.Errorf("type string cannot be assigned to type int64 for array index"), output: map[string]interface{}{"a": []int64{1, 2}}},
+		{script: "a[2] = true", input: map[string]interface{}{"a": []float32{1.1, 2.2}}, runError: fmt.Errorf("type bool cannot be assigned to type float32 for array index"), output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
+		{script: "a[2] = \"a\"", input: map[string]interface{}{"a": []float64{1.1, 2.2}}, runError: fmt.Errorf("type string cannot be assigned to type float64 for array index"), output: map[string]interface{}{"a": []float64{1.1, 2.2}}},
+		{script: "a[2] = nil", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type interface {} cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
+		{script: "a[2] = true", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type bool cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
+		{script: "a[2] = 1.1", input: map[string]interface{}{"a": []string{"a", "b"}}, runError: fmt.Errorf("type float64 cannot be assigned to type string for array index"), output: map[string]interface{}{"a": []string{"a", "b"}}},
+
+		{script: "a", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": [][]interface{}{}}},
+		{script: "a[0] = []", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{}}}},
+		{script: "a[0] = [nil]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{nil}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
+		{script: "a[0] = [true]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{true}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
+		{script: "a[0] = [1]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
+		{script: "a[0] = [1.1]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
+		{script: "a[0] = [\"b\"]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: []interface{}{"b"}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"b"}}}},
+
+		{script: "a[0] = [nil]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: nil, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{nil}}}},
+		{script: "a[0] = [true]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: true, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{true}}}},
+		{script: "a[0] = [1]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1)}}}},
+		{script: "a[0] = [1.1]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: float64(1.1), output: map[string]interface{}{"a": [][]interface{}{[]interface{}{float64(1.1)}}}},
+		{script: "a[0] = [\"b\"]; a[0][0]", input: map[string]interface{}{"a": [][]interface{}{}}, runOutput: "b", output: map[string]interface{}{"a": [][]interface{}{[]interface{}{"b"}}}},
+
+		{script: "a = make([]bool); a[0] = 1", runError: fmt.Errorf("type int64 cannot be assigned to type bool for array index"), output: map[string]interface{}{"a": []bool{}}},
+		{script: "a = make([]bool); a[0] = true; a[1] = false", runOutput: false, output: map[string]interface{}{"a": []bool{true, false}}},
+
+		{script: "a = make([][]bool); a[0] = [true, 1]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][]bool{}}},
+		{script: "a = make([][]bool); a[0] = [true, false]", runOutput: []interface{}{true, false}, output: map[string]interface{}{"a": [][]bool{[]bool{true, false}}}},
+
+		{script: "a = make([][][]bool); a[0] = [[true, 1]]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][][]bool{}}},
+		{script: "a = make([][][]bool); a[0] = [[true, false]]", runOutput: []interface{}{[]interface{}{true, false}}, output: map[string]interface{}{"a": [][][]bool{[][]bool{[]bool{true, false}}}}},
 	}
 	runTests(t, tests)
 }
@@ -229,72 +257,96 @@ func TestArrays(t *testing.T) {
 func TestMakeArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "make([]foo)", runError: fmt.Errorf("Undefined type 'foo'")},
 
-		{script: "make([]bool, nil)", runError: fmt.Errorf("Undefined type 'bool'")},
-		{script: "make([]nilT, nil)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("invalid type for make array")},
+		{script: "make([]nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
+		{script: "make([][]nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
+		{script: "make([][][]nilT)", types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		// remove ", nil" when/if syntax support it
-		{script: "make([]bool, nil)", types: map[string]interface{}{"bool": true}, runOutput: []bool{}},
-		{script: "make([]int32, nil)", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{}},
-		{script: "make([]int64, nil)", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{}},
-		{script: "make([]float32, nil)", types: map[string]interface{}{"float32": float32(1)}, runOutput: []float32{}},
-		{script: "make([]float64, nil)", types: map[string]interface{}{"float64": float64(1)}, runOutput: []float64{}},
-		{script: "make([]string, nil)", types: map[string]interface{}{"string": "a"}, runOutput: []string{}},
+		{script: "make([]bool, 1++)", runError: fmt.Errorf("Invalid operation")},
+		{script: "make([]bool, 0, 1++)", runError: fmt.Errorf("Invalid operation")},
 
-		{script: "make([]bool, 0)", types: map[string]interface{}{"bool": true}, runOutput: []bool{}},
-		{script: "make([]int32, 0)", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{}},
-		{script: "make([]int64, 0)", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{}},
-		{script: "make([]float32, 0)", types: map[string]interface{}{"float32": float32(1)}, runOutput: []float32{}},
-		{script: "make([]float64, 0)", types: map[string]interface{}{"float64": float64(1)}, runOutput: []float64{}},
-		{script: "make([]string, 0)", types: map[string]interface{}{"string": "a"}, runOutput: []string{}},
+		{script: "make(array2x)", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{}},
 
-		{script: "make([]bool, 2)", types: map[string]interface{}{"bool": true}, runOutput: []bool{false, false}},
-		{script: "make([]int32, 2)", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{int32(0), int32(0)}},
-		{script: "make([]int64, 2)", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{int64(0), int64(0)}},
-		{script: "make([]float32, 2)", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: []float32{float32(0), float32(0)}},
-		{script: "make([]float64, 2)", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: []float64{float64(0), float64(0)}},
-		{script: "make([]string, 2)", types: map[string]interface{}{"string": "a"}, runOutput: []string{"", ""}},
+		{script: "make([]bool)", runOutput: []bool{}},
+		{script: "make([]int32)", runOutput: []int32{}},
+		{script: "make([]int64)", runOutput: []int64{}},
+		{script: "make([]float32)", runOutput: []float32{}},
+		{script: "make([]float64)", runOutput: []float64{}},
+		{script: "make([]string)", runOutput: []string{}},
 
-		{script: "make([]bool, 0, 2)", types: map[string]interface{}{"bool": true}, runOutput: []bool{}},
-		{script: "make([]int32, 0, 2)", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{}},
-		{script: "make([]int64, 0, 2)", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{}},
-		{script: "make([]float32, 0, 2)", types: map[string]interface{}{"float32": float32(1)}, runOutput: []float32{}},
-		{script: "make([]float64, 0, 2)", types: map[string]interface{}{"float64": float64(1)}, runOutput: []float64{}},
-		{script: "make([]string, 0, 2)", types: map[string]interface{}{"string": "a"}, runOutput: []string{}},
+		{script: "make([]bool, 0)", runOutput: []bool{}},
+		{script: "make([]int32, 0)", runOutput: []int32{}},
+		{script: "make([]int64, 0)", runOutput: []int64{}},
+		{script: "make([]float32, 0)", runOutput: []float32{}},
+		{script: "make([]float64, 0)", runOutput: []float64{}},
+		{script: "make([]string, 0)", runOutput: []string{}},
 
-		{script: "make([]bool, 2, 2)", types: map[string]interface{}{"bool": true}, runOutput: []bool{false, false}},
-		{script: "make([]int32, 2, 2)", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{int32(0), int32(0)}},
-		{script: "make([]int64, 2, 2)", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{int64(0), int64(0)}},
-		{script: "make([]float32, 2, 2)", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: []float32{float32(0), float32(0)}},
-		{script: "make([]float64, 2, 2)", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: []float64{float64(0), float64(0)}},
-		{script: "make([]string, 2, 2)", types: map[string]interface{}{"string": "a"}, runOutput: []string{"", ""}},
+		{script: "make([]bool, 2)", runOutput: []bool{false, false}},
+		{script: "make([]int32, 2)", runOutput: []int32{int32(0), int32(0)}},
+		{script: "make([]int64, 2)", runOutput: []int64{int64(0), int64(0)}},
+		{script: "make([]float32, 2)", runOutput: []float32{float32(0), float32(0)}},
+		{script: "make([]float64, 2)", runOutput: []float64{float64(0), float64(0)}},
+		{script: "make([]string, 2)", runOutput: []string{"", ""}},
 
-		{script: "a = make([]bool, 0); a += true; a += false", types: map[string]interface{}{"bool": true}, runOutput: []bool{true, false}, output: map[string]interface{}{"a": []bool{true, false}}},
-		{script: "a = make([]int32, 0); a += 1; a += 2", types: map[string]interface{}{"int32": int32(1)}, runOutput: []int32{int32(1), int32(2)}, output: map[string]interface{}{"a": []int32{int32(1), int32(2)}}},
-		{script: "a = make([]int64, 0); a += 1; a += 2", types: map[string]interface{}{"int64": int64(1)}, runOutput: []int64{int64(1), int64(2)}, output: map[string]interface{}{"a": []int64{int64(1), int64(2)}}},
-		{script: "a = make([]float32, 0); a += 1.1; a += 2.2", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: []float32{float32(1.1), float32(2.2)}, output: map[string]interface{}{"a": []float32{float32(1.1), float32(2.2)}}},
-		{script: "a = make([]float64, 0); a += 1.1; a += 2.2", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: []float64{float64(1.1), float64(2.2)}, output: map[string]interface{}{"a": []float64{float64(1.1), float64(2.2)}}},
-		{script: "a = make([]string, 0); a += \"a\"; a += \"b\"", types: map[string]interface{}{"string": "a"}, runOutput: []string{"a", "b"}, output: map[string]interface{}{"a": []string{"a", "b"}}},
+		{script: "make([]bool, 0, 2)", runOutput: []bool{}},
+		{script: "make([]int32, 0, 2)", runOutput: []int32{}},
+		{script: "make([]int64, 0, 2)", runOutput: []int64{}},
+		{script: "make([]float32, 0, 2)", runOutput: []float32{}},
+		{script: "make([]float64, 0, 2)", runOutput: []float64{}},
+		{script: "make([]string, 0, 2)", runOutput: []string{}},
 
-		{script: "a = make([]bool, 2); a[0] = true; a[1] = false", types: map[string]interface{}{"bool": true}, runOutput: false, output: map[string]interface{}{"a": []bool{true, false}}},
-		// TOFIX:
-		// {script: "a = make([]int32, 2); a[0] = 1; a[1] = 2", types: map[string]interface{}{"int32": int32(1)}, runOutput: int32(2), output: map[string]interface{}{"a": []int32{int32(1), int32(2)}}},
-		{script: "a = make([]int64, 2); a[0] = 1; a[1] = 2", types: map[string]interface{}{"int64": int64(1)}, runOutput: int64(2), output: map[string]interface{}{"a": []int64{int64(1), int64(2)}}},
-		// TOFIX:
-		// {script: "a = make([]float32, 2); a[0] = 1.1; a[1] = 2.2", types: map[string]interface{}{"float32": float32(1.1)}, runOutput: float32(2.2), output: map[string]interface{}{"a": []float32{float32(1.1), float32(2.2)}}},
-		{script: "a = make([]float64, 2); a[0] = 1.1; a[1] = 2.2", types: map[string]interface{}{"float64": float64(1.1)}, runOutput: float64(2.2), output: map[string]interface{}{"a": []float64{float64(1.1), float64(2.2)}}},
-		{script: "a = make([]string, 2); a[0] = \"a\"; a[1] = \"b\"", types: map[string]interface{}{"string": "a"}, runOutput: "b", output: map[string]interface{}{"a": []string{"a", "b"}}},
+		{script: "make([]bool, 2, 2)", runOutput: []bool{false, false}},
+		{script: "make([]int32, 2, 2)", runOutput: []int32{int32(0), int32(0)}},
+		{script: "make([]int64, 2, 2)", runOutput: []int64{int64(0), int64(0)}},
+		{script: "make([]float32, 2, 2)", runOutput: []float32{float32(0), float32(0)}},
+		{script: "make([]float64, 2, 2)", runOutput: []float64{float64(0), float64(0)}},
+		{script: "make([]string, 2, 2)", runOutput: []string{"", ""}},
 
-		// remove ", nil" when/if syntax support it
-		{script: "make([]boolA, nil)", types: map[string]interface{}{"boolA": []bool{}}, runOutput: [][]bool{}},
-		{script: "make([]int32A, nil)", types: map[string]interface{}{"int32A": []int32{}}, runOutput: [][]int32{}},
-		{script: "make([]int64A, nil)", types: map[string]interface{}{"int64A": []int64{}}, runOutput: [][]int64{}},
-		{script: "make([]float32A, nil)", types: map[string]interface{}{"float32A": []float32{}}, runOutput: [][]float32{}},
-		{script: "make([]float64A, nil)", types: map[string]interface{}{"float64A": []float64{}}, runOutput: [][]float64{}},
-		{script: "make([]stringA, nil)", types: map[string]interface{}{"stringA": []string{}}, runOutput: [][]string{}},
+		{script: "a = make([]bool, 0); a += true; a += false", runOutput: []bool{true, false}, output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a = make([]int32, 0); a += 1; a += 2", runOutput: []int32{int32(1), int32(2)}, output: map[string]interface{}{"a": []int32{int32(1), int32(2)}}},
+		{script: "a = make([]int64, 0); a += 1; a += 2", runOutput: []int64{int64(1), int64(2)}, output: map[string]interface{}{"a": []int64{int64(1), int64(2)}}},
+		{script: "a = make([]float32, 0); a += 1.1; a += 2.2", runOutput: []float32{float32(1.1), float32(2.2)}, output: map[string]interface{}{"a": []float32{float32(1.1), float32(2.2)}}},
+		{script: "a = make([]float64, 0); a += 1.1; a += 2.2", runOutput: []float64{float64(1.1), float64(2.2)}, output: map[string]interface{}{"a": []float64{float64(1.1), float64(2.2)}}},
+		{script: "a = make([]string, 0); a += \"a\"; a += \"b\"", runOutput: []string{"a", "b"}, output: map[string]interface{}{"a": []string{"a", "b"}}},
 
-		{script: "make([]array, 0)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}},
-		{script: "a = make([]array, 0)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": [][]interface{}{}}},
+		{script: "a = make([]bool, 2); a[0] = true; a[1] = false", runOutput: false, output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a = make([]int32, 2); a[0] = 1; a[1] = 2", runOutput: int64(2), output: map[string]interface{}{"a": []int32{int32(1), int32(2)}}},
+		{script: "a = make([]int64, 2); a[0] = 1; a[1] = 2", runOutput: int64(2), output: map[string]interface{}{"a": []int64{int64(1), int64(2)}}},
+		{script: "a = make([]float32, 2); a[0] = 1.1; a[1] = 2.2", runOutput: float64(2.2), output: map[string]interface{}{"a": []float32{float32(1.1), float32(2.2)}}},
+		{script: "a = make([]float64, 2); a[0] = 1.1; a[1] = 2.2", runOutput: float64(2.2), output: map[string]interface{}{"a": []float64{float64(1.1), float64(2.2)}}},
+		{script: "a = make([]string, 2); a[0] = \"a\"; a[1] = \"b\"", runOutput: "b", output: map[string]interface{}{"a": []string{"a", "b"}}},
+
+		{script: "make([]boolA)", types: map[string]interface{}{"boolA": []bool{}}, runOutput: [][]bool{}},
+		{script: "make([]int32A)", types: map[string]interface{}{"int32A": []int32{}}, runOutput: [][]int32{}},
+		{script: "make([]int64A)", types: map[string]interface{}{"int64A": []int64{}}, runOutput: [][]int64{}},
+		{script: "make([]float32A)", types: map[string]interface{}{"float32A": []float32{}}, runOutput: [][]float32{}},
+		{script: "make([]float64A)", types: map[string]interface{}{"float64A": []float64{}}, runOutput: [][]float64{}},
+		{script: "make([]stringA)", types: map[string]interface{}{"stringA": []string{}}, runOutput: [][]string{}},
+
+		{script: "make([]array)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}},
+		{script: "a = make([]array)", types: map[string]interface{}{"array": []interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": [][]interface{}{}}},
+
+		{script: "make([][]bool)", runOutput: [][]bool{}},
+		{script: "make([][]int32)", runOutput: [][]int32{}},
+		{script: "make([][]int64)", runOutput: [][]int64{}},
+		{script: "make([][]float32)", runOutput: [][]float32{}},
+		{script: "make([][]float64)", runOutput: [][]float64{}},
+		{script: "make([][]string)", runOutput: [][]string{}},
+
+		{script: "make([][]bool)", runOutput: [][]bool{}},
+		{script: "make([][]int32)", runOutput: [][]int32{}},
+		{script: "make([][]int64)", runOutput: [][]int64{}},
+		{script: "make([][]float32)", runOutput: [][]float32{}},
+		{script: "make([][]float64)", runOutput: [][]float64{}},
+		{script: "make([][]string)", runOutput: [][]string{}},
+
+		{script: "make([][][]bool)", runOutput: [][][]bool{}},
+		{script: "make([][][]int32)", runOutput: [][][]int32{}},
+		{script: "make([][][]int64)", runOutput: [][][]int64{}},
+		{script: "make([][][]float32)", runOutput: [][][]float32{}},
+		{script: "make([][][]float64)", runOutput: [][][]float64{}},
+		{script: "make([][][]string)", runOutput: [][][]string{}},
 	}
 	runTests(t, tests)
 }
@@ -370,6 +422,14 @@ func TestArraySlice(t *testing.T) {
 func TestArrayAppendArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "a += nil", input: map[string]interface{}{"a": []bool{true}}, runError: fmt.Errorf("invalid type conversion")},
+		{script: "a += 1", input: map[string]interface{}{"a": []bool{true}}, runError: fmt.Errorf("invalid type conversion")},
+		{script: "a += 1.1", input: map[string]interface{}{"a": []bool{true}}, runError: fmt.Errorf("invalid type conversion")},
+		{script: "a += \"a\"", input: map[string]interface{}{"a": []bool{true}}, runError: fmt.Errorf("invalid type conversion")},
+
+		{script: "a += b", input: map[string]interface{}{"a": []bool{true}, "b": []string{"b"}}, runError: fmt.Errorf("invalid type conversion")},
+		{script: "b += a", input: map[string]interface{}{"a": []bool{true}, "b": []string{"b"}}, runError: fmt.Errorf("invalid type conversion")},
+
 		{script: "b = []; b += a", input: map[string]interface{}{"a": []bool{}}, runOutput: []interface{}{}, output: map[string]interface{}{"a": []bool{}, "b": []interface{}{}}},
 		{script: "b = []; b += a", input: map[string]interface{}{"a": []bool{true}}, runOutput: []interface{}{true}, output: map[string]interface{}{"a": []bool{true}, "b": []interface{}{true}}},
 		{script: "b = []; b += a", input: map[string]interface{}{"a": []bool{true, false}}, runOutput: []interface{}{true, false}, output: map[string]interface{}{"a": []bool{true, false}, "b": []interface{}{true, false}}},
@@ -550,18 +610,72 @@ func TestArrayAppendArrays(t *testing.T) {
 		{script: "a = []; a += [[1.1, 2.2]]; a += [[3.3, 4.4]]", runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}}},
 		{script: "a = []; a += [[\"a\", \"b\"]]; a += [[\"c\", \"d\"]]", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}}},
 
-		{script: "a = make(array2x); a += [[1, 2]]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}},
-		{script: "a = make(array2x); b = [1, 2]; a += [b]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}},
-		{script: "a = make(array2x); a += [[1, 2],[3, 4]]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
-		{script: "a = make(array2x); b = [1, 2]; a += [b]; b = [3, 4]; a += [b]", types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
+		{script: "a = make([]bool); a += 1", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{}}},
+		{script: "a = make([]bool); a += true; a += 1", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{true}}},
+		{script: "a = make([]bool); a += [1]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{}}},
+		{script: "a = make([]bool); a += [true, 1]", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{}}},
 
-		{script: "a = make(array3x); a += [[[1, 2]]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
-		{script: "a = make(array3x); b = [[1, 2]]; a += [b]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
-		{script: "a = make(array3x); b = [1, 2]; a += [[b]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}},
-		{script: "a = make(array3x); a += [[[1, 2],[3, 4]]]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
-		{script: "a = make(array3x); b = [[1, 2],[3, 4]]; a += [b]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
-		{script: "a = make(array3x); b = [1, 2]; c = [b]; b = [3, 4]; c += [b]; a += [c]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
-		{script: "a = make(array3x); b = [1, 2]; c = []; c += [b]; b = [3, 4]; c += [b]; a += [c]", types: map[string]interface{}{"array3x": [][][]interface{}{}}, runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make([]bool); a += true; a += false", runOutput: []bool{true, false}, output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a = make([]bool); a += [true]; a += [false]", runOutput: []bool{true, false}, output: map[string]interface{}{"a": []bool{true, false}}},
+		{script: "a = make([]bool); a += [true, false]", runOutput: []bool{true, false}, output: map[string]interface{}{"a": []bool{true, false}}},
+
+		{script: "a = make([]bool); a += true; a += b", input: map[string]interface{}{"b": int64(1)}, runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{true}, "b": int64(1)}},
+		{script: "a = make([]bool); a += [true]; a += [b]", input: map[string]interface{}{"b": int64(1)}, runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{true}, "b": int64(1)}},
+		{script: "a = make([]bool); a += [true, b]", input: map[string]interface{}{"b": int64(1)}, runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{}, "b": int64(1)}},
+
+		{script: "a = make([]bool); a += b; a += b", input: map[string]interface{}{"b": true}, runOutput: []bool{true, true}, output: map[string]interface{}{"a": []bool{true, true}, "b": true}},
+		{script: "a = make([]bool); a += [b]; a += [b]", input: map[string]interface{}{"b": true}, runOutput: []bool{true, true}, output: map[string]interface{}{"a": []bool{true, true}, "b": true}},
+		{script: "a = make([]bool); a += [b, b]", input: map[string]interface{}{"b": true}, runOutput: []bool{true, true}, output: map[string]interface{}{"a": []bool{true, true}, "b": true}},
+
+		{script: "a = make([]bool); a += [true, false]; b = make([]int64); b += [1, 2]; a += b", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{true, false}, "b": []int64{int64(1), int64(2)}}},
+
+		{script: "a = []; b = []; b += true; b += false; a += b", runOutput: []interface{}{true, false}, output: map[string]interface{}{"a": []interface{}{true, false}, "b": []interface{}{true, false}}},
+		{script: "a = []; b = make([]bool); b += true; b += false; a += b", runOutput: []interface{}{true, false}, output: map[string]interface{}{"a": []interface{}{true, false}, "b": []bool{true, false}}},
+		{script: "a = []; b = []; b += [true]; b += [false]; a += [b]", runOutput: []interface{}{[]interface{}{true, false}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{true, false}}, "b": []interface{}{true, false}}},
+		{script: "a = []; b = make([]bool); b += [true]; b += [false]; a += [b]", runOutput: []interface{}{[]bool{true, false}}, output: map[string]interface{}{"a": []interface{}{[]bool{true, false}}, "b": []bool{true, false}}},
+
+		{script: "a = [true, false]; b = [true, false]; a += b", runOutput: []interface{}{true, false, true, false}, output: map[string]interface{}{"a": []interface{}{true, false, true, false}, "b": []interface{}{true, false}}},
+		{script: "a = make([]bool); a += [true, false]; b = make([]bool); b += [true, false]; a += b", runOutput: []bool{true, false, true, false}, output: map[string]interface{}{"a": []bool{true, false, true, false}, "b": []bool{true, false}}},
+		{script: "a = make([]bool); a += [true, false]; b = [true, false]; a += b", runOutput: []bool{true, false, true, false}, output: map[string]interface{}{"a": []bool{true, false, true, false}, "b": []interface{}{true, false}}},
+		{script: "a = [true, false]; b = make([]bool); b += [true, false]; a += b", runOutput: []interface{}{true, false, true, false}, output: map[string]interface{}{"a": []interface{}{true, false, true, false}, "b": []bool{true, false}}},
+
+		{script: "a = make([][]bool); b = make([][]bool);  a += b", runOutput: [][]bool{}, output: map[string]interface{}{"a": [][]bool{}, "b": [][]bool{}}},
+		{script: "a = make([][]bool); b = make([][]bool); b += [[]]; a += b", runOutput: [][]bool{[]bool{}}, output: map[string]interface{}{"a": [][]bool{[]bool{}}, "b": [][]bool{[]bool{}}}},
+		{script: "a = make([][]bool); a += [[]]; b = make([][]bool); a += b", runOutput: [][]bool{[]bool{}}, output: map[string]interface{}{"a": [][]bool{[]bool{}}, "b": [][]bool{}}},
+		{script: "a = make([][]bool); a += [[]]; b = make([][]bool); b += [[]]; a += b", runOutput: [][]bool{[]bool{}, []bool{}}, output: map[string]interface{}{"a": [][]bool{[]bool{}, []bool{}}, "b": [][]bool{[]bool{}}}},
+
+		{script: "a = make([]bool); a += []; b = make([]bool); b += []; a += b", runOutput: []bool{}, output: map[string]interface{}{"a": []bool{}, "b": []bool{}}},
+		{script: "a = make([]bool); a += [true]; b = make([]bool); b += []; a += b", runOutput: []bool{true}, output: map[string]interface{}{"a": []bool{true}, "b": []bool{}}},
+		{script: "a = make([]bool); a += []; b = make([]bool); b += [true]; a += b", runOutput: []bool{true}, output: map[string]interface{}{"a": []bool{true}, "b": []bool{true}}},
+		{script: "a = make([]bool); a += [true]; b = make([]bool); b += [true]; a += b", runOutput: []bool{true, true}, output: map[string]interface{}{"a": []bool{true, true}, "b": []bool{true}}},
+
+		{script: "a = make([][]bool); a += [true, false];", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][]bool{}}},
+		{script: "a = make([][]bool); a += [[true, false]]; b = make([]bool); b += [true, false]; a += b", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": [][]bool{[]bool{true, false}}, "b": []bool{true, false}}},
+		{script: "a = make([]bool); a += [true, false]; b = make([][]bool); b += [[true, false]]; a += b", runError: fmt.Errorf("invalid type conversion"), output: map[string]interface{}{"a": []bool{true, false}, "b": [][]bool{[]bool{true, false}}}},
+
+		{script: "a = make([][]interface); a += [[1, 2]]", runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1), int64(2)}}}},
+		{script: "a = make([][]interface); b = [1, 2]; a += [b]", runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1), int64(2)}}, "b": []interface{}{int64(1), int64(2)}}},
+		{script: "a = make([][]interface); a += [[1, 2],[3, 4]]", runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make([][]interface); b = [1, 2]; a += [b]; b = [3, 4]; a += [b]", runOutput: [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}, output: map[string]interface{}{"a": [][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}, "b": []interface{}{int64(3), int64(4)}}},
+
+		{script: "a = [[\"a\", \"b\"], [\"c\", \"d\"]]; b = [[\"w\", \"x\"], [\"y\", \"z\"]]; a += b", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}, []interface{}{"w", "x"}, []interface{}{"y", "z"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}, []interface{}{"w", "x"}, []interface{}{"y", "z"}}, "b": []interface{}{[]interface{}{"w", "x"}, []interface{}{"y", "z"}}}},
+		{script: "a = make([][]string); a += [[\"a\", \"b\"], [\"c\", \"d\"]]; b = make([][]string); b += [[\"w\", \"x\"], [\"y\", \"z\"]]; a += b", runOutput: [][]string{[]string{"a", "b"}, []string{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, output: map[string]interface{}{"a": [][]string{[]string{"a", "b"}, []string{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, "b": [][]string{[]string{"w", "x"}, []string{"y", "z"}}}},
+		{script: "a = make([][]string); a += [[\"a\", \"b\"], [\"c\", \"d\"]]; b = [[\"w\", \"x\"], [\"y\", \"z\"]]; a += b", runOutput: [][]string{[]string{"a", "b"}, []string{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, output: map[string]interface{}{"a": [][]string{[]string{"a", "b"}, []string{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, "b": []interface{}{[]interface{}{"w", "x"}, []interface{}{"y", "z"}}}},
+		{script: "a = [[\"a\", \"b\"], [\"c\", \"d\"]]; b = make([][]string); b += [[\"w\", \"x\"], [\"y\", \"z\"]]; a += b", runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}, []string{"w", "x"}, []string{"y", "z"}}, "b": [][]string{[]string{"w", "x"}, []string{"y", "z"}}}},
+
+		{script: "a = make([][]int64); a += [[1, 2], [3, 4]]; b = make([][]int32); b += [[5, 6], [7, 8]]; a += b", runOutput: [][]int64{[]int64{int64(1), int64(2)}, []int64{int64(3), int64(4)}, []int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}, output: map[string]interface{}{"a": [][]int64{[]int64{int64(1), int64(2)}, []int64{int64(3), int64(4)}, []int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}, "b": [][]int32{[]int32{int32(5), int32(6)}, []int32{int32(7), int32(8)}}}},
+		{script: "a = make([][]int32); a += [[1, 2], [3, 4]]; b = make([][]int64); b += [[5, 6], [7, 8]]; a += b", runOutput: [][]int32{[]int32{int32(1), int32(2)}, []int32{int32(3), int32(4)}, []int32{int32(5), int32(6)}, []int32{int32(7), int32(8)}}, output: map[string]interface{}{"a": [][]int32{[]int32{int32(1), int32(2)}, []int32{int32(3), int32(4)}, []int32{int32(5), int32(6)}, []int32{int32(7), int32(8)}}, "b": [][]int64{[]int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}}},
+		{script: "a = make([][]int64); a += [[1, 2], [3, 4]]; b = make([][]float64); b += [[5, 6], [7, 8]]; a += b", runOutput: [][]int64{[]int64{int64(1), int64(2)}, []int64{int64(3), int64(4)}, []int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}, output: map[string]interface{}{"a": [][]int64{[]int64{int64(1), int64(2)}, []int64{int64(3), int64(4)}, []int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}, "b": [][]float64{[]float64{float64(5), float64(6)}, []float64{float64(7), float64(8)}}}},
+		{script: "a = make([][]float64); a += [[1, 2], [3, 4]]; b = make([][]int64); b += [[5, 6], [7, 8]]; a += b", runOutput: [][]float64{[]float64{float64(1), float64(2)}, []float64{float64(3), float64(4)}, []float64{float64(5), float64(6)}, []float64{float64(7), float64(8)}}, output: map[string]interface{}{"a": [][]float64{[]float64{float64(1), float64(2)}, []float64{float64(3), float64(4)}, []float64{float64(5), float64(6)}, []float64{float64(7), float64(8)}}, "b": [][]int64{[]int64{int64(5), int64(6)}, []int64{int64(7), int64(8)}}}},
+
+		{script: "a = make([][][]interface); a += [[[1, 2]]]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}}},
+		{script: "a = make([][][]interface); b = [[1, 2]]; a += [b]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}, "b": []interface{}{[]interface{}{int64(1), int64(2)}}}},
+		{script: "a = make([][][]interface); b = [1, 2]; a += [[b]]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}}}, "b": []interface{}{int64(1), int64(2)}}},
+
+		{script: "a = make([][][]interface); a += [[[1, 2],[3, 4]]]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}}},
+		{script: "a = make([][][]interface); b = [[1, 2],[3, 4]]; a += [b]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, "b": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make([][][]interface); b = [1, 2]; c = [b]; b = [3, 4]; c += [b]; a += [c]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		{script: "a = make([][][]interface); b = [1, 2]; c = []; c += [b]; b = [3, 4]; c += [b]; a += [c]", runOutput: [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, output: map[string]interface{}{"a": [][][]interface{}{[][]interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 	}
 	runTests(t, tests)
 }
@@ -569,6 +683,8 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "a = {}; a.b.c", runError: fmt.Errorf("type invalid does not support member operation")},
+
 		{script: "a = {}", runOutput: map[string]interface{}{}, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: "a = {\"b\": nil}", runOutput: map[string]interface{}{"b": nil}, output: map[string]interface{}{"a": map[string]interface{}{"b": nil}}},
 		{script: "a = {\"b\": true}", runOutput: map[string]interface{}{"b": true}, output: map[string]interface{}{"a": map[string]interface{}{"b": true}}},
@@ -782,6 +898,8 @@ func TestMakeMaps(t *testing.T) {
 		//		{script: "a = make(mapStringFloat32); a[\"b\"] = 1.1", types: map[string]interface{}{"mapStringFloat32": map[string]float32{"b": float32(1.1)}}, runOutput: float32(1.1), output: map[string]interface{}{"a": map[string]float32{"b": float32(1.1)}}},
 		{script: "a = make(mapStringFloat64); a[\"b\"] = 1.1", types: map[string]interface{}{"mapStringFloat64": map[string]float64{"b": float64(1.1)}}, runOutput: float64(1.1), output: map[string]interface{}{"a": map[string]float64{"b": float64(1.1)}}},
 		{script: "a = make(mapStringString); a[\"b\"] = \"b\"", types: map[string]interface{}{"mapStringString": map[string]string{"b": "b"}}, runOutput: "b", output: map[string]interface{}{"a": map[string]string{"b": "b"}}},
+
+		{script: "a = make(mapStringBool); a.b = true", types: map[string]interface{}{"mapStringBool": map[string]bool{"b": true}}, runOutput: true, output: map[string]interface{}{"a": map[string]bool{"b": true}}},
 	}
 	runTests(t, tests)
 }
@@ -870,15 +988,126 @@ func TestArraysAndMaps(t *testing.T) {
 func TestMakeArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: "make([]map)", types: map[string]interface{}{"map": map[string]interface{}{}}, runOutput: []map[string]interface{}{}},
+		{script: "make([][]map)", types: map[string]interface{}{"map": map[string]interface{}{}}, runOutput: [][]map[string]interface{}{}},
+
 		{script: "make(mapArray2x)", types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, runOutput: map[string][][]interface{}{}},
 		{script: "a = make(mapArray2x)", types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, runOutput: map[string][][]interface{}{}, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 		{script: "a = make(mapArray2x); a", types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, runOutput: map[string][][]interface{}{}, output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 		{script: "a = make(mapArray2x); a.b = b", types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, input: map[string]interface{}{"b": [][]interface{}{}}, runOutput: [][]interface{}{}, output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}{}}, "b": [][]interface{}{}}},
-
-		{script: "b = make(array2x); a.b = b", types: map[string]interface{}{"array2x": [][]interface{}{}}, input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: [][]interface{}(nil), output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}(nil)}}},
-		{script: "b = make(array2x); a.b = b; a.b[0] = [1]", types: map[string]interface{}{"array2x": [][]interface{}{}}, input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}{[]interface{}{int64(1)}}}}},
-		{script: "b = make(array2x); a.b = b; a.b[0] = []; a.b[0][0] = 1", types: map[string]interface{}{"array2x": [][]interface{}{}}, input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: int64(1), output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}{[]interface{}{int64(1)}}}}},
-		{script: "b = make(array2x); a.b = b; a.b[0] = [1]; a.b[0][1] = 2", types: map[string]interface{}{"array2x": [][]interface{}{}}, input: map[string]interface{}{"a": map[string][][]interface{}{}}, runOutput: int64(2), output: map[string]interface{}{"a": map[string][][]interface{}{"b": [][]interface{}{[]interface{}{int64(1), int64(2)}}}}},
 	}
 	runTests(t, tests)
+}
+
+func TestMakeArraysData(t *testing.T) {
+	stmts, err := parser.ParseSrc("make(array)")
+	if err != nil {
+		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
+	}
+
+	env := NewEnv()
+	err = env.DefineType("array", []string{})
+	if err != nil {
+		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
+	}
+
+	value, err := Run(stmts, env)
+	if err != nil {
+		t.Errorf("Run error - received %v - expected: %v", err, nil)
+	}
+	if !reflect.DeepEqual(value, []string{}) {
+		t.Errorf("Run value - received %#v - expected: %#v", value, []string{})
+	}
+
+	a := value.([]string)
+	if len(a) != 0 {
+		t.Errorf("len value - received %#v - expected: %#v", len(a), 0)
+	}
+	a = append(a, "a")
+	if a[0] != "a" {
+		t.Errorf("Get value - received %#v - expected: %#v", a[0], "a")
+	}
+	if len(a) != 1 {
+		t.Errorf("len value - received %#v - expected: %#v", len(a), 1)
+	}
+
+	stmts, err = parser.ParseSrc("make([]string)")
+	if err != nil {
+		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
+	}
+
+	env = NewEnv()
+	err = env.DefineType("string", "a")
+	if err != nil {
+		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
+	}
+
+	value, err = Run(stmts, env)
+	if err != nil {
+		t.Errorf("Run error - received %v - expected: %v", err, nil)
+	}
+	if !reflect.DeepEqual(value, []string{}) {
+		t.Errorf("Run value - received %#v - expected: %#v", value, []string{})
+	}
+
+	b := value.([]string)
+	if len(b) != 0 {
+		t.Errorf("len value - received %#v - expected: %#v", len(b), 0)
+	}
+	b = append(b, "b")
+	if b[0] != "b" {
+		t.Errorf("Get value - received %#v - expected: %#v", b[0], "b")
+	}
+	if len(b) != 1 {
+		t.Errorf("len value - received %#v - expected: %#v", len(b), 1)
+	}
+}
+
+func TestMakeMapsData(t *testing.T) {
+	stmts, err := parser.ParseSrc("make(map)")
+	if err != nil {
+		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
+	}
+
+	// test normal map
+	env := NewEnv()
+	err = env.DefineType("map", map[string]string{})
+	if err != nil {
+		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
+	}
+
+	value, err := Run(stmts, env)
+	if err != nil {
+		t.Errorf("Run error - received %v - expected: %v", err, nil)
+	}
+	if !reflect.DeepEqual(value, map[string]string{}) {
+		t.Errorf("Run value - received %#v - expected: %#v", value, map[string]string{})
+	}
+
+	a := value.(map[string]string)
+	a["a"] = "a"
+	if a["a"] != "a" {
+		t.Errorf("Get value - received %#v - expected: %#v", a["a"], "a")
+	}
+
+	// test url Values map
+	env = NewEnv()
+	err = env.DefineType("map", url.Values{})
+	if err != nil {
+		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
+	}
+
+	value, err = Run(stmts, env)
+	if err != nil {
+		t.Errorf("Run error - received %v - expected: %v", err, nil)
+	}
+	if !reflect.DeepEqual(value, url.Values{}) {
+		t.Errorf("Run value - received %#v - expected: %#v", value, url.Values{})
+	}
+
+	b := value.(url.Values)
+	b.Set("b", "b")
+	if b.Get("b") != "b" {
+		t.Errorf("Get value - received %#v - expected: %#v", b.Get("b"), "b")
+	}
 }

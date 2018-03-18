@@ -1,7 +1,9 @@
 # anko
 
+[![GoDoc Reference](https://godoc.org/github.com/mattn/anko/vm?status.svg)](http://godoc.org/github.com/mattn/anko/vm)
 [![Build Status](https://travis-ci.org/mattn/anko.png?branch=master)](https://travis-ci.org/mattn/anko)
-[![GoDoc](https://godoc.org/github.com/mattn/anko/vm?status.svg)](https://godoc.org/github.com/mattn/anko/vm)
+[![Coverage](https://gocover.io/_badge/github.com/mattn/anko/vm)](https://gocover.io/github.com/mattn/anko/vm#)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mattn/anko)](https://goreportcard.com/report/github.com/mattn/anko)
 
 Anko is a scriptable interpreter written in Go.
 
@@ -76,13 +78,13 @@ fmt.Println(val)
 // 3
 ```
 
-To import all builtins, allowing the example scripts to work:
+To import all core language builtins, allowing the example scripts to work:
 
 ```Go
-import anko_core "github.com/mattn/anko/builtins"
+import "github.com/mattn/anko/core"
 
 var env = vm.NewEnv()
-anko_core.LoadAllBuiltins(env)
+core.Import(env)
 
 _, err := env.Execute(`println("test")`)
 if err != nil {
@@ -97,10 +99,6 @@ Running scripts using anko command-line tool:
 ```
 $ anko script.ank
 ```
-
-# License
-
-MIT
 
 # Author
 

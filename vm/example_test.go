@@ -50,8 +50,66 @@ println("this line should not be printed")
 	// output: <nil> Execution interrupted
 }
 
+func ExampleEnv_Define() {
+	env := vm.NewEnv()
+	env.SetName("myName")
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	err = env.Define("a", true)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+	err = env.Define("b", int64(1))
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+	err = env.Define("c", float64(1.1))
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+	err = env.Define("d", "d")
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+	err = env.Define("e", []interface{}{true, int64(1), float64(1.1), "d"})
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+	err = env.Define("f", map[string]interface{}{"a": true})
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+println(a)
+println(b)
+println(c)
+println(d)
+println(e)
+println(f)
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("Execute error: %v\n", err)
+	}
+
+	// output:
+	// true
+	// 1
+	// 1.1
+	// d
+	// [true 1 1.1 d]
+	// map[a:true]
+}
+
 func ExampleEnv_Dump() {
 	env := vm.NewEnv()
+	env.SetName("myName")
 
 	err := env.Define("a", "a")
 	if err != nil {
@@ -65,5 +123,8 @@ func ExampleEnv_Dump() {
 
 	env.Dump()
 
-	// output: a = "a"
+	// output:
+	// Name: myName
+	// Has parent: false
+	// a = "a"
 }
