@@ -1,7 +1,7 @@
 package ast
 
 type Token struct {
-	PosImpl // StmtImpl provide Pos() function.
+	PosImpl // PosImpl provides get/set the position function.
 	Tok     int
 	Lit     string
 }
