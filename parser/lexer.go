@@ -15,7 +15,7 @@ const (
 )
 
 // Error provides a convenient interface for handling runtime error.
-// It can be Error inteface with type cast which can call Pos().
+// It can be Error interface with type cast which can call Pos().
 type Error struct {
 	Message  string
 	Pos      ast.Position
@@ -474,7 +474,7 @@ eos:
 	return string(ret), nil
 }
 
-// Lexer provides inteface to parse codes.
+// Lexer provides interface to parse codes.
 type Lexer struct {
 	s     *Scanner
 	lit   string
