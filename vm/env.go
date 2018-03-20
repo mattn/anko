@@ -182,18 +182,16 @@ func (e *Env) Addr(k string) (reflect.Value, error) {
 	if v, ok := e.env[k]; ok {
 		if v.CanAddr() {
 			return v.Addr(), nil
-		} else {
-			return nilValue, fmt.Errorf("Unaddressable")
 		}
+		return nilValue, fmt.Errorf("Unaddressable")
 	}
 	if e.external != nil {
 		v, err := e.external.Get(k)
 		if err == nil {
 			if v.CanAddr() {
 				return v.Addr(), nil
-			} else {
-				return nilValue, fmt.Errorf("Unaddressable")
 			}
+			return nilValue, fmt.Errorf("Unaddressable")
 		}
 	}
 	if e.parent == nil {

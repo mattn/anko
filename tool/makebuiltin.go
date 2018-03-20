@@ -103,7 +103,7 @@ func main() {
 			}
 		}
 		keys := []string{}
-		for k, _ := range names {
+		for k := range names {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)

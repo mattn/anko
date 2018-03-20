@@ -290,9 +290,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			v = v.Index(ii)
 			if v.Type().ConvertibleTo(stringType) {
 				return v.Convert(stringType), nil
-			} else {
-				return nilValue, newStringError(e, "invalid type conversion")
 			}
+			return nilValue, newStringError(e, "invalid type conversion")
 		case reflect.Map:
 			v = getMapIndex(i, v)
 			return v, nil

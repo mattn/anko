@@ -63,7 +63,7 @@ var opName = map[string]int{
 	"chan":     CHAN,
 	"make":     MAKE,
 	"type":     TYPE,
-	"len":     LEN,
+	"len":      LEN,
 }
 
 // Init resets code to scan.
@@ -420,7 +420,6 @@ func (s *Scanner) scanRawString() (string, error) {
 		s.next()
 		if s.peek() == EOF {
 			return "", errors.New("unexpected EOF")
-			break
 		}
 		if s.peek() == '`' {
 			s.next()
@@ -514,7 +513,7 @@ func EnableErrorVerbose() {
 	yyErrorVerbose = true
 }
 
-// ParserSrc provides way to parse the code from source.
+// ParseSrc provides way to parse the code from source.
 func ParseSrc(src string) ([]ast.Stmt, error) {
 	scanner := &Scanner{
 		src: []rune(src),
