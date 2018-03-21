@@ -64,6 +64,7 @@ var opName = map[string]int{
 	"make":     MAKE,
 	"type":     TYPE,
 	"len":      LEN,
+	"delete":   DELETE,
 }
 
 // Init resets code to scan.
