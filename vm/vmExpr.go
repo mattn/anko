@@ -737,12 +737,12 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.DeleteExpr:
 		mapExpr, err := invokeExpr(e.MapExpr, env)
 		if err != nil {
-			return nilValue, newStringError(e, err.Error())
+			return nilValue, newStringError(e.MapExpr, err.Error())
 		}
 
 		keyExpr, err := invokeExpr(e.KeyExpr, env)
 		if err != nil {
-			return nilValue, newStringError(e, err.Error())
+			return nilValue, newStringError(e.KeyExpr, err.Error())
 		}
 
 		if mapExpr.Kind() != reflect.Map {
@@ -752,7 +752,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return nilValue, newStringError(e, "The key parameter of delete must be string")
 		}
 
-		mapExpr.SetMapIndex(reflect.ValueOf(keyExpr.String()), reflect.Value{})
+		mapExpr.SetMapIndex(keyExpr, reflect.Value{})
 		return nilValue, nil
 
 	default:

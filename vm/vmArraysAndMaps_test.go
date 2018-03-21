@@ -878,8 +878,16 @@ func TestDeleteMaps(t *testing.T) {
 	tests := []testStruct{
 		{script: `a = {"b": "b"}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"b": ["c"]}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: `delete({"a":"b"}, "b")`, runOutput: nil, output: map[string]interface{}{}},
+
+		{script: `a = {"ab": "b"}; delete(a, "a"+"b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"b": "b"}; delete(a, 123)`, runError: fmt.Errorf("The key parameter of delete must be string")},
+		{script: `a = {"b": "b"}; delete(a, 1++)`, runError: fmt.Errorf("Invalid operation")},
+
 		{script: `delete("b", "b")`, runError: fmt.Errorf("delete only works on map")},
+		{script: `delete(nil, "b")`, runError: fmt.Errorf("delete only works on map")},
+		{script: `delete(1++, "b")`, runError: fmt.Errorf("Invalid operation")},
+		{script: `delete({}, "b")`, runOutput: nil, output: map[string]interface{}{}},
 	}
 	runTests(t, tests)
 }
