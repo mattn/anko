@@ -27,6 +27,7 @@ func colorOf(name string) ct.Color {
 	return ct.None
 }
 
+// AddPackageColortext adds the go-colortext package and the ChangeColor function
 func AddPackageColortext() {
 	packages.Packages["github.com/daviddengcn/go-colortext"] = map[string]interface{}{
 		"ChangeColor": func(fg string, fa bool, rest ...interface{}) {

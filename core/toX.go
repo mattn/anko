@@ -10,6 +10,7 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
+// ImportToX adds all the toX to the env given
 func ImportToX(env *vm.Env) {
 
 	env.Define("toBool", func(v interface{}) bool {

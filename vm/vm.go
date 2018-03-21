@@ -35,9 +35,13 @@ var (
 	zeroValue                 = reflect.Value{}
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
-	BreakError     = errors.New("Unexpected break statement")
-	ContinueError  = errors.New("Unexpected continue statement")
-	ReturnError    = errors.New("Unexpected return statement")
+	// BreakError when there is an unexpected break statement
+	BreakError = errors.New("Unexpected break statement")
+	// BreakError when there is an unexpected continue statement
+	ContinueError = errors.New("Unexpected continue statement")
+	// ReturnError when there is an unexpected return statement
+	ReturnError = errors.New("Unexpected return statement")
+	// InterruptError when execution has been interrupted
 	InterruptError = errors.New("Execution interrupted")
 )
 
