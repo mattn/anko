@@ -691,7 +691,6 @@ func TestMaps(t *testing.T) {
 		{script: `a = {"b": 1}`, runOutput: map[string]interface{}{"b": int64(1)}, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1)}}},
 		{script: `a = {"b": 1.1}`, runOutput: map[string]interface{}{"b": float64(1.1)}, output: map[string]interface{}{"a": map[string]interface{}{"b": float64(1.1)}}},
 		{script: `a = {"b": "b"}`, runOutput: map[string]interface{}{"b": "b"}, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
-		{script: `a = {"b": "b"}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
 
 		{script: `a = {"b": {}}`, runOutput: map[string]interface{}{"b": map[string]interface{}{}}, output: map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{}}}},
 		{script: `a = {"b": {"c": nil}}`, runOutput: map[string]interface{}{"b": map[string]interface{}{"c": nil}}, output: map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"c": nil}}}},
@@ -713,7 +712,6 @@ func TestMaps(t *testing.T) {
 		{script: `a = {"b": [1]}`, runOutput: map[string]interface{}{"b": []interface{}{int64(1)}}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{int64(1)}}}},
 		{script: `a = {"b": [1.1]}`, runOutput: map[string]interface{}{"b": []interface{}{float64(1.1)}}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{float64(1.1)}}}},
 		{script: `a = {"b": ["c"]}`, runOutput: map[string]interface{}{"b": []interface{}{"c"}}, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"c"}}}},
-		{script: `a = {"b": ["c"]}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
 
 		{script: `a = {}; a.b`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"b": nil}; a.b`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": nil}}},
@@ -871,6 +869,17 @@ func TestMaps(t *testing.T) {
 		{script: `a = {"b": 1, "c": nil}; a.c != 1`, runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{script: `a = {"b": 1, "c": nil}; a.d == 1`, runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{script: `a = {"b": 1, "c": nil}; a.d != 1`, runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+	}
+	runTests(t, tests)
+}
+
+func TestDeleteMaps(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = {"b": "b"}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: `a = {"b": ["c"]}; delete(a, "b")`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: `a = {"b": "b"}; delete(a, 123)`, runError: fmt.Errorf("The key parameter of delete must be string")},
+		{script: `delete("b", "b")`, runError: fmt.Errorf("delete only works on map")},
 	}
 	runTests(t, tests)
 }
