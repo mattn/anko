@@ -215,3 +215,10 @@ type LenExpr struct {
 	ExprImpl
 	Expr Expr
 }
+
+// DeleteExpr provide `delete(map, key)` expression
+type DeleteExpr struct {
+	ExprImpl
+	MapExpr Expr
+	KeyExpr Expr
+}
