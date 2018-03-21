@@ -512,7 +512,7 @@ func Parse(s *Scanner) ([]ast.Stmt, error) {
 	return l.stmts, l.e
 }
 
-// EnableErrorVerbose enabled verbose errors from the parser 
+// EnableErrorVerbose enabled verbose errors from the parser
 func EnableErrorVerbose() {
 	yyErrorVerbose = true
 }
