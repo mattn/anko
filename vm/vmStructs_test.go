@@ -9,7 +9,7 @@ import (
 func TestStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "a[\"B\"]", input: map[string]interface{}{"a": struct {
+		{script: `a["B"]`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -18,7 +18,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{}}},
-		{script: "a.C", input: map[string]interface{}{"a": struct {
+		{script: `a.C`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -28,7 +28,7 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{}}},
 
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -37,7 +37,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: nil, B: nil}},
@@ -46,7 +46,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: nil, B: nil}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: int32(1), B: int32(2)}},
@@ -55,7 +55,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: int32(1), B: int32(2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: int64(1), B: int64(2)}},
@@ -64,7 +64,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: int64(1), B: int64(2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: float32(1.1), B: float32(2.2)}},
@@ -73,7 +73,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: float32(1.1), B: float32(2.2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: float64(1.1), B: float64(2.2)}},
@@ -82,7 +82,7 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: float64(1.1), B: float64(2.2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
 		}{A: "a", B: "b"}},
@@ -92,7 +92,7 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: "a", B: "b"}}},
 
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A bool
 			B bool
 		}{}},
@@ -101,7 +101,7 @@ func TestStructs(t *testing.T) {
 				A bool
 				B bool
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A int32
 			B int32
 		}{}},
@@ -110,7 +110,7 @@ func TestStructs(t *testing.T) {
 				A int32
 				B int32
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A int64
 			B int64
 		}{}},
@@ -119,7 +119,7 @@ func TestStructs(t *testing.T) {
 				A int64
 				B int64
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A float32
 			B float32
 		}{}},
@@ -128,7 +128,7 @@ func TestStructs(t *testing.T) {
 				A float32
 				B float32
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A float64
 			B float64
 		}{}},
@@ -137,7 +137,7 @@ func TestStructs(t *testing.T) {
 				A float64
 				B float64
 			}{}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A string
 			B string
 		}{}},
@@ -147,7 +147,7 @@ func TestStructs(t *testing.T) {
 				B string
 			}{}}},
 
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A bool
 			B bool
 		}{A: true, B: true}},
@@ -156,7 +156,7 @@ func TestStructs(t *testing.T) {
 				A bool
 				B bool
 			}{A: true, B: true}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A int32
 			B int32
 		}{A: int32(1), B: int32(2)}},
@@ -165,7 +165,7 @@ func TestStructs(t *testing.T) {
 				A int32
 				B int32
 			}{A: int32(1), B: int32(2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A int64
 			B int64
 		}{A: int64(1), B: int64(2)}},
@@ -174,7 +174,7 @@ func TestStructs(t *testing.T) {
 				A int64
 				B int64
 			}{A: int64(1), B: int64(2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A float32
 			B float32
 		}{A: float32(1.1), B: float32(2.2)}},
@@ -183,7 +183,7 @@ func TestStructs(t *testing.T) {
 				A float32
 				B float32
 			}{A: float32(1.1), B: float32(2.2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A float64
 			B float64
 		}{A: float64(1.1), B: float64(2.2)}},
@@ -192,7 +192,7 @@ func TestStructs(t *testing.T) {
 				A float64
 				B float64
 			}{A: float64(1.1), B: float64(2.2)}}},
-		{script: "a.B", input: map[string]interface{}{"a": struct {
+		{script: `a.B`, input: map[string]interface{}{"a": struct {
 			A string
 			B string
 		}{A: "a", B: "b"}},
@@ -202,7 +202,7 @@ func TestStructs(t *testing.T) {
 				B string
 			}{A: "a", B: "b"}}},
 
-		{script: "a.C = 3", input: map[string]interface{}{
+		{script: `a.C = 3`, input: map[string]interface{}{
 			"a": struct {
 				A interface{}
 				B interface{}
@@ -214,7 +214,7 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: int64(1), B: int64(2)}}},
 
-		{script: "a.B = 3", input: map[string]interface{}{"a": &struct {
+		{script: `a.B = 3`, input: map[string]interface{}{"a": &struct {
 			A interface{}
 			B interface{}
 		}{A: int64(1), B: int64(2)}},
@@ -224,7 +224,7 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: int64(1), B: int64(3)}}},
 
-		{script: "a.B = 3; a = *a", input: map[string]interface{}{"a": &struct {
+		{script: `a.B = 3; a = *a`, input: map[string]interface{}{"a": &struct {
 			A interface{}
 			B interface{}
 		}{A: int64(1), B: int64(2)}},
@@ -243,7 +243,7 @@ func TestStructs(t *testing.T) {
 func TestMakeStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: "make(struct)", types: map[string]interface{}{"struct": &struct {
+		{script: `make(struct)`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -252,7 +252,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}},
 
-		{script: "a = make(struct)", types: map[string]interface{}{"struct": &struct {
+		{script: `a = make(struct)`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -265,7 +265,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}}},
 
-		{script: "a = make(struct); a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
+		{script: `a = make(struct); a.A = 3; a.B = 4`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -275,7 +275,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{script: "a = make(struct); a = *a; a.A = 3; a.B = 4", types: map[string]interface{}{"struct": &struct {
+		{script: `a = make(struct); a = *a; a.A = 3; a.B = 4`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -285,12 +285,12 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{script: "a = make(struct); a.A = func () { return 1 }; a.A()", types: map[string]interface{}{"struct": &struct {
+		{script: `a = make(struct); a.A = func () { return 1 }; a.A()`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
 			runOutput: int64(1)},
-		{script: "a = make(struct); a.A = func () { return 1 }; a = *a; a.A()", types: map[string]interface{}{"struct": &struct {
+		{script: `a = make(struct); a.A = func () { return 1 }; a = *a; a.A()`, types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
 		}{}},
