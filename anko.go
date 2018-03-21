@@ -23,9 +23,10 @@ import (
 const version = "0.0.1"
 
 var (
-	fs   = flag.NewFlagSet(os.Args[0], 1)
-	line = fs.String("e", "", "One line of program")
-	v    = fs.Bool("v", false, "Display version")
+	fs    = flag.NewFlagSet(os.Args[0], 1)
+	line  = fs.String("e", "", "One line of program")
+	check = fs.Bool("c", false, "Check syntax")
+	v     = fs.Bool("v", false, "Display version")
 
 	istty = isatty.IsTerminal(os.Stdout.Fd())
 )
@@ -56,7 +57,7 @@ func main() {
 	)
 
 	env := vm.NewEnv()
-	interactive := fs.NArg() == 0 && *line == ""
+	interactive := fs.NArg() == 0 && *line == "" && *check == false
 
 	env.Define("args", fs.Args())
 
@@ -161,17 +162,19 @@ func main() {
 
 			if interactive {
 				continue
-			} else {
-				os.Exit(1)
 			}
-		} else {
-			if interactive {
-				colortext(ct.Black, true, func() {
-					fmt.Printf("%#v\n", v)
-				})
-			} else {
-				break
-			}
+			os.Exit(1)
 		}
+		if *check {
+			fmt.Fprintln(os.Stdout, "Syntax OK")
+			return
+		}
+
+		if !interactive {
+			break
+		}
+		colortext(ct.Black, true, func() {
+			fmt.Printf("%#v\n", v)
+		})
 	}
 }
