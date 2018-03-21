@@ -22,7 +22,7 @@ type testStruct struct {
 func TestDefineImport(t *testing.T) {
 	env := vm.NewEnv()
 	DefineImport(env)
-	value, err := env.Execute("strings = import(\"strings\"); strings.ToLower(\"TEST\")")
+	value, err := env.Execute(`strings = import("strings"); strings.ToLower("TEST")`)
 	if err != nil {
 		t.Errorf("Execute error - received: %v - expected: %v", err, nil)
 	}
@@ -35,7 +35,7 @@ func TestDefineImportPackageNotFound(t *testing.T) {
 	os.Unsetenv("ANKO_DEBUG")
 	env := vm.NewEnv()
 	DefineImport(env)
-	value, err := env.Execute("a = import(\"a\")")
+	value, err := env.Execute(`a = import("a")`)
 	expectedError := ("package 'a' not found")
 	if err == nil {
 		t.Errorf("DefineImportPackageNotFound error - received: %v - expected: %v", err, expectedError)
