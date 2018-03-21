@@ -737,16 +737,22 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	case *ast.DeleteExpr:
 		mapExpr, err := invokeExpr(e.MapExpr, env)
 		if err != nil {
-			return nilValue, newStringError(e.MapExpr, err.Error())
+			return nilValue, newError(e.MapExpr, err)
 		}
 
 		keyExpr, err := invokeExpr(e.KeyExpr, env)
 		if err != nil {
-			return nilValue, newStringError(e.KeyExpr, err.Error())
+			return nilValue, newError(e.KeyExpr, err)
+		}
+
+		if includeReflectKind(mapExpr.Kind(), reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Slice) {
+			if mapExpr.IsNil() {
+				return nilValue, newStringError(e, fmt.Sprintf("first argument to delete must be map; have nil"))
+			}
 		}
 
 		if mapExpr.Kind() != reflect.Map {
-			return nilValue, newStringError(e, "delete only works on map")
+			return nilValue, newStringError(e, fmt.Sprintf("first argument to delete must be map; have %s", mapExpr.Kind()))
 		}
 		if keyExpr.Kind() != reflect.String {
 			return nilValue, newStringError(e, "The key parameter of delete must be string")

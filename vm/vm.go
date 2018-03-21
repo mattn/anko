@@ -355,3 +355,12 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 	}
 	return reflect.New(t).Elem(), nil
 }
+
+func includeReflectKind(kind reflect.Kind, kinds ...reflect.Kind) bool {
+	for _, v := range kinds {
+		if v == kind {
+			return true
+		}
+	}
+	return false
+}

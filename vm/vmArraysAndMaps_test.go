@@ -884,8 +884,8 @@ func TestDeleteMaps(t *testing.T) {
 		{script: `a = {"b": "b"}; delete(a, 123)`, runError: fmt.Errorf("The key parameter of delete must be string")},
 		{script: `a = {"b": "b"}; delete(a, 1++)`, runError: fmt.Errorf("Invalid operation")},
 
-		{script: `delete("b", "b")`, runError: fmt.Errorf("delete only works on map")},
-		{script: `delete(nil, "b")`, runError: fmt.Errorf("delete only works on map")},
+		{script: `delete(nil, "b")`, runError: fmt.Errorf("first argument to delete must be map; have nil")},
+		{script: `delete("b", "b")`, runError: fmt.Errorf("first argument to delete must be map; have string")},
 		{script: `delete(1++, "b")`, runError: fmt.Errorf("Invalid operation")},
 		{script: `delete({}, "b")`, runOutput: nil, output: map[string]interface{}{}},
 	}
