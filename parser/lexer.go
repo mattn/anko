@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	// End of file.
+	// EOF is short for End of file.
 	EOF = -1
-	// End of line.
+	// EOL is short for End of line.
 	EOL = '\n'
 )
 
