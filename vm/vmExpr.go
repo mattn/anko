@@ -1,10 +1,8 @@
 package vm
 
 import (
-	"errors"
 	"fmt"
 	"math"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -680,20 +678,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			size = int(toInt64(rv))
 		}
 
-		return func() (reflect.Value, error) {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
-		}()
+		return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
 
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)

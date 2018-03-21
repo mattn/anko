@@ -204,7 +204,7 @@ func TestFunctions(t *testing.T) {
 		{script: `if true { module a { func b() { return 1} } }; a.b()`, runOutput: int64(1)},
 
 		{script: `a = 1; func b() { a = 2 }; b()`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
-		{script: `b(a); a`, input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2) }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+		{script: `b(a); a`, input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2); _ = c }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: `func b() { }; go b()`, runOutput: nil},
 
 		{script: `b(a)`, input: map[string]interface{}{"a": nil, "b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": nil}},
