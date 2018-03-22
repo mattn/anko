@@ -465,7 +465,7 @@ for {
 `,
 		`
 a = []
-for i = 0; i < 10000; i++ {
+for i = 0; i < 100000; i++ {
 	a += 1
 }
 closeWaitChan()
@@ -474,7 +474,7 @@ for i in a {
 `,
 		`
 a = []
-for i = 0; i < 10000; i++ {
+for i = 0; i < 100000; i++ {
 	a += 1
 }
 closeWaitChan()
@@ -497,7 +497,7 @@ for i = 0; true; nil {
 `,
 		`
 a = {}
-for i = 0; i < 10000; i++ {
+for i = 0; i < 100000; i++ {
 	a[toString(i)] = 1
 }
 closeWaitChan()
@@ -506,7 +506,7 @@ for i in a {
 `,
 		`
 a = {}
-for i = 0; i < 10000; i++ {
+for i = 0; i < 100000; i++ {
 	a[toString(i)] = 1
 }
 closeWaitChan()
@@ -545,10 +545,8 @@ func runInterruptTest(t *testing.T, script string) {
 	}()
 
 	_, err = env.Execute(script)
-	if err == nil {
-		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
-	} else if err.Error() != ErrInterrupt.Error() {
-		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+	if err == nil || err.Error() != InterruptError.Error() {
+		t.Errorf("Execute error - received %#v - expected: %#v", err, InterruptError)
 	}
 }
 
@@ -560,10 +558,8 @@ func TestInterruptConcurrency(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		go func() {
 			_, err := env.Execute("for { }")
-			if err == nil {
-				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
-			} else if err.Error() != ErrInterrupt.Error() {
-				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+			if err != InterruptError {
+				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
 			}
 			waitGroup.Done()
 		}()
@@ -573,15 +569,13 @@ func TestInterruptConcurrency(t *testing.T) {
 	waitGroup.Wait()
 
 	_, err := env.Execute("for { }")
-	if err == nil {
-		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
-	} else if err.Error() != ErrInterrupt.Error() {
-		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+	if err != InterruptError {
+		t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
 	}
 
 	ClearInterrupt(env)
 
-	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
+	_, err = env.Execute("for i = 0; i < 10000; i ++ {}")
 	if err != nil {
 		t.Errorf("Execute error - received %v - expected: %v", err, nil)
 	}
@@ -590,10 +584,8 @@ func TestInterruptConcurrency(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		go func() {
 			_, err := env.Execute("for { }")
-			if err == nil {
-				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
-			} else if err.Error() != ErrInterrupt.Error() {
-				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+			if err != InterruptError {
+				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
 			}
 			waitGroup.Done()
 		}()
