@@ -256,6 +256,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return v.FieldByIndex(field.Index), nil
 		case reflect.Map:
 			v = getMapIndex(reflect.ValueOf(e.Name), v)
+			// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
 			if v == zeroValue {
 				return nilValue, nil
 			}

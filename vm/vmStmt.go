@@ -93,10 +93,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		if len(stmt.Lhss) > 1 && len(rvs) == 1 {
 			v := rvs[0]
-			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
-			if v.IsValid() && v.Kind() == reflect.Slice {
+			if v.Kind() == reflect.Slice {
 				rvs = make([]reflect.Value, v.Len())
 				for i := 0; i < v.Len(); i++ {
 					rvs[i] = v.Index(i)
@@ -108,7 +108,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				break
 			}
 			v := rvs[i]
-			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
@@ -118,7 +118,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return rvs[len(rvs)-1], nil
 	case *ast.LetMapItemStmt:
-		rv, err := invokeExpr(stmt.Rhss[0], env)
+		rv, err := invokeExpr(stmt.Rhs, env)
 		if err != nil {
 			return nilValue, newError(stmt, err)
 		}
@@ -130,7 +130,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		for i, lhs := range stmt.Lhss {
 			v := rvs[i]
-			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
 			}
 			_, err = invokeLetExpr(lhs, v, env)
