@@ -148,7 +148,7 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 		for i, expr := range callExpr.SubExprs {
 			if addrExpr, ok := expr.(*ast.AddrExpr); ok {
 				if identExpr, ok := addrExpr.Expr.(*ast.IdentExpr); ok {
-					invokeLetExpr(identExpr, args[i].Elem(), env)
+					invokeLetExpr(identExpr, args[i].Elem().Elem(), env)
 				}
 			}
 		}
