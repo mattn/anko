@@ -465,7 +465,7 @@ for {
 `,
 		`
 a = []
-for i = 0; i < 100000; i++ {
+for i = 0; i < 10000; i++ {
 	a += 1
 }
 closeWaitChan()
@@ -474,7 +474,7 @@ for i in a {
 `,
 		`
 a = []
-for i = 0; i < 100000; i++ {
+for i = 0; i < 10000; i++ {
 	a += 1
 }
 closeWaitChan()
@@ -497,7 +497,7 @@ for i = 0; true; nil {
 `,
 		`
 a = {}
-for i = 0; i < 100000; i++ {
+for i = 0; i < 10000; i++ {
 	a[toString(i)] = 1
 }
 closeWaitChan()
@@ -506,7 +506,7 @@ for i in a {
 `,
 		`
 a = {}
-for i = 0; i < 100000; i++ {
+for i = 0; i < 10000; i++ {
 	a[toString(i)] = 1
 }
 closeWaitChan()
@@ -575,7 +575,7 @@ func TestInterruptConcurrency(t *testing.T) {
 
 	ClearInterrupt(env)
 
-	_, err = env.Execute("for i = 0; i < 10000; i ++ {}")
+	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
 	if err != nil {
 		t.Errorf("Execute error - received %v - expected: %v", err, nil)
 	}
