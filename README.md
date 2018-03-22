@@ -106,6 +106,6 @@ Yasuhiro Matsumoto (a.k.a mattn)
 
 # Note
 
-Please note that the language and API may change at any time so be very weary of using in production
+Please note that the master branch is not stable,  the language and API may change at any time.
 
-I will merge breaking changes into master branch often. So please use tagged branch if you want to use stable.
+To mitigate breaking changes, please use tagged branches. New tagged branches will be created for breaking changes.
