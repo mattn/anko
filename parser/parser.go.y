@@ -281,6 +281,9 @@ expr_pairs :
 	}
 	| expr_pairs ',' opt_terms expr_pair
 	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
 		$$ = append($1, $4)
 	}
 
@@ -294,6 +297,9 @@ expr_idents :
 	}
 	| expr_idents ',' opt_terms IDENT
 	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
 		$$ = append($1, $4.Lit)
 	}
 
@@ -336,10 +342,16 @@ exprs :
 	}
 	| exprs ',' opt_terms expr
 	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
 		$$ = append($1, $4)
 	}
 	| exprs ',' opt_terms IDENT
 	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
 
