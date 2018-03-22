@@ -131,5 +131,5 @@ type LetMapItemStmt struct {
 	StmtImpl
 	Lhss     []Expr
 	Operator string
-	Rhss     []Expr
+	Rhs      Expr
 }
