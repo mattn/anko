@@ -895,8 +895,8 @@ func TestAddPackage(t *testing.T) {
 	if err != nil {
 		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
 	}
-	if !reflect.DeepEqual(value, [][]interface{}{[]interface{}{int64(1)}}) {
-		t.Errorf("AddPackage value - received: %#v - expected: %#v", value, [][]interface{}{[]interface{}{int64(1)}})
+	if !reflect.DeepEqual(value, [][]interface{}{{int64(1)}}) {
+		t.Errorf("AddPackage value - received: %#v - expected: %#v", value, [][]interface{}{{int64(1)}})
 	}
 }
 

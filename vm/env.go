@@ -9,6 +9,7 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
+// EnvResolver provides an interface for extrenal values and types
 type EnvResolver interface {
 	Get(string) (reflect.Value, error)
 	Type(string) (reflect.Type, error)
@@ -126,6 +127,7 @@ func (e *Env) AddPackage(name string, methods map[string]interface{}, types map[
 	return pack, nil
 }
 
+// SetExternal sets an external resolver
 func (e *Env) SetExternal(res EnvResolver) {
 	e.external = res
 }

@@ -6,9 +6,14 @@ import (
 	"github.com/mattn/anko/vm"
 )
 
-var Packages = make(map[string]map[string]interface{}, 16)
-var PackageTypes = make(map[string]map[string]interface{}, 4)
+var (
+	// Packages is a where all the packages are stored so they can be imported when wanted
+	Packages = make(map[string]map[string]interface{}, 16)
+	// PackageTypes is a where all the package types are stored so they can be imported when wanted
+	PackageTypes = make(map[string]map[string]interface{}, 4)
+)
 
+// DefineImport defines the vm import command that will import packages and package types when wanted
 func DefineImport(e *vm.Env) {
 	e.Define("import", func(source string) *vm.Env {
 		methods, ok := Packages[source]

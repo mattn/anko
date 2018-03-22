@@ -1,10 +1,8 @@
 package vm
 
 import (
-	"errors"
 	"fmt"
 	"math"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -680,20 +678,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			size = int(toInt64(rv))
 		}
 
-		return func() (reflect.Value, error) {
-			defer func() {
-				if os.Getenv("ANKO_DEBUG") == "" {
-					if ex := recover(); ex != nil {
-						if e, ok := ex.(error); ok {
-							err = e
-						} else {
-							err = errors.New(fmt.Sprint(ex))
-						}
-					}
-				}
-			}()
-			return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
-		}()
+		return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
 
 	case *ast.ChanExpr:
 		rhs, err := invokeExpr(e.Rhs, env)
@@ -739,23 +724,22 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return nilValue, newError(e.MapExpr, err)
 		}
-
 		keyExpr, err := invokeExpr(e.KeyExpr, env)
 		if err != nil {
 			return nilValue, newError(e.KeyExpr, err)
 		}
 
-		if includeReflectKind(mapExpr.Kind(), reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Slice) {
-			if mapExpr.IsNil() {
-				return nilValue, newStringError(e, fmt.Sprintf("first argument to delete must be map; have nil"))
-			}
-		}
-
 		if mapExpr.Kind() != reflect.Map {
-			return nilValue, newStringError(e, fmt.Sprintf("first argument to delete must be map; have %s", mapExpr.Kind()))
+			return nilValue, newStringError(e, "first argument to delete must be map; have "+mapExpr.Kind().String())
 		}
-		if keyExpr.Kind() != reflect.String {
-			return nilValue, newStringError(e, "The key parameter of delete must be string")
+		if mapExpr.IsNil() {
+			return nilValue, nil
+		}
+		if mapExpr.Type().Key() != keyExpr.Type() {
+			keyExpr, err = convertReflectValueToType(keyExpr, mapExpr.Type().Key())
+			if err != nil {
+				return nilValue, newStringError(e, "cannot use type "+mapExpr.Type().Key().String()+" as type "+keyExpr.Type().String()+" in delete")
+			}
 		}
 
 		mapExpr.SetMapIndex(keyExpr, reflect.Value{})

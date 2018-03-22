@@ -402,7 +402,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				defaultStmt = ssd
 				continue
 			}
-			caseStmt:= ss.(*ast.CaseStmt)
+			caseStmt := ss.(*ast.CaseStmt)
 			cv, err := invokeExpr(caseStmt.Expr, env)
 			if err != nil {
 				return nilValue, newError(stmt, err)

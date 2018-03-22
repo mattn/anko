@@ -4,6 +4,7 @@ import (
 	"sort"
 )
 
+// SortFuncsStruct provides functions to be used with Sort
 type SortFuncsStruct struct {
 	LenFunc  func() int
 	LessFunc func(i, j int) bool

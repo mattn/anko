@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	EOF = -1   // End of file.
-	EOL = '\n' // End of line.
+	// EOF is short for End of file.
+	EOF = -1
+	// EOL is short for End of line.
+	EOL = '\n'
 )
 
 // Error provides a convenient interface for handling runtime error.
@@ -501,7 +503,7 @@ func (l *Lexer) Error(msg string) {
 	l.e = &Error{Message: msg, Pos: l.pos, Fatal: false}
 }
 
-// Parser provides way to parse the code using Scanner.
+// Parse provides way to parse the code using Scanner.
 func Parse(s *Scanner) ([]ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
@@ -510,6 +512,7 @@ func Parse(s *Scanner) ([]ast.Stmt, error) {
 	return l.stmts, l.e
 }
 
+// EnableErrorVerbose enabled verbose errors from the parser
 func EnableErrorVerbose() {
 	yyErrorVerbose = true
 }
