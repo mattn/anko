@@ -12,6 +12,9 @@ func TestForLoop(t *testing.T) {
 	tests := []testStruct{
 		{script: `break`, runError: fmt.Errorf("Unexpected break statement")},
 		{script: `continue`, runError: fmt.Errorf("Unexpected continue statement")},
+		{script: `for 1++ { }`, runError: fmt.Errorf("Invalid operation")},
+		{script: `for { 1++ }`, runError: fmt.Errorf("Invalid operation")},
+		{script: `for a in 1++ { }`, runError: fmt.Errorf("Invalid operation")},
 
 		{script: `for { break }`, runOutput: nil},
 		{script: `for {a = 1; if a == 1 { break } }`, runOutput: nil},
