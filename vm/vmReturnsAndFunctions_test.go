@@ -506,14 +506,14 @@ func TestFunctionsInArraysAndMaps(t *testing.T) {
 func TestFunctionConvertions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "0")
 	tests := []testStruct{
-		// params Variadic arg !Variadic
-		{script: `a(true)`, input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, runOutput: []interface{}{true}},
 		{script: `b = func(c){ return c }; a("x", b)`, input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, runOutput: "x"},
 		{script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, types: map[string]interface{}{"struct": &struct {
 			A func(int, int) bool
 		}{}},
 			runOutput: true},
-
+		{script: `b = 1; a(&b)`, input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, output: map[string]interface{}{"b": int64(2)}},
+		// TOFIX:
+		// {script: `b = 1; c = &b; a(c); *c`, input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, runOutput: int64(2), output: map[string]interface{}{"b": int64(2)}},
 		// TODO: add more tests
 	}
 	runTests(t, tests)
@@ -530,6 +530,8 @@ func TestVariadicFunctionConvertions(t *testing.T) {
 	}
 	tests := []testStruct{
 		// params Variadic arg !Variadic
+		{script: `a(true)`, input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, runOutput: []interface{}{true}},
+
 		{script: `a()`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(0)},
 		{script: `a(1)`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(1)},
 		{script: `a(1, 2)`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(3)},
