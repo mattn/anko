@@ -37,26 +37,24 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
 		return convertVmFunctionToType(rv, rt)
 	}
-	if rv.Type() != interfaceType {
-		return rv, fmt.Errorf("invalid type conversion")
+	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
+		value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
+		if err != nil {
+			return rv, err
+		}
+		ptrV, err := makeValue(rt)
+		if err != nil {
+			return rv, err
+		}
+		ptrV.Elem().Set(value)
+		return ptrV, nil
 	}
-	if rv.IsNil() {
-		return makeValue(rt)
+	if rv.Type() == interfaceType {
+		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
-	rv = rv.Elem()
-	if rv.Type() == rt {
-		return rv, nil
-	}
-	if rv.Type().ConvertibleTo(rt) {
-		return rv.Convert(rt), nil
-	}
-	if rv.Type() != interfaceType {
-		return rv, fmt.Errorf("invalid type conversion")
-	}
-	if rv.IsNil() {
-		return makeValue(rt)
-	}
+	// TOFIX: handle if only one is PTR
+
 	return rv, fmt.Errorf("invalid type conversion")
 }
 
