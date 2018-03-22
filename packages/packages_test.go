@@ -36,16 +36,12 @@ func TestDefineImportPackageNotFound(t *testing.T) {
 	env := vm.NewEnv()
 	DefineImport(env)
 	value, err := env.Execute(`a = import("a")`)
-	expectedError := ("package 'a' not found")
-	if err == nil {
-		t.Errorf("DefineImportPackageNotFound error - received: %v - expected: %v", err, expectedError)
-	} else {
-		if err.Error() != expectedError {
-			t.Errorf("DefineImportPackageNotFound error - received: %v - expected: %v", err, expectedError)
-		}
+	expectedError := "package 'a' not found"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Execute error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
-		t.Errorf("DefineImportPackageNotFound value - received: %v - expected: %v", value, nil)
+		t.Errorf("Execute value - received: %v - expected: %v", value, nil)
 	}
 }
 
@@ -161,5 +157,33 @@ loop:
 		}
 
 		env.Destroy()
+	}
+}
+
+func TestDefineImportPackageDefineError(t *testing.T) {
+	os.Unsetenv("ANKO_DEBUG")
+	Packages["testPackage"] = map[string]interface{}{"bad.name": testing.Coverage}
+	env := vm.NewEnv()
+	DefineImport(env)
+
+	value, err := env.Execute(`a = import("testPackage")`)
+	expectedError := "import Define error: Unknown symbol 'bad.name'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Execute error - received: %v - expected: %v", err, expectedError)
+	}
+	if value != nil {
+		t.Errorf("Execute value - received: %v - expected: %v", value, nil)
+	}
+
+	Packages["testPackage"] = map[string]interface{}{"Coverage": testing.Coverage}
+	PackageTypes["testPackage"] = map[string]interface{}{"bad.name": int64(1)}
+
+	value, err = env.Execute(`a = import("testPackage")`)
+	expectedError = "import DefineType error: Unknown symbol 'bad.name'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Execute error - received: %v - expected: %v", err, expectedError)
+	}
+	if value != nil {
+		t.Errorf("Execute value - received: %v - expected: %v", value, nil)
 	}
 }
