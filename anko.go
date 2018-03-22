@@ -20,7 +20,7 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 var (
 	fs   = flag.NewFlagSet(os.Args[0], 1)
