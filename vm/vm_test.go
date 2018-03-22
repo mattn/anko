@@ -537,9 +537,9 @@ func runInterruptTest(t *testing.T, script string) {
 
 	_, err = env.Execute(script)
 	if err == nil {
-		t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
-	} else if err.Error() != InterruptError.Error() {
-		t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
+		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+	} else if err.Error() != ErrInterrupt.Error() {
+		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
 	}
 }
 
@@ -552,9 +552,9 @@ func TestInterruptConcurrency(t *testing.T) {
 		go func() {
 			_, err := env.Execute("for { }")
 			if err == nil {
-				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
-			} else if err.Error() != InterruptError.Error() {
-				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
+				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+			} else if err.Error() != ErrInterrupt.Error() {
+				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
 			}
 			waitGroup.Done()
 		}()
@@ -565,9 +565,9 @@ func TestInterruptConcurrency(t *testing.T) {
 
 	_, err := env.Execute("for { }")
 	if err == nil {
-		t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
-	} else if err.Error() != InterruptError.Error() {
-		t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
+		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+	} else if err.Error() != ErrInterrupt.Error() {
+		t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
 	}
 
 	ClearInterrupt(env)
@@ -582,9 +582,9 @@ func TestInterruptConcurrency(t *testing.T) {
 		go func() {
 			_, err := env.Execute("for { }")
 			if err == nil {
-				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
-			} else if err.Error() != InterruptError.Error() {
-				t.Errorf("Execute error - received %v - expected: %v", err, InterruptError)
+				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
+			} else if err.Error() != ErrInterrupt.Error() {
+				t.Errorf("Execute error - received %v - expected: %v", err, ErrInterrupt)
 			}
 			waitGroup.Done()
 		}()

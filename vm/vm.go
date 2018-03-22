@@ -35,14 +35,14 @@ var (
 	zeroValue                 = reflect.Value{}
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
-	// BreakError when there is an unexpected break statement
-	BreakError = errors.New("Unexpected break statement")
-	// ContinueError when there is an unexpected continue statement
-	ContinueError = errors.New("Unexpected continue statement")
-	// ReturnError when there is an unexpected return statement
-	ReturnError = errors.New("Unexpected return statement")
-	// InterruptError when execution has been interrupted
-	InterruptError = errors.New("Execution interrupted")
+	// ErrBreak when there is an unexpected break statement
+	ErrBreak = errors.New("Unexpected break statement")
+	// ErrContinue when there is an unexpected continue statement
+	ErrContinue = errors.New("Unexpected continue statement")
+	// ErrReturn when there is an unexpected return statement
+	ErrReturn = errors.New("Unexpected return statement")
+	// ErrInterrupt when execution has been interrupted
+	ErrInterrupt = errors.New("Execution interrupted")
 )
 
 // newStringError makes error interface with message.
@@ -64,7 +64,7 @@ func newError(pos ast.Pos, err error) error {
 	if err == nil {
 		return nil
 	}
-	if err == BreakError || err == ContinueError || err == ReturnError {
+	if err == ErrBreak || err == ErrContinue || err == ErrReturn {
 		return err
 	}
 	if pe, ok := err.(*parser.Error); ok {
@@ -85,7 +85,7 @@ func (e *Error) Error() string {
 // This includes all parent & child environments.
 // Note that the execution is not instantly aborted: after a call to Interrupt,
 // the current running statement will finish, but the next statement will not run,
-// and instead will return a nilValue and an InterruptError.
+// and instead will return a nilValue and an ErrInterrupt.
 func Interrupt(env *Env) {
 	env.Lock()
 	*(env.interrupt) = true
