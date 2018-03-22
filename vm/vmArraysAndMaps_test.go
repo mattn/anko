@@ -911,6 +911,11 @@ func TestDeleteMaps(t *testing.T) {
 		{script: `a = {"b": ["b"]}; delete(a, "b")`, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"b": ["b"], "c": ["c"]}; delete(a, "a")`, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}, "c": []interface{}{"c"}}}},
 		{script: `a = {"b": ["b"], "c": ["c"]}; delete(a, "b")`, output: map[string]interface{}{"a": map[string]interface{}{"c": []interface{}{"c"}}}},
+
+		{script: `a = {"b": ["b"]}; b = &a; delete(*b, "a")`, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}}}},
+		{script: `a = {"b": ["b"]}; b = &a; delete(*b, "b")`, output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "a")`, output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}, "c": []interface{}{"c"}}}},
+		{script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "b")`, output: map[string]interface{}{"a": map[string]interface{}{"c": []interface{}{"c"}}}},
 	}
 	runTests(t, tests)
 }

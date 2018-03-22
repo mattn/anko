@@ -729,6 +729,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return nilValue, newError(e.KeyExpr, err)
 		}
 
+		if mapExpr.Kind() == reflect.Interface && !mapExpr.IsNil() {
+			mapExpr = mapExpr.Elem()
+		}
 		if mapExpr.Kind() != reflect.Map {
 			return nilValue, newStringError(e, "first argument to delete must be map; have "+mapExpr.Kind().String())
 		}
