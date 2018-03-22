@@ -257,6 +257,14 @@ func TestMakeType(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestMap(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = {"a":1}; a["b"]`, runOutput: nil},
+	}
+	runTests(t, tests)
+}
+
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{

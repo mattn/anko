@@ -224,12 +224,6 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 		value = reflect.ValueOf(value.Interface())
 	}
 
-	// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
-	// Unware of any other way for this to be done to correct that
-	if value == zeroValue {
-		return nilValue
-	}
-
 	return value
 }
 

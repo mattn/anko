@@ -117,6 +117,28 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return rvs[len(rvs)-1], nil
+	case *ast.LetMapItemStmt:
+		rv, err := invokeExpr(stmt.Rhss[0], env)
+		if err != nil {
+			return nilValue, newError(stmt, err)
+		}
+		var rvs []reflect.Value
+		if rv != zeroValue {
+			rvs = []reflect.Value{rv, trueValue}
+		} else {
+			rvs = []reflect.Value{nilValue, falseValue}
+		}
+		for i, lhs := range stmt.Lhss {
+			v := rvs[i]
+			if v.IsValid() && v.Kind() == reflect.Interface && !v.IsNil() {
+				v = v.Elem()
+			}
+			_, err = invokeLetExpr(lhs, v, env)
+			if err != nil {
+				return nilValue, newError(lhs, err)
+			}
+		}
+		return rvs[0], nil
 	case *ast.IfStmt:
 		// If
 		rv, err := invokeExpr(stmt.If, env)

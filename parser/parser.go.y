@@ -109,7 +109,15 @@ stmt :
 	}
 	| expr_many '=' expr_many
 	{
-		$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+		if len($1) == 2 && len($3) == 1 {
+			if _, ok := $3[0].(*ast.ItemExpr); ok {
+				$$ = &ast.LetMapItemStmt{Lhss: $1, Operator: "=", Rhss: $3}
+			} else {
+				$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+			}
+		} else {
+			$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+		}
 	}
 	| BREAK
 	{

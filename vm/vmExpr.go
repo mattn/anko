@@ -256,6 +256,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return v.FieldByIndex(field.Index), nil
 		case reflect.Map:
 			v = getMapIndex(reflect.ValueOf(e.Name), v)
+			if v == zeroValue {
+				return nilValue, nil
+			}
 			return v, nil
 		default:
 			return nilValue, newStringError(e, "type "+v.Kind().String()+" does not support member operation")
