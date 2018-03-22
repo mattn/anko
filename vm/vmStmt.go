@@ -84,12 +84,29 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		return rvs[len(rvs)-1], nil
 	case *ast.LetsStmt:
 		var err error
+		var mapitem bool
+		if len(stmt.Lhss) == 2 && len(stmt.Rhss) == 1 {
+			if _, ok := stmt.Rhss[0].(*ast.ItemExpr); ok {
+				mapitem = true
+			}
+		}
 		rvs := make([]reflect.Value, len(stmt.Rhss))
 		for i, rhs := range stmt.Rhss {
 			rvs[i], err = invokeExpr(rhs, env)
 			if err != nil {
+				if err == errMapKey {
+					break
+				}
 				return nilValue, newError(rhs, err)
 			}
+		}
+		if mapitem {
+			if err != nil {
+				rvs = append(rvs, falseValue)
+			} else {
+				rvs = append(rvs, trueValue)
+			}
+
 		}
 		if len(stmt.Lhss) > 1 && len(rvs) == 1 {
 			v := rvs[0]

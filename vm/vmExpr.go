@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/mattn/anko/ast"
 )
+
+var errMapKey = errors.New("invalid map key")
 
 // invokeExpr evaluates one expression.
 func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
@@ -255,7 +258,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return v.FieldByIndex(field.Index), nil
 		case reflect.Map:
-			v = getMapIndex(reflect.ValueOf(e.Name), v)
+			var ok bool
+			v, ok := getMapIndex(reflect.ValueOf(e.Name), v)
+			if !ok {
+				return v, errMapKey
+			}
 			return v, nil
 		default:
 			return nilValue, newStringError(e, "type "+v.Kind().String()+" does not support member operation")
@@ -291,7 +298,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			}
 			return nilValue, newStringError(e, "invalid type conversion")
 		case reflect.Map:
-			v = getMapIndex(i, v)
+			var ok bool
+			v, ok = getMapIndex(i, v)
+			if !ok {
+				return v, errMapKey
+			}
 			return v, nil
 		default:
 			return nilValue, newStringError(e, "type "+v.Kind().String()+" does not support index operation")
