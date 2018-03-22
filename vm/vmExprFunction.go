@@ -47,7 +47,7 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 		}
 
 		rv, err = run(funcExpr.Stmts, newEnv)
-		if err != nil && err != ReturnError {
+		if err != nil && err != ErrReturn {
 			err = newError(funcExpr, err)
 			return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
 		}
