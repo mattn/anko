@@ -201,9 +201,9 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	return reflect.DeepEqual(lhsV, rhsV)
 }
 
-func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
+func getMapIndex(key reflect.Value, aMap reflect.Value) (reflect.Value, bool) {
 	if !aMap.IsValid() || aMap.IsNil() {
-		return nilValue
+		return nilValue, false
 	}
 
 	keyType := key.Type()
@@ -213,7 +213,7 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 		}
 	}
 	if keyType != aMap.Type().Key() {
-		return nilValue
+		return nilValue, false
 	}
 
 	// From reflect MapIndex:
@@ -227,10 +227,10 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
 	// Unware of any other way for this to be done to correct that
 	if value == zeroValue {
-		return nilValue
+		return nilValue, false
 	}
 
-	return value
+	return value, true
 }
 
 func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
