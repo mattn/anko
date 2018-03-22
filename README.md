@@ -29,7 +29,7 @@ func plus(n){
 x = 1
 y = x + 1
 
-# print values 
+# print values
 println(x * (y + 2 * x + plus(x) / 2))
 
 # if/else condition
@@ -73,7 +73,7 @@ if err != nil {
 	panic(err)
 }
 
-fmt.Println(val) 
+fmt.Println(val)
 // output:
 // 3
 ```
@@ -107,3 +107,5 @@ Yasuhiro Matsumoto (a.k.a mattn)
 # Note
 
 Please note that the language and API may change at any time so be very weary of using in production
+
+I will merge breaking changes into master branch often. So please use tagged branch if you want to use stable.
