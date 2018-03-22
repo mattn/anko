@@ -11,8 +11,11 @@ func TestBasicOperators(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	testInput1 := map[string]interface{}{"b": func() {}}
 	tests := []testStruct{
-		{script: `]`, parseError: fmt.Errorf("syntax error"), runOutput: nil},
-		{script: `1 = 2`, runError: fmt.Errorf("Invalid operation"), runOutput: nil},
+		{script: `]`, parseError: fmt.Errorf("syntax error")},
+		{script: `1 = 2`, runError: fmt.Errorf("Invalid operation")},
+		// TOFIX:
+		{script: `,b = 1, 2`, runOutput: int64(2)},
+		{script: `a, b = ,2`, runOutput: int64(2)},
 
 		{script: `2 + 1`, runOutput: int64(3)},
 		{script: `2 - 1`, runOutput: int64(1)},

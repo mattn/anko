@@ -750,25 +750,26 @@ expr :
 		$$.SetPosition($1.Position())
 	}
 
-opt_terms : /* none */
+opt_terms : 
+	/* none */
 	| terms
 	;
 
 
-terms : term
+terms : 
+	term
 	{
 	}
 	| terms term
 	{
 	}
-	;
 
-term : ';'
+term :
+	';'
 	{
 	}
 	| '\n'
 	{
 	}
-	;
 
 %%

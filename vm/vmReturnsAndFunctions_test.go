@@ -168,6 +168,7 @@ func TestFunctions(t *testing.T) {
 		{script: `a = [true]; a()`, runError: fmt.Errorf("cannot call type []interface {}")},
 		{script: `a = [true]; func b(c) { return c() }; b(a)`, runError: fmt.Errorf("cannot call type []interface {}")},
 		{script: `a = {}; a.missing()`, runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{script: `a = 1; b = func(,a){}; a`, parseError: fmt.Errorf("syntax error: unexpected ','"), runOutput: int64(1)},
 
 		{script: `func a(b) { }; a()`, runError: fmt.Errorf("function wants 1 arguments but received 0")},
 		{script: `func a(b) { }; a(true, true)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
