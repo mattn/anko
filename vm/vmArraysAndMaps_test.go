@@ -424,6 +424,11 @@ func TestArraySlice(t *testing.T) {
 		{script: `a = [1, 2, 3]; a[:0] = 4`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[:1] = 4`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[:4] = 4`, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2].a`, runError: fmt.Errorf("type slice does not support member operation"), output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
+
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2]`, runOutput: []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}}, output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2][0].b`, runOutput: "b", output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
 	}
 	runTests(t, tests)
 }
