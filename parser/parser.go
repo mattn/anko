@@ -393,11 +393,7 @@ var yyExca = [...]int{
 	-2, 132,
 }
 
-const yyNprod = 138
 const yyPrivate = 57344
-
-var yyTokenNames []string
-var yyStates []string
 
 const yyLast = 3037
 
@@ -1287,7 +1283,7 @@ yydefault:
 		{
 			if len(yyDollar[1].expr_many) == 2 && len(yyDollar[3].expr_many) == 1 {
 				if _, ok := yyDollar[3].expr_many[0].(*ast.ItemExpr); ok {
-					yyVAL.stmt = &ast.LetMapItemStmt{Lhss: yyDollar[1].expr_many, Operator: "=", Rhs: yyDollar[3].expr_many[0]}
+					yyVAL.stmt = &ast.LetMapItemStmt{Lhss: yyDollar[1].expr_many, Rhs: yyDollar[3].expr_many[0]}
 				} else {
 					yyVAL.stmt = &ast.LetsStmt{Lhss: yyDollar[1].expr_many, Operator: "=", Rhss: yyDollar[3].expr_many}
 				}

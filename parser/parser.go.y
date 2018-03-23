@@ -111,7 +111,7 @@ stmt :
 	{
 		if len($1) == 2 && len($3) == 1 {
 			if _, ok := $3[0].(*ast.ItemExpr); ok {
-				$$ = &ast.LetMapItemStmt{Lhss: $1, Operator: "=", Rhs: $3[0]}
+				$$ = &ast.LetMapItemStmt{Lhss: $1, Rhs: $3[0]}
 			} else {
 				$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
 			}

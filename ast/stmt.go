@@ -129,7 +129,6 @@ type LetsStmt struct {
 // LetMapItemStmt provide statement of let for map item.
 type LetMapItemStmt struct {
 	StmtImpl
-	Lhss     []Expr
-	Operator string
-	Rhs      Expr
+	Lhss []Expr
+	Rhs  Expr
 }
