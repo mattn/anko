@@ -53,7 +53,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return nilValue, newStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 
-			if v.Type() == interfaceType || v.Type() == rv.Type() {
+			if v.Type().Kind() == reflect.Interface && rv.Type().ConvertibleTo(v.Type()) {
 				v.Set(rv)
 				return v, nil
 			}

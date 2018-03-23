@@ -290,7 +290,10 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 
 		// rt.IsVariadic() && callExpr.VarArg
 
-		sliceType := rt.In(numIn - 1).Elem()
+		sliceType := rt.In(numIn - 1)
+		if sliceType.Kind() == reflect.Interface && !arg.IsNil() {
+			sliceType = sliceType.Elem()
+		}
 		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
