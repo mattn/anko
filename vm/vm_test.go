@@ -2,6 +2,7 @@ package vm
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"sync"
@@ -336,8 +337,8 @@ func TestLen(t *testing.T) {
 func TestReferencingAndDereference(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-	// TOFIX:
-	// {script: `a = 1; b = &a; *b = 2; *b`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
+		// TOFIX:
+		// {script: `a = 1; b = &a; *b = 2; *b`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
 	}
 	runTests(t, tests)
 }
@@ -630,5 +631,45 @@ func TestRunSingleStmt(t *testing.T) {
 	}
 	if value != int64(1) {
 		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, int64(1))
+	}
+}
+
+func TestCallFunctionWithVararg(t *testing.T) {
+	env := NewEnv()
+	err := env.Define("X", func(args ...string) []string {
+		return args
+	})
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	want := []string{"foo", "bar", "baz"}
+	err = env.Define("a", want)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	got, err := env.Execute(`X(a...)`)
+	if err != nil {
+		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Execute error - received %#v - expected: %#v", got, want)
+	}
+}
+
+func TestAssignToInterface(t *testing.T) {
+	env := NewEnv()
+	err := env.Define("X", struct {
+		Stdout io.Writer
+	}{})
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	err = env.Define("a", new(os.File))
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	_, err = env.Execute(`X.Stdout = a`)
+	if err != nil {
+		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
