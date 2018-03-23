@@ -873,6 +873,21 @@ func TestMaps(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestExistenceOfKeyInMaps(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = {"b":"b"}; v, ok = a[1++]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = {"b":"b"}; b.c, ok = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
+		{script: `a = {"b":"b"}; v, b.c = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
+
+		{script: `a = {"b":"b"}; v, ok = a["a"]`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": nil, "ok": false}},
+		{script: `a = {"b":"b"}; v, ok = a["b"]`, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": "b", "ok": true}},
+		{script: `a = {"b":"b", "c":"c"}; v, ok = a["a"]`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": nil, "ok": false}},
+		{script: `a = {"b":"b", "c":"c"}; v, ok = a["b"]`, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": "b", "ok": true}},
+	}
+	runTests(t, tests)
+}
+
 func TestDeleteMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
@@ -1157,15 +1172,4 @@ func TestMakeMapsData(t *testing.T) {
 	if b.Get("b") != "b" {
 		t.Errorf("Get value - received %#v - expected: %#v", b.Get("b"), "b")
 	}
-}
-
-func TestExistenceOfKeyInMaps(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `a = {"a":1}; a["a"]`, runOutput: int64(1)},
-		{script: `a = {"a":1}; a["b"]`, runOutput: nil},
-		{script: `a = {"a":1}; v, ok = a["a"]; [v, ok]`, runOutput: []interface{}{int64(1), true}},
-		{script: `a = {"a":1}; v, ok = a["b"]; [v, ok]`, runOutput: []interface{}{nil, false}},
-	}
-	runTests(t, tests)
 }
