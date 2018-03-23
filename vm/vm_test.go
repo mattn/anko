@@ -54,8 +54,6 @@ func TestNumbers(t *testing.T) {
 		{script: `1..1`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "1..1": invalid syntax`)},
 		{script: `0x1g`, parseError: fmt.Errorf("syntax error")},
 		{script: `9223372036854775808`, runError: fmt.Errorf(`strconv.ParseInt: parsing "9223372036854775808": value out of range`)},
-		// TOFIX:
-		{script: `0xe`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "0xe": invalid syntax`)},
 
 		{script: `1`, runOutput: int64(1)},
 		{script: `-1`, runOutput: int64(-1)},
@@ -69,6 +67,8 @@ func TestNumbers(t *testing.T) {
 		{script: `-1e-1`, runOutput: float64(-0.1)},
 		{script: `0x1`, runOutput: int64(1)},
 		{script: `0xc`, runOutput: int64(12)},
+		// TOFIX:
+		{script: `0xe`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "0xe": invalid syntax`)},
 		{script: `0xf`, runOutput: int64(15)},
 		{script: `-0x1`, runOutput: int64(-1)},
 		{script: `-0xc`, runOutput: int64(-12)},

@@ -372,10 +372,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				default:
 					v = reflect.ValueOf(toInt64(v) + 1)
 				}
-				err = env.setValue(alhs.Lit, v)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
+				// not checking err because checked above in get
+				env.setValue(alhs.Lit, v)
 				return v, nil
 			}
 		case "--":
@@ -398,10 +396,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				default:
 					v = reflect.ValueOf(toInt64(v) - 1)
 				}
-				err = env.setValue(alhs.Lit, v)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
+				// not checking err because checked above in get
+				env.setValue(alhs.Lit, v)
 				return v, nil
 			}
 		}
