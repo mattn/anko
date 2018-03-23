@@ -1,0 +1,3 @@
+func X(a) {
+  return a + 1
+}

@@ -77,6 +77,17 @@ func TestRange(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestLoad(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "")
+	tests := []testStruct{
+		{script: `load('testdata/test.ank'); X(1)`, runOutput: int64(2)},
+		{script: `load('testdata/not-found.ank'); X(1)`, runError: errors.New("open testdata/not-found.ank: The system cannot find the file specified.")},
+		{script: `load('testdata/broken.ank'); X(1)`, runError: errors.New("syntax error")},
+		{script: `load('testdata/error.ank'); X(1)`, runError: errors.New("type int64 does not support member operation")},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:
