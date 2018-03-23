@@ -1158,3 +1158,14 @@ func TestMakeMapsData(t *testing.T) {
 		t.Errorf("Get value - received %#v - expected: %#v", b.Get("b"), "b")
 	}
 }
+
+func TestExistenceOfKeyInMaps(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = {"a":1}; a["a"]`, runOutput: int64(1)},
+		{script: `a = {"a":1}; a["b"]`, runOutput: nil},
+		{script: `a = {"a":1}; v, ok = a["a"]; [v, ok]`, runOutput: []interface{}{int64(1), true}},
+		{script: `a = {"a":1}; v, ok = a["b"]; [v, ok]`, runOutput: []interface{}{nil, false}},
+	}
+	runTests(t, tests)
+}
