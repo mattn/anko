@@ -10,7 +10,9 @@ import (
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `return nil++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `return 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `return 1, 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `return 1, 2, 1++`, runError: fmt.Errorf("Invalid operation")},
 
 		{script: `return`, runOutput: nil},
 		{script: `return nil`, runOutput: nil},

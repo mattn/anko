@@ -50,6 +50,10 @@ var (
 func TestIf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: `if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
+		{script: `if false {} else if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
+		{script: `if false {} else if true { 1++ }`, runError: fmt.Errorf("Invalid operation")},
+
 		{script: `if true {}`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 		{script: `if true {}`, input: map[string]interface{}{"a": true}, runOutput: nil, output: map[string]interface{}{"a": true}},
 		{script: `if true {}`, input: map[string]interface{}{"a": int64(1)}, runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
@@ -198,7 +202,10 @@ func TestVar(t *testing.T) {
 func TestModule(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `module a { }; a.b`, runError: fmt.Errorf("Invalid operation 'b'"), runOutput: nil},
+		{script: `module a.b { }`, parseError: fmt.Errorf("syntax error")},
+		{script: `module a { 1++ }`, runError: fmt.Errorf("Invalid operation")},
+		{script: `module a { }; a.b`, runError: fmt.Errorf("Invalid operation 'b'")},
+
 		{script: `module a { b = nil }; a.b`, runOutput: nil},
 		{script: `module a { b = true }; a.b`, runOutput: true},
 		{script: `module a { b = 1 }; a.b`, runOutput: int64(1)},
