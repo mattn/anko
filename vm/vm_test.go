@@ -658,9 +658,10 @@ func TestCallFunctionWithVararg(t *testing.T) {
 
 func TestAssignToInterface(t *testing.T) {
 	env := NewEnv()
-	err := env.Define("X", struct {
+	X := new(struct {
 		Stdout io.Writer
-	}{})
+	})
+	err := env.Define("X", X)
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}
