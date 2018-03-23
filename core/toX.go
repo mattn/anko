@@ -16,6 +16,9 @@ func ImportToX(env *vm.Env) {
 	env.Define("toBool", func(v interface{}) bool {
 		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return false
+		}
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Bool()
 		}
