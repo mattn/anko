@@ -57,11 +57,9 @@ func TestArrays(t *testing.T) {
 		{script: `a = []; a += [1.1]`, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
 		{script: `a = []; a += ["a"]`, runOutput: []interface{}{"a"}, output: map[string]interface{}{"a": []interface{}{"a"}}},
 
-		{script: `a = [1,2]; a[:0]++`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [0]; a[0]++`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = [[0]]; a[0][0]++`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
 
-		{script: `a = [1,2]; a[:0]--`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [2]; a[0]--`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = [[2]]; a[0][0]--`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
 
@@ -364,7 +362,13 @@ func TestMakeArrays(t *testing.T) {
 func TestArraySlice(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `a = [1, 2, 3]; a[:]`, parseError: fmt.Errorf("syntax error")},
+
+		{script: `a = [1, 2]; a[:]`, parseError: fmt.Errorf("syntax error")},
+		{script: `(1++)[0:0]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = [1, 2]; a[1++:0]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[0:1++]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[:0]++`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[:0]--`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 
 		{script: `a = [1, 2, 3]; a[nil:2]`, runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[1:nil]`, runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
