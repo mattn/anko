@@ -28,4 +28,8 @@ func init() {
 		"Minute":          time.Minute,
 		"Hour":            time.Hour,
 	}
+	PackageTypes["time"] = map[string]interface{}{
+		"Ticker": time.Ticker{},
+		"Time":   time.Time{},
+	}
 }
