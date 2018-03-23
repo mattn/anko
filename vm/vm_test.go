@@ -609,7 +609,7 @@ func TestInterruptConcurrency(t *testing.T) {
 }
 
 func TestRunSingleStmt(t *testing.T) {
-	stmts, err := parser.ParseSrc("a = 1")
+	stmts, err := parser.ParseSrc(`a = 1`)
 	if err != nil {
 		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
 	}
@@ -621,6 +621,25 @@ func TestRunSingleStmt(t *testing.T) {
 	}
 	if value != int64(1) {
 		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, int64(1))
+	}
+
+	stmts, err = parser.ParseSrc(`return a`)
+	if err != nil {
+		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
+	}
+
+	env = NewEnv()
+	err = env.defineValue("a", reflect.Value{})
+	if err != nil {
+		t.Errorf("defineValue error - received: %v - expected: %v", err, nil)
+	}
+
+	value, err = RunSingleStmt(stmts[0], env)
+	if err != nil {
+		t.Errorf("RunSingleStmt error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, nil)
 	}
 }
 
