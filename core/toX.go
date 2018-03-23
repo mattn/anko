@@ -14,8 +14,11 @@ import (
 func ImportToX(env *vm.Env) {
 
 	env.Define("toBool", func(v interface{}) bool {
-		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return false
+		}
+		nt := reflect.TypeOf(true)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Bool()
 		}
@@ -43,8 +46,11 @@ func ImportToX(env *vm.Env) {
 	})
 
 	env.Define("toInt", func(v interface{}) int64 {
-		nt := reflect.TypeOf(1)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return 0
+		}
+		nt := reflect.TypeOf(1)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Int()
 		}
@@ -67,8 +73,11 @@ func ImportToX(env *vm.Env) {
 	})
 
 	env.Define("toFloat", func(v interface{}) float64 {
-		nt := reflect.TypeOf(1.0)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return 0
+		}
+		nt := reflect.TypeOf(1.0)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Float()
 		}
@@ -144,13 +153,18 @@ func toSlice(from []interface{}, ptr interface{}) {
 	// We can't just convert from interface{} to whatever the target is (diff memory layout),
 	// so we need to create a New slice of the proper type and copy the values individually
 	t := reflect.TypeOf(ptr).Elem()
+	tt := t.Elem()
 	slice := reflect.MakeSlice(t, len(from), len(from))
 	// Copying the data, val is an addressable Pointer of the actual target type
-	val := reflect.Indirect(reflect.New(t.Elem()))
+	val := reflect.Indirect(reflect.New(tt))
 	for i := 0; i < len(from); i++ {
 		v := reflect.ValueOf(from[i])
-		val.Set(v)
-		slice.Index(i).Set(v)
+		if v.IsValid() && v.Type().ConvertibleTo(tt) {
+			val.Set(v.Convert(tt))
+		} else {
+			val.Set(reflect.Zero(tt))
+		}
+		slice.Index(i).Set(val)
 	}
 	// Ok now assign our slice to the target pointer
 	obj.Set(slice)
