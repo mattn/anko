@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"os"
 	"reflect"
 	"testing"
@@ -57,6 +58,21 @@ func TestKindOf(t *testing.T) {
 		{script: `kindOf(a)`, input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, runOutput: "map", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
 		{script: `a = make(interface); kindOf(a)`, runOutput: "nil", output: map[string]interface{}{"a": interface{}(nil)}},
+	}
+	runTests(t, tests)
+}
+
+func TestRange(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "")
+	tests := []testStruct{
+		{script: `range()`, runError: errors.New("Missing arguments")},
+		{script: `range(-1)`, runOutput: []int64{}},
+		{script: `range(0)`, runOutput: []int64{}},
+		{script: `range(1)`, runOutput: []int64{0}},
+		{script: `range(2)`, runOutput: []int64{0, 1}},
+		{script: `range(10)`, runOutput: []int64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		{script: `range(-1,1)`, runOutput: []int64{-1, 0, 1}},
+		{script: `range(-1,0,1)`, runError: errors.New("Too many arguments")},
 	}
 	runTests(t, tests)
 }
