@@ -73,8 +73,11 @@ func ImportToX(env *vm.Env) {
 	})
 
 	env.Define("toFloat", func(v interface{}) float64 {
-		nt := reflect.TypeOf(1.0)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return 0
+		}
+		nt := reflect.TypeOf(1.0)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Float()
 		}
