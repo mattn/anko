@@ -48,6 +48,35 @@ var (
 	testVarValueString  = reflect.ValueOf("a")
 )
 
+func TestNumbers(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `1..1`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "1..1": invalid syntax`)},
+		{script: `0x1g`, parseError: fmt.Errorf("syntax error")},
+		{script: `9223372036854775808`, runError: fmt.Errorf(`strconv.ParseInt: parsing "9223372036854775808": value out of range`)},
+		// TOFIX:
+		{script: `0xe`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "0xe": invalid syntax`)},
+
+		{script: `1`, runOutput: int64(1)},
+		{script: `-1`, runOutput: int64(-1)},
+		{script: `9223372036854775807`, runOutput: int64(9223372036854775807)},
+		{script: `-9223372036854775807`, runOutput: int64(-9223372036854775807)},
+		{script: `1.1`, runOutput: float64(1.1)},
+		{script: `-1.1`, runOutput: float64(-1.1)},
+		{script: `1e1`, runOutput: float64(10)},
+		{script: `-1e1`, runOutput: float64(-10)},
+		{script: `1e-1`, runOutput: float64(0.1)},
+		{script: `-1e-1`, runOutput: float64(-0.1)},
+		{script: `0x1`, runOutput: int64(1)},
+		{script: `0xc`, runOutput: int64(12)},
+		{script: `0xf`, runOutput: int64(15)},
+		{script: `-0x1`, runOutput: int64(-1)},
+		{script: `-0xc`, runOutput: int64(-12)},
+		{script: `-0xf`, runOutput: int64(-15)},
+	}
+	runTests(t, tests)
+}
+
 func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
