@@ -193,9 +193,14 @@ func TestStrings(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: `var a = 1++`, runError: fmt.Errorf("Invalid operation")},
+
 		{script: `var a = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: `var a, b = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{script: `var a, b, c = 1, 2, 3`, runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+
+		{script: `var a = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1)}},
+		{script: `var a, b = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 	}
 	runTests(t, tests)
 }
