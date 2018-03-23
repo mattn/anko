@@ -153,13 +153,18 @@ func toSlice(from []interface{}, ptr interface{}) {
 	// We can't just convert from interface{} to whatever the target is (diff memory layout),
 	// so we need to create a New slice of the proper type and copy the values individually
 	t := reflect.TypeOf(ptr).Elem()
+	tt := t.Elem()
 	slice := reflect.MakeSlice(t, len(from), len(from))
 	// Copying the data, val is an addressable Pointer of the actual target type
-	val := reflect.Indirect(reflect.New(t.Elem()))
+	val := reflect.Indirect(reflect.New(tt))
 	for i := 0; i < len(from); i++ {
 		v := reflect.ValueOf(from[i])
-		val.Set(v)
-		slice.Index(i).Set(v)
+		if v.IsValid() && v.Type().ConvertibleTo(tt) {
+			val.Set(v.Convert(tt))
+		} else {
+			val.Set(reflect.Zero(tt))
+		}
+		slice.Index(i).Set(val)
 	}
 	// Ok now assign our slice to the target pointer
 	obj.Set(slice)
