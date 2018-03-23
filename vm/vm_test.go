@@ -336,8 +336,8 @@ func TestLen(t *testing.T) {
 func TestReferencingAndDereference(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		// TOFIX:
-		// {script: `a = 1; b = &a; *b = 2; *b`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
+	// TOFIX:
+	// {script: `a = 1; b = &a; *b = 2; *b`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
 	}
 	runTests(t, tests)
 }
