@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/mattn/anko/parser"
@@ -17,6 +18,7 @@ type testStruct struct {
 	input      map[string]interface{}
 	runError   error
 	runOutput  interface{}
+	checkError func(error) bool
 	output     map[string]interface{}
 }
 
@@ -77,6 +79,17 @@ func TestRange(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestLoad(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "")
+	tests := []testStruct{
+		{script: `load('testdata/test.ank'); X(1)`, runOutput: int64(2)},
+		{script: `load('testdata/not-found.ank'); X(1)`, checkError: func(err error) bool { return strings.HasPrefix(err.Error(), "open testdata/not-found.ank:") }},
+		{script: `load('testdata/broken.ank'); X(1)`, runError: errors.New("syntax error")},
+		{script: `load('testdata/error.ank'); X(1)`, runError: errors.New("type int64 does not support member operation")},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:
@@ -116,6 +129,10 @@ loop:
 			if err.Error() != test.runError.Error() {
 				t.Errorf("Run error - received: %v expected: %v - script: %v", err, test.runError, test.script)
 				continue
+			}
+		} else if test.checkError != nil {
+			if !test.checkError(err) {
+				t.Errorf("Run error - unexpected error: %v - script: %v", err, test.script)
 			}
 		} else if err != test.runError {
 			t.Errorf("Run error - received: %v expected: %v - script: %v", err, test.runError, test.script)
