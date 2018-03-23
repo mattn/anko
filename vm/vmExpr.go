@@ -223,16 +223,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Slice {
-			v = v.Index(0)
-		}
 		if !v.IsValid() {
 			return nilValue, newStringError(e, "type invalid does not support member operation")
 		}
-		if v.IsValid() && v.CanInterface() {
+		if v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
 				m, err := vme.get(e.Name)
-				if !m.IsValid() || err != nil {
+				if err != nil || !m.IsValid() {
 					return nilValue, newStringError(e, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 				return m, nil

@@ -344,10 +344,9 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 			if err != nil {
 				return nilValue, err
 			}
-			if !structV.Field(i).CanSet() {
-				return nilValue, fmt.Errorf("struct member '" + t.Field(i).Name + "' cannot be assigned")
+			if structV.Field(i).CanSet() {
+				structV.Field(i).Set(v)
 			}
-			structV.Field(i).Set(v)
 		}
 		return structV, nil
 	}
