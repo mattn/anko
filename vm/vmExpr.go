@@ -409,16 +409,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return invokeLetExpr(e.Lhs, v, env)
 
-	case *ast.LetExpr:
-		rv, err := invokeExpr(e.Rhs, env)
-		if err != nil {
-			return nilValue, newError(e.Rhs, err)
-		}
-		if rv.Kind() == reflect.Interface {
-			rv = rv.Elem()
-		}
-		return invokeLetExpr(e.Lhs, rv, env)
-
 	case *ast.LetsExpr:
 		var err error
 		rvs := make([]reflect.Value, len(e.Rhss))
