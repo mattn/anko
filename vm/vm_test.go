@@ -103,7 +103,7 @@ func TestStrings(t *testing.T) {
 		{script: `a[4]`, input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test"}},
 
 		{script: `a`, input: map[string]interface{}{"a": `"a"`}, runOutput: `"a"`, output: map[string]interface{}{"a": `"a"`}},
-		{script: `a[0]`, input: map[string]interface{}{"a": `"a"`}, runOutput: "\"", output: map[string]interface{}{"a": `"a"`}},
+		{script: `a[0]`, input: map[string]interface{}{"a": `"a"`}, runOutput: `"`, output: map[string]interface{}{"a": `"a"`}},
 		{script: `a[1]`, input: map[string]interface{}{"a": `"a"`}, runOutput: "a", output: map[string]interface{}{"a": `"a"`}},
 
 		{script: `a = "\"a\""`, runOutput: `"a"`, output: map[string]interface{}{"a": `"a"`}},
@@ -122,6 +122,7 @@ func TestStrings(t *testing.T) {
 		{script: `a[1:]`, input: map[string]interface{}{"a": ""}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": ""}},
 		{script: `a[:0]`, input: map[string]interface{}{"a": ""}, runOutput: "", output: map[string]interface{}{"a": ""}},
 		{script: `a[:1]`, input: map[string]interface{}{"a": ""}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": ""}},
+		{script: `a[0:0]`, input: map[string]interface{}{"a": ""}, runOutput: "", output: map[string]interface{}{"a": ""}},
 
 		{script: `a[1:0]`, input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": "test data"}},
 		{script: `a[-1:2]`, input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},

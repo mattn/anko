@@ -21,6 +21,7 @@ func TestArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: `[1++]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `1++[0]`, runError: fmt.Errorf("Invalid operation")},
 
 		{script: `[]`, runOutput: []interface{}{}},
 		{script: `[nil]`, runOutput: []interface{}{nil}},
