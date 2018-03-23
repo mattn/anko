@@ -32,17 +32,11 @@ func isPkgFile(dir os.FileInfo) bool {
 }
 
 func parseDir(p string) (map[string]*ast.Package, error) {
-	_, pn := filepath.Split(p)
-
-	isGoDir := func(d os.FileInfo) bool {
-		if isPkgFile(d) {
-			name := pkgName(p + "/" + d.Name())
-			return name == pn
-		}
-		return false
+	isGoFile := func(d os.FileInfo) bool {
+		return !d.IsDir() && !strings.HasSuffix(d.Name(), "_test.go") && !strings.HasPrefix(d.Name(), "example_")
 	}
 
-	pkgs, err := parser.ParseDir(token.NewFileSet(), p, isGoDir, parser.ParseComments)
+	pkgs, err := parser.ParseDir(token.NewFileSet(), p, isGoFile, parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +63,13 @@ func main() {
 	for _, p := range paths {
 		pp := filepath.Join(p, pkg)
 		pkgs, err := parseDir(pp)
-		if err != nil {
+		if err != nil || len(pkgs) == 0 {
 			continue
 		}
 		names := map[string]bool{}
+		pn := pkg
 		for _, pp := range pkgs {
+			pn = pp.Name
 			for _, f := range pp.Files {
 				for _, d := range f.Decls {
 					switch decl := d.(type) {
@@ -107,22 +103,19 @@ func main() {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		_, pn := filepath.Split(pkg)
 		fmt.Printf(`// Package %s implements %s interface for anko script.
 package %s
 
 import (
-	"github.com/mattn/anko/vm"
-	pkg "%s"
+	"%s"
 )
 
-func Import(env *vm.Env) *vm.Env {
-	m := env.NewModule("%s")
+func init() {
+	Packages["%s"] = map[string]interface{}{
 `, pn, pkg, pn, pkg, pn)
 		for _, k := range keys {
-			fmt.Printf("\t"+`m.Define("%s", pkg.%s)`+"\n", k, k)
+			fmt.Printf(`	"%s": %s.%s,`+"\n", k, pn, k)
 		}
-		fmt.Println("\treturn m")
 		fmt.Println("}")
 	}
 }
