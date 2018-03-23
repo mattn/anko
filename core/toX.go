@@ -14,11 +14,11 @@ import (
 func ImportToX(env *vm.Env) {
 
 	env.Define("toBool", func(v interface{}) bool {
-		nt := reflect.TypeOf(true)
 		rv := reflect.ValueOf(v)
 		if !rv.IsValid() {
 			return false
 		}
+		nt := reflect.TypeOf(true)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Bool()
 		}
@@ -46,8 +46,11 @@ func ImportToX(env *vm.Env) {
 	})
 
 	env.Define("toInt", func(v interface{}) int64 {
-		nt := reflect.TypeOf(1)
 		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return 0
+		}
+		nt := reflect.TypeOf(1)
 		if rv.Type().ConvertibleTo(nt) {
 			return rv.Convert(nt).Int()
 		}
