@@ -13,6 +13,10 @@ var (
 	PackageTypes = make(map[string]map[string]interface{}, 4)
 )
 
+func init() {
+	notAppEngine()
+}
+
 // DefineImport defines the vm import command that will import packages and package types when wanted
 func DefineImport(e *vm.Env) {
 	e.Define("import", func(source string) *vm.Env {

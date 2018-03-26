@@ -1,3 +1,5 @@
+// +build go1.6
+
 package packages
 
 import (
@@ -5,15 +7,19 @@ import (
 )
 
 func init() {
-	Packages["path"] = map[string]interface{}{
-		"Base":          path.Base,
-		"Clean":         path.Clean,
-		"Dir":           path.Dir,
-		"ErrBadPattern": path.ErrBadPattern,
-		"Ext":           path.Ext,
-		"IsAbs":         path.IsAbs,
-		"Join":          path.Join,
-		"Match":         path.Match,
-		"Split":         path.Split,
+	if _, ok := Packages["path"]; !ok {
+		Packages["path"] = make(map[string]interface{})
 	}
+	if _, ok := PackageTypes["path"]; !ok {
+		PackageTypes["path"] = make(map[string]interface{})
+	}
+	Packages["path"]["Base"] = path.Base
+	Packages["path"]["Clean"] = path.Clean
+	Packages["path"]["Dir"] = path.Dir
+	Packages["path"]["ErrBadPattern"] = path.ErrBadPattern
+	Packages["path"]["Ext"] = path.Ext
+	Packages["path"]["IsAbs"] = path.IsAbs
+	Packages["path"]["Join"] = path.Join
+	Packages["path"]["Match"] = path.Match
+	Packages["path"]["Split"] = path.Split
 }

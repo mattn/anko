@@ -6,6 +6,6 @@ import (
 	"os"
 )
 
-func osNotAppEngine() {
+func notAppEngine() {
 	Packages["os"]["Getppid"] = os.Getppid
 }

@@ -1,73 +1,142 @@
-// +build !appengine
+// +build go1.6
 
 package packages
 
 import (
 	"net"
+	"reflect"
 )
 
 func init() {
-	Packages["net"] = map[string]interface{}{
-		"CIDRMask":                   net.CIDRMask,
-		"Dial":                       net.Dial,
-		"DialIP":                     net.DialIP,
-		"DialTCP":                    net.DialTCP,
-		"DialTimeout":                net.DialTimeout,
-		"DialUDP":                    net.DialUDP,
-		"DialUnix":                   net.DialUnix,
-		"ErrWriteToConnected":        net.ErrWriteToConnected,
-		"FileConn":                   net.FileConn,
-		"FileListener":               net.FileListener,
-		"FilePacketConn":             net.FilePacketConn,
-		"FlagBroadcast":              net.FlagBroadcast,
-		"FlagLoopback":               net.FlagLoopback,
-		"FlagMulticast":              net.FlagMulticast,
-		"FlagPointToPoint":           net.FlagPointToPoint,
-		"FlagUp":                     net.FlagUp,
-		"IPv4":                       net.IPv4,
-		"IPv4Mask":                   net.IPv4Mask,
-		"IPv4allrouter":              net.IPv4allrouter,
-		"IPv4allsys":                 net.IPv4allsys,
-		"IPv4bcast":                  net.IPv4bcast,
-		"IPv4len":                    net.IPv4len,
-		"IPv4zero":                   net.IPv4zero,
-		"IPv6interfacelocalallnodes": net.IPv6interfacelocalallnodes,
-		"IPv6len":                    net.IPv6len,
-		"IPv6linklocalallnodes":      net.IPv6linklocalallnodes,
-		"IPv6linklocalallrouters":    net.IPv6linklocalallrouters,
-		"IPv6loopback":               net.IPv6loopback,
-		"IPv6unspecified":            net.IPv6unspecified,
-		"IPv6zero":                   net.IPv6zero,
-		"InterfaceAddrs":             net.InterfaceAddrs,
-		"InterfaceByIndex":           net.InterfaceByIndex,
-		"InterfaceByName":            net.InterfaceByName,
-		"Interfaces":                 net.Interfaces,
-		"JoinHostPort":               net.JoinHostPort,
-		"Listen":                     net.Listen,
-		"ListenIP":                   net.ListenIP,
-		"ListenMulticastUDP":         net.ListenMulticastUDP,
-		"ListenPacket":               net.ListenPacket,
-		"ListenTCP":                  net.ListenTCP,
-		"ListenUDP":                  net.ListenUDP,
-		"ListenUnix":                 net.ListenUnix,
-		"ListenUnixgram":             net.ListenUnixgram,
-		"LookupAddr":                 net.LookupAddr,
-		"LookupCNAME":                net.LookupCNAME,
-		"LookupHost":                 net.LookupHost,
-		"LookupIP":                   net.LookupIP,
-		"LookupMX":                   net.LookupMX,
-		"LookupNS":                   net.LookupNS,
-		"LookupPort":                 net.LookupPort,
-		"LookupSRV":                  net.LookupSRV,
-		"LookupTXT":                  net.LookupTXT,
-		"ParseCIDR":                  net.ParseCIDR,
-		"ParseIP":                    net.ParseIP,
-		"ParseMAC":                   net.ParseMAC,
-		"Pipe":                       net.Pipe,
-		"ResolveIPAddr":              net.ResolveIPAddr,
-		"ResolveTCPAddr":             net.ResolveTCPAddr,
-		"ResolveUDPAddr":             net.ResolveUDPAddr,
-		"ResolveUnixAddr":            net.ResolveUnixAddr,
-		"SplitHostPort":              net.SplitHostPort,
+	if _, ok := Packages["net"]; !ok {
+		Packages["net"] = make(map[string]interface{})
 	}
+	if _, ok := PackageTypes["net"]; !ok {
+		PackageTypes["net"] = make(map[string]interface{})
+	}
+	var addr net.Addr
+	var addrerror net.AddrError
+	var conn net.Conn
+	var dnsconfigerror net.DNSConfigError
+	var dnserror net.DNSError
+	var dialer net.Dialer
+	var error_ net.Error
+	var flags net.Flags
+	var hardwareaddr net.HardwareAddr
+	var ip net.IP
+	var ipaddr net.IPAddr
+	var ipconn net.IPConn
+	var ipmask net.IPMask
+	var ipnet net.IPNet
+	var interface_ net.Interface
+	var invalidaddrerror net.InvalidAddrError
+	var listener net.Listener
+	var mx net.MX
+	var ns net.NS
+	var operror net.OpError
+	var packetconn net.PacketConn
+	var parseerror net.ParseError
+	var srv net.SRV
+	var tcpaddr net.TCPAddr
+	var tcpconn net.TCPConn
+	var tcplistener net.TCPListener
+	var udpaddr net.UDPAddr
+	var udpconn net.UDPConn
+	var unixaddr net.UnixAddr
+	var unixconn net.UnixConn
+	var unixlistener net.UnixListener
+	var unknownnetworkerror net.UnknownNetworkError
+	Packages["net"]["CIDRMask"] = net.CIDRMask
+	Packages["net"]["Dial"] = net.Dial
+	Packages["net"]["DialIP"] = net.DialIP
+	Packages["net"]["DialTCP"] = net.DialTCP
+	Packages["net"]["DialTimeout"] = net.DialTimeout
+	Packages["net"]["DialUDP"] = net.DialUDP
+	Packages["net"]["DialUnix"] = net.DialUnix
+	Packages["net"]["ErrWriteToConnected"] = net.ErrWriteToConnected
+	Packages["net"]["FileConn"] = net.FileConn
+	Packages["net"]["FileListener"] = net.FileListener
+	Packages["net"]["FilePacketConn"] = net.FilePacketConn
+	Packages["net"]["FlagBroadcast"] = net.FlagBroadcast
+	Packages["net"]["FlagLoopback"] = net.FlagLoopback
+	Packages["net"]["FlagMulticast"] = net.FlagMulticast
+	Packages["net"]["FlagPointToPoint"] = net.FlagPointToPoint
+	Packages["net"]["FlagUp"] = net.FlagUp
+	Packages["net"]["IPv4"] = net.IPv4
+	Packages["net"]["IPv4Mask"] = net.IPv4Mask
+	Packages["net"]["IPv4allrouter"] = net.IPv4allrouter
+	Packages["net"]["IPv4allsys"] = net.IPv4allsys
+	Packages["net"]["IPv4bcast"] = net.IPv4bcast
+	Packages["net"]["IPv4len"] = net.IPv4len
+	Packages["net"]["IPv4zero"] = net.IPv4zero
+	Packages["net"]["IPv6interfacelocalallnodes"] = net.IPv6interfacelocalallnodes
+	Packages["net"]["IPv6len"] = net.IPv6len
+	Packages["net"]["IPv6linklocalallnodes"] = net.IPv6linklocalallnodes
+	Packages["net"]["IPv6linklocalallrouters"] = net.IPv6linklocalallrouters
+	Packages["net"]["IPv6loopback"] = net.IPv6loopback
+	Packages["net"]["IPv6unspecified"] = net.IPv6unspecified
+	Packages["net"]["IPv6zero"] = net.IPv6zero
+	Packages["net"]["InterfaceAddrs"] = net.InterfaceAddrs
+	Packages["net"]["InterfaceByIndex"] = net.InterfaceByIndex
+	Packages["net"]["InterfaceByName"] = net.InterfaceByName
+	Packages["net"]["Interfaces"] = net.Interfaces
+	Packages["net"]["JoinHostPort"] = net.JoinHostPort
+	Packages["net"]["Listen"] = net.Listen
+	Packages["net"]["ListenIP"] = net.ListenIP
+	Packages["net"]["ListenMulticastUDP"] = net.ListenMulticastUDP
+	Packages["net"]["ListenPacket"] = net.ListenPacket
+	Packages["net"]["ListenTCP"] = net.ListenTCP
+	Packages["net"]["ListenUDP"] = net.ListenUDP
+	Packages["net"]["ListenUnix"] = net.ListenUnix
+	Packages["net"]["ListenUnixgram"] = net.ListenUnixgram
+	Packages["net"]["LookupAddr"] = net.LookupAddr
+	Packages["net"]["LookupCNAME"] = net.LookupCNAME
+	Packages["net"]["LookupHost"] = net.LookupHost
+	Packages["net"]["LookupIP"] = net.LookupIP
+	Packages["net"]["LookupMX"] = net.LookupMX
+	Packages["net"]["LookupNS"] = net.LookupNS
+	Packages["net"]["LookupPort"] = net.LookupPort
+	Packages["net"]["LookupSRV"] = net.LookupSRV
+	Packages["net"]["LookupTXT"] = net.LookupTXT
+	Packages["net"]["ParseCIDR"] = net.ParseCIDR
+	Packages["net"]["ParseIP"] = net.ParseIP
+	Packages["net"]["ParseMAC"] = net.ParseMAC
+	Packages["net"]["Pipe"] = net.Pipe
+	Packages["net"]["ResolveIPAddr"] = net.ResolveIPAddr
+	Packages["net"]["ResolveTCPAddr"] = net.ResolveTCPAddr
+	Packages["net"]["ResolveUDPAddr"] = net.ResolveUDPAddr
+	Packages["net"]["ResolveUnixAddr"] = net.ResolveUnixAddr
+	Packages["net"]["SplitHostPort"] = net.SplitHostPort
+	PackageTypes["net"]["Addr"] = reflect.TypeOf(&addr).Elem()
+	PackageTypes["net"]["AddrError"] = reflect.TypeOf(&addrerror).Elem()
+	PackageTypes["net"]["Conn"] = reflect.TypeOf(&conn).Elem()
+	PackageTypes["net"]["DNSConfigError"] = reflect.TypeOf(&dnsconfigerror).Elem()
+	PackageTypes["net"]["DNSError"] = reflect.TypeOf(&dnserror).Elem()
+	PackageTypes["net"]["Dialer"] = reflect.TypeOf(&dialer).Elem()
+	PackageTypes["net"]["Error"] = reflect.TypeOf(&error_).Elem()
+	PackageTypes["net"]["Flags"] = reflect.TypeOf(&flags).Elem()
+	PackageTypes["net"]["HardwareAddr"] = reflect.TypeOf(&hardwareaddr).Elem()
+	PackageTypes["net"]["IP"] = reflect.TypeOf(&ip).Elem()
+	PackageTypes["net"]["IPAddr"] = reflect.TypeOf(&ipaddr).Elem()
+	PackageTypes["net"]["IPConn"] = reflect.TypeOf(&ipconn).Elem()
+	PackageTypes["net"]["IPMask"] = reflect.TypeOf(&ipmask).Elem()
+	PackageTypes["net"]["IPNet"] = reflect.TypeOf(&ipnet).Elem()
+	PackageTypes["net"]["Interface"] = reflect.TypeOf(&interface_).Elem()
+	PackageTypes["net"]["InvalidAddrError"] = reflect.TypeOf(&invalidaddrerror).Elem()
+	PackageTypes["net"]["Listener"] = reflect.TypeOf(&listener).Elem()
+	PackageTypes["net"]["MX"] = reflect.TypeOf(&mx).Elem()
+	PackageTypes["net"]["NS"] = reflect.TypeOf(&ns).Elem()
+	PackageTypes["net"]["OpError"] = reflect.TypeOf(&operror).Elem()
+	PackageTypes["net"]["PacketConn"] = reflect.TypeOf(&packetconn).Elem()
+	PackageTypes["net"]["ParseError"] = reflect.TypeOf(&parseerror).Elem()
+	PackageTypes["net"]["SRV"] = reflect.TypeOf(&srv).Elem()
+	PackageTypes["net"]["TCPAddr"] = reflect.TypeOf(&tcpaddr).Elem()
+	PackageTypes["net"]["TCPConn"] = reflect.TypeOf(&tcpconn).Elem()
+	PackageTypes["net"]["TCPListener"] = reflect.TypeOf(&tcplistener).Elem()
+	PackageTypes["net"]["UDPAddr"] = reflect.TypeOf(&udpaddr).Elem()
+	PackageTypes["net"]["UDPConn"] = reflect.TypeOf(&udpconn).Elem()
+	PackageTypes["net"]["UnixAddr"] = reflect.TypeOf(&unixaddr).Elem()
+	PackageTypes["net"]["UnixConn"] = reflect.TypeOf(&unixconn).Elem()
+	PackageTypes["net"]["UnixListener"] = reflect.TypeOf(&unixlistener).Elem()
+	PackageTypes["net"]["UnknownNetworkError"] = reflect.TypeOf(&unknownnetworkerror).Elem()
 }
