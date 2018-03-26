@@ -24,6 +24,10 @@ func Main(arg1) {
 func Tester() {
 	return "YES"
 }
+
+func testLen() {
+	return len("test")
+}
 `
 )
 
