@@ -37,6 +37,7 @@ func TestWalk(t *testing.T) {
 		t.Fatal(err)
 	}
 	var mainFound bool
+	var lenFound bool
 	err = Walk(stmts, func(e interface{}) error {
 		switch exp := e.(type) {
 		case *ast.CallExpr:
@@ -60,6 +61,8 @@ func TestWalk(t *testing.T) {
 			} else if mainFound && exp.Name == `Main` {
 				return errors.New("Main redefined")
 			}
+		case *ast.LenExpr:
+			lenFound = true
 		}
 		return nil
 	})
@@ -68,6 +71,9 @@ func TestWalk(t *testing.T) {
 	}
 	if !mainFound {
 		t.Fatal("Main not found")
+	}
+	if !lenFound {
+		t.Fatal("len not found")
 	}
 }
 
