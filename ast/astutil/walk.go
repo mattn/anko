@@ -1,6 +1,6 @@
 // +build !appengine
 
-package util
+package astutil
 
 import (
 	"fmt"
