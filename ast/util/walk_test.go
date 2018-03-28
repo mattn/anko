@@ -98,8 +98,10 @@ func Main(arg1) {
 	x = new(string)
 	fmt.Println(x)
 
-	x = "foo"
-	fmt.Println(x[0], true)
+	var f = func() {
+		return "foo"
+	}
+	fmt.Println(x()[0], true)
 }
 
 func Tester() {
