@@ -45,6 +45,14 @@ func Main(arg1) {
 	} catch e {
 		fmt.Println(e)
 	}
+
+	for n = 0; n < 3; n++ {
+		fmt.Println(n)
+	}
+
+	for n in [1, 2, 3] {
+		fmt.Println(n)
+	}
 }
 
 func Tester() {
