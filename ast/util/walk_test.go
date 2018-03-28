@@ -211,3 +211,21 @@ fmt.Println(Main())
 		fmt.Println("ERROR: Main not found")
 	}
 }
+
+func TestBadCode(t *testing.T) {
+	var codes = []string{
+		`const 1 = 2`,
+		`a["foo"] = 2, 3`,
+		`if a, 2 {}`,
+		`if a { else }`,
+		`if a { } else foo { }`,
+		`try a { } else { }`,
+		`try { } catch { }`,
+	}
+	for _, code := range codes {
+		_, err := parser.ParseSrc(code)
+		if err == nil {
+			t.Fatalf("code %q should fail", code)
+		}
+	}
+}
