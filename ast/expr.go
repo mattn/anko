@@ -146,13 +146,6 @@ type FuncExpr struct {
 	VarArg bool
 }
 
-// LetExpr provide expression to let variable.
-type LetExpr struct {
-	ExprImpl
-	Lhs Expr
-	Rhs Expr
-}
-
 // LetsExpr provide multiple expression of let.
 type LetsExpr struct {
 	ExprImpl

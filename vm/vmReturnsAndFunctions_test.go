@@ -1,10 +1,12 @@
 package vm
 
 import (
+	// "bytes"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestReturns(t *testing.T) {
@@ -263,15 +265,9 @@ func TestFunctions(t *testing.T) {
 		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{"a"}, "b": func(c interface{}) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{"a"}}},
 
 		// TOFIX:
-		//		{script: `b(a)",
-		//			input: map[string]interface{}{"a": []bool{true, false, true}, "b": func(c ...bool) bool {
-		//				for i := 0; i < len(c); i++ {
-		//					if !c[i] {
-		//						return false
-		//					}
-		//				}
-		//				return true
-		//			}}, runOutput: true, output: map[string]interface{}{"a": true}},
+		//		{script: `b(a)`,
+		//			input:     map[string]interface{}{"a": []bool{true, false, true}, "b": func(c ...bool) bool { return c[len(c)-1] }},
+		//			runOutput: true, output: map[string]interface{}{"a": true}},
 
 		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{true}, "b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{true}}},
 		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{int32(1)}, "b": func(c int32) bool { return c == int32(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int32(1)}}},
@@ -363,6 +359,12 @@ func TestFunctions(t *testing.T) {
 		{script: `a = func(b) { return b + "b" }; a( func(c) { return c + "c" }("a") )`, runOutput: "acb"},
 
 		{script: `a = func(x, y) { return func() { x(y) } }; b = a(func (z) { return z + "z" }, "b"); b()`, runOutput: "bz"},
+
+		{script: `a = make(Time); a.IsZero()`, types: map[string]interface{}{"Time": time.Time{}}, runOutput: true},
+
+		// TOFIX:
+		// {script: `a = make(Buffer); n, err = a.WriteString("b")`, types: map[string]interface{}{"Buffer": bytes.Buffer{}}, runOutput: []interface{}{1, nil}},
+		// {script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, types: map[string]interface{}{"Buffer": bytes.Buffer{}}, runOutput: "b"},
 	}
 	runTests(t, tests)
 }

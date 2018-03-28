@@ -223,16 +223,13 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Slice {
-			v = v.Index(0)
-		}
 		if !v.IsValid() {
 			return nilValue, newStringError(e, "type invalid does not support member operation")
 		}
-		if v.IsValid() && v.CanInterface() {
+		if v.CanInterface() {
 			if vme, ok := v.Interface().(*Env); ok {
 				m, err := vme.get(e.Name)
-				if !m.IsValid() || err != nil {
+				if err != nil || !m.IsValid() {
 					return nilValue, newStringError(e, fmt.Sprintf("Invalid operation '%s'", e.Name))
 				}
 				return m, nil
@@ -289,11 +286,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if v.Kind() != reflect.String {
 				return v.Index(ii), nil
 			}
-			v = v.Index(ii)
-			if v.Type().ConvertibleTo(stringType) {
-				return v.Convert(stringType), nil
-			}
-			return nilValue, newStringError(e, "invalid type conversion")
+			// String
+			return v.Index(ii).Convert(stringType), nil
 		case reflect.Map:
 			v = getMapIndex(i, v)
 			return v, nil
@@ -372,10 +366,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				default:
 					v = reflect.ValueOf(toInt64(v) + 1)
 				}
-				err = env.setValue(alhs.Lit, v)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
+				// not checking err because checked above in get
+				env.setValue(alhs.Lit, v)
 				return v, nil
 			}
 		case "--":
@@ -398,10 +390,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				default:
 					v = reflect.ValueOf(toInt64(v) - 1)
 				}
-				err = env.setValue(alhs.Lit, v)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
+				// not checking err because checked above in get
+				env.setValue(alhs.Lit, v)
 				return v, nil
 			}
 		}
@@ -418,16 +408,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			v = v.Elem()
 		}
 		return invokeLetExpr(e.Lhs, v, env)
-
-	case *ast.LetExpr:
-		rv, err := invokeExpr(e.Rhs, env)
-		if err != nil {
-			return nilValue, newError(e.Rhs, err)
-		}
-		if rv.Kind() == reflect.Interface {
-			rv = rv.Elem()
-		}
-		return invokeLetExpr(e.Lhs, rv, env)
 
 	case *ast.LetsExpr:
 		var err error

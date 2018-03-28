@@ -20,38 +20,46 @@ var (
 func TestArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: `[1++]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `1++[0]`, runError: fmt.Errorf("Invalid operation")},
+
+		{script: `[]`, runOutput: []interface{}{}},
+		{script: `[nil]`, runOutput: []interface{}{nil}},
+		{script: `[true]`, runOutput: []interface{}{true}},
+		{script: `["a"]`, runOutput: []interface{}{"a"}},
+		{script: `[1]`, runOutput: []interface{}{int64(1)}},
+		{script: `[1.1]`, runOutput: []interface{}{float64(1.1)}},
+
 		{script: `a = []`, runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{}}},
 		{script: `a = [nil]`, runOutput: []interface{}{interface{}(nil)}, output: map[string]interface{}{"a": []interface{}{interface{}(nil)}}},
 		{script: `a = [true]`, runOutput: []interface{}{true}, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `a = ["test"]`, runOutput: []interface{}{"test"}, output: map[string]interface{}{"a": []interface{}{"test"}}},
 		{script: `a = [1]`, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = [1.1]`, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{script: `a = ["a"]`, runOutput: []interface{}{"a"}, output: map[string]interface{}{"a": []interface{}{"a"}}},
 
 		{script: `a = [[]]`, runOutput: []interface{}{[]interface{}{}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{}}}},
 		{script: `a = [[nil]]`, runOutput: []interface{}{[]interface{}{interface{}(nil)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{interface{}(nil)}}}},
 		{script: `a = [[true]]`, runOutput: []interface{}{[]interface{}{true}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{true}}}},
-		{script: `a = [["test"]]`, runOutput: []interface{}{[]interface{}{"test"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"test"}}}},
 		{script: `a = [[1]]`, runOutput: []interface{}{[]interface{}{int64(1)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
 		{script: `a = [[1.1]]`, runOutput: []interface{}{[]interface{}{float64(1.1)}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{float64(1.1)}}}},
+		{script: `a = [["a"]]`, runOutput: []interface{}{[]interface{}{"a"}}, output: map[string]interface{}{"a": []interface{}{[]interface{}{"a"}}}},
 
 		{script: `a = []; a += nil`, runOutput: []interface{}{nil}, output: map[string]interface{}{"a": []interface{}{nil}}},
 		{script: `a = []; a += true`, runOutput: []interface{}{true}, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `a = []; a += "test"`, runOutput: []interface{}{"test"}, output: map[string]interface{}{"a": []interface{}{"test"}}},
 		{script: `a = []; a += 1`, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = []; a += 1.1`, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{script: `a = []; a += "a"`, runOutput: []interface{}{"a"}, output: map[string]interface{}{"a": []interface{}{"a"}}},
 
 		{script: `a = []; a += []`, runOutput: []interface{}{}, output: map[string]interface{}{"a": []interface{}{}}},
 		{script: `a = []; a += [nil]`, runOutput: []interface{}{nil}, output: map[string]interface{}{"a": []interface{}{nil}}},
 		{script: `a = []; a += [true]`, runOutput: []interface{}{true}, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `a = []; a += ["test"]`, runOutput: []interface{}{"test"}, output: map[string]interface{}{"a": []interface{}{"test"}}},
 		{script: `a = []; a += [1]`, runOutput: []interface{}{int64(1)}, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = []; a += [1.1]`, runOutput: []interface{}{float64(1.1)}, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{script: `a = []; a += ["a"]`, runOutput: []interface{}{"a"}, output: map[string]interface{}{"a": []interface{}{"a"}}},
 
-		{script: `a = [1,2]; a[:0]++`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [0]; a[0]++`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = [[0]]; a[0][0]++`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
 
-		{script: `a = [1,2]; a[:0]--`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [2]; a[0]--`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `a = [[2]]; a[0][0]--`, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1)}}}},
 
@@ -354,7 +362,13 @@ func TestMakeArrays(t *testing.T) {
 func TestArraySlice(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `a = [1, 2, 3]; a[:]`, parseError: fmt.Errorf("syntax error")},
+
+		{script: `a = [1, 2]; a[:]`, parseError: fmt.Errorf("syntax error")},
+		{script: `(1++)[0:0]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = [1, 2]; a[1++:0]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[0:1++]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[:0]++`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[:0]--`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 
 		{script: `a = [1, 2, 3]; a[nil:2]`, runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[1:nil]`, runError: fmt.Errorf("index must be a number"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
@@ -415,6 +429,11 @@ func TestArraySlice(t *testing.T) {
 		{script: `a = [1, 2, 3]; a[:0] = 4`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[:1] = 4`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{script: `a = [1, 2, 3]; a[:4] = 4`, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2].a`, runError: fmt.Errorf("type slice does not support member operation"), output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
+
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2]`, runOutput: []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}}, output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
+		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2][0].b`, runOutput: "b", output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
 	}
 	runTests(t, tests)
 }
@@ -683,7 +702,18 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: `{"b": 1++}`, runError: fmt.Errorf("Invalid operation")},
 		{script: `a = {}; a.b.c`, runError: fmt.Errorf("type invalid does not support member operation")},
+
+		// TODO: accept non-strings
+		{script: `{1: "b"}`, parseError: fmt.Errorf("syntax error")},
+
+		{script: `{}`, runOutput: map[string]interface{}{}},
+		{script: `{"b": nil}`, runOutput: map[string]interface{}{"b": nil}},
+		{script: `{"b": true}`, runOutput: map[string]interface{}{"b": true}},
+		{script: `{"b": 1}`, runOutput: map[string]interface{}{"b": int64(1)}},
+		{script: `{"b": 1.1}`, runOutput: map[string]interface{}{"b": float64(1.1)}},
+		{script: `{"b": "b"}`, runOutput: map[string]interface{}{"b": "b"}},
 
 		{script: `a = {}`, runOutput: map[string]interface{}{}, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"b": nil}`, runOutput: map[string]interface{}{"b": nil}, output: map[string]interface{}{"a": map[string]interface{}{"b": nil}}},
@@ -869,6 +899,21 @@ func TestMaps(t *testing.T) {
 		{script: `a = {"b": 1, "c": nil}; a.c != 1`, runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{script: `a = {"b": 1, "c": nil}; a.d == 1`, runOutput: false, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{script: `a = {"b": 1, "c": nil}; a.d != 1`, runOutput: true, output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+	}
+	runTests(t, tests)
+}
+
+func TestExistenceOfKeyInMaps(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = {"b":"b"}; v, ok = a[1++]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = {"b":"b"}; b.c, ok = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
+		{script: `a = {"b":"b"}; v, b.c = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
+
+		{script: `a = {"b":"b"}; v, ok = a["a"]`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": nil, "ok": false}},
+		{script: `a = {"b":"b"}; v, ok = a["b"]`, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": "b", "ok": true}},
+		{script: `a = {"b":"b", "c":"c"}; v, ok = a["a"]`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": nil, "ok": false}},
+		{script: `a = {"b":"b", "c":"c"}; v, ok = a["b"]`, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": "b", "ok": true}},
 	}
 	runTests(t, tests)
 }
@@ -1157,15 +1202,4 @@ func TestMakeMapsData(t *testing.T) {
 	if b.Get("b") != "b" {
 		t.Errorf("Get value - received %#v - expected: %#v", b.Get("b"), "b")
 	}
-}
-
-func TestExistenceOfKeyInMaps(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `a = {"a":1}; a["a"]`, runOutput: int64(1)},
-		{script: `a = {"a":1}; a["b"]`, runOutput: nil},
-		{script: `a = {"a":1}; v, ok = a["a"]; [v, ok]`, runOutput: []interface{}{int64(1), true}},
-		{script: `a = {"a":1}; v, ok = a["b"]; [v, ok]`, runOutput: []interface{}{nil, false}},
-	}
-	runTests(t, tests)
 }
