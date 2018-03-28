@@ -94,6 +94,9 @@ func Main(arg1) {
 
 	x, y = !x, 2
 	fmt.Println(x, y)
+
+	x = new(string)
+	fmt.Println(x)
 }
 
 func Tester() {
