@@ -1,6 +1,6 @@
 // +build !appengine
 
-package util
+package astutil
 
 import (
 	"fmt"
@@ -146,6 +146,7 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		return err
 	}
 	switch expr := expr.(type) {
+	case *ast.LenExpr:
 	case *ast.NumberExpr:
 	case *ast.IdentExpr:
 	case *ast.MemberExpr:

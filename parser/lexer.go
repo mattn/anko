@@ -311,6 +311,14 @@ func isBlank(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\r'
 }
 
+func appendNumberAndPoint(s *Scanner, ret []rune) []rune {
+	for isDigit(s.peek()) || s.peek() == '.' {
+		ret = append(ret, s.peek())
+		s.next()
+	}
+	return ret
+}
+
 // peek returns current rune in the code.
 func (s *Scanner) peek() rune {
 	if s.reachEOF() {
@@ -389,25 +397,16 @@ func (s *Scanner) scanNumber() (string, error) {
 			s.next()
 		}
 	} else {
-		for isDigit(s.peek()) || s.peek() == '.' {
-			ret = append(ret, s.peek())
-			s.next()
-		}
+		ret = appendNumberAndPoint(s, ret)
 		if s.peek() == 'e' {
 			ret = append(ret, s.peek())
 			s.next()
 			if isDigit(s.peek()) || s.peek() == '+' || s.peek() == '-' {
 				ret = append(ret, s.peek())
 				s.next()
-				for isDigit(s.peek()) || s.peek() == '.' {
-					ret = append(ret, s.peek())
-					s.next()
-				}
+				ret = appendNumberAndPoint(s, ret)
 			}
-			for isDigit(s.peek()) || s.peek() == '.' {
-				ret = append(ret, s.peek())
-				s.next()
-			}
+			ret = appendNumberAndPoint(s, ret)
 		}
 		if isLetter(s.peek()) {
 			return "", errors.New("identifier starts immediately after numeric literal")
