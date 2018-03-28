@@ -23,8 +23,20 @@ func Main(arg1) {
 	fmt.Println("enter Main")
 	defer fmt.Println("leave Main")
 	b = testA(1, 2, 3) + Tester()
-	if b != 0 {
-		fmt.Println(b)
+	if b == 0 {
+		fmt.Println("b is 0")
+	} else if b == 1 {
+		fmt.Println("b is 1")
+	} else {
+		fmt.Println("b is other")
+	}
+	switch arg1 {
+	case 0:
+		fmt.Println("arg0 is 0")
+	case 1:
+		fmt.Println("arg0 is 1")
+	default:
+		fmt.Println("arg0 is other")
 	}
 }
 
