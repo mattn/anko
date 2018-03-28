@@ -39,6 +39,12 @@ func Main(arg1) {
 	default:
 		fmt.Println("arg0 is other")
 	}
+
+	try {
+		throw "WTF!"
+	} catch e {
+		fmt.Println(e)
+	}
 }
 
 func Tester() {
