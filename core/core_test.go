@@ -90,6 +90,16 @@ func TestLoad(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestDefined(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "")
+	tests := []testStruct{
+		{script: `var a = 1; defined("a")`, runOutput: true},
+		{script: `defined("a")`, runOutput: false},
+		{script: `func(){ var a = 1 }(); defined("a")`, runOutput: false},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:
