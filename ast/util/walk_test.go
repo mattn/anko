@@ -59,6 +59,11 @@ func Main(arg1) {
 			break
 		}
 	}
+
+	n = 0
+	for n < 3 {
+		n++
+	}
 }
 
 func Tester() {
