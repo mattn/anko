@@ -47,11 +47,17 @@ func Main(arg1) {
 	}
 
 	for n = 0; n < 3; n++ {
+		if n < 2 {
+			continue
+		}
 		fmt.Println(n)
 	}
 
-	for n in [1, 2, 3] {
+	for n in [1, 2, 3, 4, 5] {
 		fmt.Println(n)
+		if n > 3 {
+			break
+		}
 	}
 }
 
