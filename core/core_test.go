@@ -28,6 +28,7 @@ func TestKeys(t *testing.T) {
 		{script: `a = {}; b = keys(a)`, runOutput: []string{}, output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{script: `a = {"a": nil}; b = keys(a)`, runOutput: []string{"a"}, output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
 		{script: `a = {"a": 1}; b = keys(a)`, runOutput: []string{"a"}, output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
+		{script: `a = {"a": [1][0]}; b = keys(a)`, runOutput: []string{"a"}, output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
 	}
 	runTests(t, tests)
 }
