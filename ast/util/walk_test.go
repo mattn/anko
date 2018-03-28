@@ -220,7 +220,8 @@ func TestBadCode(t *testing.T) {
 		`if a { else }`,
 		`if a { } else foo { }`,
 		`try a { } else { }`,
-		`try { } catch { }`,
+		`try { } catch 1, 2 { }`,
+		`throw 1, 2`,
 	}
 	for _, code := range codes {
 		_, err := parser.ParseSrc(code)
