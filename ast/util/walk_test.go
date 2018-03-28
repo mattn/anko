@@ -70,6 +70,19 @@ func Main(arg1) {
 	if a["foo"] == "zoo" {
 		fmt.Println("foo is zoo")
 	}
+	fmt.Println(a["foo"] == "zoo" ? "zoo" : "baz")
+
+	c = make(chan int64)
+
+	go func() {
+	  c <- 1
+	  c <- 2
+	  c <- 3
+	}()
+
+	println(<-c)
+	println(<-c)
+	println(<-c)
 }
 
 func Tester() {
