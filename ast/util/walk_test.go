@@ -86,6 +86,14 @@ func Main(arg1) {
 
 	v = make([]int, 3)
 	fmt.Println("sizeof v is ", len(v))
+
+	x = 1
+	y = (&x)
+	*y = 2
+	fmt.Println(x)
+
+	x = !x
+	fmt.Println(x)
 }
 
 func Tester() {
