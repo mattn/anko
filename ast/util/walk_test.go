@@ -97,6 +97,9 @@ func Main(arg1) {
 
 	x = new(string)
 	fmt.Println(x)
+
+	x = "foo"
+	fmt.Println(x[0])
 }
 
 func Tester() {
