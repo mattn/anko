@@ -224,9 +224,8 @@ func TestBadCode(t *testing.T) {
 		`try { } catch 1, 2 { }`,
 		`throw 1, 2`,
 		`for.true`,
-		`switch.true`,
-		`switch`,
-		`case {}`,
+		`switch { var }`,
+		`case { var }`,
 	}
 	for _, code := range codes {
 		_, err := parser.ParseSrc(code)
