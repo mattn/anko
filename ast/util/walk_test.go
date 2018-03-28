@@ -92,8 +92,8 @@ func Main(arg1) {
 	*y = 2
 	fmt.Println(x)
 
-	x = !x
-	fmt.Println(x)
+	x, y = !x, 2
+	fmt.Println(x, y)
 }
 
 func Tester() {
