@@ -99,7 +99,7 @@ func Main(arg1) {
 	fmt.Println(x)
 
 	x = "foo"
-	fmt.Println(x[0])
+	fmt.Println(x[0], true)
 }
 
 func Tester() {
