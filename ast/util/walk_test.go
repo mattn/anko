@@ -217,11 +217,16 @@ func TestBadCode(t *testing.T) {
 		`const 1 = 2`,
 		`a["foo"] = 2, 3`,
 		`if a, 2 {}`,
+		`if break {}`,
 		`if a { else }`,
 		`if a { } else foo { }`,
 		`try a { } else { }`,
 		`try { } catch 1, 2 { }`,
 		`throw 1, 2`,
+		`for.true`,
+		`switch.true`,
+		`switch`,
+		`case {}`,
 	}
 	for _, code := range codes {
 		_, err := parser.ParseSrc(code)
