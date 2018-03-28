@@ -64,6 +64,12 @@ func Main(arg1) {
 	for n < 3 {
 		n++
 	}
+
+	a = {"foo": "bar"}
+	a.foo = "baz"
+	if a["foo"] == "zoo" {
+		fmt.Println("foo is zoo")
+	}
 }
 
 func Tester() {
