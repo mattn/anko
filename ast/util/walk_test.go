@@ -11,6 +11,8 @@ import (
 
 const (
 	goodSrc string = `
+var fmt = import("fmt")
+
 a = "1"
 b = 2
 func testA(arg1, arg2, arg3) {
@@ -28,6 +30,8 @@ func Tester() {
 func testLen() {
 	return len("test")
 }
+
+fmt.Println(Main(1))
 `
 )
 
@@ -79,6 +83,8 @@ func TestWalk(t *testing.T) {
 
 func Example_astWalk() {
 	src := `
+var fmt = import("fmt")
+
 func TestFunc(arg1, arg2, arg3) {
 	return (arg1 + arg2) * arg3
 }
@@ -86,6 +92,8 @@ func TestFunc(arg1, arg2, arg3) {
 func Main() {
 	return TestFunc(1, 2, 3) + BuiltinFuncX(1, 2, 3)
 }
+
+fmt.Println(Main())
 	`
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
