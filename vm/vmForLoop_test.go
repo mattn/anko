@@ -62,6 +62,13 @@ func TestForLoop(t *testing.T) {
 		{script: `func x() { return [1, 2] }; a = 1; for i in x() { a++ }`, runOutput: nil, output: map[string]interface{}{"a": int64(3)}},
 		{script: `func x() { return [1, 2, 3] }; a = 1; for i in x() { a++ }`, runOutput: nil, output: map[string]interface{}{"a": int64(4)}},
 
+		// TOFIX:
+		// {script: `for a = 1, 2; nil; nil { return }`},
+		// {script: `for a, b = 1; nil; nil { return }`},
+		// {script: `for a, b = 1, 2; nil; nil { return }`},
+
+		{script: `for a.b = 1; nil; nil { return }`, runError: fmt.Errorf("Undefined symbol 'a'")},
+
 		{script: `for a = 1; nil; nil { if a == 1 { break } }`, runOutput: nil},
 		{script: `for a = 1; nil; nil { if a == 2 { break }; a++ }`, runOutput: nil},
 		{script: `for a = 1; nil; nil { a++; if a == 3 { break } }`, runOutput: nil},

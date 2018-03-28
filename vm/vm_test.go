@@ -48,46 +48,31 @@ var (
 	testVarValueString  = reflect.ValueOf("a")
 )
 
-func TestIf(t *testing.T) {
+func TestNumbers(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
-		{script: `if false {} else if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
-		{script: `if false {} else if true { 1++ }`, runError: fmt.Errorf("Invalid operation")},
+		{script: `1..1`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "1..1": invalid syntax`)},
+		{script: `0x1g`, parseError: fmt.Errorf("syntax error")},
+		{script: `9223372036854775808`, runError: fmt.Errorf(`strconv.ParseInt: parsing "9223372036854775808": value out of range`)},
 
-		{script: `if true {}`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if true {}`, input: map[string]interface{}{"a": true}, runOutput: nil, output: map[string]interface{}{"a": true}},
-		{script: `if true {}`, input: map[string]interface{}{"a": int64(1)}, runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
-		{script: `if true {}`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `if true {}`, input: map[string]interface{}{"a": "a"}, runOutput: nil, output: map[string]interface{}{"a": "a"}},
-
-		{script: `if true {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if true {a = true}`, input: map[string]interface{}{"a": int64(2)}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `if true {a = 1}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `if true {a = 1.1}`, input: map[string]interface{}{"a": int64(2)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `if true {a = "a"}`, input: map[string]interface{}{"a": int64(2)}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
-
-		{script: `if a == 1 {a = 1}`, input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
-		{script: `if a == 2 {a = 1}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `if a == 1 {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
-		{script: `if a == 2 {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-
-		{script: `if a == 1 {a = 1} else {a = 3}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(3)}},
-		{script: `if a == 2 {a = 1} else {a = 3}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3}`, input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
-		{script: `if a == 1 {a = 1} else if a == 2 {a = 3}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(3)}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else {a = 4}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), output: map[string]interface{}{"a": int64(4)}},
-
-		{script: `if a == 1 {a = 1} else {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if a == 2 {a = nil} else {a = 3}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if a == 1 {a = nil} else if a == 3 {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: false, output: map[string]interface{}{"a": int64(2)}},
-		{script: `if a == 1 {a = 1} else if a == 2 {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = 5}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(5), output: map[string]interface{}{"a": int64(5)}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = nil}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(4), output: map[string]interface{}{"a": int64(4)}},
-		{script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}`, input: map[string]interface{}{"a": int64(2)}, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{script: `1`, runOutput: int64(1)},
+		{script: `-1`, runOutput: int64(-1)},
+		{script: `9223372036854775807`, runOutput: int64(9223372036854775807)},
+		{script: `-9223372036854775807`, runOutput: int64(-9223372036854775807)},
+		{script: `1.1`, runOutput: float64(1.1)},
+		{script: `-1.1`, runOutput: float64(-1.1)},
+		{script: `1e1`, runOutput: float64(10)},
+		{script: `-1e1`, runOutput: float64(-10)},
+		{script: `1e-1`, runOutput: float64(0.1)},
+		{script: `-1e-1`, runOutput: float64(-0.1)},
+		{script: `0x1`, runOutput: int64(1)},
+		{script: `0xc`, runOutput: int64(12)},
+		// TOFIX:
+		{script: `0xe`, runError: fmt.Errorf(`strconv.ParseFloat: parsing "0xe": invalid syntax`)},
+		{script: `0xf`, runOutput: int64(15)},
+		{script: `-0x1`, runOutput: int64(-1)},
+		{script: `-0xc`, runOutput: int64(-12)},
+		{script: `-0xf`, runOutput: int64(-15)},
 	}
 	runTests(t, tests)
 }
@@ -118,7 +103,7 @@ func TestStrings(t *testing.T) {
 		{script: `a[4]`, input: map[string]interface{}{"a": "test"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test"}},
 
 		{script: `a`, input: map[string]interface{}{"a": `"a"`}, runOutput: `"a"`, output: map[string]interface{}{"a": `"a"`}},
-		{script: `a[0]`, input: map[string]interface{}{"a": `"a"`}, runOutput: "\"", output: map[string]interface{}{"a": `"a"`}},
+		{script: `a[0]`, input: map[string]interface{}{"a": `"a"`}, runOutput: `"`, output: map[string]interface{}{"a": `"a"`}},
 		{script: `a[1]`, input: map[string]interface{}{"a": `"a"`}, runOutput: "a", output: map[string]interface{}{"a": `"a"`}},
 
 		{script: `a = "\"a\""`, runOutput: `"a"`, output: map[string]interface{}{"a": `"a"`}},
@@ -137,6 +122,7 @@ func TestStrings(t *testing.T) {
 		{script: `a[1:]`, input: map[string]interface{}{"a": ""}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": ""}},
 		{script: `a[:0]`, input: map[string]interface{}{"a": ""}, runOutput: "", output: map[string]interface{}{"a": ""}},
 		{script: `a[:1]`, input: map[string]interface{}{"a": ""}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": ""}},
+		{script: `a[0:0]`, input: map[string]interface{}{"a": ""}, runOutput: "", output: map[string]interface{}{"a": ""}},
 
 		{script: `a[1:0]`, input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("invalid slice index"), output: map[string]interface{}{"a": "test data"}},
 		{script: `a[-1:2]`, input: map[string]interface{}{"a": "test data"}, runError: fmt.Errorf("index out of range"), output: map[string]interface{}{"a": "test data"}},
@@ -193,9 +179,14 @@ func TestStrings(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
+		{script: `var a = 1++`, runError: fmt.Errorf("Invalid operation")},
+
 		{script: `var a = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: `var a, b = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{script: `var a, b, c = 1, 2, 3`, runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+
+		{script: `var a = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1)}},
+		{script: `var a, b = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 	}
 	runTests(t, tests)
 }
@@ -619,7 +610,7 @@ func TestInterruptConcurrency(t *testing.T) {
 }
 
 func TestRunSingleStmt(t *testing.T) {
-	stmts, err := parser.ParseSrc("a = 1")
+	stmts, err := parser.ParseSrc(`a = 1`)
 	if err != nil {
 		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
 	}
@@ -631,6 +622,25 @@ func TestRunSingleStmt(t *testing.T) {
 	}
 	if value != int64(1) {
 		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, int64(1))
+	}
+
+	stmts, err = parser.ParseSrc(`return a`)
+	if err != nil {
+		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
+	}
+
+	env = NewEnv()
+	err = env.defineValue("a", reflect.Value{})
+	if err != nil {
+		t.Errorf("defineValue error - received: %v - expected: %v", err, nil)
+	}
+
+	value, err = RunSingleStmt(stmts[0], env)
+	if err != nil {
+		t.Errorf("RunSingleStmt error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, nil)
 	}
 }
 
