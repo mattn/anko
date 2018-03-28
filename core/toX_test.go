@@ -44,6 +44,7 @@ func TestToX(t *testing.T) {
 		{script: `toString({})`, runOutput: "map[]"},
 		{script: `toString({"foo": "bar"})`, runOutput: "map[foo:bar]"},
 		{script: `toString([true,nil])`, runOutput: "[true <nil>]"},
+		{script: `toString(toByteSlice("foo"))`, runOutput: "foo"},
 		{script: `toInt(nil)`, runOutput: int64(0)},
 		{script: `toInt(-2)`, runOutput: int64(-2)},
 		{script: `toInt(-1.4)`, runOutput: int64(-1)},
