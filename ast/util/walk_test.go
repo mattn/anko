@@ -20,7 +20,12 @@ func testA(arg1, arg2, arg3) {
 }
 
 func Main(arg1) {
+	fmt.Println("enter Main")
+	defer fmt.Println("leave Main")
 	b = testA(1, 2, 3) + Tester()
+	if b != 0 {
+		fmt.Println(b)
+	}
 }
 
 func Tester() {
