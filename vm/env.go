@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/mattn/anko/parser"
+	"github.com/mohae/deepcopy"
 )
 
 // EnvResolver provides an interface for extrenal values and types
@@ -385,4 +386,22 @@ func (e *Env) Execute(src string) (interface{}, error) {
 		return nilValue, err
 	}
 	return Run(stmts, e)
+}
+
+// Copy makes a deep copy of the scope
+func (e *Env) Copy() *Env {
+	envCopy := deepcopy.Copy(e.env).(map[string]reflect.Value)
+	typCopy := deepcopy.Copy(e.typ).(map[string]reflect.Type)
+	var parentCopy *Env
+	if e.parent != nil {
+		parentCopy = e.parent.Copy()
+	}
+	b := false
+	c := Env{
+		env:       envCopy,
+		typ:       typCopy,
+		parent:    parentCopy,
+		interrupt: &b,
+	}
+	return &c
 }
