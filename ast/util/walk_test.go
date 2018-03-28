@@ -101,7 +101,9 @@ func Main(arg1) {
 	var f = func() {
 		return "foo"
 	}
-	fmt.Println(x()[0], true)
+	x = f()[0:1]
+	y = f()[0]
+	fmt.Println(x == y ? true : false)
 }
 
 func Tester() {
