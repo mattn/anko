@@ -384,7 +384,7 @@ func TestChan(t *testing.T) {
 		{script: `a = make(chan bool, 2); a <- true; a <- (<- a)`, runOutput: nil},
 		{script: `a = make(chan bool, 2); a <- true; a <- <- a; <- a`, runOutput: true},
 		{script: `a = make(chan bool, 2); a <- true; b = false; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
-		// TOFIX: if variable is not created yet, should make variable, not error
+		// TOFIX: if variable is not created yet, should make variable instead of error
 		// {script: `a = make(chan bool, 2); a <- true; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
 	}
 	runTests(t, tests)
