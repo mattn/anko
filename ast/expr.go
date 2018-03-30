@@ -221,3 +221,10 @@ type DeleteExpr struct {
 	MapExpr Expr
 	KeyExpr Expr
 }
+
+// IncludeExpr provide `item in list` expression, and return bool
+type IncludeExpr struct {
+	ExprImpl
+	Item  Expr
+	Array SliceExpr
+}
