@@ -363,18 +363,20 @@ func TestChan(t *testing.T) {
 		// TOFIX: add chan syntax ok, do not return error. Also b should be nil
 		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("Failed to send to channel"), output: map[string]interface{}{"b": true}},
 
+		{script: `a = make(chan bool, 2); a <- 1`, runError: fmt.Errorf("cannot use type int64 as type bool to send to chan")},
+
 		{script: `a = make(chan interface, 2); a <- nil; <- a`, runOutput: nil},
 		{script: `a = make(chan bool, 2); a <- true; <- a`, runOutput: true},
-		// {script: `a = make(chan int32, 2); a <- 1; <- a`, runOutput: int32(1)},
+		{script: `a = make(chan int32, 2); a <- 1; <- a`, runOutput: int32(1)},
 		{script: `a = make(chan int64, 2); a <- 1; <- a`, runOutput: int64(1)},
-		// {script: `a = make(chan float32, 2); a <- 1.1; <- a`, runOutput: float32(1.1)},
+		{script: `a = make(chan float32, 2); a <- 1.1; <- a`, runOutput: float32(1.1)},
 		{script: `a = make(chan float64, 2); a <- 1.1; <- a`, runOutput: float64(1.1)},
 
 		{script: `a <- nil; <- a`, input: map[string]interface{}{"a": make(chan interface{}, 2)}, runOutput: nil},
 		{script: `a <- true; <- a`, input: map[string]interface{}{"a": make(chan bool, 2)}, runOutput: true},
-		// {script: `a <- 1; <- a`, input: map[string]interface{}{"a": make(chan int32, 2)}, runOutput: int32(1)},
+		{script: `a <- 1; <- a`, input: map[string]interface{}{"a": make(chan int32, 2)}, runOutput: int32(1)},
 		{script: `a <- 1; <- a`, input: map[string]interface{}{"a": make(chan int64, 2)}, runOutput: int64(1)},
-		// {script: `a <- 1.1; <- a`, input: map[string]interface{}{"a": make(chan float32, 2)}, runOutput: float32(1.1)},
+		{script: `a <- 1.1; <- a`, input: map[string]interface{}{"a": make(chan float32, 2)}, runOutput: float32(1.1)},
 		{script: `a <- 1.1; <- a`, input: map[string]interface{}{"a": make(chan float64, 2)}, runOutput: float64(1.1)},
 		{script: `a <- "b"; <- a`, input: map[string]interface{}{"a": make(chan string, 2)}, runOutput: "b"},
 
@@ -382,7 +384,7 @@ func TestChan(t *testing.T) {
 		{script: `a = make(chan bool, 2); a <- true; a <- (<- a)`, runOutput: nil},
 		{script: `a = make(chan bool, 2); a <- true; a <- <- a; <- a`, runOutput: true},
 		{script: `a = make(chan bool, 2); a <- true; b = false; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
-		// TOFIX:
+		// TOFIX: if variable is not created yet, should make variable, not error
 		// {script: `a = make(chan bool, 2); a <- true; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
 	}
 	runTests(t, tests)
