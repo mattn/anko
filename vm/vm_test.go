@@ -390,6 +390,26 @@ func TestChan(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestVMDelete(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `delete(1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `delete("a", 1++)`, runError: fmt.Errorf("Invalid operation")},
+
+		{script: `a = 1; delete("a"); a`, runError: fmt.Errorf("Undefined symbol 'a'")},
+
+		{script: `delete("a")`},
+		{script: `delete("a", false)`},
+		{script: `delete("a", true)`},
+		{script: `delete("a", nil)`},
+
+		{script: `a = 1; func b() { delete("a") }; b()`, output: map[string]interface{}{"a": int64(1)}},
+		{script: `a = 1; func b() { delete("a", false) }; b()`, output: map[string]interface{}{"a": int64(1)}},
+		{script: `a = 1; func b() { delete("a", true) }; b(); a`, runError: fmt.Errorf("Undefined symbol 'a'")},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:
