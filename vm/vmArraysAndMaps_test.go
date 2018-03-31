@@ -923,8 +923,8 @@ func TestDeleteMaps(t *testing.T) {
 	tests := []testStruct{
 		{script: `delete(1++, "b")`, runError: fmt.Errorf("Invalid operation")},
 		{script: `delete({}, 1++)`, runError: fmt.Errorf("Invalid operation")},
-		{script: `delete(nil, "b")`, runError: fmt.Errorf("first argument to delete must be map; have interface")},
-		{script: `delete("b", "b")`, runError: fmt.Errorf("first argument to delete must be map; have string")},
+		{script: `delete(nil, "b")`, runError: fmt.Errorf("first argument to delete cannot be type interface")},
+		{script: `delete(1, "b")`, runError: fmt.Errorf("first argument to delete cannot be type int64")},
 		{script: `delete({"b":"b"}, true)`, runError: fmt.Errorf("cannot use type string as type bool in delete")},
 
 		{script: `delete(a, "")`, input: map[string]interface{}{"a": testMapEmpty}, output: map[string]interface{}{"a": testMapEmpty}},

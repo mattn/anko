@@ -215,9 +215,9 @@ type LenExpr struct {
 	Expr Expr
 }
 
-// DeleteExpr provide `delete(map, key)` expression
+// DeleteExpr provide delete expression
 type DeleteExpr struct {
 	ExprImpl
-	MapExpr Expr
+	WhatExpr Expr
 	KeyExpr Expr
 }

@@ -752,9 +752,14 @@ expr :
 		$$ = &ast.ChanExpr{Rhs: $2}
 		$$.SetPosition($2.Position())
 	}
+	| DELETE '(' expr ')'
+	{
+		$$ = &ast.DeleteExpr{WhatExpr: $3}
+		$$.SetPosition($1.Position())
+	}
 	| DELETE '(' expr ',' expr ')'
 	{
-		$$ = &ast.DeleteExpr{MapExpr: $3, KeyExpr: $5}
+		$$ = &ast.DeleteExpr{WhatExpr: $3, KeyExpr: $5}
 		$$.SetPosition($1.Position())
 	}
 

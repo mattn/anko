@@ -713,33 +713,50 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return callExpr(e, env)
 
 	case *ast.DeleteExpr:
-		mapExpr, err := invokeExpr(e.MapExpr, env)
+		whatExpr, err := invokeExpr(e.WhatExpr, env)
 		if err != nil {
-			return nilValue, newError(e.MapExpr, err)
+			return nilValue, newError(e.WhatExpr, err)
 		}
-		keyExpr, err := invokeExpr(e.KeyExpr, env)
-		if err != nil {
-			return nilValue, newError(e.KeyExpr, err)
-		}
-
-		if mapExpr.Kind() == reflect.Interface && !mapExpr.IsNil() {
-			mapExpr = mapExpr.Elem()
-		}
-		if mapExpr.Kind() != reflect.Map {
-			return nilValue, newStringError(e, "first argument to delete must be map; have "+mapExpr.Kind().String())
-		}
-		if mapExpr.IsNil() {
-			return nilValue, nil
-		}
-		if mapExpr.Type().Key() != keyExpr.Type() {
-			keyExpr, err = convertReflectValueToType(keyExpr, mapExpr.Type().Key())
+		var keyExpr reflect.Value
+		if e.KeyExpr != nil {
+			keyExpr, err = invokeExpr(e.KeyExpr, env)
 			if err != nil {
-				return nilValue, newStringError(e, "cannot use type "+mapExpr.Type().Key().String()+" as type "+keyExpr.Type().String()+" in delete")
+				return nilValue, newError(e.KeyExpr, err)
 			}
 		}
+		if whatExpr.Kind() == reflect.Interface && !whatExpr.IsNil() {
+			whatExpr = whatExpr.Elem()
+		}
 
-		mapExpr.SetMapIndex(keyExpr, reflect.Value{})
-		return nilValue, nil
+		switch whatExpr.Kind() {
+		case reflect.String:
+			if e.KeyExpr == nil {
+				return nilValue, env.Delete(whatExpr.String())
+			}
+			if keyExpr.Kind() != reflect.Bool {
+				return nilValue, env.Delete(whatExpr.String())
+			}
+			if keyExpr.Bool() {
+				return nilValue, env.DeleteGlobal(whatExpr.String())
+			} else {
+				return nilValue, env.Delete(whatExpr.String())
+			}
+
+		case reflect.Map:
+			if whatExpr.IsNil() {
+				return nilValue, nil
+			}
+			if whatExpr.Type().Key() != keyExpr.Type() {
+				keyExpr, err = convertReflectValueToType(keyExpr, whatExpr.Type().Key())
+				if err != nil {
+					return nilValue, newStringError(e, "cannot use type "+whatExpr.Type().Key().String()+" as type "+keyExpr.Type().String()+" in delete")
+				}
+			}
+			whatExpr.SetMapIndex(keyExpr, reflect.Value{})
+			return nilValue, nil
+		}
+
+		return nilValue, newStringError(e, "first argument to delete cannot be type "+whatExpr.Kind().String())
 
 	default:
 		return nilValue, newStringError(e, "Unknown expression")
