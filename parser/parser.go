@@ -1603,37 +1603,37 @@ yydefault:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		//line parser.go.y:370
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
+			yyVAL.expr_slice = ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 56:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:374
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: yyDollar[3].expr, End: nil}
+			yyVAL.expr_slice = ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 57:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:378
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: nil, End: yyDollar[4].expr}
+			yyVAL.expr_slice = ast.SliceExpr{Value: &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 58:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		//line parser.go.y:382
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
+			yyVAL.expr_slice = ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 59:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:386
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: nil}
+			yyVAL.expr_slice = ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 60:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:390
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: nil, End: yyDollar[4].expr}
+			yyVAL.expr_slice = ast.SliceExpr{Value: yyDollar[1].expr, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 61:
 		yyDollar = yyS[yypt-1 : yypt+1]
@@ -2077,7 +2077,7 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		//line parser.go.y:704
 		{
-			yyVAL.expr = yyDollar[1].expr_slice
+			yyVAL.expr = &yyDollar[1].expr_slice
 			yyVAL.expr.SetPosition(yyDollar[1].expr_slice.Position())
 		}
 	case 122:

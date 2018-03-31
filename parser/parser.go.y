@@ -368,27 +368,27 @@ exprs :
 expr_slice :
 	IDENT '[' expr ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
 	}
 	| IDENT '[' expr ':' ']'
 	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
 	}
 	| IDENT '[' ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
 	}
 	| expr '[' expr ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: $5}
 	}
 	| expr '[' expr ':' ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: nil}
 	}
 	| expr '[' ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$ = ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 	}
 
 expr :
@@ -702,7 +702,7 @@ expr :
 	}
 	| expr_slice
 	{
-		$$ = $1
+		$$ = &$1
 		$$.SetPosition($1.Position())
 	}
 	| LEN '(' expr ')'
