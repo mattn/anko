@@ -314,6 +314,36 @@ func (e *Env) defineValue(k string, v reflect.Value) error {
 	return nil
 }
 
+// Delete deletes symbol in current scope.
+func (e *Env) Delete(k string) error {
+	if strings.Contains(k, ".") {
+		return fmt.Errorf("Unknown symbol '%s'", k)
+	}
+
+	e.Lock()
+	delete(e.env, k)
+	e.Unlock()
+
+	return nil
+}
+
+// Delete deletes the first matching symbol found in current or parent scope.
+func (e *Env) DeleteGlobal(k string) error {
+	if e.parent == nil {
+		return e.Delete(k)
+	}
+
+	e.RLock()
+	_, ok := e.env[k]
+	e.RUnlock()
+
+	if ok {
+		return e.Delete(k)
+	}
+
+	return e.parent.DeleteGlobal(k)
+}
+
 // DefineGlobalType defines type in global scope.
 func (e *Env) DefineGlobalType(k string, t interface{}) error {
 	for e.parent != nil {

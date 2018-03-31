@@ -823,6 +823,122 @@ func TestAddr(t *testing.T) {
 	}
 }
 
+func TestDelete(t *testing.T) {
+	// empty
+	env := NewEnv()
+	err := env.Delete("a")
+	if err != nil {
+		t.Errorf("Delete error - received: %v - expected: %v", err, nil)
+	}
+
+	// bad name
+	err = env.Delete("a.b")
+	expectedError := "Unknown symbol 'a.b'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Delete error - received: %v - expected: %v", err, expectedError)
+	}
+
+	// add & delete a
+	env.Define("a", "a")
+	err = env.Delete("a")
+	if err != nil {
+		t.Errorf("Delete error - received: %v - expected: %v", err, nil)
+	}
+	value, err := env.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
+	}
+}
+
+func TestDeleteGlobal(t *testing.T) {
+	// empty
+	env := NewEnv()
+	err := env.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+
+	// bad name
+	err = env.DeleteGlobal("a.b")
+	expectedError := "Unknown symbol 'a.b'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, expectedError)
+	}
+
+	// add & delete a
+	env.Define("a", "a")
+	err = env.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+	value, err := env.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
+	}
+
+	// parent & child, var in child, delete in parent
+	envChild := env.NewEnv()
+	envChild.Define("a", "a")
+	err = env.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+	value, err = envChild.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != "a" {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, "a")
+	}
+
+	// parent & child, var in child, delete in child
+	err = envChild.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+	value, err = envChild.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
+	}
+
+	// parent & child, var in parent, delete in child
+	env.Define("a", "a")
+	err = envChild.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+	value, err = envChild.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
+	}
+
+	// parent & child, var in parent, delete in parent
+	env.Define("a", "a")
+	err = env.DeleteGlobal("a")
+	if err != nil {
+		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
+	}
+	value, err = envChild.Get("a")
+	if err != nil {
+		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	}
+	if value != nil {
+		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
+	}
+}
+
 func TestAddPackage(t *testing.T) {
 	// empty
 	env := NewEnv()
