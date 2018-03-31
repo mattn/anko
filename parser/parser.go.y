@@ -366,7 +366,7 @@ exprs :
 	}
 
 expr_slice :
-	| IDENT '[' expr ':' expr ']'
+	IDENT '[' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
 	}
