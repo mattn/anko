@@ -845,8 +845,9 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Delete error - received: %v - expected: %v", err, nil)
 	}
 	value, err := env.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	expectedError = "Undefined symbol 'a'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
 		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
@@ -875,8 +876,9 @@ func TestDeleteGlobal(t *testing.T) {
 		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
 	}
 	value, err := env.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	expectedError = "Undefined symbol 'a'"
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
 		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
@@ -903,8 +905,8 @@ func TestDeleteGlobal(t *testing.T) {
 		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
 	}
 	value, err = envChild.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
 		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
@@ -917,8 +919,8 @@ func TestDeleteGlobal(t *testing.T) {
 		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
 	}
 	value, err = envChild.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
 		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
@@ -931,8 +933,8 @@ func TestDeleteGlobal(t *testing.T) {
 		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
 	}
 	value, err = envChild.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
+	if err == nil || err.Error() != expectedError {
+		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
 	if value != nil {
 		t.Errorf("Get value - received: %#v - expected: %#v", value, nil)
