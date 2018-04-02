@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -32,7 +33,12 @@ func TestItemInList(t *testing.T) {
 		{script: `l = ["b", "a", "c"];"a" in l[1:2]`, runOutput: true},
 
 		// for i in list && item in list
-		{script: `list_of_list = [["a"]];k=[];for l in list_of_list { return "a" in l }`, runOutput: true},
+		{script: `list_of_list = [["a"]];for l in list_of_list { return "a" in l }`, runOutput: true},
+
+		// not slice or array
+		// todo: support `"a" in "aaa"` ?
+		{script: `"a" in "aaa"`, runError: fmt.Errorf("second argument must be slice or array; but get string")},
+		{script: `1 in 12345`, runError: fmt.Errorf("type int64 does not support slice operation")},
 	}
 	runTests(t, tests)
 }
