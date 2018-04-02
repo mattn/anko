@@ -733,14 +733,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if e.KeyExpr == nil {
 				return nilValue, env.Delete(whatExpr.String())
 			}
-			if keyExpr.Kind() != reflect.Bool {
-				return nilValue, env.Delete(whatExpr.String())
-			}
-			if keyExpr.Bool() {
+			if keyExpr.Kind() == reflect.Bool && keyExpr.Bool() {
 				return nilValue, env.DeleteGlobal(whatExpr.String())
-			} else {
-				return nilValue, env.Delete(whatExpr.String())
 			}
+      return nilValue, env.Delete(whatExpr.String())
 
 		case reflect.Map:
 			if whatExpr.IsNil() {
