@@ -221,3 +221,9 @@ type DeleteExpr struct {
 	MapExpr Expr
 	KeyExpr Expr
 }
+
+type IncludeExpr struct {
+	ExprImpl
+	ItemExpr Expr
+	ListExpr SliceExpr
+}
