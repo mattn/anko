@@ -766,17 +766,14 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				list = list.Elem()
 			}
 
-			if isNum(item) && isNum(list) {
-				if !list.Type().ConvertibleTo(item.Type()) {
-					return falseValue, nil
-				}
-				list = list.Convert(item.Type())
-			}
-			if reflect.DeepEqual(list.Interface(), item.Interface()) {
+			if isNum(item) && isNum(list) && equalNumber(item, list) {
+				return trueValue, nil
+			} else if item.CanInterface() && list.CanInterface() && reflect.DeepEqual(item.Interface(), list.Interface()) {
+				return trueValue, nil
+			} else if reflect.DeepEqual(item, list) {
 				return trueValue, nil
 			}
 		}
-
 		return falseValue, nil
 
 	default:
