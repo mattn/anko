@@ -23,6 +23,7 @@ import (
 %type<expr_idents> expr_idents
 %type<expr_type> expr_type
 %type<array_count> array_count
+%type<stmt_multi_case> stmt_multi_case
 
 %union{
 	compstmt               []ast.Stmt
@@ -39,12 +40,13 @@ import (
 	expr_pair              ast.Expr
 	expr_pairs             []ast.Expr
 	expr_idents            []string
-	expr_type            string
+	expr_type              string
 	tok                    ast.Token
 	term                   ast.Token
 	terms                  ast.Token
 	opt_terms              ast.Token
-	array_count     ast.ArrayCount
+	array_count            ast.ArrayCount
+	stmt_multi_case        []ast.Stmt
 }
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE
@@ -238,6 +240,14 @@ stmt_cases :
 	{
 		$$ = append($1, $2)
 	}
+	| opt_terms stmt_multi_case
+	{
+		$$ = $2
+	}
+	| stmt_cases stmt_multi_case
+	{
+		$$ = append($1, $2...)
+	}
 	| stmt_cases stmt_default
 	{
 		for _, stmt := range $1 {
@@ -252,6 +262,16 @@ stmt_case :
 	CASE expr ':' opt_terms compstmt
 	{
 		$$ = &ast.CaseStmt{Expr: $2, Stmts: $5}
+	}
+
+stmt_multi_case :
+	CASE expr_many ':' opt_terms compstmt
+	{
+	    var cases = []ast.Stmt{}
+		for _, stmt := range $2 {
+			cases = append(cases, &ast.CaseStmt{Expr: stmt, Stmts: $5})
+		}
+		$$ = cases
 	}
 
 stmt_default :
