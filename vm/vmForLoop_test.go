@@ -10,8 +10,8 @@ import (
 func TestForLoop(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `break`, runError: fmt.Errorf("Unexpected break statement")},
-		{script: `continue`, runError: fmt.Errorf("Unexpected continue statement")},
+		{script: `break`, runError: fmt.Errorf("unexpected break statement")},
+		{script: `continue`, runError: fmt.Errorf("unexpected continue statement")},
 		{script: `for 1++ { }`, runError: fmt.Errorf("invalid operation")},
 		{script: `for { 1++ }`, runError: fmt.Errorf("invalid operation")},
 		{script: `for a in 1++ { }`, runError: fmt.Errorf("invalid operation")},

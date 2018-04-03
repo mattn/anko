@@ -47,7 +47,7 @@ println("this line should not be printed")
 
 	waitGroup.Wait()
 
-	// output: <nil> Execution interrupted
+	// output: <nil> execution interrupted
 }
 
 func ExampleEnv_Define() {

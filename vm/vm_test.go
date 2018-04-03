@@ -361,7 +361,7 @@ func TestChan(t *testing.T) {
 		// {script: `a = make(chan bool, 2); a <- true; close(a); b, ok <- a; ok`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runOutput: false, output: map[string]interface{}{"b": nil}},
 		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runOutput: true, output: map[string]interface{}{"b": true}},
 		// TOFIX: add chan syntax ok, do not return error. Also b should be nil
-		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("Failed to send to channel"), output: map[string]interface{}{"b": true}},
+		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("failed to send to channel"), output: map[string]interface{}{"b": true}},
 
 		{script: `a = make(chan bool, 2); a <- 1`, runError: fmt.Errorf("cannot use type int64 as type bool to send to chan")},
 

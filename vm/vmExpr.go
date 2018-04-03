@@ -120,7 +120,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return nilValue, newStringError(e, "invalid operation for the value")
 		}
 		if v.Kind() != reflect.Ptr {
-			return nilValue, newStringError(e, "Cannot deference for the value")
+			return nilValue, newStringError(e, "cannot deference for the value")
 		}
 		return v.Elem(), nil
 
@@ -695,7 +695,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			} else if rhs.Kind() == reflect.Chan {
 				rv, ok := rhs.Recv()
 				if !ok {
-					return nilValue, newErrorf(expr, "Failed to send to channel")
+					return nilValue, newErrorf(expr, "failed to send to channel")
 				}
 				return invokeLetExpr(e.Lhs, rv, env)
 			}
