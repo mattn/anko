@@ -61,6 +61,11 @@ func TestItemInList(t *testing.T) {
 		{script: `1 in [2,3] && false`, runOutput: false},
 		{script: `1 in [2,3] || true`, runOutput: true},
 		{script: `1 in [2,3] || false`, runOutput: false},
+		{script: `1++ in [1, 2, 3]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `3++ in [1, 2, 3]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `1 in 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a=1;a++ in [1, 2, 3]`, runOutput: true},
+		{script: `a=3;a++ in [1, 2, 3]`, runOutput: false},
 	}
 	runTests(t, tests)
 }
