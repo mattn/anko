@@ -756,7 +756,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		for i := 0; i < listExpr.Len(); i++ {
-			if listExpr.Index(i).Interface() == itemExpr.Interface() {
+			if reflect.DeepEqual(listExpr.Index(i).Interface(), itemExpr.Interface()) {
 				return trueValue, nil
 			}
 		}

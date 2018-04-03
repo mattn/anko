@@ -66,6 +66,18 @@ func TestItemInList(t *testing.T) {
 		{script: `1 in 1++`, runError: fmt.Errorf("Invalid operation")},
 		{script: `a=1;a++ in [1, 2, 3]`, runOutput: true},
 		{script: `a=3;a++ in [1, 2, 3]`, runOutput: false},
+
+		// multidimensional slice
+		{script: `1 in [1]`, runOutput: true},
+		{script: `1 in [[1]]`, runOutput: false},
+		{script: `1 in [[[1]]]`, runOutput: false},
+		{script: `1 in [[1],[[1]],1]`, runOutput: true},
+		{script: `[1] in [1]`, runOutput: false},
+		{script: `[1] in [[1]]`, runOutput: true},
+		{script: `[1] in [[[1]]]`, runOutput: false},
+		{script: `[[1]] in [1]`, runOutput: false},
+		{script: `[[1]] in [[1]]`, runOutput: false},
+		{script: `[[1]] in [[[1]]]`, runOutput: true},
 	}
 	runTests(t, tests)
 }
