@@ -39,6 +39,9 @@ func TestItemInList(t *testing.T) {
 		// todo: support `"a" in "aaa"` ?
 		{script: `"a" in "aaa"`, runError: fmt.Errorf("second argument must be slice or array; but get string")},
 		{script: `1 in 12345`, runError: fmt.Errorf("type int64 does not support slice operation")},
+
+		// a in item in list
+		{script: `"a" in 5 in [1, 2, 3]`, runError: fmt.Errorf("type bool does not support slice operation")},
 	}
 	runTests(t, tests)
 }

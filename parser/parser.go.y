@@ -55,6 +55,7 @@ import (
 %right '?' ':'
 %left OROR
 %left ANDAND
+%right IN
 %left IDENT
 %nonassoc EQEQ NEQ ','
 %left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
@@ -760,19 +761,14 @@ expr :
 		$$ = &ast.DeleteExpr{MapExpr: $3, KeyExpr: $5}
 		$$.SetPosition($1.Position())
 	}
-	| expr IN IDENT
+	| expr IN expr_slice
 	{
-		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: ast.SliceExpr{Value: &ast.IdentExpr{Lit: $3.Lit}, Begin: nil, End: nil}}
+		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr IN expr
 	{
 		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
-		$$.SetPosition($1.Position())
-	}
-	| expr IN expr_slice
-	{
-		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
 		$$.SetPosition($1.Position())
 	}
 
