@@ -53,8 +53,6 @@ func TestIf(t *testing.T) {
 func TestSwitch(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		// TODO: add tests
-
 		{script: `switch {}`, parseError: fmt.Errorf("syntax error")},
 		{script: `a=1; switch a; {}`, parseError: fmt.Errorf("syntax error")},
 
