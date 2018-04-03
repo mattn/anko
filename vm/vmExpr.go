@@ -743,7 +743,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		if listExpr.Kind() != reflect.Slice && listExpr.Kind() != reflect.Array {
-			return nilValue, newStringError(e, "second argument must be slice or array; but get "+listExpr.Kind().String())
+			return nilValue, newStringError(e, "second argument must be slice or array; but have "+listExpr.Kind().String())
 		}
 
 		for i := 0; i < listExpr.Len(); i++ {
