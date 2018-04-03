@@ -28,9 +28,9 @@ if v2.Get("b") != "b" {
 v2.Get("a")
 `)
 	if err != nil {
-		t.Errorf("Execute error - received: %v expected: %v", err, nil)
+		t.Errorf("execute error - received: %v expected: %v", err, nil)
 	}
 	if value != "" {
-		t.Errorf("Execute value - received: %#v expected: %#v", value, "")
+		t.Errorf("execute value - received: %#v expected: %#v", value, "")
 	}
 }

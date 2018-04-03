@@ -13,9 +13,9 @@ func TestExecuteError(t *testing.T) {
 	script := "a]]"
 	_, err := env.Execute(script)
 	if err == nil {
-		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	} else if err.Error() != "syntax error" {
-		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	}
 }
 
@@ -77,7 +77,7 @@ func TestDefineAndGet(t *testing.T) {
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 
 		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.Interface, defineError: fmt.Errorf("unknown symbol 'a.a'"), getError: fmt.Errorf("undefined symbol 'a.a'")},
-		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: `"a"`, varGetValue: `"a"`, varKind: reflect.String},
 	}
 
 	// DefineAndGet
@@ -880,7 +880,7 @@ func TestAddPackage(t *testing.T) {
 	// method
 	env = NewEnv()
 	env.AddPackage("strings", map[string]interface{}{"ToLower": strings.ToLower}, map[string]interface{}{})
-	value, err = env.Execute("strings.ToLower(\"TEST\")")
+	value, err = env.Execute(`strings.ToLower("TEST")`)
 	if err != nil {
 		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
 	}
@@ -980,7 +980,7 @@ func TestExternalResolverValueAndGet(t *testing.T) {
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 
 		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.String, defineError: fmt.Errorf("unknown symbol 'a.a'"), getError: fmt.Errorf("undefined symbol 'a.a'")},
-		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: `"a"`, varGetValue: `"a"`, varKind: reflect.String},
 	}
 
 	// ExternalResolverSetAndEnvGet

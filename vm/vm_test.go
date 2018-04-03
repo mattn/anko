@@ -616,7 +616,7 @@ func runInterruptTest(t *testing.T, script string) {
 
 	_, err = env.Execute(script)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
 
@@ -629,7 +629,7 @@ func TestInterruptConcurrency(t *testing.T) {
 		go func() {
 			_, err := env.Execute("for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
-				t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
 			waitGroup.Done()
 		}()
@@ -640,14 +640,14 @@ func TestInterruptConcurrency(t *testing.T) {
 
 	_, err := env.Execute("for { }")
 	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 
 	ClearInterrupt(env)
 
 	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
 	if err != nil {
-		t.Errorf("Execute error - received: %v - expected: %v", err, nil)
+		t.Errorf("execute error - received: %v - expected: %v", err, nil)
 	}
 
 	waitGroup.Add(100)
@@ -655,7 +655,7 @@ func TestInterruptConcurrency(t *testing.T) {
 		go func() {
 			_, err := env.Execute("for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
-				t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
 			waitGroup.Done()
 		}()
@@ -715,10 +715,10 @@ func TestCallFunctionWithVararg(t *testing.T) {
 	}
 	got, err := env.Execute(`X(a...)`)
 	if err != nil {
-		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Execute error - received %#v - expected: %#v", got, want)
+		t.Errorf("execute error - received %#v - expected: %#v", got, want)
 	}
 }
 
@@ -737,6 +737,6 @@ func TestAssignToInterface(t *testing.T) {
 	}
 	_, err = env.Execute(`X.Stdout = a`)
 	if err != nil {
-		t.Errorf("Execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
