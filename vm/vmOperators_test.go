@@ -12,7 +12,7 @@ func TestBasicOperators(t *testing.T) {
 	testInput1 := map[string]interface{}{"b": func() {}}
 	tests := []testStruct{
 		{script: `]`, parseError: fmt.Errorf("syntax error")},
-		{script: `1 = 2`, runError: fmt.Errorf("Invalid operation")},
+		{script: `1 = 2`, runError: fmt.Errorf("invalid operation")},
 		// TOFIX:
 		{script: `,b = 1, 2`, runOutput: int64(2)},
 		{script: `a, b = ,2`, runOutput: int64(2)},
@@ -38,8 +38,8 @@ func TestBasicOperators(t *testing.T) {
 		{script: `a + b`, input: map[string]interface{}{"a": "a", "b": "b"}, runOutput: "ab"},
 		{script: `a + b`, input: map[string]interface{}{"a": "a", "b": int64(1)}, runOutput: "a1"},
 		{script: `a + b`, input: map[string]interface{}{"a": "a", "b": float64(1.1)}, runOutput: "a1.1"},
-		{script: `a + z`, input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
-		{script: `z + b`, input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
+		{script: `a + z`, input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("undefined symbol 'z'"), runOutput: nil},
+		{script: `z + b`, input: map[string]interface{}{"a": "a"}, runError: fmt.Errorf("undefined symbol 'z'"), runOutput: nil},
 
 		{script: `a = nil`, runOutput: nil, output: map[string]interface{}{"a": nil}},
 		{script: `a = nil; a = nil`, runOutput: nil, output: map[string]interface{}{"a": nil}},
@@ -78,15 +78,15 @@ func TestBasicOperators(t *testing.T) {
 
 		{script: `a = 1, 2`, parseError: fmt.Errorf("syntax error")},
 		{script: `a, b = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `a.c, b = 1, 2`, runError: fmt.Errorf("Undefined symbol 'a'")},
-		{script: `a, b.c = 1, 2`, runError: fmt.Errorf("Undefined symbol 'b'")},
+		{script: `a.c, b = 1, 2`, runError: fmt.Errorf("undefined symbol 'a'")},
+		{script: `a, b.c = 1, 2`, runError: fmt.Errorf("undefined symbol 'b'")},
 
 		{script: `a, b = 1, 2`, input: map[string]interface{}{"a": int64(3)}, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{script: `a, b, c = 1, 2, 3`, input: map[string]interface{}{"a": int64(3)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
 		{script: `a, b = [1, 2], [3, 4]`, runOutput: []interface{}{int64(3), int64(4)}, output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}, "b": []interface{}{int64(3), int64(4)}}},
 
-		{script: `y = z`, runError: fmt.Errorf("Undefined symbol 'z'")},
-		{script: `z.y.x = 1`, runError: fmt.Errorf("Undefined symbol 'z'")},
+		{script: `y = z`, runError: fmt.Errorf("undefined symbol 'z'")},
+		{script: `z.y.x = 1`, runError: fmt.Errorf("undefined symbol 'z'")},
 
 		{script: `c = a + b`, input: map[string]interface{}{"a": int64(2), "b": int64(1)}, runOutput: int64(3), output: map[string]interface{}{"c": int64(3)}},
 		{script: `c = a - b`, input: map[string]interface{}{"a": int64(2), "b": int64(1)}, runOutput: int64(1), output: map[string]interface{}{"c": int64(1)}},
@@ -133,11 +133,11 @@ func TestBasicOperators(t *testing.T) {
 		{script: `a--`, input: map[string]interface{}{"a": "2"}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: `a--`, input: map[string]interface{}{"a": "a"}, runOutput: int64(-1), output: map[string]interface{}{"a": int64(-1)}},
 
-		{script: `1++`, runError: fmt.Errorf("Invalid operation"), runOutput: nil},
-		{script: `1--`, runError: fmt.Errorf("Invalid operation"), runOutput: nil},
-		{script: `z++`, runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
-		{script: `z--`, runError: fmt.Errorf("Undefined symbol 'z'"), runOutput: nil},
-		{script: `!(1++)`, runError: fmt.Errorf("Invalid operation"), runOutput: nil},
+		{script: `1++`, runError: fmt.Errorf("invalid operation"), runOutput: nil},
+		{script: `1--`, runError: fmt.Errorf("invalid operation"), runOutput: nil},
+		{script: `z++`, runError: fmt.Errorf("undefined symbol 'z'"), runOutput: nil},
+		{script: `z--`, runError: fmt.Errorf("undefined symbol 'z'"), runOutput: nil},
+		{script: `!(1++)`, runError: fmt.Errorf("invalid operation"), runOutput: nil},
 
 		{script: `a += 1`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(3), output: map[string]interface{}{"a": int64(3)}},
 		{script: `a -= 1`, input: map[string]interface{}{"a": int64(2)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},

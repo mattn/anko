@@ -179,7 +179,7 @@ func TestStrings(t *testing.T) {
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `var a = 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `var a = 1++`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `var a = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
 		{script: `var a, b = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
@@ -195,8 +195,8 @@ func TestModule(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: `module a.b { }`, parseError: fmt.Errorf("syntax error")},
-		{script: `module a { 1++ }`, runError: fmt.Errorf("Invalid operation")},
-		{script: `module a { }; a.b`, runError: fmt.Errorf("Invalid operation 'b'")},
+		{script: `module a { 1++ }`, runError: fmt.Errorf("invalid operation")},
+		{script: `module a { }; a.b`, runError: fmt.Errorf("invalid operation 'b'")},
 
 		{script: `module a { b = nil }; a.b`, runOutput: nil},
 		{script: `module a { b = true }; a.b`, runOutput: true},
@@ -245,7 +245,7 @@ func TestMake(t *testing.T) {
 func TestMakeType(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `make(type a, 1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `make(type a, 1++)`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `make(type a, true)`, runOutput: reflect.TypeOf(true)},
 		{script: `a = make(type a, true)`, runOutput: reflect.TypeOf(true), output: map[string]interface{}{"a": reflect.TypeOf(true)}},
@@ -259,7 +259,7 @@ func TestMakeType(t *testing.T) {
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `len(1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `len(1++)`, runError: fmt.Errorf("invalid operation")},
 		{script: `len(true)`, runError: fmt.Errorf("type bool does not support len operation")},
 
 		{script: `a = ""; len(a)`, runOutput: int64(0)},
@@ -339,7 +339,7 @@ func TestMakeChan(t *testing.T) {
 	tests := []testStruct{
 		{script: `make(chan foobar, 2)`, runError: fmt.Errorf("Undefined type 'foobar'")},
 		{script: `make(chan nilT, 2)`, types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make chan")},
-		{script: `make(chan bool, 1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `make(chan bool, 1++)`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `a = make(chan bool); b = func (c) { c <- true }; go b(a); <- a`, runOutput: true},
 	}
@@ -349,12 +349,12 @@ func TestMakeChan(t *testing.T) {
 func TestChan(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `a = make(chan bool, 2); 1++ <- 1`, runError: fmt.Errorf("Invalid operation")},
-		{script: `a = make(chan bool, 2); a <- 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = make(chan bool, 2); 1++ <- 1`, runError: fmt.Errorf("invalid operation")},
+		{script: `a = make(chan bool, 2); a <- 1++`, runError: fmt.Errorf("invalid operation")},
 
 		// TODO: move close from core into vm code, then update tests
 
-		{script: `1 <- 1`, runError: fmt.Errorf("Invalid operation for chan")},
+		{script: `1 <- 1`, runError: fmt.Errorf("invalid operation for chan")},
 		// TODO: this panics, should we capture the panic in a better way?
 		// {script: `a = make(chan bool, 2); close(a); a <- true`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("channel is close")},
 		// TODO: add chan syntax ok

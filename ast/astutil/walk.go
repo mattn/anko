@@ -132,7 +132,7 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 			}
 		}
 	default:
-		return fmt.Errorf("Unknown statement %v", reflect.TypeOf(stmt))
+		return fmt.Errorf("unknown statement %v", reflect.TypeOf(stmt))
 	}
 	return nil
 }
@@ -225,7 +225,7 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		}
 		return walkExpr(expr.Lhs, f)
 	default:
-		return fmt.Errorf("Unknown expression %v", reflect.TypeOf(expr))
+		return fmt.Errorf("unknown expression %v", reflect.TypeOf(expr))
 	}
 	return nil
 }

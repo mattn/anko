@@ -131,15 +131,15 @@ func TestWalk(t *testing.T) {
 			switch exp.Name {
 			case `testA`:
 				if len(exp.SubExprs) != 3 {
-					return errors.New("Invalid parameter count")
+					return errors.New("invalid parameter count")
 				}
 			case `Main`:
 				if len(exp.SubExprs) != 1 {
-					return errors.New("Invalid parameter count")
+					return errors.New("invalid parameter count")
 				}
 			case `Tester`:
 				if len(exp.SubExprs) != 0 {
-					return errors.New("Invalid parameter count")
+					return errors.New("invalid parameter count")
 				}
 			}
 		case *ast.FuncExpr:
@@ -189,7 +189,7 @@ fmt.Println(Main())
 		case *ast.CallExpr:
 			//check if the BuiltinFuncX is getting the right number of args
 			if e.Name == `BuiltinFuncX` && len(e.SubExprs) != 3 {
-				return errors.New("Invalid number of arguments to BuiltinFuncX")
+				return errors.New("invalid number of arguments to BuiltinFuncX")
 			}
 		case *ast.FuncExpr:
 			if !mainFound && e.Name == `Main` {
