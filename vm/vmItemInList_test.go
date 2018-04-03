@@ -13,17 +13,32 @@ func TestItemInList(t *testing.T) {
 		{script: `"a" in ["b"]`, runOutput: false},
 		{script: `"a" in ["c", "b", "a"]`, runOutput: true},
 		{script: `"a" in ["a", "b", 1]`, runOutput: true},
+		{script: `"a" in l`, input: map[string]interface{}{"l": []interface{}{"a"}}, runOutput: true},
+		{script: `"a" in l`, input: map[string]interface{}{"l": []interface{}{"b"}}, runOutput: false},
+		{script: `"a" in l`, input: map[string]interface{}{"l": []interface{}{"c", "b", "a"}}, runOutput: true},
+		{script: `"a" in l`, input: map[string]interface{}{"l": []interface{}{"a", "b", 1}}, runOutput: true},
 
 		{script: `1 in [1]`, runOutput: true},
 		{script: `1 in [2]`, runOutput: false},
 		{script: `1 in [3, 2, 1]`, runOutput: true},
-		{script: `1.0 in [1]`, runOutput: false},
+		{script: `1.0 in [1]`, runOutput: true},
 		{script: `1 in ["1"]`, runOutput: false},
+		{script: `1 in l`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `"1" in l`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: false},
+		{script: `1 in l`, input: map[string]interface{}{"l": []interface{}{2}}, runOutput: false},
+		{script: `1 in l`, input: map[string]interface{}{"l": []interface{}{3, 2, 1}}, runOutput: true},
+		{script: `1.0 in l`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `1 in l`, input: map[string]interface{}{"l": []interface{}{"1"}}, runOutput: false},
+
 
 		{script: `true in ["true"]`, runOutput: false},
 		{script: `true in [true]`, runOutput: true},
 		{script: `true in [true, false]`, runOutput: true},
 		{script: `false in [false, true]`, runOutput: true},
+		{script: `true in l`, input: map[string]interface{}{"l": []interface{}{"true"}}, runOutput: false},
+		{script: `true in l`, input: map[string]interface{}{"l": []interface{}{true}}, runOutput: true},
+		{script: `true in l`, input: map[string]interface{}{"l": []interface{}{true, false}}, runOutput: true},
+		{script: `false in l`, input: map[string]interface{}{"l": []interface{}{false, true}}, runOutput: true},
 
 		{script: `"a" in ["b", "a", "c"][1:]`, runOutput: true},
 		{script: `"a" in ["b", "a", "c"][:1]`, runOutput: false},
@@ -31,9 +46,13 @@ func TestItemInList(t *testing.T) {
 		{script: `l = ["b", "a", "c"];"a" in l[1:]`, runOutput: true},
 		{script: `l = ["b", "a", "c"];"a" in l[:1]`, runOutput: false},
 		{script: `l = ["b", "a", "c"];"a" in l[1:2]`, runOutput: true},
+		{script: `"a" in l[1:]`, input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, runOutput: true},
+		{script: `"a" in l[:1]`, input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, runOutput: false},
+		{script: `"a" in l[1:2]`, input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, runOutput: true},
 
 		// for i in list && item in list
 		{script: `list_of_list = [["a"]];for l in list_of_list { return "a" in l }`, runOutput: true},
+		{script: `for l in list_of_list { return "a" in l }`, input: map[string]interface{}{"list_of_list": []interface{}{[]interface{}{"a"}}}, runOutput: true},
 
 		// not slice or array
 		// todo: support `"a" in "aaa"` ?
@@ -66,6 +85,27 @@ func TestItemInList(t *testing.T) {
 		{script: `1 in 1++`, runError: fmt.Errorf("Invalid operation")},
 		{script: `a=1;a++ in [1, 2, 3]`, runOutput: true},
 		{script: `a=3;a++ in [1, 2, 3]`, runOutput: false},
+		{script: `switch 1 in l {case true: return true;default: return false}`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `switch 1 in l {case true: return true;default: return false}`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `switch true {case 1 in l: return true;default: return false}`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `switch false {case 1 in l: return true;default: return false}`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: false},
+		{script: `if 1 in l {return true} else {return false}`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `if 1 in l {return true} else {return false}`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `for i in l { i++ }`, input: map[string]interface{}{"l": []interface{}{1, 2, 3}}},
+		{script: `a=1; a=a in l`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `a=1; a=a in l`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `1 in l && true`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `1 in l && false`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: false},
+		{script: `1 in l || true`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `1 in l || false`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `1 in l && true`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `1 in l && false`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `1 in l || true`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: true},
+		{script: `1 in l || false`, input: map[string]interface{}{"l": []interface{}{2, 3}}, runOutput: false},
+		{script: `1++ in l`, input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, runError: fmt.Errorf("Invalid operation")},
+		{script: `3++ in l`, input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, runError: fmt.Errorf("Invalid operation")},
+		{script: `a=1;a++ in l`, input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, runOutput: true},
+		{script: `a=3;a++ in l`, input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, runOutput: false},
 
 		// multidimensional slice
 		{script: `1 in [1]`, runOutput: true},
@@ -78,6 +118,16 @@ func TestItemInList(t *testing.T) {
 		{script: `[[1]] in [1]`, runOutput: false},
 		{script: `[[1]] in [[1]]`, runOutput: false},
 		{script: `[[1]] in [[[1]]]`, runOutput: true},
+		{script: `1 in [1]`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: true},
+		{script: `1 in [[1]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, runOutput: false},
+		{script: `1 in [[[1]]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, runOutput: false},
+		{script: `1 in [[1],[[1]],1]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{1}, []interface{}{[]interface{}{1}}, 1}}, runOutput: true},
+		{script: `[1] in [1]`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: false},
+		{script: `[1] in [[1]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, runOutput: true},
+		{script: `[1] in [[[1]]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, runOutput: false},
+		{script: `[[1]] in [1]`, input: map[string]interface{}{"l": []interface{}{1}}, runOutput: false},
+		{script: `[[1]] in [[1]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, runOutput: false},
+		{script: `[[1]] in [[[1]]]`, input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, runOutput: true},
 	}
 	runTests(t, tests)
 }

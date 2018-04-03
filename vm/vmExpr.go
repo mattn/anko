@@ -756,7 +756,23 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		for i := 0; i < listExpr.Len(); i++ {
-			if reflect.DeepEqual(listExpr.Index(i).Interface(), itemExpr.Interface()) {
+			item := itemExpr
+			list := listExpr.Index(i)
+
+			if item.Kind() == reflect.Interface || item.Kind() == reflect.Ptr {
+				item = item.Elem()
+			}
+			if list.Kind() == reflect.Interface || list.Kind() == reflect.Ptr {
+				list = list.Elem()
+			}
+
+			if isNum(item) && isNum(list) {
+				if !list.Type().ConvertibleTo(item.Type()) {
+					return falseValue, nil
+				}
+				list = list.Convert(item.Type())
+			}
+			if reflect.DeepEqual(list.Interface(), item.Interface()) {
 				return trueValue, nil
 			}
 		}
