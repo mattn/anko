@@ -201,27 +201,7 @@ func equal(lhsV, rhsV reflect.Value) bool {
 
 // equal returns true when lhsV and rhsV is same number.
 func equalNumber(lhsV, rhsV reflect.Value) bool {
-	if !isNum(lhsV) || !isNum(rhsV) {
-		return false
-	}
-
-	lk := lhsV.Kind()
-	rk := rhsV.Kind()
-	var targetType reflect.Type
-	if lk == reflect.Float32 || lk == reflect.Float64 || rk == reflect.Float32 || rk == reflect.Float64 {
-		targetType = reflect.ValueOf(float64(1)).Type()
-	} else {
-		targetType = reflect.ValueOf(int64(1)).Type()
-	}
-
-	if !lhsV.Type().ConvertibleTo(targetType) {
-		return false
-	}
-	if !rhsV.Type().ConvertibleTo(targetType) {
-		return false
-	}
-
-	return reflect.DeepEqual(lhsV.Convert(targetType).Interface(), rhsV.Convert(targetType).Interface())
+	return isNum(lhsV) && isNum(rhsV) && fmt.Sprintf("%v", lhsV) == fmt.Sprintf("%v", rhsV)
 }
 
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {

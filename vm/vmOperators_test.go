@@ -285,7 +285,7 @@ func TestComparisonOperators(t *testing.T) {
 		{script: `0.0 == "0.0"`, runOutput: true},
 		{script: `1.0 == "1.0"`, runOutput: true},
 		{script: `1.2 == "1.2"`, runOutput: true},
-		{script: `"7" == 7.2`, runOutput: true},
+		{script: `"7" == 7.2`, runOutput: false},
 		{script: `1.2 == "1"`, runOutput: false},
 		{script: `"1.1" == 1`, runOutput: false},
 		{script: `0 == "1"`, runOutput: false},
