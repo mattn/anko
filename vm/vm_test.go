@@ -395,14 +395,14 @@ func runTests(t *testing.T, tests []testStruct) {
 loop:
 	for _, test := range tests {
 		stmts, err := parser.ParseSrc(test.script)
-		if err != nil && test.parseError != nil {
-			if err.Error() != test.parseError.Error() {
+		if err != nil {
+			if test.parseError == nil || err.Error() != test.parseError.Error() {
 				t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.parseError, test.script)
 				continue
+			} else if test.parseError != nil && err.Error() == test.parseError.Error() {
+				// parse err, skip run code
+				continue
 			}
-		} else if err != test.parseError {
-			t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.parseError, test.script)
-			continue
 		}
 
 		env := NewEnv()
