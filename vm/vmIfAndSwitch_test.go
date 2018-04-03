@@ -54,6 +54,7 @@ func TestSwitch(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
 		{script: `switch {}`, parseError: fmt.Errorf("syntax error")},
+		{script: `a=1; switch a {case: return a}`, parseError: fmt.Errorf("syntax error")},
 		{script: `a=1; switch a; {}`, parseError: fmt.Errorf("syntax error")},
 
 		{script: `a=1; switch a {}`, runOutput: int64(1)},
@@ -66,6 +67,7 @@ func TestSwitch(t *testing.T) {
 		{script: `a=3; switch a {case 1,3: return a;case 2: return a}`, runOutput: int64(3)},
 		{script: `a=3; switch a {case 1: return a;case 2,3: return a}`, runOutput: int64(3)},
 
+		{script: `a=99; switch a {default: return 'default'}`, runOutput: "default"},
 		{script: `a=99; switch a {case 1: return a;default: return 'default'}`, runOutput: "default"},
 		{script: `a=99; switch a {case 1,2: return a;default: return 'default'}`, runOutput: "default"},
 		{script: `a=99; switch a {case 1,2,3: return a;default: return 'default'}`, runOutput: "default"},
