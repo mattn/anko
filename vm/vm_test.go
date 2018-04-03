@@ -293,11 +293,11 @@ func TestLen(t *testing.T) {
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{}}, runOutput: int64(0), output: map[string]interface{}{"a": []interface{}{}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{nil}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{nil}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{true}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{"test"}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{"test"}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{int32(1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int32(1)}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{int64(1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{script: `len(a)`, input: map[string]interface{}{"a": []interface{}{"a"}}, runOutput: int64(1), output: map[string]interface{}{"a": []interface{}{"a"}}},
 
 		{script: `len(a[0])`, input: map[string]interface{}{"a": []interface{}{"test"}}, runOutput: int64(4), output: map[string]interface{}{"a": []interface{}{"test"}}},
 
@@ -305,20 +305,20 @@ func TestLen(t *testing.T) {
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{nil}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{nil}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{nil}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{nil}}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{true}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{true}}}},
-		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}},
 		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
+		{script: `len(a)`, input: map[string]interface{}{"a": [][]interface{}{{"a"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{"a"}}}},
 
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{nil}}, runOutput: int64(0), output: map[string]interface{}{"a": [][]interface{}{nil}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{nil}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{nil}}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{true}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{true}}}},
-		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}},
 		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
+		{script: `len(a[0])`, input: map[string]interface{}{"a": [][]interface{}{{"a"}}}, runOutput: int64(1), output: map[string]interface{}{"a": [][]interface{}{{"a"}}}},
 
 		{script: `len(a[0][0])`, input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, runOutput: int64(4), output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
 	}
@@ -334,19 +334,75 @@ func TestReferencingAndDereference(t *testing.T) {
 	runTests(t, tests)
 }
 
+func TestMakeChan(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `make(chan foobar, 2)`, runError: fmt.Errorf("Undefined type 'foobar'")},
+		{script: `make(chan nilT, 2)`, types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make chan")},
+		{script: `make(chan bool, 1++)`, runError: fmt.Errorf("Invalid operation")},
+
+		{script: `a = make(chan bool); b = func (c) { c <- true }; go b(a); <- a`, runOutput: true},
+	}
+	runTests(t, tests)
+}
+
+func TestChan(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testStruct{
+		{script: `a = make(chan bool, 2); 1++ <- 1`, runError: fmt.Errorf("Invalid operation")},
+		{script: `a = make(chan bool, 2); a <- 1++`, runError: fmt.Errorf("Invalid operation")},
+
+		// TODO: move close from core into vm code, then update tests
+
+		{script: `1 <- 1`, runError: fmt.Errorf("Invalid operation for chan")},
+		// TODO: this panics, should we capture the panic in a better way?
+		// {script: `a = make(chan bool, 2); close(a); a <- true`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("channel is close")},
+		// TODO: add chan syntax ok
+		// {script: `a = make(chan bool, 2); a <- true; close(a); b, ok <- a; ok`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runOutput: false, output: map[string]interface{}{"b": nil}},
+		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runOutput: true, output: map[string]interface{}{"b": true}},
+		// TOFIX: add chan syntax ok, do not return error. Also b should be nil
+		{script: `a = make(chan bool, 2); a <- true; close(a); b = false; b <- a; b <- a`, input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, runError: fmt.Errorf("Failed to send to channel"), output: map[string]interface{}{"b": true}},
+
+		{script: `a = make(chan bool, 2); a <- 1`, runError: fmt.Errorf("cannot use type int64 as type bool to send to chan")},
+
+		{script: `a = make(chan interface, 2); a <- nil; <- a`, runOutput: nil},
+		{script: `a = make(chan bool, 2); a <- true; <- a`, runOutput: true},
+		{script: `a = make(chan int32, 2); a <- 1; <- a`, runOutput: int32(1)},
+		{script: `a = make(chan int64, 2); a <- 1; <- a`, runOutput: int64(1)},
+		{script: `a = make(chan float32, 2); a <- 1.1; <- a`, runOutput: float32(1.1)},
+		{script: `a = make(chan float64, 2); a <- 1.1; <- a`, runOutput: float64(1.1)},
+
+		{script: `a <- nil; <- a`, input: map[string]interface{}{"a": make(chan interface{}, 2)}, runOutput: nil},
+		{script: `a <- true; <- a`, input: map[string]interface{}{"a": make(chan bool, 2)}, runOutput: true},
+		{script: `a <- 1; <- a`, input: map[string]interface{}{"a": make(chan int32, 2)}, runOutput: int32(1)},
+		{script: `a <- 1; <- a`, input: map[string]interface{}{"a": make(chan int64, 2)}, runOutput: int64(1)},
+		{script: `a <- 1.1; <- a`, input: map[string]interface{}{"a": make(chan float32, 2)}, runOutput: float32(1.1)},
+		{script: `a <- 1.1; <- a`, input: map[string]interface{}{"a": make(chan float64, 2)}, runOutput: float64(1.1)},
+		{script: `a <- "b"; <- a`, input: map[string]interface{}{"a": make(chan string, 2)}, runOutput: "b"},
+
+		{script: `a = make(chan bool, 2); a <- true; a <- <- a`, runOutput: nil},
+		{script: `a = make(chan bool, 2); a <- true; a <- (<- a)`, runOutput: nil},
+		{script: `a = make(chan bool, 2); a <- true; a <- <- a; <- a`, runOutput: true},
+		{script: `a = make(chan bool, 2); a <- true; b = false; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
+		// TOFIX: if variable is not created yet, should make variable instead of error
+		// {script: `a = make(chan bool, 2); a <- true; b <- a`, runOutput: true, output: map[string]interface{}{"b": true}},
+	}
+	runTests(t, tests)
+}
+
 func runTests(t *testing.T, tests []testStruct) {
 	var value interface{}
 loop:
 	for _, test := range tests {
 		stmts, err := parser.ParseSrc(test.script)
-		if err != nil && test.parseError != nil {
-			if err.Error() != test.parseError.Error() {
+		if err != nil {
+			if test.parseError == nil || err.Error() != test.parseError.Error() {
 				t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.parseError, test.script)
 				continue
+			} else if test.parseError != nil && err.Error() == test.parseError.Error() {
+				// parse err, skip run code
+				continue
 			}
-		} else if err != test.parseError {
-			t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.parseError, test.script)
-			continue
 		}
 
 		env := NewEnv()

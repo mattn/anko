@@ -681,7 +681,16 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 				return nilValue, newError(e.Lhs, err)
 			}
 			if lhs.Kind() == reflect.Chan {
-				lhs.Send(rhs)
+				chanType := lhs.Type().Elem()
+				if chanType == interfaceType || (rhs.IsValid() && rhs.Type() == chanType) {
+					lhs.Send(rhs)
+				} else {
+					rhs, err = convertReflectValueToType(rhs, chanType)
+					if err != nil {
+						return nilValue, newStringError(e, "cannot use type "+rhs.Type().String()+" as type "+chanType.String()+" to send to chan")
+					}
+					lhs.Send(rhs)
+				}
 				return nilValue, nil
 			} else if rhs.Kind() == reflect.Chan {
 				rv, ok := rhs.Recv()

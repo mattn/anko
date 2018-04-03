@@ -11,5 +11,6 @@ func init() {
 		"GOMAXPROCS": runtime.GOMAXPROCS,
 		"GOOS":       runtime.GOOS,
 		"GOROOT":     runtime.GOROOT,
+		"Version":    runtime.Version,
 	}
 }
