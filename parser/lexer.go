@@ -110,7 +110,7 @@ retry:
 		}
 	case ch == '`':
 		tok = STRING
-		lit, err = s.scanRawString()
+		lit, err = s.scanRawString('`')
 		if err != nil {
 			return
 		}
@@ -193,6 +193,25 @@ retry:
 			case '=':
 				tok = DIVEQ
 				lit = "/="
+			case '/':
+				for !isEOL(s.peek()) {
+					s.next()
+				}
+				goto retry
+			case '*':
+				for {
+					_, err = s.scanRawString('*')
+					if err != nil {
+						return
+					}
+
+					if s.peek() == '/' {
+						s.next()
+						goto retry
+					}
+
+					s.back()
+				}
 			default:
 				s.back()
 				tok = int(ch)
@@ -416,14 +435,14 @@ func (s *Scanner) scanNumber() (string, error) {
 }
 
 // scanRawString returns raw-string starting at current position.
-func (s *Scanner) scanRawString() (string, error) {
+func (s *Scanner) scanRawString(l rune) (string, error) {
 	var ret []rune
 	for {
 		s.next()
 		if s.peek() == EOF {
 			return "", errors.New("unexpected EOF")
 		}
-		if s.peek() == '`' {
+		if s.peek() == l {
 			s.next()
 			break
 		}
