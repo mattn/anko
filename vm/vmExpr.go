@@ -756,21 +756,8 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 
 		for i := 0; i < listExpr.Len(); i++ {
-			item := itemExpr
-			list := listExpr.Index(i)
-
-			if item.Kind() == reflect.Interface || item.Kind() == reflect.Ptr {
-				item = item.Elem()
-			}
-			if list.Kind() == reflect.Interface || list.Kind() == reflect.Ptr {
-				list = list.Elem()
-			}
-
-			if isNum(item) && isNum(list) && equalNumber(item, list) {
-				return trueValue, nil
-			} else if item.CanInterface() && list.CanInterface() && reflect.DeepEqual(item.Interface(), list.Interface()) {
-				return trueValue, nil
-			} else if reflect.DeepEqual(item, list) {
+			// todo: https://github.com/mattn/anko/issues/192
+			if equal(itemExpr, listExpr.Index(i)) {
 				return trueValue, nil
 			}
 		}

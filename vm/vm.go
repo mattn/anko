@@ -177,7 +177,7 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 
 	if isNum(lhsV) && isNum(rhsV) {
-		return equalNumber(lhsV, rhsV)
+		return fmt.Sprintf("%v", lhsV) == fmt.Sprintf("%v", rhsV)
 	}
 
 	// Try to compare bools to strings and numbers
@@ -197,11 +197,6 @@ func equal(lhsV, rhsV reflect.Value) bool {
 		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
 	}
 	return reflect.DeepEqual(lhsV, rhsV)
-}
-
-// equal returns true when lhsV and rhsV is same number.
-func equalNumber(lhsV, rhsV reflect.Value) bool {
-	return isNum(lhsV) && isNum(rhsV) && fmt.Sprintf("%v", lhsV) == fmt.Sprintf("%v", rhsV)
 }
 
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
