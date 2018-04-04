@@ -13,9 +13,9 @@ func TestExecuteError(t *testing.T) {
 	script := "a]]"
 	_, err := env.Execute(script)
 	if err == nil {
-		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	} else if err.Error() != "syntax error" {
-		t.Errorf("Execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
+		t.Errorf("execute error - received: %v - expected: %v", err, fmt.Errorf("syntax error"))
 	}
 }
 
@@ -24,9 +24,9 @@ func TestSetError(t *testing.T) {
 	envChild := envParent.NewEnv()
 	err := envChild.Set("a", "a")
 	if err == nil {
-		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
-	} else if err.Error() != "Unknown symbol 'a'" {
-		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("Unknown symbol 'a'"))
+		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("unknown symbol 'a'"))
+	} else if err.Error() != "unknown symbol 'a'" {
+		t.Errorf("Set error - received: %v - expected: %v", err, fmt.Errorf("unknown symbol 'a'"))
 	}
 }
 
@@ -35,9 +35,9 @@ func TestAddrError(t *testing.T) {
 	envChild := envParent.NewEnv()
 	_, err := envChild.Addr("a")
 	if err == nil {
-		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
-	} else if err.Error() != "Undefined symbol 'a'" {
-		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("Undefined symbol 'a'"))
+		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("undefined symbol 'a'"))
+	} else if err.Error() != "undefined symbol 'a'" {
+		t.Errorf("Addr error - received: %v - expected: %v", err, fmt.Errorf("undefined symbol 'a'"))
 	}
 }
 
@@ -76,8 +76,8 @@ func TestDefineAndGet(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.Interface, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
-		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.Interface, defineError: fmt.Errorf("unknown symbol 'a.a'"), getError: fmt.Errorf("undefined symbol 'a.a'")},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: `"a"`, varGetValue: `"a"`, varKind: reflect.String},
 	}
 
 	// DefineAndGet
@@ -453,7 +453,7 @@ func TestDefineType(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
 		{testInfo: "string", varName: "a", varDefineValue: "a"},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("Unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
 	}
 
 	// DefineType
@@ -784,10 +784,10 @@ func TestAddr(t *testing.T) {
 		addrError      error
 	}{
 		{testInfo: "nil", varName: "a", varDefineValue: nil, addrError: nil},
-		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("unaddressable")},
 	}
 
 	// TestAddr
@@ -848,10 +848,10 @@ func TestAddPackage(t *testing.T) {
 	env = NewEnv()
 	_, err = env.AddPackage("bad.package.name", map[string]interface{}{}, map[string]interface{}{})
 	if err == nil {
-		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'bad.package.name'")
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'bad.package.name'")
 	} else {
-		if err.Error() != "Unknown symbol 'bad.package.name'" {
-			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'bad.package.name'")
+		if err.Error() != "unknown symbol 'bad.package.name'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'bad.package.name'")
 		}
 	}
 
@@ -859,10 +859,10 @@ func TestAddPackage(t *testing.T) {
 	env = NewEnv()
 	_, err = env.AddPackage("badMethodName", map[string]interface{}{"a.b": "a"}, map[string]interface{}{})
 	if err == nil {
-		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'a.b'")
 	} else {
-		if err.Error() != "Unknown symbol 'a.b'" {
-			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		if err.Error() != "unknown symbol 'a.b'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'a.b'")
 		}
 	}
 
@@ -870,17 +870,17 @@ func TestAddPackage(t *testing.T) {
 	env = NewEnv()
 	_, err = env.AddPackage("badTypeName", map[string]interface{}{}, map[string]interface{}{"a.b": "a"})
 	if err == nil {
-		t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'a.b'")
 	} else {
-		if err.Error() != "Unknown symbol 'a.b'" {
-			t.Errorf("AddPackage error - received: %v - expected: %v", err, "Unknown symbol 'a.b'")
+		if err.Error() != "unknown symbol 'a.b'" {
+			t.Errorf("AddPackage error - received: %v - expected: %v", err, "unknown symbol 'a.b'")
 		}
 	}
 
 	// method
 	env = NewEnv()
 	env.AddPackage("strings", map[string]interface{}{"ToLower": strings.ToLower}, map[string]interface{}{})
-	value, err = env.Execute("strings.ToLower(\"TEST\")")
+	value, err = env.Execute(`strings.ToLower("TEST")`)
 	if err != nil {
 		t.Errorf("AddPackage error - received: %v - expected: %v", err, nil)
 	}
@@ -911,7 +911,7 @@ func NewExternalResolver() *externalResolver {
 
 func (er *externalResolver) SetValue(name string, value interface{}) error {
 	if strings.Contains(name, ".") {
-		return fmt.Errorf("Unknown symbol '%s'", name)
+		return fmt.Errorf("unknown symbol '%s'", name)
 	}
 
 	if value == nil {
@@ -926,12 +926,12 @@ func (er *externalResolver) Get(name string) (reflect.Value, error) {
 	if v, ok := er.values[name]; ok {
 		return v, nil
 	}
-	return nilValue, fmt.Errorf("Undefined symbol '%s'", name)
+	return nilValue, fmt.Errorf("undefined symbol '%s'", name)
 }
 
 func (er *externalResolver) DefineType(name string, t interface{}) error {
 	if strings.Contains(name, ".") {
-		return fmt.Errorf("Unknown symbol '%s'", name)
+		return fmt.Errorf("unknown symbol '%s'", name)
 	}
 
 	var typ reflect.Type
@@ -953,7 +953,7 @@ func (er *externalResolver) Type(name string) (reflect.Type, error) {
 	if v, ok := er.types[name]; ok {
 		return v, nil
 	}
-	return nilType, fmt.Errorf("Undefined symbol '%s'", name)
+	return nilType, fmt.Errorf("undefined symbol '%s'", name)
 }
 
 func TestExternalResolverValueAndGet(t *testing.T) {
@@ -979,8 +979,8 @@ func TestExternalResolverValueAndGet(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1), varGetValue: float64(1), varKind: reflect.Float64},
 		{testInfo: "string", varName: "a", varDefineValue: "a", varGetValue: "a", varKind: reflect.String},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.String, defineError: fmt.Errorf("Unknown symbol 'a.a'"), getError: fmt.Errorf("Undefined symbol 'a.a'")},
-		{testInfo: "string with quotes", varName: "a", varDefineValue: "\"a\"", varGetValue: "\"a\"", varKind: reflect.String},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: "a", varGetValue: nil, varKind: reflect.String, defineError: fmt.Errorf("unknown symbol 'a.a'"), getError: fmt.Errorf("undefined symbol 'a.a'")},
+		{testInfo: "string with quotes", varName: "a", varDefineValue: `"a"`, varGetValue: `"a"`, varKind: reflect.String},
 	}
 
 	// ExternalResolverSetAndEnvGet
@@ -1038,7 +1038,7 @@ func TestExternalResolverTypeAndGet(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
 		{testInfo: "string", varName: "a", varDefineValue: "a"},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("Unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
 	}
 
 	// DefineType
@@ -1091,10 +1091,10 @@ func TestExternalResolverAddr(t *testing.T) {
 		addrError      error
 	}{
 		{testInfo: "nil", varName: "a", varDefineValue: nil, addrError: nil},
-		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("Unaddressable")},
-		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("Unaddressable")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), addrError: fmt.Errorf("unaddressable")},
+		{testInfo: "string", varName: "a", varDefineValue: "a", addrError: fmt.Errorf("unaddressable")},
 	}
 
 	for _, test := range tests {
@@ -1322,7 +1322,7 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 		go func() {
 			<-waitChan
 			err := envParent.Set("a", 1)
-			if err != nil && err.Error() != "Unknown symbol 'a'" {
+			if err != nil && err.Error() != "unknown symbol 'a'" {
 				t.Errorf("Set error: %v", err)
 			}
 			waitGroup.Done()
@@ -1340,7 +1340,7 @@ func raceDefineAndSetSameVariable(t *testing.T) {
 		go func() {
 			<-waitChan
 			err := envChild.Set("a", 3)
-			if err != nil && err.Error() != "Unknown symbol 'a'" {
+			if err != nil && err.Error() != "unknown symbol 'a'" {
 				t.Errorf("Set error: %v", err)
 			}
 			waitGroup.Done()

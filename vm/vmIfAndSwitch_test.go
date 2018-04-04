@@ -9,9 +9,9 @@ import (
 func TestIf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
-		{script: `if false {} else if 1++ {}`, runError: fmt.Errorf("Invalid operation")},
-		{script: `if false {} else if true { 1++ }`, runError: fmt.Errorf("Invalid operation")},
+		{script: `if 1++ {}`, runError: fmt.Errorf("invalid operation")},
+		{script: `if false {} else if 1++ {}`, runError: fmt.Errorf("invalid operation")},
+		{script: `if false {} else if true { 1++ }`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `if true {}`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
 		{script: `if true {}`, input: map[string]interface{}{"a": true}, runOutput: nil, output: map[string]interface{}{"a": true}},

@@ -36,13 +36,13 @@ var (
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
 	// ErrBreak when there is an unexpected break statement
-	ErrBreak = errors.New("Unexpected break statement")
+	ErrBreak = errors.New("unexpected break statement")
 	// ErrContinue when there is an unexpected continue statement
-	ErrContinue = errors.New("Unexpected continue statement")
+	ErrContinue = errors.New("unexpected continue statement")
 	// ErrReturn when there is an unexpected return statement
-	ErrReturn = errors.New("Unexpected return statement")
+	ErrReturn = errors.New("unexpected return statement")
 	// ErrInterrupt when execution has been interrupted
-	ErrInterrupt = errors.New("Execution interrupted")
+	ErrInterrupt = errors.New("execution interrupted")
 )
 
 // newStringError makes error interface with message.

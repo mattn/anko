@@ -20,8 +20,8 @@ var (
 func TestArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `[1++]`, runError: fmt.Errorf("Invalid operation")},
-		{script: `1++[0]`, runError: fmt.Errorf("Invalid operation")},
+		{script: `[1++]`, runError: fmt.Errorf("invalid operation")},
+		{script: `1++[0]`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `[]`, runOutput: []interface{}{}},
 		{script: `[nil]`, runOutput: []interface{}{nil}},
@@ -271,8 +271,8 @@ func TestMakeArrays(t *testing.T) {
 		{script: `make([][]nilT)`, types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 		{script: `make([][][]nilT)`, types: map[string]interface{}{"nilT": nil}, runError: fmt.Errorf("type cannot be nil for make")},
 
-		{script: `make([]bool, 1++)`, runError: fmt.Errorf("Invalid operation")},
-		{script: `make([]bool, 0, 1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `make([]bool, 1++)`, runError: fmt.Errorf("invalid operation")},
+		{script: `make([]bool, 0, 1++)`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `make(array2x)`, types: map[string]interface{}{"array2x": [][]interface{}{}}, runOutput: [][]interface{}{}},
 
@@ -364,9 +364,9 @@ func TestArraySlice(t *testing.T) {
 	tests := []testStruct{
 
 		{script: `a = [1, 2]; a[:]`, parseError: fmt.Errorf("syntax error")},
-		{script: `(1++)[0:0]`, runError: fmt.Errorf("Invalid operation")},
-		{script: `a = [1, 2]; a[1++:0]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
-		{script: `a = [1, 2]; a[0:1++]`, runError: fmt.Errorf("Invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `(1++)[0:0]`, runError: fmt.Errorf("invalid operation")},
+		{script: `a = [1, 2]; a[1++:0]`, runError: fmt.Errorf("invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{script: `a = [1, 2]; a[0:1++]`, runError: fmt.Errorf("invalid operation"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [1, 2]; a[:0]++`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 		{script: `a = [1, 2]; a[:0]--`, runError: fmt.Errorf("slice cannot be assigned"), output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
 
@@ -702,7 +702,7 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `{"b": 1++}`, runError: fmt.Errorf("Invalid operation")},
+		{script: `{"b": 1++}`, runError: fmt.Errorf("invalid operation")},
 		{script: `a = {}; a.b.c`, runError: fmt.Errorf("type invalid does not support member operation")},
 
 		// TODO: accept non-strings
@@ -906,9 +906,9 @@ func TestMaps(t *testing.T) {
 func TestExistenceOfKeyInMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `a = {"b":"b"}; v, ok = a[1++]`, runError: fmt.Errorf("Invalid operation")},
-		{script: `a = {"b":"b"}; b.c, ok = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
-		{script: `a = {"b":"b"}; v, b.c = a["b"]`, runError: fmt.Errorf("Undefined symbol 'b'")},
+		{script: `a = {"b":"b"}; v, ok = a[1++]`, runError: fmt.Errorf("invalid operation")},
+		{script: `a = {"b":"b"}; b.c, ok = a["b"]`, runError: fmt.Errorf("undefined symbol 'b'")},
+		{script: `a = {"b":"b"}; v, b.c = a["b"]`, runError: fmt.Errorf("undefined symbol 'b'")},
 
 		{script: `a = {"b":"b"}; v, ok = a["a"]`, runOutput: nil, output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": nil, "ok": false}},
 		{script: `a = {"b":"b"}; v, ok = a["b"]`, runOutput: "b", output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "v": "b", "ok": true}},
@@ -921,8 +921,8 @@ func TestExistenceOfKeyInMaps(t *testing.T) {
 func TestDeleteMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `delete(1++, "b")`, runError: fmt.Errorf("Invalid operation")},
-		{script: `delete({}, 1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `delete(1++, "b")`, runError: fmt.Errorf("invalid operation")},
+		{script: `delete({}, 1++)`, runError: fmt.Errorf("invalid operation")},
 		{script: `delete(nil, "b")`, runError: fmt.Errorf("first argument to delete must be map; have interface")},
 		{script: `delete("b", "b")`, runError: fmt.Errorf("first argument to delete must be map; have string")},
 		{script: `delete({"b":"b"}, true)`, runError: fmt.Errorf("cannot use type string as type bool in delete")},

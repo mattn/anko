@@ -47,7 +47,7 @@ println("this line should not be printed")
 
 	waitGroup.Wait()
 
-	// output: <nil> Execution interrupted
+	// output: <nil> execution interrupted
 }
 
 func ExampleEnv_Define() {
@@ -95,7 +95,7 @@ println(f)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:

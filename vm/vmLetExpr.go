@@ -12,7 +12,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 	case *ast.IdentExpr:
 		if env.setValue(lhs.Lit, rv) != nil {
 			if strings.Contains(lhs.Lit, ".") {
-				return nilValue, newErrorf(expr, "Undefined symbol '%s'", lhs.Lit)
+				return nilValue, newErrorf(expr, "undefined symbol '%s'", lhs.Lit)
 			}
 			env.defineValue(lhs.Lit, rv)
 		}
@@ -245,5 +245,5 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		v.Elem().Set(rv)
 		return v, nil
 	}
-	return nilValue, newStringError(expr, "Invalid operation")
+	return nilValue, newStringError(expr, "invalid operation")
 }

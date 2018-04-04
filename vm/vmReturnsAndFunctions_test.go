@@ -12,9 +12,9 @@ import (
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testStruct{
-		{script: `return 1++`, runError: fmt.Errorf("Invalid operation")},
-		{script: `return 1, 1++`, runError: fmt.Errorf("Invalid operation")},
-		{script: `return 1, 2, 1++`, runError: fmt.Errorf("Invalid operation")},
+		{script: `return 1++`, runError: fmt.Errorf("invalid operation")},
+		{script: `return 1, 1++`, runError: fmt.Errorf("invalid operation")},
+		{script: `return 1, 2, 1++`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `return`, runOutput: nil},
 		{script: `return nil`, runOutput: nil},
@@ -182,9 +182,9 @@ func TestFunctions(t *testing.T) {
 
 		{script: `func a() { return "a" }; a.b()`, runError: fmt.Errorf("type func does not support member operation")},
 		{script: `a = [func () { return nil}]; func b(c) { return c() }; b(a[1])`, runError: fmt.Errorf("index out of range")},
-		{script: `func a() { return "a" }; b()`, runError: fmt.Errorf("Undefined symbol 'b'")},
-		{script: ` func a() { return "a" }; 1++()`, runError: fmt.Errorf("Invalid operation")},
-		{script: ` func a(b) { return b }; a(1++)`, runError: fmt.Errorf("Invalid operation")},
+		{script: `func a() { return "a" }; b()`, runError: fmt.Errorf("undefined symbol 'b'")},
+		{script: ` func a() { return "a" }; 1++()`, runError: fmt.Errorf("invalid operation")},
+		{script: ` func a(b) { return b }; a(1++)`, runError: fmt.Errorf("invalid operation")},
 
 		{script: `a`, input: map[string]interface{}{"a": testVarFunc}, runOutput: testVarFunc, output: map[string]interface{}{"a": testVarFunc}},
 		{script: `a()`, input: map[string]interface{}{"a": testVarFunc}, runOutput: int64(1), output: map[string]interface{}{"a": testVarFunc}},
