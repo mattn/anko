@@ -219,7 +219,7 @@ type LenExpr struct {
 type DeleteExpr struct {
 	ExprImpl
 	WhatExpr Expr
-	KeyExpr Expr
+	KeyExpr  Expr
 }
 
 type IncludeExpr struct {

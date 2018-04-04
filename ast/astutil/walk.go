@@ -131,6 +131,8 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 				return err
 			}
 		}
+	case *ast.GoroutineStmt:
+		return walkExpr(stmt.Expr, f)
 	default:
 		return fmt.Errorf("unknown statement %v", reflect.TypeOf(stmt))
 	}

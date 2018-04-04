@@ -446,6 +446,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return rv, nil
+	case *ast.GoroutineStmt:
+		return invokeExpr(stmt.Expr, env)
 	default:
 		return nilValue, newStringError(stmt, "unknown statement")
 	}

@@ -132,3 +132,9 @@ type LetMapItemStmt struct {
 	Lhss []Expr
 	Rhs  Expr
 }
+
+// GoroutineStmt provide statement of groutine.
+type GoroutineStmt struct {
+	StmtImpl
+	Expr Expr
+}
