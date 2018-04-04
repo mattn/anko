@@ -741,6 +741,28 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		mapExpr.SetMapIndex(keyExpr, reflect.Value{})
 		return nilValue, nil
 
+	case *ast.IncludeExpr:
+		itemExpr, err := invokeExpr(e.ItemExpr, env)
+		if err != nil {
+			return nilValue, newError(e.ItemExpr, err)
+		}
+		listExpr, err := invokeExpr(&e.ListExpr, env)
+		if err != nil {
+			return nilValue, newError(&e.ListExpr, err)
+		}
+
+		if listExpr.Kind() != reflect.Slice && listExpr.Kind() != reflect.Array {
+			return nilValue, newStringError(e, "second argument must be slice or array; but have "+listExpr.Kind().String())
+		}
+
+		for i := 0; i < listExpr.Len(); i++ {
+			// todo: https://github.com/mattn/anko/issues/192
+			if equal(itemExpr, listExpr.Index(i)) {
+				return trueValue, nil
+			}
+		}
+		return falseValue, nil
+
 	default:
 		return nilValue, newStringError(e, "Unknown expression")
 	}

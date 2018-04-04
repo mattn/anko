@@ -23,6 +23,7 @@ import (
 %type<expr_idents> expr_idents
 %type<expr_type> expr_type
 %type<array_count> array_count
+%type<expr_slice> expr_slice
 %type<stmt_multi_case> stmt_multi_case
 
 %union{
@@ -46,6 +47,7 @@ import (
 	terms                  ast.Token
 	opt_terms              ast.Token
 	array_count            ast.ArrayCount
+	expr_slice             ast.SliceExpr
 	stmt_multi_case        []ast.Stmt
 }
 
@@ -55,6 +57,7 @@ import (
 %right '?' ':'
 %left OROR
 %left ANDAND
+%right IN
 %left IDENT
 %nonassoc EQEQ NEQ ','
 %left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
@@ -383,6 +386,32 @@ exprs :
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
 
+expr_slice :
+	IDENT '[' expr ':' expr ']'
+	{
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
+	}
+	| IDENT '[' expr ':' ']'
+	{
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
+	}
+	| IDENT '[' ':' expr ']'
+	{
+		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
+	}
+	| expr '[' expr ':' expr ']'
+	{
+		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+	}
+	| expr '[' expr ':' ']'
+	{
+		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+	}
+	| expr '[' ':' expr ']'
+	{
+		$$ = ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+	}
+
 expr :
 	IDENT
 	{
@@ -692,34 +721,9 @@ expr :
 		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 		$$.SetPosition($1.Position())
 	}
-	| IDENT '[' expr ':' expr ']'
+	| expr_slice
 	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
-		$$.SetPosition($1.Position())
-	}
-	| IDENT '[' expr ':' ']'
-	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
-		$$.SetPosition($1.Position())
-	}
-	| IDENT '[' ':' expr ']'
-	{
-		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
-		$$.SetPosition($1.Position())
-	}
-	| expr '[' expr ':' expr ']'
-	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
-		$$.SetPosition($1.Position())
-	}
-	| expr '[' expr ':' ']'
-	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
-		$$.SetPosition($1.Position())
-	}
-	| expr '[' ':' expr ']'
-	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$ = &$1
 		$$.SetPosition($1.Position())
 	}
 	| LEN '(' expr ')'
@@ -775,6 +779,16 @@ expr :
 	| DELETE '(' expr ',' expr ')'
 	{
 		$$ = &ast.DeleteExpr{MapExpr: $3, KeyExpr: $5}
+		$$.SetPosition($1.Position())
+	}
+	| expr IN expr_slice
+	{
+		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr IN expr
+	{
+		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
 		$$.SetPosition($1.Position())
 	}
 

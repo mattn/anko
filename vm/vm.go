@@ -177,9 +177,7 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 
 	if isNum(lhsV) && isNum(rhsV) {
-		if rhsV.Type().ConvertibleTo(lhsV.Type()) {
-			rhsV = rhsV.Convert(lhsV.Type())
-		}
+		return fmt.Sprintf("%v", lhsV) == fmt.Sprintf("%v", rhsV)
 	}
 
 	// Try to compare bools to strings and numbers
