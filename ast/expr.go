@@ -100,6 +100,7 @@ type TernaryOpExpr struct {
 type CallExpr struct {
 	ExprImpl
 	Func     reflect.Value
+	Args     []reflect.Value
 	Name     string
 	SubExprs []Expr
 	VarArg   bool

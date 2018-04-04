@@ -199,6 +199,26 @@ stmt :
 		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
 		$$.SetPosition($1.Position())
 	}
+	| GO IDENT '(' exprs VARARG ')'
+	{
+		$$ = &ast.GoroutineStmt{Expr: &ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true, Go: true}}
+		$$.SetPosition($2.Position())
+	}
+	| GO IDENT '(' exprs ')'
+	{
+		$$ = &ast.GoroutineStmt{Expr: &ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}}
+		$$.SetPosition($2.Position())
+	}
+	| GO expr '(' exprs VARARG ')'
+	{
+		$$ = &ast.GoroutineStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true, Go: true}}
+		$$.SetPosition($2.Position())
+	}
+	| GO expr '(' exprs ')'
+	{
+		$$ = &ast.GoroutineStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}}
+		$$.SetPosition($1.Position())
+	}
 	| expr
 	{
 		$$ = &ast.ExprStmt{Expr: $1}
@@ -681,16 +701,6 @@ expr :
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3}
 		$$.SetPosition($1.Position())
 	}
-	| GO IDENT '(' exprs VARARG ')'
-	{
-		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true, Go: true}
-		$$.SetPosition($2.Position())
-	}
-	| GO IDENT '(' exprs ')'
-	{
-		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}
-		$$.SetPosition($2.Position())
-	}
 	| expr '(' exprs VARARG ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3, VarArg: true}
@@ -699,16 +709,6 @@ expr :
 	| expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
-		$$.SetPosition($1.Position())
-	}
-	| GO expr '(' exprs VARARG ')'
-	{
-		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true, Go: true}
-		$$.SetPosition($2.Position())
-	}
-	| GO expr '(' exprs ')'
-	{
-		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
 		$$.SetPosition($1.Position())
 	}
 	| IDENT '[' expr ']'
