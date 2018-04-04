@@ -100,7 +100,6 @@ type TernaryOpExpr struct {
 type CallExpr struct {
 	ExprImpl
 	Func     reflect.Value
-	Args     []reflect.Value
 	Name     string
 	SubExprs []Expr
 	VarArg   bool
@@ -220,7 +219,7 @@ type LenExpr struct {
 type DeleteExpr struct {
 	ExprImpl
 	WhatExpr Expr
-	KeyExpr Expr
+	KeyExpr  Expr
 }
 
 type IncludeExpr struct {
