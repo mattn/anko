@@ -845,7 +845,7 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Delete error - received: %v - expected: %v", err, nil)
 	}
 	value, err := env.Get("a")
-	expectedError = "Undefined symbol 'a'"
+	expectedError = "undefined symbol 'a'"
 	if err == nil || err.Error() != expectedError {
 		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
@@ -876,7 +876,7 @@ func TestDeleteGlobal(t *testing.T) {
 		t.Errorf("DeleteGlobal error - received: %v - expected: %v", err, nil)
 	}
 	value, err := env.Get("a")
-	expectedError = "Undefined symbol 'a'"
+	expectedError = "undefined symbol 'a'"
 	if err == nil || err.Error() != expectedError {
 		t.Errorf("Get error - received: %v - expected: %v", err, expectedError)
 	}
