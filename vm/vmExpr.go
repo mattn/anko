@@ -736,7 +736,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			if keyExpr.Kind() == reflect.Bool && keyExpr.Bool() {
 				return nilValue, env.DeleteGlobal(whatExpr.String())
 			}
-      return nilValue, env.Delete(whatExpr.String())
+			return nilValue, env.Delete(whatExpr.String())
 
 		case reflect.Map:
 			if whatExpr.IsNil() {
@@ -759,9 +759,9 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if err != nil {
 			return nilValue, newError(e.ItemExpr, err)
 		}
-		listExpr, err := invokeExpr(&e.ListExpr, env)
+		listExpr, err := invokeExpr(e.ListExpr.(*ast.SliceExpr), env)
 		if err != nil {
-			return nilValue, newError(&e.ListExpr, err)
+			return nilValue, newError(e.ListExpr.(*ast.SliceExpr), err)
 		}
 
 		if listExpr.Kind() != reflect.Slice && listExpr.Kind() != reflect.Array {

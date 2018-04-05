@@ -225,5 +225,5 @@ type DeleteExpr struct {
 type IncludeExpr struct {
 	ExprImpl
 	ItemExpr Expr
-	ListExpr SliceExpr
+	ListExpr Expr
 }

@@ -47,7 +47,7 @@ import (
 	terms                  ast.Token
 	opt_terms              ast.Token
 	array_count            ast.ArrayCount
-	expr_slice             ast.SliceExpr
+	expr_slice             ast.Expr
 	stmt_multi_case        []ast.Stmt
 }
 
@@ -409,27 +409,27 @@ exprs :
 expr_slice :
 	IDENT '[' expr ':' expr ']'
 	{
-		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
 	}
 	| IDENT '[' expr ':' ']'
 	{
-		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
 	}
 	| IDENT '[' ':' expr ']'
 	{
-		$$ = ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
+		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
 	}
 	| expr '[' expr ':' expr ']'
 	{
-		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
 	}
 	| expr '[' expr ':' ']'
 	{
-		$$ = ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
 	}
 	| expr '[' ':' expr ']'
 	{
-		$$ = ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 	}
 
 expr :
@@ -723,7 +723,7 @@ expr :
 	}
 	| expr_slice
 	{
-		$$ = &$1
+		$$ = $1
 		$$.SetPosition($1.Position())
 	}
 	| LEN '(' expr ')'
@@ -786,14 +786,9 @@ expr :
 		$$ = &ast.DeleteExpr{WhatExpr: $3, KeyExpr: $5}
 		$$.SetPosition($1.Position())
 	}
-	| expr IN expr_slice
-	{
-		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
-		$$.SetPosition($1.Position())
-	}
 	| expr IN expr
 	{
-		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
+		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: &ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
 		$$.SetPosition($1.Position())
 	}
 
