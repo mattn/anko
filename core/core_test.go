@@ -15,58 +15,58 @@ var testCoreEnvSetupFunc = func(t *testing.T, env *vm.Env) { Import(env) }
 func TestKeys(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []vm.Test{
-		{Script: `a = {}; b = keys(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []string{}, Output: map[string]interface{}{"a": map[string]interface{}{}}},
-		{Script: `a = {"a": nil}; b = keys(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
-		{Script: `a = {"a": 1}; b = keys(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
+		{Script: `a = {}; b = keys(a)`, RunOutput: []string{}, Output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{Script: `a = {"a": nil}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
+		{Script: `a = {"a": 1}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
 }
 
 func TestKindOf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []vm.Test{
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": reflect.Value{}}, RunOutput: "struct", Output: map[string]interface{}{"a": reflect.Value{}}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": nil}, RunOutput: "nil", Output: map[string]interface{}{"a": nil}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": true}, RunOutput: "bool", Output: map[string]interface{}{"a": true}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": int32(1)}, RunOutput: "int32", Output: map[string]interface{}{"a": int32(1)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": int64(1)}, RunOutput: "int64", Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: "float32", Output: map[string]interface{}{"a": float32(1.1)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: "float64", Output: map[string]interface{}{"a": float64(1.1)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": "a"}, RunOutput: "string", Output: map[string]interface{}{"a": "a"}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": 'a'}, RunOutput: "int32", Output: map[string]interface{}{"a": 'a'}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": reflect.Value{}}, RunOutput: "struct", Output: map[string]interface{}{"a": reflect.Value{}}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": nil}, RunOutput: "nil", Output: map[string]interface{}{"a": nil}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": true}, RunOutput: "bool", Output: map[string]interface{}{"a": true}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: "int32", Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: "int64", Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: "float32", Output: map[string]interface{}{"a": float32(1.1)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: "float64", Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": "a"}, RunOutput: "string", Output: map[string]interface{}{"a": "a"}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": 'a'}, RunOutput: "int32", Output: map[string]interface{}{"a": 'a'}},
 
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(nil)}, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(true)}, RunOutput: "bool", Output: map[string]interface{}{"a": interface{}(true)}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(int32(1))}, RunOutput: "int32", Output: map[string]interface{}{"a": interface{}(int32(1))}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(int64(1))}, RunOutput: "int64", Output: map[string]interface{}{"a": interface{}(int64(1))}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(float32(1))}, RunOutput: "float32", Output: map[string]interface{}{"a": interface{}(float32(1))}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}(float64(1))}, RunOutput: "float64", Output: map[string]interface{}{"a": interface{}(float64(1))}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": interface{}("a")}, RunOutput: "string", Output: map[string]interface{}{"a": interface{}("a")}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(nil)}, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(true)}, RunOutput: "bool", Output: map[string]interface{}{"a": interface{}(true)}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(int32(1))}, RunOutput: "int32", Output: map[string]interface{}{"a": interface{}(int32(1))}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(int64(1))}, RunOutput: "int64", Output: map[string]interface{}{"a": interface{}(int64(1))}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(float32(1))}, RunOutput: "float32", Output: map[string]interface{}{"a": interface{}(float32(1))}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}(float64(1))}, RunOutput: "float64", Output: map[string]interface{}{"a": interface{}(float64(1))}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": interface{}("a")}, RunOutput: "string", Output: map[string]interface{}{"a": interface{}("a")}},
 
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": []interface{}{}}, RunOutput: "slice", Output: map[string]interface{}{"a": []interface{}{}}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": []interface{}{nil}}, RunOutput: "slice", Output: map[string]interface{}{"a": []interface{}{nil}}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": []interface{}{}}, RunOutput: "slice", Output: map[string]interface{}{"a": []interface{}{}}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": []interface{}{nil}}, RunOutput: "slice", Output: map[string]interface{}{"a": []interface{}{nil}}},
 
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": map[string]interface{}{}}, RunOutput: "map", Output: map[string]interface{}{"a": map[string]interface{}{}}},
-		{Script: `kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, Input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, RunOutput: "map", Output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": map[string]interface{}{}}, RunOutput: "map", Output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}, RunOutput: "map", Output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}}},
 
-		{Script: `a = make(interface); kindOf(a)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
+		{Script: `a = make(interface); kindOf(a)`, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
 }
 
 func TestRange(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
 	tests := []vm.Test{
-		{Script: `range()`, EnvSetupFunc: &testCoreEnvSetupFunc, RunError: fmt.Errorf("Missing arguments")},
-		{Script: `range(-1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{}},
-		{Script: `range(0)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{}},
-		{Script: `range(1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{0}},
-		{Script: `range(2)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{0, 1}},
-		{Script: `range(10)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
-		{Script: `range(-1,1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: []int64{-1, 0, 1}},
-		{Script: `range(-1,0,1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunError: fmt.Errorf("Too many arguments")},
+		{Script: `range()`, RunError: fmt.Errorf("Missing arguments")},
+		{Script: `range(-1)`, RunOutput: []int64{}},
+		{Script: `range(0)`, RunOutput: []int64{}},
+		{Script: `range(1)`, RunOutput: []int64{0}},
+		{Script: `range(2)`, RunOutput: []int64{0, 1}},
+		{Script: `range(10)`, RunOutput: []int64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+		{Script: `range(-1,1)`, RunOutput: []int64{-1, 0, 1}},
+		{Script: `range(-1,0,1)`, RunError: fmt.Errorf("Too many arguments")},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
 }
 
 func TestLoad(t *testing.T) {
@@ -77,19 +77,19 @@ func TestLoad(t *testing.T) {
 		}
 	}
 	tests := []vm.Test{
-		{Script: `load('testdata/test.ank'); X(1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: int64(2)},
-		{Script: `load('testdata/not-found.ank'); X(1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunErrorFunc: &notFoundRunErrorFunc},
-		{Script: `load('testdata/broken.ank'); X(1)`, EnvSetupFunc: &testCoreEnvSetupFunc, RunError: fmt.Errorf("syntax error")},
+		{Script: `load('testdata/test.ank'); X(1)`, RunOutput: int64(2)},
+		{Script: `load('testdata/not-found.ank'); X(1)`, RunErrorFunc: &notFoundRunErrorFunc},
+		{Script: `load('testdata/broken.ank'); X(1)`, RunError: fmt.Errorf("syntax error")},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
 }
 
 func TestDefined(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
 	tests := []vm.Test{
-		{Script: `var a = 1; defined("a")`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: true},
-		{Script: `defined("a")`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: false},
-		{Script: `func(){ var a = 1 }(); defined("a")`, EnvSetupFunc: &testCoreEnvSetupFunc, RunOutput: false},
+		{Script: `var a = 1; defined("a")`, RunOutput: true},
+		{Script: `defined("a")`, RunOutput: false},
+		{Script: `func(){ var a = 1 }(); defined("a")`, RunOutput: false},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
 }
