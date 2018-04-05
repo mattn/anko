@@ -3,30 +3,32 @@ package packages
 import (
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/vm"
 )
 
 func TestRegexp(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("simple")`, runOutput: true},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("no match")`, runOutput: false},
+	tests := []vm.Test{
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("simple")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("no match")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: false},
 
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^simple$", "b": "simple"}, runOutput: true, output: map[string]interface{}{"a": "^simple$", "b": "simple"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^simple$", "b": "no match"}, runOutput: false, output: map[string]interface{}{"a": "^simple$", "b": "no match"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^simple$", "b": "simple"}, RunOutput: true, Output: map[string]interface{}{"a": "^simple$", "b": "simple"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^simple$", "b": "no match"}, RunOutput: false, Output: map[string]interface{}{"a": "^simple$", "b": "no match"}},
 
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.String()`, runOutput: "^a\\.\\d+\\.b$"},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.1.b")`, runOutput: true},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.22.b")`, runOutput: true},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.333.b")`, runOutput: true},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("no match")`, runOutput: false},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a+1+b")`, runOutput: false},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.String()`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: "^a\\.\\d+\\.b$"},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.1.b")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.22.b")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a.333.b")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("no match")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: false},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^a\\.\\d+\\.b$"); re.MatchString("a+1+b")`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: false},
 
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.String()`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}, runOutput: "^a\\.\\d+\\.b$", output: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}, runOutput: true, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}, runOutput: false, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}},
-		{script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}, runOutput: false, output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.String()`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}, RunOutput: "^a\\.\\d+\\.b$", Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}, RunOutput: true, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.1.b"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}, RunOutput: true, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.22.b"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}, RunOutput: true, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a.333.b"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}},
+		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, EnvSetupFunc: &testPackagesEnvSetupFunc, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}},
 	}
-	runTests(t, tests)
+	vm.RunTests(t, tests)
 }
