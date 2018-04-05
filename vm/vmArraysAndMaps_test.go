@@ -434,6 +434,7 @@ func TestArraySlice(t *testing.T) {
 
 		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2]`, runOutput: []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}}, output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
 		{script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2][0].b`, runOutput: "b", output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": "b"}, map[string]interface{}{"c": "c"}, map[string]interface{}{"d": "d"}}}},
+		{script: `a = [[1,2,3]]; a[0][1:]`, runOutput: []interface{}{int64(2), int64(3)}},
 	}
 	runTests(t, tests)
 }
