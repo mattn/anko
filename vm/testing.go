@@ -1,35 +1,40 @@
 package vm
 
 import (
+	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/mattn/anko/parser"
 )
 
+type envSetupFunc *func(*testing.T, *Env)
+
 // Test is a struct use for testing VM
 type Test struct {
 	Script         string
 	ParseError     error
 	ParseErrorFunc *func(*testing.T, error)
-	EnvSetupFunc   *func(*testing.T, *Env)
+	EnvSetupFunc   envSetupFunc
 	Types          map[string]interface{}
 	Input          map[string]interface{}
 	RunError       error
 	RunErrorFunc   *func(*testing.T, error)
 	RunOutput      interface{}
 	Output         map[string]interface{}
+	Stdout         string
 }
 
 // RunTests runs VM tests
-func RunTests(t *testing.T, tests []Test) {
+func RunTests(t *testing.T, tests []Test, options ...envSetupFunc) {
 	for _, test := range tests {
-		RunTest(t, test)
+		RunTest(t, test, options...)
 	}
 }
 
 // RunTest runs a VM test
-func RunTest(t *testing.T, test Test) {
+func RunTest(t *testing.T, test Test, options ...envSetupFunc) {
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)
@@ -46,6 +51,9 @@ func RunTest(t *testing.T, test Test) {
 	env := NewEnv()
 	if test.EnvSetupFunc != nil {
 		(*test.EnvSetupFunc)(t, env)
+	}
+	for _, envSetupFunc := range options {
+		(*envSetupFunc)(t, env)
 	}
 
 	for typeName, typeValue := range test.Types {
@@ -98,7 +106,69 @@ func RunTest(t *testing.T, test Test) {
 		}
 	}
 
+	v, err := env.Get("TestStdout")
+	if err == nil && v != test.Stdout {
+		t.Errorf("Stdout error - received: %#v - expected: %#v - script: %v", v, test.Stdout, test.Script)
+		return
+	} else if err != nil && err.Error() != "undefined symbol 'TestStdout'" {
+		t.Errorf("Get error: %v - TestStdout - script: %v", err, test.Script)
+		return
+	}
+
 	env.Destroy()
+}
+
+var tee = func(env *Env, n int, b *bytes.Buffer, err error) (int, error) {
+	if err != nil {
+		return n, err
+	}
+
+	oldOut, err := env.Get("TestStdout")
+	if err != nil {
+		return n, err
+	}
+
+	err = env.Set("TestStdout", fmt.Sprintf("%s%s", oldOut, b.String()))
+	if err != nil {
+		return n, err
+	}
+
+	fmt.Print(b.String())
+
+	return n, nil
+}
+var ImportTestPrint = func(t *testing.T, env *Env) {
+	err := env.Define("TestStdout", "")
+	if err != nil {
+		t.Fatalf("Define error: %v\n", err)
+	}
+
+	err = env.Define("print", func(a ...interface{}) (n int, err error) {
+		var b = new(bytes.Buffer)
+		n, err = fmt.Fprint(b, a...)
+		return tee(env, n, b, err)
+	})
+	if err != nil {
+		t.Fatalf("Define error: %v\n", err)
+	}
+
+	err = env.Define("println", func(a ...interface{}) (n int, err error) {
+		var b = new(bytes.Buffer)
+		n, err = fmt.Fprintln(b, a...)
+		return tee(env, n, b, err)
+	})
+	if err != nil {
+		t.Fatalf("Define error: %v\n", err)
+	}
+
+	err = env.Define("printf", func(format string, a ...interface{}) (n int, err error) {
+		var b = new(bytes.Buffer)
+		n, err = fmt.Fprintf(b, format, a...)
+		return tee(env, n, b, err)
+	})
+	if err != nil {
+		t.Fatalf("Define error: %v\n", err)
+	}
 }
 
 // ValueEqual checks the values and returns true if equal
