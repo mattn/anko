@@ -7,14 +7,12 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
-type envSetupFunc *func(*testing.T, *Env)
-
 // Test is a struct use for testing VM
 type Test struct {
 	Script         string
 	ParseError     error
 	ParseErrorFunc *func(*testing.T, error)
-	EnvSetupFunc   envSetupFunc
+	EnvSetupFunc   *func(*testing.T, *Env)
 	Types          map[string]interface{}
 	Input          map[string]interface{}
 	RunError       error
@@ -51,10 +49,11 @@ func RunTest(t *testing.T, test Test, options ...interface{}) {
 	}
 	for _, v := range options {
 		switch v := v.(type) {
-		case envSetupFunc:
+		case *func(*testing.T, *Env):
 			(*v)(t, env)
+			continue
 		default:
-			t.Errorf("Options error - unknown option type: %v - script: %v", v, test.Script)
+			t.Errorf("Options error - unknown option type: %v - script: %v", reflect.TypeOf(v), test.Script)
 			return
 		}
 	}
