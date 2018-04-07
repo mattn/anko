@@ -6,7 +6,15 @@ go:
   - 1.10.x
 
 env:
-  secure: "ELC4rD8nn2l5T48WYbTfcbwGGBmNxl7LAu05hgx5AB9/KA+oD3oBKIJkZqD512gJ31Gtyla/hG9QOgU7LikfWdpGuJjVILy01ZqtgP5SSKsrTdlln1D5pK1ZyHJNrEPevb3W5PYn9ahHnjKGtpobXj4/E0sCXfRPH67jv9hffYs="
+  global:
+    - secure: "ELC4rD8nn2l5T48WYbTfcbwGGBmNxl7LAu05hgx5AB9/KA+oD3oBKIJkZqD512gJ31Gtyla/hG9QOgU7LikfWdpGuJjVILy01ZqtgP5SSKsrTdlln1D5pK1ZyHJNrEPevb3W5PYn9ahHnjKGtpobXj4/E0sCXfRPH67jv9hffYs="
+  matrix:
+    - GOOS=linux GOARCH=amd64
+    - GOOS=linux GOARCH=386
+    - GOOS=darwin GOARCH=amd64
+    - GOOS=darwin GOARCH=386
+    - GOOS=windows GOARCH=amd64
+    - GOOS=windows GOARCH=386
 
 before_install:
     - go get -u github.com/haya14busa/goverage
