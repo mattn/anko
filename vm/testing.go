@@ -22,14 +22,14 @@ type Test struct {
 }
 
 // RunTests runs VM tests
-func RunTests(t *testing.T, tests []Test) {
+func RunTests(t *testing.T, tests []Test, options ...interface{}) {
 	for _, test := range tests {
-		RunTest(t, test)
+		RunTest(t, test, options...)
 	}
 }
 
 // RunTest runs a VM test
-func RunTest(t *testing.T, test Test) {
+func RunTest(t *testing.T, test Test, options ...interface{}) {
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)
@@ -47,6 +47,16 @@ func RunTest(t *testing.T, test Test) {
 	env := NewEnv()
 	if test.EnvSetupFunc != nil {
 		(*test.EnvSetupFunc)(t, env)
+	}
+	for _, v := range options {
+		switch v := v.(type) {
+		case *func(*testing.T, *Env):
+			(*v)(t, env)
+			continue
+		default:
+			t.Errorf("Options error - unknown option type: %v - script: %v", reflect.TypeOf(v), test.Script)
+			return
+		}
 	}
 
 	for typeName, typeValue := range test.Types {

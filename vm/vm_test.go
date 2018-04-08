@@ -178,17 +178,23 @@ func TestStrings(t *testing.T) {
 
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `var a = 1++`, runError: fmt.Errorf("invalid operation")},
-
-		{script: `var a = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `var a, b = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: `var a, b, c = 1, 2, 3`, runOutput: int64(3), output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
-
-		{script: `var a = 1, 2`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1)}},
-		{script: `var a, b = 1`, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
+	var parseErrFunc = func(t *testing.T, err error) {
+		if !ValueEqual("syntax error", err.Error()) {
+			t.Errorf("err: %s, not equal syntax error", err)
+		}
 	}
-	runTests(t, tests)
+	tests := []Test{
+		{Script: `a := 1`, ParseErrorFunc: &parseErrFunc},
+		{Script: `var a = 1++`, RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `var a = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `var a, b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `var a, b, c = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+
+		{Script: `var a = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `var a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+	}
+	RunTests(t, tests)
 }
 
 func TestModule(t *testing.T) {
