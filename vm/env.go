@@ -327,7 +327,7 @@ func (e *Env) Delete(k string) error {
 	return nil
 }
 
-// Delete deletes the first matching symbol found in current or parent scope.
+// DeleteGlobal deletes the first matching symbol found in current or parent scope.
 func (e *Env) DeleteGlobal(k string) error {
 	if e.parent == nil {
 		return e.Delete(k)
