@@ -11,362 +11,362 @@ import (
 
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `return 1++`, runError: fmt.Errorf("invalid operation")},
-		{script: `return 1, 1++`, runError: fmt.Errorf("invalid operation")},
-		{script: `return 1, 2, 1++`, runError: fmt.Errorf("invalid operation")},
+	tests := []Test{
+		{Script: `return 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `return 1, 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `return 1, 2, 1++`, RunError: fmt.Errorf("invalid operation")},
 
-		{script: `return`, runOutput: nil},
-		{script: `return nil`, runOutput: nil},
-		{script: `return true`, runOutput: true},
-		{script: `return 1`, runOutput: int64(1)},
-		{script: `return 1.1`, runOutput: float64(1.1)},
-		{script: `return "a"`, runOutput: "a"},
+		{Script: `return`, RunOutput: nil},
+		{Script: `return nil`, RunOutput: nil},
+		{Script: `return true`, RunOutput: true},
+		{Script: `return 1`, RunOutput: int64(1)},
+		{Script: `return 1.1`, RunOutput: float64(1.1)},
+		{Script: `return "a"`, RunOutput: "a"},
 
-		{script: `b()`, input: map[string]interface{}{"b": func() {}}, runOutput: nil},
-		{script: `b()`, input: map[string]interface{}{"b": func() reflect.Value { return reflect.Value{} }}, runOutput: reflect.Value{}},
-		{script: `b()`, input: map[string]interface{}{"b": func() interface{} { return nil }}, runOutput: nil},
-		{script: `b()`, input: map[string]interface{}{"b": func() bool { return true }}, runOutput: true},
-		{script: `b()`, input: map[string]interface{}{"b": func() int32 { return int32(1) }}, runOutput: int32(1)},
-		{script: `b()`, input: map[string]interface{}{"b": func() int64 { return int64(1) }}, runOutput: int64(1)},
-		{script: `b()`, input: map[string]interface{}{"b": func() float32 { return float32(1.1) }}, runOutput: float32(1.1)},
-		{script: `b()`, input: map[string]interface{}{"b": func() float64 { return float64(1.1) }}, runOutput: float64(1.1)},
-		{script: `b()`, input: map[string]interface{}{"b": func() string { return "a" }}, runOutput: "a"},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() {}}, RunOutput: nil},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() reflect.Value { return reflect.Value{} }}, RunOutput: reflect.Value{}},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() interface{} { return nil }}, RunOutput: nil},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() bool { return true }}, RunOutput: true},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() int32 { return int32(1) }}, RunOutput: int32(1)},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() int64 { return int64(1) }}, RunOutput: int64(1)},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() float32 { return float32(1.1) }}, RunOutput: float32(1.1)},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() float64 { return float64(1.1) }}, RunOutput: float64(1.1)},
+		{Script: `b()`, Input: map[string]interface{}{"b": func() string { return "a" }}, RunOutput: "a"},
 
-		{script: `b(a)`, input: map[string]interface{}{"a": reflect.Value{}, "b": func(c reflect.Value) reflect.Value { return c }}, runOutput: reflect.Value{}, output: map[string]interface{}{"a": reflect.Value{}}},
-		{script: `b(a)`, input: map[string]interface{}{"a": nil, "b": func(c interface{}) interface{} { return c }}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `b(a)`, input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c }}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int32(1), "b": func(c int32) int32 { return c }}, runOutput: int32(1), output: map[string]interface{}{"a": int32(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int64(1), "b": func(c int64) int64 { return c }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float32(1.1), "b": func(c float32) float32 { return c }}, runOutput: float32(1.1), output: map[string]interface{}{"a": float32(1.1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float64(1.1), "b": func(c float64) float64 { return c }}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": "a", "b": func(c string) string { return c }}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": reflect.Value{}, "b": func(c reflect.Value) reflect.Value { return c }}, RunOutput: reflect.Value{}, Output: map[string]interface{}{"a": reflect.Value{}}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": nil, "b": func(c interface{}) interface{} { return c }}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c }}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int32(1), "b": func(c int32) int32 { return c }}, RunOutput: int32(1), Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int64(1), "b": func(c int64) int64 { return c }}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float32(1.1), "b": func(c float32) float32 { return c }}, RunOutput: float32(1.1), Output: map[string]interface{}{"a": float32(1.1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float64(1.1), "b": func(c float64) float64 { return c }}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": "a", "b": func(c string) string { return c }}, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
 
-		{script: `b(a)`, input: map[string]interface{}{"a": "a", "b": func(c bool) bool { return c }}, runError: fmt.Errorf("function wants argument type bool but received type string"), output: map[string]interface{}{"a": "a"}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int64(1), "b": func(c int32) int32 { return c }}, runOutput: int32(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int32(1), "b": func(c int64) int64 { return c }}, runOutput: int64(1), output: map[string]interface{}{"a": int32(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float64(1.25), "b": func(c float32) float32 { return c }}, runOutput: float32(1.25), output: map[string]interface{}{"a": float64(1.25)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float32(1.25), "b": func(c float64) float64 { return c }}, runOutput: float64(1.25), output: map[string]interface{}{"a": float32(1.25)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": true, "b": func(c string) string { return c }}, runError: fmt.Errorf("function wants argument type string but received type bool"), output: map[string]interface{}{"a": true}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": "a", "b": func(c bool) bool { return c }}, RunError: fmt.Errorf("function wants argument type bool but received type string"), Output: map[string]interface{}{"a": "a"}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int64(1), "b": func(c int32) int32 { return c }}, RunOutput: int32(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int32(1), "b": func(c int64) int64 { return c }}, RunOutput: int64(1), Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float64(1.25), "b": func(c float32) float32 { return c }}, RunOutput: float32(1.25), Output: map[string]interface{}{"a": float64(1.25)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float32(1.25), "b": func(c float64) float64 { return c }}, RunOutput: float64(1.25), Output: map[string]interface{}{"a": float32(1.25)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": true, "b": func(c string) string { return c }}, RunError: fmt.Errorf("function wants argument type string but received type bool"), Output: map[string]interface{}{"a": true}},
 
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueBool, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueBool, output: map[string]interface{}{"a": testVarValueBool}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueInt32, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueInt32, output: map[string]interface{}{"a": testVarValueInt32}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueInt64, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueInt64, output: map[string]interface{}{"a": testVarValueInt64}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueFloat32, output: map[string]interface{}{"a": testVarValueFloat32}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueFloat64, output: map[string]interface{}{"a": testVarValueFloat64}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueString, "b": func(c interface{}) interface{} { return c }}, runOutput: testVarValueString, output: map[string]interface{}{"a": testVarValueString}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueBool, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueBool, Output: map[string]interface{}{"a": testVarValueBool}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueInt32, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueInt32, Output: map[string]interface{}{"a": testVarValueInt32}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueInt64, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueInt64, Output: map[string]interface{}{"a": testVarValueInt64}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueFloat32, Output: map[string]interface{}{"a": testVarValueFloat32}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueFloat64, Output: map[string]interface{}{"a": testVarValueFloat64}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueString, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueString, Output: map[string]interface{}{"a": testVarValueString}},
 
-		{script: `func aFunc() {}; aFunc()`, runOutput: nil},
-		{script: `func aFunc() {return}; aFunc()`, runOutput: nil},
-		{script: `func aFunc() {return}; a = aFunc()`, runOutput: nil, output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {}; aFunc()`, RunOutput: nil},
+		{Script: `func aFunc() {return}; aFunc()`, RunOutput: nil},
+		{Script: `func aFunc() {return}; a = aFunc()`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
 
-		{script: `func aFunc() {return nil}; aFunc()`, runOutput: nil},
-		{script: `func aFunc() {return true}; aFunc()`, runOutput: true},
-		{script: `func aFunc() {return 1}; aFunc()`, runOutput: int64(1)},
-		{script: `func aFunc() {return 1.1}; aFunc()`, runOutput: float64(1.1)},
-		{script: `func aFunc() {return "a"}; aFunc()`, runOutput: "a"},
+		{Script: `func aFunc() {return nil}; aFunc()`, RunOutput: nil},
+		{Script: `func aFunc() {return true}; aFunc()`, RunOutput: true},
+		{Script: `func aFunc() {return 1}; aFunc()`, RunOutput: int64(1)},
+		{Script: `func aFunc() {return 1.1}; aFunc()`, RunOutput: float64(1.1)},
+		{Script: `func aFunc() {return "a"}; aFunc()`, RunOutput: "a"},
 
-		{script: `func aFunc() {return 1 + 2}; aFunc()`, runOutput: int64(3)},
-		{script: `func aFunc() {return 1.25 + 2.25}; aFunc()`, runOutput: float64(3.5)},
-		{script: `func aFunc() {return "a" + "b"}; aFunc()`, runOutput: "ab"},
+		{Script: `func aFunc() {return 1 + 2}; aFunc()`, RunOutput: int64(3)},
+		{Script: `func aFunc() {return 1.25 + 2.25}; aFunc()`, RunOutput: float64(3.5)},
+		{Script: `func aFunc() {return "a" + "b"}; aFunc()`, RunOutput: "ab"},
 
-		{script: `func aFunc() {return 1 + 2, 3 + 4}; aFunc()`, runOutput: []interface{}{int64(3), int64(7)}},
-		{script: `func aFunc() {return 1.25 + 2.25, 3.25 + 4.25}; aFunc()`, runOutput: []interface{}{float64(3.5), float64(7.5)}},
-		{script: `func aFunc() {return "a" + "b", "c" + "d"}; aFunc()`, runOutput: []interface{}{"ab", "cd"}},
+		{Script: `func aFunc() {return 1 + 2, 3 + 4}; aFunc()`, RunOutput: []interface{}{int64(3), int64(7)}},
+		{Script: `func aFunc() {return 1.25 + 2.25, 3.25 + 4.25}; aFunc()`, RunOutput: []interface{}{float64(3.5), float64(7.5)}},
+		{Script: `func aFunc() {return "a" + "b", "c" + "d"}; aFunc()`, RunOutput: []interface{}{"ab", "cd"}},
 
-		{script: `func aFunc() {return nil, nil}; aFunc()`, runOutput: []interface{}{nil, nil}},
-		{script: `func aFunc() {return true, false}; aFunc()`, runOutput: []interface{}{true, false}},
-		{script: `func aFunc() {return 1, 2}; aFunc()`, runOutput: []interface{}{int64(1), int64(2)}},
-		{script: `func aFunc() {return 1.1, 2.2}; aFunc()`, runOutput: []interface{}{float64(1.1), float64(2.2)}},
-		{script: `func aFunc() {return "a", "b"}; aFunc()`, runOutput: []interface{}{"a", "b"}},
+		{Script: `func aFunc() {return nil, nil}; aFunc()`, RunOutput: []interface{}{nil, nil}},
+		{Script: `func aFunc() {return true, false}; aFunc()`, RunOutput: []interface{}{true, false}},
+		{Script: `func aFunc() {return 1, 2}; aFunc()`, RunOutput: []interface{}{int64(1), int64(2)}},
+		{Script: `func aFunc() {return 1.1, 2.2}; aFunc()`, RunOutput: []interface{}{float64(1.1), float64(2.2)}},
+		{Script: `func aFunc() {return "a", "b"}; aFunc()`, RunOutput: []interface{}{"a", "b"}},
 
-		{script: `func aFunc() {return [nil]}; aFunc()`, runOutput: []interface{}{nil}},
-		{script: `func aFunc() {return [nil, nil]}; aFunc()`, runOutput: []interface{}{nil, nil}},
-		{script: `func aFunc() {return [nil, nil, nil]}; aFunc()`, runOutput: []interface{}{nil, nil, nil}},
-		{script: `func aFunc() {return [nil, nil], [nil, nil]}; aFunc()`, runOutput: []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}},
+		{Script: `func aFunc() {return [nil]}; aFunc()`, RunOutput: []interface{}{nil}},
+		{Script: `func aFunc() {return [nil, nil]}; aFunc()`, RunOutput: []interface{}{nil, nil}},
+		{Script: `func aFunc() {return [nil, nil, nil]}; aFunc()`, RunOutput: []interface{}{nil, nil, nil}},
+		{Script: `func aFunc() {return [nil, nil], [nil, nil]}; aFunc()`, RunOutput: []interface{}{[]interface{}{nil, nil}, []interface{}{nil, nil}}},
 
-		{script: `func aFunc() {return [true]}; aFunc()`, runOutput: []interface{}{true}},
-		{script: `func aFunc() {return [true, false]}; aFunc()`, runOutput: []interface{}{true, false}},
-		{script: `func aFunc() {return [true, false, true]}; aFunc()`, runOutput: []interface{}{true, false, true}},
-		{script: `func aFunc() {return [true, false], [false, true]}; aFunc()`, runOutput: []interface{}{[]interface{}{true, false}, []interface{}{false, true}}},
+		{Script: `func aFunc() {return [true]}; aFunc()`, RunOutput: []interface{}{true}},
+		{Script: `func aFunc() {return [true, false]}; aFunc()`, RunOutput: []interface{}{true, false}},
+		{Script: `func aFunc() {return [true, false, true]}; aFunc()`, RunOutput: []interface{}{true, false, true}},
+		{Script: `func aFunc() {return [true, false], [false, true]}; aFunc()`, RunOutput: []interface{}{[]interface{}{true, false}, []interface{}{false, true}}},
 
-		{script: `func aFunc() {return []}; aFunc()`, runOutput: []interface{}{}},
-		{script: `func aFunc() {return [1]}; aFunc()`, runOutput: []interface{}{int64(1)}},
-		{script: `func aFunc() {return [1, 2]}; aFunc()`, runOutput: []interface{}{int64(1), int64(2)}},
-		{script: `func aFunc() {return [1, 2, 3]}; aFunc()`, runOutput: []interface{}{int64(1), int64(2), int64(3)}},
-		{script: `func aFunc() {return [1, 2], [3, 4]}; aFunc()`, runOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
+		{Script: `func aFunc() {return []}; aFunc()`, RunOutput: []interface{}{}},
+		{Script: `func aFunc() {return [1]}; aFunc()`, RunOutput: []interface{}{int64(1)}},
+		{Script: `func aFunc() {return [1, 2]}; aFunc()`, RunOutput: []interface{}{int64(1), int64(2)}},
+		{Script: `func aFunc() {return [1, 2, 3]}; aFunc()`, RunOutput: []interface{}{int64(1), int64(2), int64(3)}},
+		{Script: `func aFunc() {return [1, 2], [3, 4]}; aFunc()`, RunOutput: []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}},
 
-		{script: `func aFunc() {return [1.1]}; aFunc()`, runOutput: []interface{}{float64(1.1)}},
-		{script: `func aFunc() {return [1.1, 2.2]}; aFunc()`, runOutput: []interface{}{float64(1.1), float64(2.2)}},
-		{script: `func aFunc() {return [1.1, 2.2, 3.3]}; aFunc()`, runOutput: []interface{}{float64(1.1), float64(2.2), float64(3.3)}},
-		{script: `func aFunc() {return [1.1, 2.2], [3.3, 4.4]}; aFunc()`, runOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}},
+		{Script: `func aFunc() {return [1.1]}; aFunc()`, RunOutput: []interface{}{float64(1.1)}},
+		{Script: `func aFunc() {return [1.1, 2.2]}; aFunc()`, RunOutput: []interface{}{float64(1.1), float64(2.2)}},
+		{Script: `func aFunc() {return [1.1, 2.2, 3.3]}; aFunc()`, RunOutput: []interface{}{float64(1.1), float64(2.2), float64(3.3)}},
+		{Script: `func aFunc() {return [1.1, 2.2], [3.3, 4.4]}; aFunc()`, RunOutput: []interface{}{[]interface{}{float64(1.1), float64(2.2)}, []interface{}{float64(3.3), float64(4.4)}}},
 
-		{script: `func aFunc() {return ["a"]}; aFunc()`, runOutput: []interface{}{"a"}},
-		{script: `func aFunc() {return ["a", "b"]}; aFunc()`, runOutput: []interface{}{"a", "b"}},
-		{script: `func aFunc() {return ["a", "b", "c"]}; aFunc()`, runOutput: []interface{}{"a", "b", "c"}},
-		{script: `func aFunc() {return ["a", "b"], ["c", "d"]}; aFunc()`, runOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}},
+		{Script: `func aFunc() {return ["a"]}; aFunc()`, RunOutput: []interface{}{"a"}},
+		{Script: `func aFunc() {return ["a", "b"]}; aFunc()`, RunOutput: []interface{}{"a", "b"}},
+		{Script: `func aFunc() {return ["a", "b", "c"]}; aFunc()`, RunOutput: []interface{}{"a", "b", "c"}},
+		{Script: `func aFunc() {return ["a", "b"], ["c", "d"]}; aFunc()`, RunOutput: []interface{}{[]interface{}{"a", "b"}, []interface{}{"c", "d"}}},
 
-		{script: `func aFunc() {return nil, nil}; aFunc()`, runOutput: []interface{}{interface{}(nil), interface{}(nil)}},
-		{script: `func aFunc() {return true, false}; aFunc()`, runOutput: []interface{}{true, false}},
-		{script: `func aFunc() {return 1, 2}; aFunc()`, runOutput: []interface{}{int64(1), int64(2)}},
-		{script: `func aFunc() {return 1.1, 2.2}; aFunc()`, runOutput: []interface{}{float64(1.1), float64(2.2)}},
-		{script: `func aFunc() {return "a", "b"}; aFunc()`, runOutput: []interface{}{"a", "b"}},
+		{Script: `func aFunc() {return nil, nil}; aFunc()`, RunOutput: []interface{}{interface{}(nil), interface{}(nil)}},
+		{Script: `func aFunc() {return true, false}; aFunc()`, RunOutput: []interface{}{true, false}},
+		{Script: `func aFunc() {return 1, 2}; aFunc()`, RunOutput: []interface{}{int64(1), int64(2)}},
+		{Script: `func aFunc() {return 1.1, 2.2}; aFunc()`, RunOutput: []interface{}{float64(1.1), float64(2.2)}},
+		{Script: `func aFunc() {return "a", "b"}; aFunc()`, RunOutput: []interface{}{"a", "b"}},
 
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": reflect.Value{}}, runOutput: reflect.Value{}, output: map[string]interface{}{"a": reflect.Value{}}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunOutput: reflect.Value{}, Output: map[string]interface{}{"a": reflect.Value{}}},
 
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": true}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func aFunc() {return a}; aFunc()`, input: map[string]interface{}{"a": "a"}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": true}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func aFunc() {return a}; aFunc()`, Input: map[string]interface{}{"a": "a"}, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": reflect.Value{}}, runOutput: []interface{}{reflect.Value{}, reflect.Value{}}, output: map[string]interface{}{"a": reflect.Value{}}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": nil}, runOutput: []interface{}{nil, nil}, output: map[string]interface{}{"a": nil}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": true}, runOutput: []interface{}{true, true}, output: map[string]interface{}{"a": true}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": int32(1)}, runOutput: []interface{}{int32(1), int32(1)}, output: map[string]interface{}{"a": int32(1)}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": int64(1)}, runOutput: []interface{}{int64(1), int64(1)}, output: map[string]interface{}{"a": int64(1)}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": float32(1.1)}, runOutput: []interface{}{float32(1.1), float32(1.1)}, output: map[string]interface{}{"a": float32(1.1)}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: []interface{}{float64(1.1), float64(1.1)}, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func aFunc() {return a, a}; aFunc()`, input: map[string]interface{}{"a": "a"}, runOutput: []interface{}{"a", "a"}, output: map[string]interface{}{"a": "a"}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunOutput: []interface{}{reflect.Value{}, reflect.Value{}}, Output: map[string]interface{}{"a": reflect.Value{}}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": nil}, RunOutput: []interface{}{nil, nil}, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": true}, RunOutput: []interface{}{true, true}, Output: map[string]interface{}{"a": true}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: []interface{}{int32(1), int32(1)}, Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: []interface{}{int64(1), int64(1)}, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: []interface{}{float32(1.1), float32(1.1)}, Output: map[string]interface{}{"a": float32(1.1)}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: []interface{}{float64(1.1), float64(1.1)}, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func aFunc() {return a, a}; aFunc()`, Input: map[string]interface{}{"a": "a"}, RunOutput: []interface{}{"a", "a"}, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func a(x) { return x}; a(nil)`, runOutput: nil},
-		{script: `func a(x) { return x}; a(true)`, runOutput: true},
-		{script: `func a(x) { return x}; a(1)`, runOutput: int64(1)},
-		{script: `func a(x) { return x}; a(1.1)`, runOutput: float64(1.1)},
-		{script: `func a(x) { return x}; a("a")`, runOutput: "a"},
+		{Script: `func a(x) { return x}; a(nil)`, RunOutput: nil},
+		{Script: `func a(x) { return x}; a(true)`, RunOutput: true},
+		{Script: `func a(x) { return x}; a(1)`, RunOutput: int64(1)},
+		{Script: `func a(x) { return x}; a(1.1)`, RunOutput: float64(1.1)},
+		{Script: `func a(x) { return x}; a("a")`, RunOutput: "a"},
 
-		{script: `func aFunc() {return a}; for {aFunc(); break}`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `func aFunc() {return a}; for {aFunc(); break}`, input: map[string]interface{}{"a": true}, runOutput: nil, output: map[string]interface{}{"a": true}},
-		{script: `func aFunc() {return a}; for {aFunc(); break}`, input: map[string]interface{}{"a": int64(1)}, runOutput: nil, output: map[string]interface{}{"a": int64(1)}},
-		{script: `func aFunc() {return a}; for {aFunc(); break}`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: nil, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func aFunc() {return a}; for {aFunc(); break}`, input: map[string]interface{}{"a": "a"}, runOutput: nil, output: map[string]interface{}{"a": "a"}},
+		{Script: `func aFunc() {return a}; for {aFunc(); break}`, Input: map[string]interface{}{"a": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {return a}; for {aFunc(); break}`, Input: map[string]interface{}{"a": true}, RunOutput: nil, Output: map[string]interface{}{"a": true}},
+		{Script: `func aFunc() {return a}; for {aFunc(); break}`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func aFunc() {return a}; for {aFunc(); break}`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: nil, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func aFunc() {return a}; for {aFunc(); break}`, Input: map[string]interface{}{"a": "a"}, RunOutput: nil, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func aFunc() {for {return a}}; aFunc()`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `func aFunc() {for {return a}}; aFunc()`, input: map[string]interface{}{"a": true}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `func aFunc() {for {return a}}; aFunc()`, input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `func aFunc() {for {return a}}; aFunc()`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func aFunc() {for {return a}}; aFunc()`, input: map[string]interface{}{"a": "a"}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
+		{Script: `func aFunc() {for {return a}}; aFunc()`, Input: map[string]interface{}{"a": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {for {return a}}; aFunc()`, Input: map[string]interface{}{"a": true}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `func aFunc() {for {return a}}; aFunc()`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func aFunc() {for {return a}}; aFunc()`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func aFunc() {for {return a}}; aFunc()`, Input: map[string]interface{}{"a": "a"}, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func aFunc() {for {if true {return a}}}; aFunc()`, input: map[string]interface{}{"a": nil}, runOutput: nil, output: map[string]interface{}{"a": nil}},
-		{script: `func aFunc() {for {if true {return a}}}; aFunc()`, input: map[string]interface{}{"a": true}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `func aFunc() {for {if true {return a}}}; aFunc()`, input: map[string]interface{}{"a": int64(1)}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `func aFunc() {for {if true {return a}}}; aFunc()`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: float64(1.1), output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func aFunc() {for {if true {return a}}}; aFunc()`, input: map[string]interface{}{"a": "a"}, runOutput: "a", output: map[string]interface{}{"a": "a"}},
+		{Script: `func aFunc() {for {if true {return a}}}; aFunc()`, Input: map[string]interface{}{"a": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() {for {if true {return a}}}; aFunc()`, Input: map[string]interface{}{"a": true}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `func aFunc() {for {if true {return a}}}; aFunc()`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func aFunc() {for {if true {return a}}}; aFunc()`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func aFunc() {for {if true {return a}}}; aFunc()`, Input: map[string]interface{}{"a": "a"}, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func aFunc() {return nil, nil}; a, b = aFunc()`, runOutput: nil, output: map[string]interface{}{"a": nil, "b": nil}},
-		{script: `func aFunc() {return true, false}; a, b = aFunc()`, runOutput: false, output: map[string]interface{}{"a": true, "b": false}},
-		{script: `func aFunc() {return 1, 2}; a, b = aFunc()`, runOutput: int64(2), output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{script: `func aFunc() {return 1.1, 2.2}; a, b = aFunc()`, runOutput: float64(2.2), output: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
-		{script: `func aFunc() {return "a", "b"}; a, b = aFunc()`, runOutput: "b", output: map[string]interface{}{"a": "a", "b": "b"}},
+		{Script: `func aFunc() {return nil, nil}; a, b = aFunc()`, RunOutput: nil, Output: map[string]interface{}{"a": nil, "b": nil}},
+		{Script: `func aFunc() {return true, false}; a, b = aFunc()`, RunOutput: false, Output: map[string]interface{}{"a": true, "b": false}},
+		{Script: `func aFunc() {return 1, 2}; a, b = aFunc()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `func aFunc() {return 1.1, 2.2}; a, b = aFunc()`, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
+		{Script: `func aFunc() {return "a", "b"}; a, b = aFunc()`, RunOutput: "b", Output: map[string]interface{}{"a": "a", "b": "b"}},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `a()`, input: map[string]interface{}{"a": reflect.Value{}}, runError: fmt.Errorf("cannot call type reflect.Value")},
-		{script: `a = nil; a()`, runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
-		{script: `a = true; a()`, runError: fmt.Errorf("cannot call type bool"), output: map[string]interface{}{"a": true}},
-		{script: `a = nil; b = func c(d) { return d == nil }; c = nil; c(a)`, runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": nil}},
-		{script: `a = [true]; a()`, runError: fmt.Errorf("cannot call type []interface {}")},
-		{script: `a = [true]; func b(c) { return c() }; b(a)`, runError: fmt.Errorf("cannot call type []interface {}")},
-		{script: `a = {}; a.missing()`, runError: fmt.Errorf("cannot call type interface {}"), output: map[string]interface{}{"a": map[string]interface{}{}}},
-		{script: `a = 1; b = func(,a){}; a`, parseError: fmt.Errorf("syntax error: unexpected ','"), runOutput: int64(1)},
+	tests := []Test{
+		{Script: `a()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("cannot call type reflect.Value")},
+		{Script: `a = nil; a()`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; a()`, RunError: fmt.Errorf("cannot call type bool"), Output: map[string]interface{}{"a": true}},
+		{Script: `a = nil; b = func c(d) { return d == nil }; c = nil; c(a)`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": nil}},
+		{Script: `a = [true]; a()`, RunError: fmt.Errorf("cannot call type []interface {}")},
+		{Script: `a = [true]; func b(c) { return c() }; b(a)`, RunError: fmt.Errorf("cannot call type []interface {}")},
+		{Script: `a = {}; a.missing()`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": map[string]interface{}{}}},
+		{Script: `a = 1; b = func(,a){}; a`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(1)},
 
-		{script: `func a(b) { }; a()`, runError: fmt.Errorf("function wants 1 arguments but received 0")},
-		{script: `func a(b) { }; a(true, true)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
-		{script: `func a(b, c) { }; a()`, runError: fmt.Errorf("function wants 2 arguments but received 0")},
-		{script: `func a(b, c) { }; a(true)`, runError: fmt.Errorf("function wants 2 arguments but received 1")},
-		{script: `func a(b, c) { }; a(true, true, true)`, runError: fmt.Errorf("function wants 2 arguments but received 3")},
+		{Script: `func a(b) { }; a()`, RunError: fmt.Errorf("function wants 1 arguments but received 0")},
+		{Script: `func a(b) { }; a(true, true)`, RunError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{Script: `func a(b, c) { }; a()`, RunError: fmt.Errorf("function wants 2 arguments but received 0")},
+		{Script: `func a(b, c) { }; a(true)`, RunError: fmt.Errorf("function wants 2 arguments but received 1")},
+		{Script: `func a(b, c) { }; a(true, true, true)`, RunError: fmt.Errorf("function wants 2 arguments but received 3")},
 
-		{script: `func a() { return "a" }; a.b()`, runError: fmt.Errorf("type func does not support member operation")},
-		{script: `a = [func () { return nil}]; func b(c) { return c() }; b(a[1])`, runError: fmt.Errorf("index out of range")},
-		{script: `func a() { return "a" }; b()`, runError: fmt.Errorf("undefined symbol 'b'")},
-		{script: ` func a() { return "a" }; 1++()`, runError: fmt.Errorf("invalid operation")},
-		{script: ` func a(b) { return b }; a(1++)`, runError: fmt.Errorf("invalid operation")},
+		{Script: `func a() { return "a" }; a.b()`, RunError: fmt.Errorf("type func does not support member operation")},
+		{Script: `a = [func () { return nil}]; func b(c) { return c() }; b(a[1])`, RunError: fmt.Errorf("index out of range")},
+		{Script: `func a() { return "a" }; b()`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: ` func a() { return "a" }; 1++()`, RunError: fmt.Errorf("invalid operation")},
+		{Script: ` func a(b) { return b }; a(1++)`, RunError: fmt.Errorf("invalid operation")},
 
-		{script: `a`, input: map[string]interface{}{"a": testVarFunc}, runOutput: testVarFunc, output: map[string]interface{}{"a": testVarFunc}},
-		{script: `a()`, input: map[string]interface{}{"a": testVarFunc}, runOutput: int64(1), output: map[string]interface{}{"a": testVarFunc}},
-		{script: `a`, input: map[string]interface{}{"a": testVarFuncP}, runOutput: testVarFuncP, output: map[string]interface{}{"a": testVarFuncP}},
+		{Script: `a`, Input: map[string]interface{}{"a": testVarFunc}, RunOutput: testVarFunc, Output: map[string]interface{}{"a": testVarFunc}},
+		{Script: `a()`, Input: map[string]interface{}{"a": testVarFunc}, RunOutput: int64(1), Output: map[string]interface{}{"a": testVarFunc}},
+		{Script: `a`, Input: map[string]interface{}{"a": testVarFuncP}, RunOutput: testVarFuncP, Output: map[string]interface{}{"a": testVarFuncP}},
 		// TOFIX:
-		// {script: `a()`, input: map[string]interface{}{"a": testVarFuncP}, runOutput: int64(1), output: map[string]interface{}{"a": testVarFuncP}},
+		// {Script: `a()`, Input: map[string]interface{}{"a": testVarFuncP}, RunOutput: int64(1), Output: map[string]interface{}{"a": testVarFuncP}},
 
-		{script: `module a { func b() { return } }; a.b()`, runOutput: nil},
-		{script: `module a { func b() { return nil} }; a.b()`, runOutput: nil},
-		{script: `module a { func b() { return true} }; a.b()`, runOutput: true},
-		{script: `module a { func b() { return 1} }; a.b()`, runOutput: int64(1)},
-		{script: `module a { func b() { return 1.1} }; a.b()`, runOutput: float64(1.1)},
-		{script: `module a { func b() { return "a"} }; a.b()`, runOutput: "a"},
+		{Script: `module a { func b() { return } }; a.b()`, RunOutput: nil},
+		{Script: `module a { func b() { return nil} }; a.b()`, RunOutput: nil},
+		{Script: `module a { func b() { return true} }; a.b()`, RunOutput: true},
+		{Script: `module a { func b() { return 1} }; a.b()`, RunOutput: int64(1)},
+		{Script: `module a { func b() { return 1.1} }; a.b()`, RunOutput: float64(1.1)},
+		{Script: `module a { func b() { return "a"} }; a.b()`, RunOutput: "a"},
 
-		{script: `if true { module a { func b() { return } } }; a.b()`, runOutput: nil},
-		{script: `if true { module a { func b() { return nil} } }; a.b()`, runOutput: nil},
-		{script: `if true { module a { func b() { return true} } }; a.b()`, runOutput: true},
-		{script: `if true { module a { func b() { return 1} } }; a.b()`, runOutput: int64(1)},
-		{script: `if true { module a { func b() { return 1.1} } }; a.b()`, runOutput: float64(1.1)},
-		{script: `if true { module a { func b() { return "a"} } }; a.b()`, runOutput: "a"},
+		{Script: `if true { module a { func b() { return } } }; a.b()`, RunOutput: nil},
+		{Script: `if true { module a { func b() { return nil} } }; a.b()`, RunOutput: nil},
+		{Script: `if true { module a { func b() { return true} } }; a.b()`, RunOutput: true},
+		{Script: `if true { module a { func b() { return 1} } }; a.b()`, RunOutput: int64(1)},
+		{Script: `if true { module a { func b() { return 1.1} } }; a.b()`, RunOutput: float64(1.1)},
+		{Script: `if true { module a { func b() { return "a"} } }; a.b()`, RunOutput: "a"},
 
-		{script: `if true { module a { func b() { return 1} } }; a.b()`, runOutput: int64(1)},
+		{Script: `if true { module a { func b() { return 1} } }; a.b()`, RunOutput: int64(1)},
 
-		{script: `a = 1; func b() { a = 2 }; b()`, runOutput: int64(2), output: map[string]interface{}{"a": int64(2)}},
-		{script: `b(a); a`, input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2); _ = c }}, runOutput: int64(1), output: map[string]interface{}{"a": int64(1)}},
-		{script: `func b() { }; go b()`, runOutput: nil},
+		{Script: `a = 1; func b() { a = 2 }; b()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `b(a); a`, Input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2); _ = c }}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func b() { }; go b()`, RunOutput: nil},
 
-		{script: `b(a)`, input: map[string]interface{}{"a": nil, "b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `b(a)`, input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int32(1), "b": func(c int32) bool { return c == 1 }}, runOutput: true, output: map[string]interface{}{"a": int32(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": int64(1), "b": func(c int64) bool { return c == 1 }}, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float32(1.1), "b": func(c float32) bool { return c == 1.1 }}, runOutput: true, output: map[string]interface{}{"a": float32(1.1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": float64(1.1), "b": func(c float64) bool { return c == 1.1 }}, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `b(a)`, input: map[string]interface{}{"a": "a", "b": func(c string) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": "a"}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": nil, "b": func(c interface{}) bool { return c == nil }}, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": true, "b": func(c bool) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int32(1), "b": func(c int32) bool { return c == 1 }}, RunOutput: true, Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": int64(1), "b": func(c int64) bool { return c == 1 }}, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float32(1.1), "b": func(c float32) bool { return c == 1.1 }}, RunOutput: true, Output: map[string]interface{}{"a": float32(1.1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": float64(1.1), "b": func(c float64) bool { return c == 1.1 }}, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": "a", "b": func(c string) bool { return c == "a" }}, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueBool, "b": func(c reflect.Value) bool { return c == testVarValueBool }}, runOutput: true, output: map[string]interface{}{"a": testVarValueBool}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueInt32, "b": func(c reflect.Value) bool { return c == testVarValueInt32 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueInt32}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueInt64, "b": func(c reflect.Value) bool { return c == testVarValueInt64 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueInt64}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c reflect.Value) bool { return c == testVarValueFloat32 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueFloat32}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c reflect.Value) bool { return c == testVarValueFloat64 }}, runOutput: true, output: map[string]interface{}{"a": testVarValueFloat64}},
-		{script: `b(a)`, input: map[string]interface{}{"a": testVarValueString, "b": func(c reflect.Value) bool { return c == testVarValueString }}, runOutput: true, output: map[string]interface{}{"a": testVarValueString}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueBool, "b": func(c reflect.Value) bool { return c == testVarValueBool }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueBool}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueInt32, "b": func(c reflect.Value) bool { return c == testVarValueInt32 }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueInt32}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueInt64, "b": func(c reflect.Value) bool { return c == testVarValueInt64 }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueInt64}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueFloat32, "b": func(c reflect.Value) bool { return c == testVarValueFloat32 }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueFloat32}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueFloat64, "b": func(c reflect.Value) bool { return c == testVarValueFloat64 }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueFloat64}},
+		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueString, "b": func(c reflect.Value) bool { return c == testVarValueString }}, RunOutput: true, Output: map[string]interface{}{"a": testVarValueString}},
 
-		{script: `x(a, b, c, d, e, f, g)`, input: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g",
+		{Script: `x(a, b, c, d, e, f, g)`, Input: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g",
 			"x": func(a interface{}, b bool, c int32, d int64, e float32, f float64, g string) bool {
 				return a == nil && b == true && c == 1 && d == 2 && e == 1.1 && f == 2.2 && g == "g"
-			}}, runOutput: true, output: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g"}},
-		{script: `x(a, b, c, d, e, f, g)`, input: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g",
+			}}, RunOutput: true, Output: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g"}},
+		{Script: `x(a, b, c, d, e, f, g)`, Input: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g",
 			"x": func(a interface{}, b bool, c int32, d int64, e float32, f float64, g string) (interface{}, bool, int32, int64, float32, float64, string) {
 				return a, b, c, d, e, f, g
-			}}, runOutput: []interface{}{nil, true, int32(1), int64(2), float32(1.1), float64(2.2), "g"}, output: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g"}},
+			}}, RunOutput: []interface{}{nil, true, int32(1), int64(2), float32(1.1), float64(2.2), "g"}, Output: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g"}},
 
-		{script: `a = nil; b(a)`, input: map[string]interface{}{"b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; b(a)`, input: map[string]interface{}{"b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; b(a)`, input: map[string]interface{}{"b": func(c int64) bool { return c == 1 }}, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; b(a)`, input: map[string]interface{}{"b": func(c float64) bool { return c == 1.1 }}, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; b(a)`, input: map[string]interface{}{"b": func(c string) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": "a"}},
+		{Script: `a = nil; b(a)`, Input: map[string]interface{}{"b": func(c interface{}) bool { return c == nil }}, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; b(a)`, Input: map[string]interface{}{"b": func(c bool) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; b(a)`, Input: map[string]interface{}{"b": func(c int64) bool { return c == 1 }}, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; b(a)`, Input: map[string]interface{}{"b": func(c float64) bool { return c == 1.1 }}, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; b(a)`, Input: map[string]interface{}{"b": func(c string) bool { return c == "a" }}, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `func b(c) { return c == nil }; b(a)`, input: map[string]interface{}{"a": nil}, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `func b(c) { return c == true }; b(a)`, input: map[string]interface{}{"a": true}, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `func b(c) { return c == 1 }; b(a)`, input: map[string]interface{}{"a": int32(1)}, runOutput: true, output: map[string]interface{}{"a": int32(1)}},
-		{script: `func b(c) { return c == 1 }; b(a)`, input: map[string]interface{}{"a": int64(1)}, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `func b(c) { return c == 1.1 }; b(a)`, input: map[string]interface{}{"a": float32(1.1)}, runOutput: true, output: map[string]interface{}{"a": float32(1.1)}},
-		{script: `func b(c) { return c == 1.1 }; b(a)`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `func b(c) { return c == "a" }; b(a)`, input: map[string]interface{}{"a": "a"}, runOutput: true, output: map[string]interface{}{"a": "a"}},
+		{Script: `func b(c) { return c == nil }; b(a)`, Input: map[string]interface{}{"a": nil}, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `func b(c) { return c == true }; b(a)`, Input: map[string]interface{}{"a": true}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `func b(c) { return c == 1 }; b(a)`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: true, Output: map[string]interface{}{"a": int32(1)}},
+		{Script: `func b(c) { return c == 1 }; b(a)`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `func b(c) { return c == 1.1 }; b(a)`, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: true, Output: map[string]interface{}{"a": float32(1.1)}},
+		{Script: `func b(c) { return c == 1.1 }; b(a)`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `func b(c) { return c == "a" }; b(a)`, Input: map[string]interface{}{"a": "a"}, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `a = nil; func b(c) { return c == nil }; b(a)`, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; func b(c) { return c == true }; b(a)`, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; func b(c) { return c == 1 }; b(a)`, input: map[string]interface{}{"a": int64(1)}, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; func b(c) { return c == 1.1 }; b(a)`, input: map[string]interface{}{"a": float64(1.1)}, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; func b(c) { return c == "a" }; b(a)`, input: map[string]interface{}{"a": "a"}, runOutput: true, output: map[string]interface{}{"a": "a"}},
+		{Script: `a = nil; func b(c) { return c == nil }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; func b(c) { return c == true }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; func b(c) { return c == 1 }; b(a)`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; func b(c) { return c == 1.1 }; b(a)`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; func b(c) { return c == "a" }; b(a)`, Input: map[string]interface{}{"a": "a"}, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
 
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{nil}, "b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{nil}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{true}, "b": func(c interface{}) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{int32(1)}, "b": func(c interface{}) bool { return c == int32(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int32(1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{int64(1)}, "b": func(c interface{}) bool { return c == int64(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": func(c interface{}) bool { return c == float32(1.1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": func(c interface{}) bool { return c == float64(1.1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{"a"}, "b": func(c interface{}) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{"a"}}},
-
-		// TOFIX:
-		//		{script: `b(a)`,
-		//			input:     map[string]interface{}{"a": []bool{true, false, true}, "b": func(c ...bool) bool { return c[len(c)-1] }},
-		//			runOutput: true, output: map[string]interface{}{"a": true}},
-
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{true}, "b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{int32(1)}, "b": func(c int32) bool { return c == int32(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int32(1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{int64(1)}, "b": func(c int64) bool { return c == int64(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": func(c float32) bool { return c == float32(1.1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": func(c float64) bool { return c == float64(1.1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
-		{script: `b(a[0])`, input: map[string]interface{}{"a": []interface{}{"a"}, "b": func(c string) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{"a"}}},
-
-		{script: `a = [nil]; b(a[0])`, input: map[string]interface{}{"b": func(c interface{}) bool { return c == nil }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{nil}}},
-		{script: `a = [true]; b(a[0])`, input: map[string]interface{}{"b": func(c bool) bool { return c == true }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `a = [1]; b(a[0])`, input: map[string]interface{}{"b": func(c int64) bool { return c == int64(1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: `a = [1.1]; b(a[0])`, input: map[string]interface{}{"b": func(c float64) bool { return c == float64(1.1) }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
-		{script: `a = ["a"]; b(a[0])`, input: map[string]interface{}{"b": func(c string) bool { return c == "a" }}, runOutput: true, output: map[string]interface{}{"a": []interface{}{"a"}}},
-
-		{script: `a = [nil]; func b(c) { c == nil }; b(a[0])`, runOutput: true, output: map[string]interface{}{"a": []interface{}{nil}}},
-		{script: `a = [true]; func b(c) { c == true }; b(a[0])`, runOutput: true, output: map[string]interface{}{"a": []interface{}{true}}},
-		{script: `a = [1]; func b(c) { c == 1 }; b(a[0])`, runOutput: true, output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{script: `a = [1.1]; func b(c) { c == 1.1 }; b(a[0])`, runOutput: true, output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
-		{script: `a = ["a"]; func b(c) { c == "a" }; b(a[0])`, runOutput: true, output: map[string]interface{}{"a": []interface{}{"a"}}},
-
-		{script: `a = nil; b = func (d) { return d == nil }; b(a)`, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; b = func (d) { return d == true }; b(a)`, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; b = func (d) { return d == 1 }; b(a)`, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; b = func (d) { return d == 1.1 }; b(a)`, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; b = func (d) { return d == "a" }; b(a)`, runOutput: true, output: map[string]interface{}{"a": "a"}},
-
-		{script: `a = nil; b = func c(d) { return d == nil }; b(a)`, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; b = func c(d) { return d == true }; b(a)`, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; b = func c(d) { return d == 1 }; b(a)`, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; b = func c(d) { return d == 1.1 }; b(a)`, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; b = func c(d) { return d == "a" }; b(a)`, runOutput: true, output: map[string]interface{}{"a": "a"}},
-
-		{script: `a = nil; b = func c(d) { return d == nil }; c(a)`, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; b = func c(d) { return d == true }; c(a)`, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; b = func c(d) { return d == 1 }; c(a)`, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; b = func c(d) { return d == 1.1 }; c(a)`, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; b = func c(d) { return d == "a" }; c(a)`, runOutput: true, output: map[string]interface{}{"a": "a"}},
-
-		{script: `a = nil; func b() { return func c(d) { d == nil } }; e = b(); e(a)`, runOutput: true, output: map[string]interface{}{"a": nil}},
-		{script: `a = true; func b() { return func c(d) { d == true } }; e = b(); e(a)`, runOutput: true, output: map[string]interface{}{"a": true}},
-		{script: `a = 1; func b() { return func c(d) { d == 1 } }; e = b(); e(a)`, runOutput: true, output: map[string]interface{}{"a": int64(1)}},
-		{script: `a = 1.1; func b() { return func c(d) { d == 1.1 } }; e = b(); e(a)`, runOutput: true, output: map[string]interface{}{"a": float64(1.1)}},
-		{script: `a = "a"; func b() { return func c(d) { d == "a" } }; e = b(); e(a)`, runOutput: true, output: map[string]interface{}{"a": "a"}},
-
-		{script: `a = func () { return nil }; func b(c) { return c() }; b(a)`, runOutput: nil},
-		{script: `a = func () { return true }; func b(c) { return c() }; b(a)`, runOutput: true},
-		{script: `a = func () { return 1 }; func b(c) { return c() }; b(a)`, runOutput: int64(1)},
-		{script: `a = func () { return 1.1 }; func b(c) { return c() }; b(a)`, runOutput: float64(1.1)},
-		{script: `a = func () { return "a" }; func b(c) { return c() }; b(a)`, runOutput: "a"},
-
-		{script: `a = [nil]; func c(d) { return d[0] }; c(a)`, runOutput: nil},
-		{script: `a = [true]; func c(d) { return d[0] }; c(a)`, runOutput: true},
-		{script: `a = [1]; func c(d) { return d[0] }; c(a)`, runOutput: int64(1)},
-		{script: `a = [1.1]; func c(d) { return d[0] }; c(a)`, runOutput: float64(1.1)},
-		{script: `a = ["a"]; func c(d) { return d[0] }; c(a)`, runOutput: "a"},
-
-		{script: `a = {"b": nil}; func c(d) { return d.b }; c(a)`, runOutput: nil},
-		{script: `a = {"b": true}; func c(d) { return d.b }; c(a)`, runOutput: true},
-		{script: `a = {"b": 1}; func c(d) { return d.b }; c(a)`, runOutput: int64(1)},
-		{script: `a = {"b": 1.1}; func c(d) { return d.b }; c(a)`, runOutput: float64(1.1)},
-		{script: `a = {"b": "a"}; func c(d) { return d.b }; c(a)`, runOutput: "a"},
-
-		{script: `a = func() { return func(c) { return c + "c"} }; a()("a")`, runOutput: "ac"},
-		{script: `a = func() { return func(c) { return c + "c"} }(); a("a")`, runOutput: "ac"},
-		{script: `a = func() { return func(c) { return c + "c"} }()("a")`, runOutput: "ac"},
-		{script: `func() { return func(c) { return c + "c"} }()("a")`, runOutput: "ac"},
-
-		{script: `a = func(b) { return func() { return b + "c"} }; b = a("a"); b()`, runOutput: "ac"},
-		{script: `a = func(b) { return func() { return b + "c"} }("a"); a()`, runOutput: "ac"},
-		{script: `a = func(b) { return func() { return b + "c"} }("a")()`, runOutput: "ac"},
-		{script: `func(b) { return func() { return b + "c"} }("a")()`, runOutput: "ac"},
-
-		{script: `a = func(b) { return func(c) { return b[c] } }; b = a({"x": "x"}); b("x")`, runOutput: "x"},
-		{script: `a = func(b) { return func(c) { return b[c] } }({"x": "x"}); a("x")`, runOutput: "x"},
-		{script: `a = func(b) { return func(c) { return b[c] } }({"x": "x"})("x")`, runOutput: "x"},
-		{script: `func(b) { return func(c) { return b[c] } }({"x": "x"})("x")`, runOutput: "x"},
-
-		{script: `a = func(b) { return func(c) { return b[c] } }; x = {"y": "y"}; b = a(x); x = {"y": "y"}; b("y")`, runOutput: "y"},
-		{script: `a = func(b) { return func(c) { return b[c] } }; x = {"y": "y"}; b = a(x); x.y = "z"; b("y")`, runOutput: "z"},
-
-		{script: ` func a() { return "a" }; a()`, runOutput: "a"},
-		{script: `a = func a() { return "a" }; a = func() { return "b" }; a()`, runOutput: "b"},
-		{script: `a = "a.b"; func a() { return "a" }; a()`, runOutput: "a"},
-
-		{script: `a = func() { b = "b"; return func() { b += "c" } }(); a()`, runOutput: "bc"},
-		{script: `a = func() { b = "b"; return func() { b += "c"; return b} }(); a()`, runOutput: "bc"},
-		{script: `a = func(b) { return func(c) { return func(d) { return d + "d" }(c) + "c" }(b) + "b" }("a")`, runOutput: "adcb"},
-		{script: `a = func(b) { return "b" + func(c) { return "c" + func(d) { return "d" + d  }(c) }(b) }("a")`, runOutput: "bcda"},
-		{script: `a = func(b) { return b + "b" }; a( func(c) { return c + "c" }("a") )`, runOutput: "acb"},
-
-		{script: `a = func(x, y) { return func() { x(y) } }; b = a(func (z) { return z + "z" }, "b"); b()`, runOutput: "bz"},
-
-		{script: `a = make(Time); a.IsZero()`, types: map[string]interface{}{"Time": time.Time{}}, runOutput: true},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{nil}, "b": func(c interface{}) bool { return c == nil }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{nil}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{true}, "b": func(c interface{}) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{true}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{int32(1)}, "b": func(c interface{}) bool { return c == int32(1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int32(1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{int64(1)}, "b": func(c interface{}) bool { return c == int64(1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": func(c interface{}) bool { return c == float32(1.1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": func(c interface{}) bool { return c == float64(1.1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{"a"}, "b": func(c interface{}) bool { return c == "a" }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{"a"}}},
 
 		// TOFIX:
-		// {script: `a = make(Buffer); n, err = a.WriteString("b")`, types: map[string]interface{}{"Buffer": bytes.Buffer{}}, runOutput: []interface{}{1, nil}},
-		// {script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, types: map[string]interface{}{"Buffer": bytes.Buffer{}}, runOutput: "b"},
+		//		{Script: `b(a)`,
+		//			Input:     map[string]interface{}{"a": []bool{true, false, true}, "b": func(c ...bool) bool { return c[len(c)-1] }},
+		//			RunOutput: true, Output: map[string]interface{}{"a": true}},
+
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{true}, "b": func(c bool) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{true}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{int32(1)}, "b": func(c int32) bool { return c == int32(1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int32(1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{int64(1)}, "b": func(c int64) bool { return c == int64(1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": func(c float32) bool { return c == float32(1.1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": func(c float64) bool { return c == float64(1.1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{Script: `b(a[0])`, Input: map[string]interface{}{"a": []interface{}{"a"}, "b": func(c string) bool { return c == "a" }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{"a"}}},
+
+		{Script: `a = [nil]; b(a[0])`, Input: map[string]interface{}{"b": func(c interface{}) bool { return c == nil }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{nil}}},
+		{Script: `a = [true]; b(a[0])`, Input: map[string]interface{}{"b": func(c bool) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{true}}},
+		{Script: `a = [1]; b(a[0])`, Input: map[string]interface{}{"b": func(c int64) bool { return c == int64(1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{Script: `a = [1.1]; b(a[0])`, Input: map[string]interface{}{"b": func(c float64) bool { return c == float64(1.1) }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{Script: `a = ["a"]; b(a[0])`, Input: map[string]interface{}{"b": func(c string) bool { return c == "a" }}, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{"a"}}},
+
+		{Script: `a = [nil]; func b(c) { c == nil }; b(a[0])`, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{nil}}},
+		{Script: `a = [true]; func b(c) { c == true }; b(a[0])`, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{true}}},
+		{Script: `a = [1]; func b(c) { c == 1 }; b(a[0])`, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{Script: `a = [1.1]; func b(c) { c == 1.1 }; b(a[0])`, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
+		{Script: `a = ["a"]; func b(c) { c == "a" }; b(a[0])`, RunOutput: true, Output: map[string]interface{}{"a": []interface{}{"a"}}},
+
+		{Script: `a = nil; b = func (d) { return d == nil }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; b = func (d) { return d == true }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; b = func (d) { return d == 1 }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; b = func (d) { return d == 1.1 }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; b = func (d) { return d == "a" }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `a = nil; b = func c(d) { return d == nil }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; b = func c(d) { return d == true }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; b = func c(d) { return d == 1 }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; b = func c(d) { return d == 1.1 }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; b = func c(d) { return d == "a" }; b(a)`, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `a = nil; b = func c(d) { return d == nil }; c(a)`, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; b = func c(d) { return d == true }; c(a)`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; b = func c(d) { return d == 1 }; c(a)`, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; b = func c(d) { return d == 1.1 }; c(a)`, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; b = func c(d) { return d == "a" }; c(a)`, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `a = nil; func b() { return func c(d) { d == nil } }; e = b(); e(a)`, RunOutput: true, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true; func b() { return func c(d) { d == true } }; e = b(); e(a)`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; func b() { return func c(d) { d == 1 } }; e = b(); e(a)`, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1; func b() { return func c(d) { d == 1.1 } }; e = b(); e(a)`, RunOutput: true, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"; func b() { return func c(d) { d == "a" } }; e = b(); e(a)`, RunOutput: true, Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `a = func () { return nil }; func b(c) { return c() }; b(a)`, RunOutput: nil},
+		{Script: `a = func () { return true }; func b(c) { return c() }; b(a)`, RunOutput: true},
+		{Script: `a = func () { return 1 }; func b(c) { return c() }; b(a)`, RunOutput: int64(1)},
+		{Script: `a = func () { return 1.1 }; func b(c) { return c() }; b(a)`, RunOutput: float64(1.1)},
+		{Script: `a = func () { return "a" }; func b(c) { return c() }; b(a)`, RunOutput: "a"},
+
+		{Script: `a = [nil]; func c(d) { return d[0] }; c(a)`, RunOutput: nil},
+		{Script: `a = [true]; func c(d) { return d[0] }; c(a)`, RunOutput: true},
+		{Script: `a = [1]; func c(d) { return d[0] }; c(a)`, RunOutput: int64(1)},
+		{Script: `a = [1.1]; func c(d) { return d[0] }; c(a)`, RunOutput: float64(1.1)},
+		{Script: `a = ["a"]; func c(d) { return d[0] }; c(a)`, RunOutput: "a"},
+
+		{Script: `a = {"b": nil}; func c(d) { return d.b }; c(a)`, RunOutput: nil},
+		{Script: `a = {"b": true}; func c(d) { return d.b }; c(a)`, RunOutput: true},
+		{Script: `a = {"b": 1}; func c(d) { return d.b }; c(a)`, RunOutput: int64(1)},
+		{Script: `a = {"b": 1.1}; func c(d) { return d.b }; c(a)`, RunOutput: float64(1.1)},
+		{Script: `a = {"b": "a"}; func c(d) { return d.b }; c(a)`, RunOutput: "a"},
+
+		{Script: `a = func() { return func(c) { return c + "c"} }; a()("a")`, RunOutput: "ac"},
+		{Script: `a = func() { return func(c) { return c + "c"} }(); a("a")`, RunOutput: "ac"},
+		{Script: `a = func() { return func(c) { return c + "c"} }()("a")`, RunOutput: "ac"},
+		{Script: `func() { return func(c) { return c + "c"} }()("a")`, RunOutput: "ac"},
+
+		{Script: `a = func(b) { return func() { return b + "c"} }; b = a("a"); b()`, RunOutput: "ac"},
+		{Script: `a = func(b) { return func() { return b + "c"} }("a"); a()`, RunOutput: "ac"},
+		{Script: `a = func(b) { return func() { return b + "c"} }("a")()`, RunOutput: "ac"},
+		{Script: `func(b) { return func() { return b + "c"} }("a")()`, RunOutput: "ac"},
+
+		{Script: `a = func(b) { return func(c) { return b[c] } }; b = a({"x": "x"}); b("x")`, RunOutput: "x"},
+		{Script: `a = func(b) { return func(c) { return b[c] } }({"x": "x"}); a("x")`, RunOutput: "x"},
+		{Script: `a = func(b) { return func(c) { return b[c] } }({"x": "x"})("x")`, RunOutput: "x"},
+		{Script: `func(b) { return func(c) { return b[c] } }({"x": "x"})("x")`, RunOutput: "x"},
+
+		{Script: `a = func(b) { return func(c) { return b[c] } }; x = {"y": "y"}; b = a(x); x = {"y": "y"}; b("y")`, RunOutput: "y"},
+		{Script: `a = func(b) { return func(c) { return b[c] } }; x = {"y": "y"}; b = a(x); x.y = "z"; b("y")`, RunOutput: "z"},
+
+		{Script: ` func a() { return "a" }; a()`, RunOutput: "a"},
+		{Script: `a = func a() { return "a" }; a = func() { return "b" }; a()`, RunOutput: "b"},
+		{Script: `a = "a.b"; func a() { return "a" }; a()`, RunOutput: "a"},
+
+		{Script: `a = func() { b = "b"; return func() { b += "c" } }(); a()`, RunOutput: "bc"},
+		{Script: `a = func() { b = "b"; return func() { b += "c"; return b} }(); a()`, RunOutput: "bc"},
+		{Script: `a = func(b) { return func(c) { return func(d) { return d + "d" }(c) + "c" }(b) + "b" }("a")`, RunOutput: "adcb"},
+		{Script: `a = func(b) { return "b" + func(c) { return "c" + func(d) { return "d" + d  }(c) }(b) }("a")`, RunOutput: "bcda"},
+		{Script: `a = func(b) { return b + "b" }; a( func(c) { return c + "c" }("a") )`, RunOutput: "acb"},
+
+		{Script: `a = func(x, y) { return func() { x(y) } }; b = a(func (z) { return z + "z" }, "b"); b()`, RunOutput: "bz"},
+
+		{Script: `a = make(Time); a.IsZero()`, Types: map[string]interface{}{"Time": time.Time{}}, RunOutput: true},
+
+		// TOFIX:
+		// {Script: `a = make(Buffer); n, err = a.WriteString("b")`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: []interface{}{1, nil}},
+		// {Script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "b"},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestPointerFunctions(t *testing.T) {
@@ -398,130 +398,130 @@ func TestPointerFunctions(t *testing.T) {
 		rv.Elem().Set(slice)
 		return "good"
 	}
-	tests := []testStruct{
-		{script: `b = 1; a(&b)`, input: map[string]interface{}{"a": testFunctionPointer}, runOutput: "good", output: map[string]interface{}{"b": []interface{}{"b"}}},
+	tests := []Test{
+		{Script: `b = 1; a(&b)`, Input: map[string]interface{}{"a": testFunctionPointer}, RunOutput: "good", Output: map[string]interface{}{"b": []interface{}{"b"}}},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestVariadicFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
+	tests := []Test{
 		// params Variadic arg !Variadic
-		{script: `func a(b...) { return b }; a()`, runOutput: []interface{}{}},
-		{script: `func a(b...) { return b }; a(true)`, runOutput: []interface{}{true}},
-		{script: `func a(b...) { return b }; a(true, true)`, runOutput: []interface{}{true, true}},
-		{script: `func a(b...) { return b }; a([true])`, runOutput: []interface{}{[]interface{}{true}}},
-		{script: `func a(b...) { return b }; a([true, true])`, runOutput: []interface{}{[]interface{}{true, true}}},
-		{script: `func a(b...) { return b }; a([true, true], [true, true])`, runOutput: []interface{}{[]interface{}{true, true}, []interface{}{true, true}}},
+		{Script: `func a(b...) { return b }; a()`, RunOutput: []interface{}{}},
+		{Script: `func a(b...) { return b }; a(true)`, RunOutput: []interface{}{true}},
+		{Script: `func a(b...) { return b }; a(true, true)`, RunOutput: []interface{}{true, true}},
+		{Script: `func a(b...) { return b }; a([true])`, RunOutput: []interface{}{[]interface{}{true}}},
+		{Script: `func a(b...) { return b }; a([true, true])`, RunOutput: []interface{}{[]interface{}{true, true}}},
+		{Script: `func a(b...) { return b }; a([true, true], [true, true])`, RunOutput: []interface{}{[]interface{}{true, true}, []interface{}{true, true}}},
 
 		// params Variadic arg !Variadic
-		{script: `func a(b, c...) { return c }; a()`, runError: fmt.Errorf("function wants 2 arguments but received 0")},
-		{script: `func a(b, c...) { return c }; a(true)`, runOutput: []interface{}{}},
-		{script: `func a(b, c...) { return c }; a(true, true)`, runOutput: []interface{}{true}},
-		{script: `func a(b, c...) { return c }; a(true, true, true)`, runOutput: []interface{}{true, true}},
-		{script: `func a(b, c...) { return c }; a([true])`, runOutput: []interface{}{}},
-		{script: `func a(b, c...) { return c }; a([true], [true])`, runOutput: []interface{}{[]interface{}{true}}},
-		{script: `func a(b, c...) { return c }; a([true], [true], [true])`, runOutput: []interface{}{[]interface{}{true}, []interface{}{true}}},
-		{script: `func a(b, c...) { return c }; a([true], [true, true], [true, true])`, runOutput: []interface{}{[]interface{}{true, true}, []interface{}{true, true}}},
+		{Script: `func a(b, c...) { return c }; a()`, RunError: fmt.Errorf("function wants 2 arguments but received 0")},
+		{Script: `func a(b, c...) { return c }; a(true)`, RunOutput: []interface{}{}},
+		{Script: `func a(b, c...) { return c }; a(true, true)`, RunOutput: []interface{}{true}},
+		{Script: `func a(b, c...) { return c }; a(true, true, true)`, RunOutput: []interface{}{true, true}},
+		{Script: `func a(b, c...) { return c }; a([true])`, RunOutput: []interface{}{}},
+		{Script: `func a(b, c...) { return c }; a([true], [true])`, RunOutput: []interface{}{[]interface{}{true}}},
+		{Script: `func a(b, c...) { return c }; a([true], [true], [true])`, RunOutput: []interface{}{[]interface{}{true}, []interface{}{true}}},
+		{Script: `func a(b, c...) { return c }; a([true], [true, true], [true, true])`, RunOutput: []interface{}{[]interface{}{true, true}, []interface{}{true, true}}},
 
 		// params Variadic arg Variadic
-		{script: `func a(b...) { return b }; a([true]...)`, runOutput: []interface{}{true}},
-		{script: `func a(b...) { return b }; a([true, true]...)`, runOutput: []interface{}{true, true}},
-		{script: `func a(b...) { return b }; a(true, [true]...)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{Script: `func a(b...) { return b }; a([true]...)`, RunOutput: []interface{}{true}},
+		{Script: `func a(b...) { return b }; a([true, true]...)`, RunOutput: []interface{}{true, true}},
+		{Script: `func a(b...) { return b }; a(true, [true]...)`, RunError: fmt.Errorf("function wants 1 arguments but received 2")},
 
 		// params Variadic arg Variadic
-		{script: `func a(b, c...) { return c }; a([true]...)`, runOutput: []interface{}{}},
-		{script: `func a(b, c...) { return c }; a([true, true]...)`, runOutput: []interface{}{}},
-		{script: `func a(b, c...) { return c }; a(true, [true]...)`, runOutput: []interface{}{true}},
-		{script: `func a(b, c...) { return c }; a(true, [true, true]...)`, runOutput: []interface{}{true, true}},
+		{Script: `func a(b, c...) { return c }; a([true]...)`, RunOutput: []interface{}{}},
+		{Script: `func a(b, c...) { return c }; a([true, true]...)`, RunOutput: []interface{}{}},
+		{Script: `func a(b, c...) { return c }; a(true, [true]...)`, RunOutput: []interface{}{true}},
+		{Script: `func a(b, c...) { return c }; a(true, [true, true]...)`, RunOutput: []interface{}{true, true}},
 
 		// params !Variadic arg Variadic
-		{script: `func a() { return "a" }; a([true]...)`, runOutput: "a"},
-		{script: `func a() { return "a" }; a(true, [true]...)`, runOutput: "a"},
-		{script: `func a() { return "a" }; a(true, [true, true]...)`, runOutput: "a"},
+		{Script: `func a() { return "a" }; a([true]...)`, RunOutput: "a"},
+		{Script: `func a() { return "a" }; a(true, [true]...)`, RunOutput: "a"},
+		{Script: `func a() { return "a" }; a(true, [true, true]...)`, RunOutput: "a"},
 
 		// params !Variadic arg Variadic
-		{script: `func a(b) { return b }; a(true...)`, runError: fmt.Errorf("call is variadic but last parameter is of type bool")},
-		{script: `func a(b) { return b }; a([true]...)`, runOutput: true},
-		{script: `func a(b) { return b }; a(true, false...)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
-		{script: `func a(b) { return b }; a(true, [1]...)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
-		{script: `func a(b) { return b }; a(true, [1, 2]...)`, runError: fmt.Errorf("function wants 1 arguments but received 2")},
-		{script: `func a(b) { return b }; a([true, 1]...)`, runOutput: true},
-		{script: `func a(b) { return b }; a([true, 1, 2]...)`, runOutput: true},
+		{Script: `func a(b) { return b }; a(true...)`, RunError: fmt.Errorf("call is variadic but last parameter is of type bool")},
+		{Script: `func a(b) { return b }; a([true]...)`, RunOutput: true},
+		{Script: `func a(b) { return b }; a(true, false...)`, RunError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{Script: `func a(b) { return b }; a(true, [1]...)`, RunError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{Script: `func a(b) { return b }; a(true, [1, 2]...)`, RunError: fmt.Errorf("function wants 1 arguments but received 2")},
+		{Script: `func a(b) { return b }; a([true, 1]...)`, RunOutput: true},
+		{Script: `func a(b) { return b }; a([true, 1, 2]...)`, RunOutput: true},
 
 		// params !Variadic arg Variadi
-		{script: `func a(b, c) { return c }; a(false...)`, runError: fmt.Errorf("call is variadic but last parameter is of type bool")},
-		{script: `func a(b, c) { return c }; a([1]...)`, runError: fmt.Errorf("function wants 2 arguments but received 1")},
-		{script: `func a(b, c) { return c }; a(1, true...)`, runError: fmt.Errorf("call is variadic but last parameter is of type bool")},
-		{script: `func a(b, c) { return c }; a(1, [true]...)`, runOutput: true},
-		{script: `func a(b, c) { return c }; a([1, true]...)`, runOutput: true},
-		{script: `func a(b, c) { return c }; a(1, true...)`, runError: fmt.Errorf("call is variadic but last parameter is of type bool")},
-		{script: `func a(b, c) { return c }; a(1, [true]...)`, runOutput: true},
-		{script: `func a(b, c) { return c }; a(1, true, false...)`, runError: fmt.Errorf("function wants 2 arguments but received 3")},
-		{script: `func a(b, c) { return c }; a(1, true, [2]...)`, runError: fmt.Errorf("function wants 2 arguments but received 3")},
-		{script: `func a(b, c) { return c }; a(1, [true, 2]...)`, runOutput: true},
-		{script: `func a(b, c) { return c }; a([1, true, 2]...)`, runOutput: true},
+		{Script: `func a(b, c) { return c }; a(false...)`, RunError: fmt.Errorf("call is variadic but last parameter is of type bool")},
+		{Script: `func a(b, c) { return c }; a([1]...)`, RunError: fmt.Errorf("function wants 2 arguments but received 1")},
+		{Script: `func a(b, c) { return c }; a(1, true...)`, RunError: fmt.Errorf("call is variadic but last parameter is of type bool")},
+		{Script: `func a(b, c) { return c }; a(1, [true]...)`, RunOutput: true},
+		{Script: `func a(b, c) { return c }; a([1, true]...)`, RunOutput: true},
+		{Script: `func a(b, c) { return c }; a(1, true...)`, RunError: fmt.Errorf("call is variadic but last parameter is of type bool")},
+		{Script: `func a(b, c) { return c }; a(1, [true]...)`, RunOutput: true},
+		{Script: `func a(b, c) { return c }; a(1, true, false...)`, RunError: fmt.Errorf("function wants 2 arguments but received 3")},
+		{Script: `func a(b, c) { return c }; a(1, true, [2]...)`, RunError: fmt.Errorf("function wants 2 arguments but received 3")},
+		{Script: `func a(b, c) { return c }; a(1, [true, 2]...)`, RunOutput: true},
+		{Script: `func a(b, c) { return c }; a([1, true, 2]...)`, RunOutput: true},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestFunctionsInArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `a = [func () { return nil }]; a[0]()`, runOutput: nil},
-		{script: `a = [func () { return true }]; a[0]()`, runOutput: true},
-		{script: `a = [func () { return 1 }]; a[0]()`, runOutput: int64(1)},
-		{script: `a = [func () { return 1.1 }]; a[0]()`, runOutput: float64(1.1)},
-		{script: `a = [func () { return "a" }]; a[0]()`, runOutput: "a"},
+	tests := []Test{
+		{Script: `a = [func () { return nil }]; a[0]()`, RunOutput: nil},
+		{Script: `a = [func () { return true }]; a[0]()`, RunOutput: true},
+		{Script: `a = [func () { return 1 }]; a[0]()`, RunOutput: int64(1)},
+		{Script: `a = [func () { return 1.1 }]; a[0]()`, RunOutput: float64(1.1)},
+		{Script: `a = [func () { return "a" }]; a[0]()`, RunOutput: "a"},
 
-		{script: `a = [func () { return nil }]; b = a[0]; b()`, runOutput: nil},
-		{script: `a = [func () { return true }]; b = a[0]; b()`, runOutput: true},
-		{script: `a = [func () { return 1 }]; b = a[0]; b()`, runOutput: int64(1)},
-		{script: `a = [func () { return 1.1 }]; b = a[0]; b()`, runOutput: float64(1.1)},
-		{script: `a = [func () { return "a" }]; b = a[0]; b()`, runOutput: "a"},
+		{Script: `a = [func () { return nil }]; b = a[0]; b()`, RunOutput: nil},
+		{Script: `a = [func () { return true }]; b = a[0]; b()`, RunOutput: true},
+		{Script: `a = [func () { return 1 }]; b = a[0]; b()`, RunOutput: int64(1)},
+		{Script: `a = [func () { return 1.1 }]; b = a[0]; b()`, RunOutput: float64(1.1)},
+		{Script: `a = [func () { return "a" }]; b = a[0]; b()`, RunOutput: "a"},
 
-		{script: `a = [func () { return nil}]; func b(c) { return c() }; b(a[0])`, runOutput: nil},
-		{script: `a = [func () { return true}]; func b(c) { return c() }; b(a[0])`, runOutput: true},
-		{script: `a = [func () { return 1}]; func b(c) { return c() }; b(a[0])`, runOutput: int64(1)},
-		{script: `a = [func () { return 1.1}]; func b(c) { return c() }; b(a[0])`, runOutput: float64(1.1)},
-		{script: `a = [func () { return "a"}]; func b(c) { return c() }; b(a[0])`, runOutput: "a"},
+		{Script: `a = [func () { return nil}]; func b(c) { return c() }; b(a[0])`, RunOutput: nil},
+		{Script: `a = [func () { return true}]; func b(c) { return c() }; b(a[0])`, RunOutput: true},
+		{Script: `a = [func () { return 1}]; func b(c) { return c() }; b(a[0])`, RunOutput: int64(1)},
+		{Script: `a = [func () { return 1.1}]; func b(c) { return c() }; b(a[0])`, RunOutput: float64(1.1)},
+		{Script: `a = [func () { return "a"}]; func b(c) { return c() }; b(a[0])`, RunOutput: "a"},
 
-		{script: `a = {"b": func () { return nil }}; a["b"]()`, runOutput: nil},
-		{script: `a = {"b": func () { return true }}; a["b"]()`, runOutput: true},
-		{script: `a = {"b": func () { return 1 }}; a["b"]()`, runOutput: int64(1)},
-		{script: `a = {"b": func () { return 1.1 }}; a["b"]()`, runOutput: float64(1.1)},
-		{script: `a = {"b": func () { return "a" }}; a["b"]()`, runOutput: "a"},
+		{Script: `a = {"b": func () { return nil }}; a["b"]()`, RunOutput: nil},
+		{Script: `a = {"b": func () { return true }}; a["b"]()`, RunOutput: true},
+		{Script: `a = {"b": func () { return 1 }}; a["b"]()`, RunOutput: int64(1)},
+		{Script: `a = {"b": func () { return 1.1 }}; a["b"]()`, RunOutput: float64(1.1)},
+		{Script: `a = {"b": func () { return "a" }}; a["b"]()`, RunOutput: "a"},
 
-		{script: `a = {"b": func () { return nil }}; a.b()`, runOutput: nil},
-		{script: `a = {"b": func () { return true }}; a.b()`, runOutput: true},
-		{script: `a = {"b": func () { return 1 }}; a.b()`, runOutput: int64(1)},
-		{script: `a = {"b": func () { return 1.1 }}; a.b()`, runOutput: float64(1.1)},
-		{script: `a = {"b": func () { return "a" }}; a.b()`, runOutput: "a"},
+		{Script: `a = {"b": func () { return nil }}; a.b()`, RunOutput: nil},
+		{Script: `a = {"b": func () { return true }}; a.b()`, RunOutput: true},
+		{Script: `a = {"b": func () { return 1 }}; a.b()`, RunOutput: int64(1)},
+		{Script: `a = {"b": func () { return 1.1 }}; a.b()`, RunOutput: float64(1.1)},
+		{Script: `a = {"b": func () { return "a" }}; a.b()`, RunOutput: "a"},
 
-		{script: `a = {"b": func () { return nil }}; func c(d) { return d() }; c(a.b)`, runOutput: nil},
-		{script: `a = {"b": func () { return true }}; func c(d) { return d() }; c(a.b)`, runOutput: true},
-		{script: `a = {"b": func () { return 1 }}; func c(d) { return d() }; c(a.b)`, runOutput: int64(1)},
-		{script: `a = {"b": func () { return 1.1 }}; func c(d) { return d() }; c(a.b)`, runOutput: float64(1.1)},
-		{script: `a = {"b": func () { return "a" }}; func c(d) { return d() }; c(a.b)`, runOutput: "a"},
+		{Script: `a = {"b": func () { return nil }}; func c(d) { return d() }; c(a.b)`, RunOutput: nil},
+		{Script: `a = {"b": func () { return true }}; func c(d) { return d() }; c(a.b)`, RunOutput: true},
+		{Script: `a = {"b": func () { return 1 }}; func c(d) { return d() }; c(a.b)`, RunOutput: int64(1)},
+		{Script: `a = {"b": func () { return 1.1 }}; func c(d) { return d() }; c(a.b)`, RunOutput: float64(1.1)},
+		{Script: `a = {"b": func () { return "a" }}; func c(d) { return d() }; c(a.b)`, RunOutput: "a"},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestFunctionConvertions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "0")
-	tests := []testStruct{
-		{script: `b = func(c){ return c }; a("x", b)`, input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, runOutput: "x"},
-		{script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, types: map[string]interface{}{"struct": &struct {
+	tests := []Test{
+		{Script: `b = func(c){ return c }; a("x", b)`, Input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, RunOutput: "x"},
+		{Script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, Types: map[string]interface{}{"struct": &struct {
 			A func(int, int) bool
 		}{}},
-			runOutput: true},
-		{script: `b = 1; a(&b)`, input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, output: map[string]interface{}{"b": int64(2)}},
+			RunOutput: true},
+		{Script: `b = 1; a(&b)`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, Output: map[string]interface{}{"b": int64(2)}},
 		// TOFIX:
-		// {script: `b = 1; c = &b; a(c); *c`, input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, runOutput: int64(2), output: map[string]interface{}{"b": int64(2)}},
+		// {Script: `b = 1; c = &b; a(c); *c`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
 		// TODO: add more tests
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestVariadicFunctionConvertions(t *testing.T) {
@@ -533,16 +533,16 @@ func TestVariadicFunctionConvertions(t *testing.T) {
 		}
 		return total
 	}
-	tests := []testStruct{
+	tests := []Test{
 		// params Variadic arg !Variadic
-		{script: `a(true)`, input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, runOutput: []interface{}{true}},
+		{Script: `a(true)`, Input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, RunOutput: []interface{}{true}},
 
-		{script: `a()`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(0)},
-		{script: `a(1)`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(1)},
-		{script: `a(1, 2)`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(3)},
-		{script: `a(1, 2, 3)`, input: map[string]interface{}{"a": testSumFunc}, runOutput: int64(6)},
+		{Script: `a()`, Input: map[string]interface{}{"a": testSumFunc}, RunOutput: int64(0)},
+		{Script: `a(1)`, Input: map[string]interface{}{"a": testSumFunc}, RunOutput: int64(1)},
+		{Script: `a(1, 2)`, Input: map[string]interface{}{"a": testSumFunc}, RunOutput: int64(3)},
+		{Script: `a(1, 2, 3)`, Input: map[string]interface{}{"a": testSumFunc}, RunOutput: int64(6)},
 
 		// TODO: add more tests
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
