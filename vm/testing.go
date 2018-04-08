@@ -42,6 +42,7 @@ func RunTest(t *testing.T, test Test) {
 		t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.ParseError, test.Script)
 		return
 	}
+	// Note: Still want to run the code even after a parse error to see what happens
 
 	env := NewEnv()
 	if test.EnvSetupFunc != nil {
