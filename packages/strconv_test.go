@@ -38,5 +38,5 @@ func TestStrconv(t *testing.T) {
 		{Script: `strconv = import("strconv"); a = "1"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)`, Input: map[string]interface{}{"toString": toString}, RunOutput: "<nil>", Output: map[string]interface{}{"a": "1", "b": uint64(1), "err": "<nil>"}},
 		{Script: `strconv = import("strconv"); a = "a"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)`, Input: map[string]interface{}{"toString": toString}, RunOutput: `strconv.ParseUint: parsing "a": invalid syntax`, Output: map[string]interface{}{"a": "a", "b": uint64(0), "err": `strconv.ParseUint: parsing "a": invalid syntax`}},
 	}
-	vm.RunTests(t, tests, &testPackagesEnvSetupFunc)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

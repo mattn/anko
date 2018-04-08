@@ -147,5 +147,5 @@ func TestToX(t *testing.T) {
 		{Script: `toDuration(a)`, Input: map[string]interface{}{"a": float64(time.Duration(123 * time.Minute))}, RunOutput: time.Duration(123 * time.Minute)},
 		{Script: `toDuration(a)`, Input: map[string]interface{}{"a": time.Duration(123 * time.Minute)}, RunOutput: time.Duration(123 * time.Minute)},
 	}
-	vm.RunTests(t, tests, &testCoreEnvSetupFunc)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
