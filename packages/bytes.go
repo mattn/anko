@@ -8,7 +8,6 @@ func init() {
 	Packages["bytes"] = map[string]interface{}{
 		"Compare":         bytes.Compare,
 		"Contains":        bytes.Contains,
-		"ContainsRune":    bytes.ContainsRune,
 		"Count":           bytes.Count,
 		"Equal":           bytes.Equal,
 		"EqualFold":       bytes.EqualFold,
@@ -58,4 +57,5 @@ func init() {
 		"Buffer": bytes.Buffer{},
 		"Reader": bytes.Reader{},
 	}
+	bytesGo17()
 }

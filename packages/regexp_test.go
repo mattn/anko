@@ -30,5 +30,5 @@ func TestRegexp(t *testing.T) {
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}},
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}},
 	}
-	vm.RunTests(t, tests, &testPackagesEnvSetupFunc)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

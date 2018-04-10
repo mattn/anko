@@ -25,5 +25,5 @@ a
 `,
 			RunOutput: []interface{}{"f", float64(1.1), "2", int64(3), "4.4", int64(5)}, Output: map[string]interface{}{"a": []interface{}{"f", float64(1.1), "2", int64(3), "4.4", int64(5)}}},
 	}
-	vm.RunTests(t, tests, &testPackagesEnvSetupFunc)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

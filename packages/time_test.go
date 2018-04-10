@@ -12,5 +12,5 @@ func TestTime(t *testing.T) {
 	tests := []vm.Test{
 		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
 	}
-	vm.RunTests(t, tests)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

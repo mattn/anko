@@ -14,5 +14,5 @@ func TestBytes(t *testing.T) {
 		// {Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("b")`, RunOutput: []interface{}{1, nil}},
 		// {Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("b"); a.String()`, RunOutput: "b"},
 	}
-	vm.RunTests(t, tests, &testPackagesEnvSetupFunc)
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

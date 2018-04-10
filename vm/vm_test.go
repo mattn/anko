@@ -194,7 +194,7 @@ func TestVar(t *testing.T) {
 		{Script: `var a = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 	}
-	RunTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestModule(t *testing.T) {

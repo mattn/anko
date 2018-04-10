@@ -187,7 +187,7 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `!true`, RunOutput: false},
 		{Script: `!1`, RunOutput: false},
 	}
-	RunTests(t, tests)
+	RunTests(t, tests, nil)
 }
 
 func TestComparisonOperators(t *testing.T) {
@@ -351,5 +351,5 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `a = "test"; a[1] != 'e'`, RunOutput: false},
 		{Script: `a = "test"; a[3] != 't'`, RunOutput: false},
 	}
-	RunTests(t, tests)
+	RunTests(t, tests, nil)
 }

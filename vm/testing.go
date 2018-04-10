@@ -21,15 +21,19 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
+type TestingOptions struct {
+	EnvSetupFunc *func(*testing.T, *Env)
+}
+
 // RunTests runs VM tests
-func RunTests(t *testing.T, tests []Test, options ...interface{}) {
+func RunTests(t *testing.T, tests []Test, testingOptions *TestingOptions) {
 	for _, test := range tests {
-		RunTest(t, test, options...)
+		RunTest(t, test, testingOptions)
 	}
 }
 
 // RunTest runs a VM test
-func RunTest(t *testing.T, test Test, options ...interface{}) {
+func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)
@@ -45,18 +49,11 @@ func RunTest(t *testing.T, test Test, options ...interface{}) {
 	// Note: Still want to run the code even after a parse error to see what happens
 
 	env := NewEnv()
+	if testingOptions != nil && testingOptions.EnvSetupFunc != nil {
+		(*testingOptions.EnvSetupFunc)(t, env)
+	}
 	if test.EnvSetupFunc != nil {
 		(*test.EnvSetupFunc)(t, env)
-	}
-	for _, v := range options {
-		switch v := v.(type) {
-		case *func(*testing.T, *Env):
-			(*v)(t, env)
-			continue
-		default:
-			t.Errorf("Options error - unknown option type: %v - script: %v", reflect.TypeOf(v), test.Script)
-			return
-		}
 	}
 
 	for typeName, typeValue := range test.Types {
