@@ -75,7 +75,7 @@ func TestSwitch(t *testing.T) {
 		{Script: `a=99; switch a {case 1,3: return a; case 2: return a; default: return 'default'}`, RunOutput: "default"},
 		{Script: `a=99; switch a {case 1: return a; case 2,3: return a; default: return 'default'}`, RunOutput: "default"},
 
-		// TODO: After a parse error, the second default statment still runs and returns. Is this something to fix?
+		// TODO: After a parse error, the second default statement still runs and returns. Is this something to fix?
 		{Script: `a=99; switch a {case 1: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 		{Script: `a=99; switch a {case 1,2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 		{Script: `a=99; switch a {case 1: return a; case 2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},

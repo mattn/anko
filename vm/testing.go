@@ -21,6 +21,7 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
+// TestingOptions are options to pass to RunTests or RunTest
 type TestingOptions struct {
 	EnvSetupFunc *func(*testing.T, *Env)
 }
