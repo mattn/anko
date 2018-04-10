@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mattn/anko/packages"
 	"github.com/mattn/anko/vm"
 )
 
@@ -82,6 +83,28 @@ func TestLoad(t *testing.T) {
 		{Script: `load('testdata/broken.ank'); X(1)`, RunError: fmt.Errorf("syntax error")},
 	}
 	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+}
+
+func TestAnk(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "")
+	var testEnvSetupFunc = func(t *testing.T, env *vm.Env) {
+		Import(env)
+		packages.DefineImport(env)
+	}
+	tests := []vm.Test{
+		{Script: `load('testdata/testing.ank'); load('testdata/let.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/toString.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/op.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/func.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/len.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/for.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/switch.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/if.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/toBytes.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/toRunes.ank')`},
+		{Script: `load('testdata/testing.ank'); load('testdata/chan.ank')`},
+	}
+	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testEnvSetupFunc})
 }
 
 func TestDefined(t *testing.T) {
