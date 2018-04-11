@@ -16,7 +16,7 @@ before_install:
 
 script:
   - go build
-  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.(1[0-9]|[8-9])\.[0-9]$ ]]; then goverage -v -coverprofile=coverage.txt -covermode=atomic ./ast/astutil ./vm ./core ./packages; else go test -v github.com/mattn/anko/vm github.com/mattn/anko/core github.com/mattn/anko/packages github.com/mattn/anko/ast/astutil; fi
+  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.(1[0-9]|[8-9])\.[0-9]$ ]]; then goverage -v -coverprofile=coverage.txt -covermode=count . ./ast/astutil ./vm ./core ./packages; else go test -v -coverprofile=coverage.txt -covermode=count github.com/mattn/anko github.com/mattn/anko/ast/astutil github.com/mattn/anko/core github.com/mattn/anko/packages github.com/mattn/anko/vm; fi
   - ./t/test.sh
   - ./anko ./_example/scripts/term.ank
 

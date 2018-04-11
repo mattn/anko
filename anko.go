@@ -21,53 +21,62 @@ import (
 const version = "0.0.3"
 
 var (
-	flagExecute *string
+	flagExecute string
+	file        string
+	args        []string
 	env         *vm.Env
 )
 
 func main() {
+	var exitCode int
+
 	parseFlags()
 	setupEnv()
-	runNonInteractive()
-	runInteractive()
+	if flagExecute != "" || flag.NArg() > 0 {
+		exitCode = runNonInteractive()
+	} else {
+		exitCode = runInteractive()
+	}
+
+	os.Exit(exitCode)
 }
 
 func parseFlags() {
 	flagVersion := flag.Bool("v", false, "prints out the version and then exits")
-	flagExecute = flag.String("e", "", "execute the Anko code")
+	flag.StringVar(&flagExecute, "e", "", "execute the Anko code")
 	flag.Parse()
 
 	if *flagVersion {
 		fmt.Println(version)
 		os.Exit(0)
 	}
+
+	if flagExecute != "" || flag.NArg() < 1 {
+		args = flag.Args()
+		return
+	}
+
+	file = flag.Arg(0)
+	args = flag.Args()[1:]
 }
 
 func setupEnv() {
 	env = vm.NewEnv()
-	if len(*flagExecute) > 0 || flag.NArg() < 1 {
-		env.Define("args", flag.Args())
-	} else {
-		env.Define("args", flag.Args()[1:])
-	}
+	env.Define("args", args)
 	core.Import(env)
 	AddPackageColortext()
 	packages.DefineImport(env)
 }
 
-func runNonInteractive() {
-	if len(*flagExecute) < 1 && flag.NArg() < 1 {
-		return
-	}
-
+func runNonInteractive() int {
 	var source string
-	if len(*flagExecute) > 1 {
-		source = *flagExecute
+	if flagExecute != "" {
+		source = flagExecute
 	} else {
-		sourceBytes, err := ioutil.ReadFile(flag.Arg(0))
+		sourceBytes, err := ioutil.ReadFile(file)
 		if err != nil {
 			fmt.Println("ReadFile error:", err)
-			os.Exit(2)
+			return 2
 		}
 		source = string(sourceBytes)
 	}
@@ -75,13 +84,13 @@ func runNonInteractive() {
 	_, err := env.Execute(source)
 	if err != nil {
 		fmt.Println("Execute error:", err)
-		os.Exit(4)
+		return 4
 	}
 
-	os.Exit(0)
+	return 0
 }
 
-func runInteractive() {
+func runInteractive() int {
 	var reader *bufio.Reader
 	var source string
 	var b []byte
@@ -179,4 +188,6 @@ func runInteractive() {
 			}
 		}
 	}
+
+	return 0
 }
