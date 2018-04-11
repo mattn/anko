@@ -1,0 +1,19 @@
+
+var runtime = import("runtime")
+var regexp = import("regexp")
+
+func is(expect, got, name) {
+  if expect != got {
+	panic("is - received: " + toString(got) + " - expected: " + toString(expect) + " - for: " +  toString(name))
+  }
+}
+
+func ok(expect, name) {
+  if !expect {
+	panic("ok - received: " + toString(expect) + " - for: " +  toString(name))
+  }
+}
+
+func go18later() {
+  return regexp.MustCompile("^go1\\.(1[0-9]|[8-9])\\.[0-9]$").MatchString(runtime.Version())
+}

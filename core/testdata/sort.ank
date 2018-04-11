@@ -1,0 +1,32 @@
+sort = import("sort")
+
+a = make([]int)
+b = make([]int)
+a += [1, 2, 3]
+b += [3, 1, 2]
+sort.Ints(b)
+is(a, b, "sort.Ints")
+
+a = make([]float64)
+b = make([]float64)
+a += [1.1, 2.2, 3.3]
+b += [3.3, 1.1, 2.2]
+sort.Float64s(b)
+is(a, b, "sort.Float64s")
+
+a = make([]string)
+b = make([]string)
+a += ["a", "b", "c", "d"]
+b += ["b", "d", "a", "c"]
+sort.Strings(b)
+is(a, b, "sort.Strings")
+
+if go18later() {
+  a = [1, 3, 2]
+  sort.Slice(a, func(i, j) {
+    return a[i] < a[j]
+  })
+  is([1,2,3], a, "sort.Slice")
+}
+
+nil
