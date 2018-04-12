@@ -3,9 +3,12 @@
 package main
 
 import (
+	"os"
+
 	"github.com/mattn/anko/packages"
 
 	"github.com/daviddengcn/go-colortext"
+	"github.com/mattn/go-isatty"
 )
 
 var ntoc = map[string]ct.Color{
@@ -18,6 +21,18 @@ var ntoc = map[string]ct.Color{
 	"mazenta": ct.Magenta,
 	"cyan":    ct.Cyan,
 	"white":   ct.White,
+}
+
+var istty = isatty.IsTerminal(os.Stdout.Fd())
+
+func colortext(color ct.Color, bright bool, f func()) {
+	if istty {
+		ct.ChangeColor(color, bright, ct.None, false)
+		f()
+		ct.ResetColor()
+	} else {
+		f()
+	}
 }
 
 func colorOf(name string) ct.Color {

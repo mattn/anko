@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mattn/anko/core"
@@ -17,75 +16,90 @@ import (
 	"github.com/mattn/anko/vm"
 
 	"github.com/daviddengcn/go-colortext"
-	"github.com/mattn/go-isatty"
 )
 
-const version = "0.0.2"
+const version = "0.0.3"
 
 var (
-	fs   = flag.NewFlagSet(os.Args[0], 1)
-	line = fs.String("e", "", "One line of program")
-	v    = fs.Bool("v", false, "Display version")
-
-	istty = isatty.IsTerminal(os.Stdout.Fd())
+	flagExecute string
+	file        string
+	args        []string
+	env         *vm.Env
 )
 
-func colortext(color ct.Color, bright bool, f func()) {
-	if istty {
-		ct.ChangeColor(color, bright, ct.None, false)
-		f()
-		ct.ResetColor()
+func main() {
+	var exitCode int
+
+	parseFlags()
+	setupEnv()
+	if flagExecute != "" || flag.NArg() > 0 {
+		exitCode = runNonInteractive()
 	} else {
-		f()
+		exitCode = runInteractive()
 	}
+
+	os.Exit(exitCode)
 }
 
-func main() {
-	fs.Parse(os.Args[1:])
-	if *v {
+func parseFlags() {
+	flagVersion := flag.Bool("v", false, "prints out the version and then exits")
+	flag.StringVar(&flagExecute, "e", "", "execute the Anko code")
+	flag.Parse()
+
+	if *flagVersion {
 		fmt.Println(version)
 		os.Exit(0)
 	}
 
-	var (
-		code      string
-		b         []byte
-		reader    *bufio.Reader
-		following bool
-		source    string
-	)
-
-	env := vm.NewEnv()
-	interactive := fs.NArg() == 0 && *line == ""
-
-	env.Define("args", fs.Args())
-
-	if interactive {
-		reader = bufio.NewReader(os.Stdin)
-		source = "typein"
-		os.Args = append([]string{os.Args[0]}, fs.Args()...)
-	} else {
-		if *line != "" {
-			b = []byte(*line)
-			source = "argument"
-		} else {
-			var err error
-			b, err = ioutil.ReadFile(fs.Arg(0))
-			if err != nil {
-				colortext(ct.Red, false, func() {
-					fmt.Fprintln(os.Stderr, err)
-				})
-				os.Exit(1)
-			}
-			env.Define("args", fs.Args()[1:])
-			source = filepath.Clean(fs.Arg(0))
-		}
-		os.Args = fs.Args()
+	if flagExecute != "" || flag.NArg() < 1 {
+		args = flag.Args()
+		return
 	}
 
+	file = flag.Arg(0)
+	args = flag.Args()[1:]
+}
+
+func setupEnv() {
+	env = vm.NewEnv()
+	env.Define("args", args)
 	core.Import(env)
 	AddPackageColortext()
 	packages.DefineImport(env)
+}
+
+func runNonInteractive() int {
+	var source string
+	if flagExecute != "" {
+		source = flagExecute
+	} else {
+		sourceBytes, err := ioutil.ReadFile(file)
+		if err != nil {
+			fmt.Println("ReadFile error:", err)
+			return 2
+		}
+		source = string(sourceBytes)
+	}
+
+	_, err := env.Execute(source)
+	if err != nil {
+		fmt.Println("Execute error:", err)
+		return 4
+	}
+
+	return 0
+}
+
+func runInteractive() int {
+	var reader *bufio.Reader
+	var source string
+	var b []byte
+	var code string
+	var following bool
+
+	interactive := true
+	reader = bufio.NewReader(os.Stdin)
+	source = "typein"
 
 	for {
 		if interactive {
@@ -174,4 +188,6 @@ func main() {
 			}
 		}
 	}
+
+	return 0
 }
