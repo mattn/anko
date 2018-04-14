@@ -158,6 +158,10 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { if i ==  "y" { break }; b++ }; if b > 1 { return false } else { return true }`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
 		{Script: `a = {"x": 2, "y": 3}; b = 1; for i in a { if (i ==  "x" || i ==  "y") { break }; b++ }; b`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": int64(1)}},
 
+		{Script: `a = ["123", "456", "789"]; b = ""; for v in a { b += v[len(v) - 2:]; b += v[:len(v) - 2] }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{"123", "456", "789"}, "b": "231564897"}},
+		{Script: `a = [[["123"], ["456"]], [["789"]]]; b = ""; for x in a { for y in x  {  for z in y { for i = 0; i < len(z); i++ { b += z[i] + "-" } } } }`,
+			RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{[]interface{}{[]interface{}{"123"}, []interface{}{"456"}}, []interface{}{[]interface{}{"789"}}}, "b": "1-2-3-4-5-6-7-8-9-"}},
+
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = k }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = v }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": int64(2)}},
 	}
