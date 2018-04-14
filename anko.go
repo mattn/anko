@@ -91,69 +91,62 @@ func runNonInteractive() int {
 }
 
 func runInteractive() int {
-	var reader *bufio.Reader
 	var source string
 	var b []byte
-	var code string
 	var following bool
+	reader := bufio.NewReader(os.Stdin)
 
-	interactive := true
-	reader = bufio.NewReader(os.Stdin)
-	source = "typein"
+	parser.EnableErrorVerbose()
 
 	for {
-		if interactive {
-			colortext(ct.Green, true, func() {
-				if following {
-					fmt.Print("  ")
-				} else {
-					fmt.Print("> ")
-				}
-			})
-			var err error
-			b, _, err = reader.ReadLine()
-			if err != nil {
-				break
+		colortext(ct.Green, true, func() {
+			if following {
+				fmt.Print("  ")
+			} else {
+				fmt.Print("> ")
 			}
-			if len(b) == 0 {
-				continue
-			}
-			if code != "" {
-				code += "\n"
-			}
-			code += string(b)
-		} else {
-			code = string(b)
+		})
+		var err error
+		b, _, err = reader.ReadLine()
+		if err != nil {
+			break
+		}
+		if len(b) == 0 {
+			continue
+		}
+		if source != "" {
+			source += "\n"
+		}
+		source += string(b)
+
+		if source == "quit()" {
+			return 0
 		}
 
-		parser.EnableErrorVerbose()
+		stmts, err := parser.ParseSrc(source)
 
-		stmts, err := parser.ParseSrc(code)
-
-		if interactive {
-			if e, ok := err.(*parser.Error); ok {
-				es := e.Error()
-				if strings.HasPrefix(es, "syntax error: unexpected") {
-					if strings.HasPrefix(es, "syntax error: unexpected $end,") {
-						following = true
-						continue
-					}
-				} else {
-					if e.Pos.Column == len(b) && !e.Fatal {
-						println(e.Error())
-						following = true
-						continue
-					}
-					if e.Error() == "unexpected EOF" {
-						following = true
-						continue
-					}
+		if e, ok := err.(*parser.Error); ok {
+			es := e.Error()
+			if strings.HasPrefix(es, "syntax error: unexpected") {
+				if strings.HasPrefix(es, "syntax error: unexpected $end,") {
+					following = true
+					continue
+				}
+			} else {
+				if e.Pos.Column == len(b) && !e.Fatal {
+					fmt.Fprintln(os.Stderr, e)
+					following = true
+					continue
+				}
+				if e.Error() == "unexpected EOF" {
+					following = true
+					continue
 				}
 			}
 		}
 
 		following = false
-		code = ""
+		source = ""
 		var v interface{}
 
 		if err == nil {
@@ -162,30 +155,19 @@ func runInteractive() int {
 		if err != nil {
 			colortext(ct.Red, false, func() {
 				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "%s:%d:%d %s\n", source, e.Pos.Line, e.Pos.Column, err)
+					fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
 				} else if e, ok := err.(*parser.Error); ok {
-					if e.Filename != "" {
-						source = e.Filename
-					}
-					fmt.Fprintf(os.Stderr, "%s:%d:%d %s\n", source, e.Pos.Line, e.Pos.Column, err)
+					fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
 				} else {
 					fmt.Fprintln(os.Stderr, err)
 				}
 			})
 
-			if interactive {
-				continue
-			} else {
-				os.Exit(1)
-			}
+			continue
 		} else {
-			if interactive {
-				colortext(ct.Black, true, func() {
-					fmt.Printf("%#v\n", v)
-				})
-			} else {
-				break
-			}
+			colortext(ct.Black, true, func() {
+				fmt.Printf("%#v\n", v)
+			})
 		}
 	}
 
