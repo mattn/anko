@@ -90,6 +90,7 @@ func runNonInteractive() int {
 
 func runInteractive() int {
 	var following bool
+	var source string
 	reader := bufio.NewReader(os.Stdin)
 
 	parser.EnableErrorVerbose()
@@ -101,7 +102,7 @@ func runInteractive() int {
 			fmt.Print("> ")
 		}
 
-		source, err := reader.ReadString('\n')
+		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -109,6 +110,7 @@ func runInteractive() int {
 			fmt.Fprintln(os.Stderr, "ReadString error:", err)
 			return 12
 		}
+		source += line
 		if source == "\n" || source == "\r\n" {
 			continue
 		}
@@ -139,6 +141,7 @@ func runInteractive() int {
 		}
 
 		following = false
+		source = ""
 		var v interface{}
 
 		if err == nil {
