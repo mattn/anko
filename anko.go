@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -14,8 +15,6 @@ import (
 	"github.com/mattn/anko/packages"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
-
-	"github.com/daviddengcn/go-colortext"
 )
 
 const version = "0.0.3"
@@ -64,7 +63,6 @@ func setupEnv() {
 	env = vm.NewEnv()
 	env.Define("args", args)
 	core.Import(env)
-	AddPackageColortext()
 	packages.DefineImport(env)
 }
 
@@ -91,36 +89,31 @@ func runNonInteractive() int {
 }
 
 func runInteractive() int {
-	var source string
-	var b []byte
 	var following bool
 	reader := bufio.NewReader(os.Stdin)
 
 	parser.EnableErrorVerbose()
 
 	for {
-		colortext(ct.Green, true, func() {
-			if following {
-				fmt.Print("  ")
-			} else {
-				fmt.Print("> ")
-			}
-		})
-		var err error
-		b, _, err = reader.ReadLine()
-		if err != nil {
-			break
+		if following {
+			fmt.Print("  ")
+		} else {
+			fmt.Print("> ")
 		}
-		if len(b) == 0 {
+
+		source, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Fprintln(os.Stderr, "ReadString error:", err)
+			return 12
+		}
+		if source == "\n" || source == "\r\n" {
 			continue
 		}
-		if source != "" {
-			source += "\n"
-		}
-		source += string(b)
-
-		if source == "quit()" {
-			return 0
+		if source == "quit()\n" || source == "quit()\r\n" {
+			break
 		}
 
 		stmts, err := parser.ParseSrc(source)
@@ -133,7 +126,7 @@ func runInteractive() int {
 					continue
 				}
 			} else {
-				if e.Pos.Column == len(b) && !e.Fatal {
+				if e.Pos.Column == len(source) && !e.Fatal {
 					fmt.Fprintln(os.Stderr, e)
 					following = true
 					continue
@@ -146,29 +139,23 @@ func runInteractive() int {
 		}
 
 		following = false
-		source = ""
 		var v interface{}
 
 		if err == nil {
 			v, err = vm.Run(stmts, env)
 		}
 		if err != nil {
-			colortext(ct.Red, false, func() {
-				if e, ok := err.(*vm.Error); ok {
-					fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
-				} else if e, ok := err.(*parser.Error); ok {
-					fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
-				} else {
-					fmt.Fprintln(os.Stderr, err)
-				}
-			})
-
+			if e, ok := err.(*vm.Error); ok {
+				fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
+			} else if e, ok := err.(*parser.Error); ok {
+				fmt.Fprintf(os.Stderr, "%d:%d %s\n", e.Pos.Line, e.Pos.Column, err)
+			} else {
+				fmt.Fprintln(os.Stderr, err)
+			}
 			continue
-		} else {
-			colortext(ct.Black, true, func() {
-				fmt.Printf("%#v\n", v)
-			})
 		}
+
+		fmt.Printf("%#v\n", v)
 	}
 
 	return 0
