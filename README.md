@@ -9,7 +9,7 @@ Anko is a scriptable interpreter written in Go.
 
 ![](https://raw.githubusercontent.com/mattn/anko/master/anko.png)
 
-(Picture licensed under CC BY-SA 3.0 by wikipedia)
+(Picture licensed under CC BY-SA 3.0, photo by Ocdp)
 
 ## Installation
 Requires Go.
