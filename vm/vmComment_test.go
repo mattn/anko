@@ -7,116 +7,116 @@ import (
 
 func TestComment(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testStruct{
-		{script: `# 1`},
-		{script: `# 1;`},
-		{script: `# 1 // 2`},
-		{script: `# 1 \n 2`},
-		{script: `# 1 # 2`},
+	tests := []Test{
+		{Script: `# 1`},
+		{Script: `# 1;`},
+		{Script: `# 1 // 2`},
+		{Script: `# 1 \n 2`},
+		{Script: `# 1 # 2`},
 
-		{script: `1# 1`, runOutput: int64(1)},
-		{script: `1# 1;`, runOutput: int64(1)},
-		{script: `1# 1 // 2`, runOutput: int64(1)},
-		{script: `1# 1 \n 2`, runOutput: int64(1)},
-		{script: `1# 1 # 2`, runOutput: int64(1)},
+		{Script: `1# 1`, RunOutput: int64(1)},
+		{Script: `1# 1;`, RunOutput: int64(1)},
+		{Script: `1# 1 // 2`, RunOutput: int64(1)},
+		{Script: `1# 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1# 1 # 2`, RunOutput: int64(1)},
 
-		{script: `1
-# 1`, runOutput: int64(1)},
-		{script: `1
-# 1;`, runOutput: int64(1)},
-		{script: `1
-# 1 // 2`, runOutput: int64(1)},
-		{script: `1
-# 1 \n 2`, runOutput: int64(1)},
-		{script: `1
-# 1 # 2`, runOutput: int64(1)},
+		{Script: `1
+# 1`, RunOutput: int64(1)},
+		{Script: `1
+# 1;`, RunOutput: int64(1)},
+		{Script: `1
+# 1 // 2`, RunOutput: int64(1)},
+		{Script: `1
+# 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1
+# 1 # 2`, RunOutput: int64(1)},
 
-		{script: `// 1`},
-		{script: `// 1;`},
-		{script: `// 1 // 2`},
-		{script: `// 1 \n 2`},
-		{script: `// 1 # 2`},
+		{Script: `// 1`},
+		{Script: `// 1;`},
+		{Script: `// 1 // 2`},
+		{Script: `// 1 \n 2`},
+		{Script: `// 1 # 2`},
 
-		{script: `1// 1`, runOutput: int64(1)},
-		{script: `1// 1;`, runOutput: int64(1)},
-		{script: `1// 1 // 2`, runOutput: int64(1)},
-		{script: `1// 1 \n 2`, runOutput: int64(1)},
-		{script: `1// 1 # 2`, runOutput: int64(1)},
+		{Script: `1// 1`, RunOutput: int64(1)},
+		{Script: `1// 1;`, RunOutput: int64(1)},
+		{Script: `1// 1 // 2`, RunOutput: int64(1)},
+		{Script: `1// 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1// 1 # 2`, RunOutput: int64(1)},
 
-		{script: `1
-// 1`, runOutput: int64(1)},
-		{script: `1
-// 1;`, runOutput: int64(1)},
-		{script: `1
-// 1 // 2`, runOutput: int64(1)},
-		{script: `1
-// 1 \n 2`, runOutput: int64(1)},
-		{script: `1
-// 1 # 2`, runOutput: int64(1)},
+		{Script: `1
+// 1`, RunOutput: int64(1)},
+		{Script: `1
+// 1;`, RunOutput: int64(1)},
+		{Script: `1
+// 1 // 2`, RunOutput: int64(1)},
+		{Script: `1
+// 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1
+// 1 # 2`, RunOutput: int64(1)},
 
-		{script: `/* 1 */`},
-		{script: `/* * 1 */`},
-		{script: `/* 1 * */`},
-		{script: `/** 1 */`},
-		{script: `/*** 1 */`},
-		{script: `/**** 1 */`},
-		{script: `/* 1 **/`},
-		{script: `/* 1 ***/`},
-		{script: `/* 1 ****/`},
-		{script: `/** 1 ****/`},
-		{script: `/*** 1 ****/`},
-		{script: `/**** 1 ****/`},
+		{Script: `/* 1 */`},
+		{Script: `/* * 1 */`},
+		{Script: `/* 1 * */`},
+		{Script: `/** 1 */`},
+		{Script: `/*** 1 */`},
+		{Script: `/**** 1 */`},
+		{Script: `/* 1 **/`},
+		{Script: `/* 1 ***/`},
+		{Script: `/* 1 ****/`},
+		{Script: `/** 1 ****/`},
+		{Script: `/*** 1 ****/`},
+		{Script: `/**** 1 ****/`},
 
-		{script: `1/* 1 */`, runOutput: int64(1)},
-		{script: `1/* * 1 */`, runOutput: int64(1)},
-		{script: `1/* 1 * */`, runOutput: int64(1)},
-		{script: `1/** 1 */`, runOutput: int64(1)},
-		{script: `1/*** 1 */`, runOutput: int64(1)},
-		{script: `1/**** 1 */`, runOutput: int64(1)},
-		{script: `1/* 1 **/`, runOutput: int64(1)},
-		{script: `1/* 1 ***/`, runOutput: int64(1)},
-		{script: `1/* 1 ****/`, runOutput: int64(1)},
-		{script: `1/** 1 ****/`, runOutput: int64(1)},
-		{script: `1/*** 1 ****/`, runOutput: int64(1)},
-		{script: `1/**** 1 ****/`, runOutput: int64(1)},
+		{Script: `1/* 1 */`, RunOutput: int64(1)},
+		{Script: `1/* * 1 */`, RunOutput: int64(1)},
+		{Script: `1/* 1 * */`, RunOutput: int64(1)},
+		{Script: `1/** 1 */`, RunOutput: int64(1)},
+		{Script: `1/*** 1 */`, RunOutput: int64(1)},
+		{Script: `1/**** 1 */`, RunOutput: int64(1)},
+		{Script: `1/* 1 **/`, RunOutput: int64(1)},
+		{Script: `1/* 1 ***/`, RunOutput: int64(1)},
+		{Script: `1/* 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/*** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/**** 1 ****/`, RunOutput: int64(1)},
 
-		{script: `/* 1 */1`, runOutput: int64(1)},
-		{script: `/* * 1 */1`, runOutput: int64(1)},
-		{script: `/* 1 * */1`, runOutput: int64(1)},
-		{script: `/** 1 */1`, runOutput: int64(1)},
-		{script: `/*** 1 */1`, runOutput: int64(1)},
-		{script: `/**** 1 */1`, runOutput: int64(1)},
-		{script: `/* 1 **/1`, runOutput: int64(1)},
-		{script: `/* 1 ***/1`, runOutput: int64(1)},
-		{script: `/* 1 ****/1`, runOutput: int64(1)},
-		{script: `/** 1 ****/1`, runOutput: int64(1)},
-		{script: `/*** 1 ****/1`, runOutput: int64(1)},
-		{script: `/**** 1 ****/1`, runOutput: int64(1)},
+		{Script: `/* 1 */1`, RunOutput: int64(1)},
+		{Script: `/* * 1 */1`, RunOutput: int64(1)},
+		{Script: `/* 1 * */1`, RunOutput: int64(1)},
+		{Script: `/** 1 */1`, RunOutput: int64(1)},
+		{Script: `/*** 1 */1`, RunOutput: int64(1)},
+		{Script: `/**** 1 */1`, RunOutput: int64(1)},
+		{Script: `/* 1 **/1`, RunOutput: int64(1)},
+		{Script: `/* 1 ***/1`, RunOutput: int64(1)},
+		{Script: `/* 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/** 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/*** 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/**** 1 ****/1`, RunOutput: int64(1)},
 
-		{script: `1
-/* 1 */`, runOutput: int64(1)},
-		{script: `1
-/* * 1 */`, runOutput: int64(1)},
-		{script: `1
-/* 1 * */`, runOutput: int64(1)},
-		{script: `1
-/** 1 */`, runOutput: int64(1)},
-		{script: `1
-/*** 1 */`, runOutput: int64(1)},
-		{script: `1
-/**** 1 */`, runOutput: int64(1)},
-		{script: `1
-/* 1 **/`, runOutput: int64(1)},
-		{script: `1
-/* 1 ***/`, runOutput: int64(1)},
-		{script: `1
-/* 1 ****/`, runOutput: int64(1)},
-		{script: `1
-/** 1 ****/`, runOutput: int64(1)},
-		{script: `1
-/*** 1 ****/`, runOutput: int64(1)},
-		{script: `1
-/**** 1 ****/`, runOutput: int64(1)},
+		{Script: `1
+/* 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* * 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 * */`, RunOutput: int64(1)},
+		{Script: `1
+/** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/*** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/**** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 **/`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 ***/`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/*** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/**** 1 ****/`, RunOutput: int64(1)},
 	}
-	runTests(t, tests)
+	RunTests(t, tests, nil)
 }
