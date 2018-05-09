@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/mattn/anko/parser"
@@ -108,30 +107,4 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 
 	env.Destroy()
-}
-
-// ValueEqual checks the values and returns true if equal
-// If passed function, does extra checks otherwise just doing reflect.DeepEqual
-func ValueEqual(v1 interface{}, v2 interface{}) bool {
-	v1RV := reflect.ValueOf(v1)
-	switch v1RV.Kind() {
-	case reflect.Func:
-		// This is best effort to check if functions match, but it could be wrong
-		v2RV := reflect.ValueOf(v2)
-		if !v1RV.IsValid() || !v2RV.IsValid() {
-			if v1RV.IsValid() != !v2RV.IsValid() {
-				return false
-			}
-			return true
-		} else if v1RV.Kind() != v2RV.Kind() {
-			return false
-		} else if v1RV.Type() != v2RV.Type() {
-			return false
-		} else if v1RV.Pointer() != v2RV.Pointer() {
-			// From reflect: If v's Kind is Func, the returned pointer is an underlying code pointer, but not necessarily enough to identify a single function uniquely.
-			return false
-		}
-		return true
-	}
-	return reflect.DeepEqual(v1, v2)
 }
