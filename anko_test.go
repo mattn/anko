@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -24,23 +25,23 @@ func TestMain(m *testing.M) {
 
 func TestRunNonInteractiveFile(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	testDir := filepath.Dir(filename) + "/core/testdata/"
+	testDir := filepath.Join(filepath.Dir(filename), "core", "testdata")
 	setupEnv()
 
-	file = testDir + "not-found.ank"
+	file = filepath.Join(testDir, "not-found.ank")
 	exitCode := runNonInteractive()
 	if exitCode != 2 {
 		t.Fatalf("exitCode - received: %v - expected: %v", exitCode, 2)
 	}
 
-	file = testDir + "broken.ank"
+	file = filepath.Join(testDir, "broken.ank")
 	exitCode = runNonInteractive()
 	os.Args = []string{os.Args[0]}
 	if exitCode != 4 {
 		t.Fatalf("exitCode - received: %v - expected: %v", exitCode, 4)
 	}
 
-	file = testDir + "test.ank"
+	file = filepath.Join(testDir, "test.ank")
 	exitCode = runNonInteractive()
 	os.Args = []string{os.Args[0]}
 	if exitCode != 0 {
@@ -90,7 +91,14 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 	// Note: logger is used for debugging since real stdout cannot be used
 	logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.LUTC|log.Llongfile)
 	gopath := os.Getenv("GOPATH")
-	filehandle, err := os.OpenFile(gopath+"/bin/anko_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if gopath == "" {
+		b, err := exec.Command("go", "env", "GOPATH").CombinedOutput()
+		if err != nil {
+			t.Fatal(err)
+		}
+		gopath = strings.TrimSpace(string(b))
+	}
+	filehandle, err := os.OpenFile(filepath.Join(gopath, "bin", "anko_test.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		t.Fatal("OpenFile error:", err)
 	}
