@@ -212,7 +212,7 @@ func TestModule(t *testing.T) {
 func TestNew(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []Test{
-		{Script: `new(foo)`, RunError: fmt.Errorf("Undefined type 'foo'")},
+		{Script: `new(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for new")},
 
 		{Script: `a = new(bool); *a`, RunOutput: false},
@@ -228,7 +228,7 @@ func TestNew(t *testing.T) {
 func TestMake(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []Test{
-		{Script: `make(foo)`, RunError: fmt.Errorf("Undefined type 'foo'")},
+		{Script: `make(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"a": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"b": true}, RunError: fmt.Errorf("no namespace called: a")},
 
@@ -339,7 +339,7 @@ func TestReferencingAndDereference(t *testing.T) {
 func TestMakeChan(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []Test{
-		{Script: `make(chan foobar, 2)`, RunError: fmt.Errorf("Undefined type 'foobar'")},
+		{Script: `make(chan foobar, 2)`, RunError: fmt.Errorf("undefined type 'foobar'")},
 		{Script: `make(chan nilT, 2)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make chan")},
 		{Script: `make(chan bool, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
