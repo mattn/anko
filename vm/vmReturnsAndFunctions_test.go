@@ -7,11 +7,13 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestReturns(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `return 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `return 1, 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `return 1, 2, 1++`, RunError: fmt.Errorf("invalid operation")},
@@ -159,12 +161,12 @@ func TestReturns(t *testing.T) {
 		{Script: `func aFunc() {return 1.1, 2.2}; a, b = aFunc()`, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
 		{Script: `func aFunc() {return "a", "b"}; a, b = aFunc()`, RunOutput: "b", Output: map[string]interface{}{"a": "a", "b": "b"}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("cannot call type reflect.Value")},
 		{Script: `a = nil; a()`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": nil}},
 		{Script: `a = true; a()`, RunError: fmt.Errorf("cannot call type bool"), Output: map[string]interface{}{"a": true}},
@@ -366,7 +368,7 @@ func TestFunctions(t *testing.T) {
 		// {Script: `a = make(Buffer); n, err = a.WriteString("b")`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: []interface{}{1, nil}},
 		// {Script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "b"},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestPointerFunctions(t *testing.T) {
@@ -398,15 +400,15 @@ func TestPointerFunctions(t *testing.T) {
 		rv.Elem().Set(slice)
 		return "good"
 	}
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `b = 1; a(&b)`, Input: map[string]interface{}{"a": testFunctionPointer}, RunOutput: "good", Output: map[string]interface{}{"b": []interface{}{"b"}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVariadicFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		// params Variadic arg !Variadic
 		{Script: `func a(b...) { return b }; a()`, RunOutput: []interface{}{}},
 		{Script: `func a(b...) { return b }; a(true)`, RunOutput: []interface{}{true}},
@@ -463,12 +465,12 @@ func TestVariadicFunctions(t *testing.T) {
 		{Script: `func a(b, c) { return c }; a(1, [true, 2]...)`, RunOutput: true},
 		{Script: `func a(b, c) { return c }; a([1, true, 2]...)`, RunOutput: true},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctionsInArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a = [func () { return nil }]; a[0]()`, RunOutput: nil},
 		{Script: `a = [func () { return true }]; a[0]()`, RunOutput: true},
 		{Script: `a = [func () { return 1 }]; a[0]()`, RunOutput: int64(1)},
@@ -505,12 +507,12 @@ func TestFunctionsInArraysAndMaps(t *testing.T) {
 		{Script: `a = {"b": func () { return 1.1 }}; func c(d) { return d() }; c(a.b)`, RunOutput: float64(1.1)},
 		{Script: `a = {"b": func () { return "a" }}; func c(d) { return d() }; c(a.b)`, RunOutput: "a"},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctionConvertions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "0")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `b = func(c){ return c }; a("x", b)`, Input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, RunOutput: "x"},
 		{Script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, Types: map[string]interface{}{"struct": &struct {
 			A func(int, int) bool
@@ -521,7 +523,7 @@ func TestFunctionConvertions(t *testing.T) {
 		// {Script: `b = 1; c = &b; a(c); *c`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
 		// TODO: add more tests
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVariadicFunctionConvertions(t *testing.T) {
@@ -533,7 +535,7 @@ func TestVariadicFunctionConvertions(t *testing.T) {
 		}
 		return total
 	}
-	tests := []Test{
+	tests := []testlib.Test{
 		// params Variadic arg !Variadic
 		{Script: `a(true)`, Input: map[string]interface{}{"a": func(b ...interface{}) []interface{} { return b }}, RunOutput: []interface{}{true}},
 
@@ -544,5 +546,5 @@ func TestVariadicFunctionConvertions(t *testing.T) {
 
 		// TODO: add more tests
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

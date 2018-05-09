@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestItemInList(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `"a" in ["a"]`, RunOutput: true},
 		{Script: `"a" in ["b"]`, RunOutput: false},
 		{Script: `"a" in ["c", "b", "a"]`, RunOutput: true},
@@ -139,5 +141,5 @@ func TestItemInList(t *testing.T) {
 		{Script: `[[1]] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
 		{Script: `[[1]] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: true},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

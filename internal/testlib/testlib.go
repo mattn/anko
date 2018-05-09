@@ -1,18 +1,17 @@
-package vm
+package testlib
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/parser"
 )
 
-// Test is a struct use for testing VM
 type Test struct {
 	Script         string
 	ParseError     error
 	ParseErrorFunc *func(*testing.T, error)
-	EnvSetupFunc   *func(*testing.T, *Env)
+	EnvSetupFunc   *func(*testing.T, corelib.Env)
 	Types          map[string]interface{}
 	Input          map[string]interface{}
 	RunError       error
@@ -21,20 +20,18 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
-// TestingOptions are options to pass to RunTests or RunTest
-type TestingOptions struct {
-	EnvSetupFunc *func(*testing.T, *Env)
+type Options struct {
+	EnvSetupFunc *func(*testing.T, corelib.Env)
 }
 
-// RunTests runs VM tests
-func RunTests(t *testing.T, tests []Test, testingOptions *TestingOptions) {
+// Run runs VM tests
+func Run(t *testing.T, tests []Test, testingOptions *Options) {
 	for _, test := range tests {
-		RunTest(t, test, testingOptions)
+		run(t, test, testingOptions)
 	}
 }
 
-// RunTest runs a VM test
-func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
+func run(t *testing.T, test Test, testingOptions *Options) {
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)
@@ -49,7 +46,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 	// Note: Still want to run the code even after a parse error to see what happens
 
-	env := NewEnv()
+	env := corelib.NewEnv()
 	if testingOptions != nil && testingOptions.EnvSetupFunc != nil {
 		(*testingOptions.EnvSetupFunc)(t, env)
 	}
@@ -74,7 +71,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 
 	var value interface{}
-	value, err = Run(stmts, env)
+	value, err = env.Run(stmts)
 	if test.RunErrorFunc != nil {
 		(*test.RunErrorFunc)(t, err)
 	} else if err != nil && test.RunError != nil {
@@ -87,7 +84,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 		return
 	}
 
-	if !ValueEqual(value, test.RunOutput) {
+	if !corelib.ValueEqual(value, test.RunOutput) {
 		t.Errorf("Run output - received: %#v - expected: %#v - script: %v", value, test.RunOutput, test.Script)
 		t.Errorf("received type: %T - expected: %T", value, test.RunOutput)
 		return
@@ -100,7 +97,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 			return
 		}
 
-		if !ValueEqual(value, outputValue) {
+		if !corelib.ValueEqual(value, outputValue) {
 			t.Errorf("outputName %v - received: %#v - expected: %#v - script: %v", outputName, value, outputValue, test.Script)
 			t.Errorf("received type: %T - expected: %T", value, outputValue)
 			continue
@@ -108,30 +105,4 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 
 	env.Destroy()
-}
-
-// ValueEqual checks the values and returns true if equal
-// If passed function, does extra checks otherwise just doing reflect.DeepEqual
-func ValueEqual(v1 interface{}, v2 interface{}) bool {
-	v1RV := reflect.ValueOf(v1)
-	switch v1RV.Kind() {
-	case reflect.Func:
-		// This is best effort to check if functions match, but it could be wrong
-		v2RV := reflect.ValueOf(v2)
-		if !v1RV.IsValid() || !v2RV.IsValid() {
-			if v1RV.IsValid() != !v2RV.IsValid() {
-				return false
-			}
-			return true
-		} else if v1RV.Kind() != v2RV.Kind() {
-			return false
-		} else if v1RV.Type() != v2RV.Type() {
-			return false
-		} else if v1RV.Pointer() != v2RV.Pointer() {
-			// From reflect: If v's Kind is Func, the returned pointer is an underlying code pointer, but not necessarily enough to identify a single function uniquely.
-			return false
-		}
-		return true
-	}
-	return reflect.DeepEqual(v1, v2)
 }

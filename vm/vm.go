@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/parser"
 )
 
@@ -349,4 +350,10 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 		return structV, nil
 	}
 	return reflect.New(t).Elem(), nil
+}
+
+// ValueEqual checks the values and returns true if equal
+// If passed function, does extra checks otherwise just doing reflect.DeepEqual
+func ValueEqual(v1 interface{}, v2 interface{}) bool {
+	return corelib.ValueEqual(v1, v2)
 }

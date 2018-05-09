@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mattn/anko/internal/corelib"
+	"github.com/mattn/anko/internal/testlib"
 	"github.com/mattn/anko/parser"
 )
 
@@ -38,9 +40,15 @@ var (
 	testVarValueString  = reflect.ValueOf("a")
 )
 
+func init() {
+	corelib.NewEnv = func() corelib.Env {
+		return NewEnv()
+	}
+}
+
 func TestNumbers(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `1..1`, RunError: fmt.Errorf(`strconv.ParseFloat: parsing "1..1": invalid syntax`)},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, RunError: fmt.Errorf(`strconv.ParseInt: parsing "9223372036854775808": value out of range`)},
@@ -64,12 +72,12 @@ func TestNumbers(t *testing.T) {
 		{Script: `-0xc`, RunOutput: int64(-12)},
 		{Script: `-0xf`, RunOutput: int64(-15)},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestStrings(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a`, Input: map[string]interface{}{"a": 'a'}, RunOutput: 'a', Output: map[string]interface{}{"a": 'a'}},
 		{Script: `a.b`, Input: map[string]interface{}{"a": 'a'}, RunError: fmt.Errorf("type int32 does not support member operation"), Output: map[string]interface{}{"a": 'a'}},
 		{Script: `a[0]`, Input: map[string]interface{}{"a": 'a'}, RunError: fmt.Errorf("type int32 does not support index operation"), RunOutput: nil, Output: map[string]interface{}{"a": 'a'}},
@@ -163,7 +171,7 @@ func TestStrings(t *testing.T) {
 		{Script: `a[9:]`, Input: map[string]interface{}{"a": "test data"}, RunOutput: "", Output: map[string]interface{}{"a": "test data"}},
 		{Script: `a[10:]`, Input: map[string]interface{}{"a": "test data"}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": "test data"}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVar(t *testing.T) {
@@ -173,7 +181,7 @@ func TestVar(t *testing.T) {
 			t.Errorf("err: %s, not equal syntax error", err)
 		}
 	}
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a := 1`, ParseErrorFunc: &parseErrFunc},
 		{Script: `var a = 1++`, RunError: fmt.Errorf("invalid operation")},
 
@@ -190,12 +198,12 @@ func TestVar(t *testing.T) {
 		{Script: `var a = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestModule(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `module a.b { }`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `module a { 1++ }`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `module a { }; a.b`, RunError: fmt.Errorf("invalid operation 'b'")},
@@ -206,12 +214,12 @@ func TestModule(t *testing.T) {
 		{Script: `module a { b = 1.1 }; a.b`, RunOutput: float64(1.1)},
 		{Script: `module a { b = "a" }; a.b`, RunOutput: "a"},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestNew(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `new(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for new")},
 
@@ -222,12 +230,12 @@ func TestNew(t *testing.T) {
 		{Script: `a = new(float64); *a`, RunOutput: float64(0)},
 		{Script: `a = new(string); *a`, RunOutput: ""},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMake(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"a": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"b": true}, RunError: fmt.Errorf("no namespace called: a")},
@@ -241,12 +249,12 @@ func TestMake(t *testing.T) {
 		{Script: `make(float64)`, RunOutput: float64(0)},
 		{Script: `make(string)`, RunOutput: ""},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeType(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make(type a, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
 		{Script: `make(type a, true)`, RunOutput: reflect.TypeOf(true)},
@@ -255,12 +263,12 @@ func TestMakeType(t *testing.T) {
 		{Script: `make(type a, make([]bool))`, RunOutput: reflect.TypeOf([]bool{})},
 		{Script: `make(type a, make([]bool)); a = make(a)`, RunOutput: []bool{}, Output: map[string]interface{}{"a": []bool{}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestLen(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `len(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `len(true)`, RunError: fmt.Errorf("type bool does not support len operation")},
 
@@ -324,33 +332,33 @@ func TestLen(t *testing.T) {
 
 		{Script: `len(a[0][0])`, Input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, RunOutput: int64(4), Output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestReferencingAndDereference(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		// TOFIX:
 		// {Script: `a = 1; b = &a; *b = 2; *b`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeChan(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make(chan foobar, 2)`, RunError: fmt.Errorf("undefined type 'foobar'")},
 		{Script: `make(chan nilT, 2)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make chan")},
 		{Script: `make(chan bool, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
 		{Script: `a = make(chan bool); b = func (c) { c <- true }; go b(a); <- a`, RunOutput: true},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestChan(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a = make(chan bool, 2); 1++ <- 1`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = make(chan bool, 2); a <- 1++`, RunError: fmt.Errorf("invalid operation")},
 
@@ -389,12 +397,12 @@ func TestChan(t *testing.T) {
 		// TOFIX: if variable is not created yet, should make variable instead of error
 		// {Script: `a = make(chan bool, 2); a <- true; b <- a`, RunOutput: true, Output: map[string]interface{}{"b": true}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVMDelete(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `delete(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete("a", 1++)`, RunError: fmt.Errorf("invalid operation")},
 
@@ -409,7 +417,7 @@ func TestVMDelete(t *testing.T) {
 		{Script: `a = 1; func b() { delete("a", false) }; b()`, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; func b() { delete("a", true) }; b(); a`, RunError: fmt.Errorf("undefined symbol 'a'")},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestInterrupts(t *testing.T) {

@@ -4,12 +4,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mattn/anko/vm"
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestRegexp(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("simple")`, RunOutput: true},
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("no match")`, RunOutput: false},
 
@@ -30,5 +30,5 @@ func TestRegexp(t *testing.T) {
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "no match"}},
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile(a); re.MatchString(b)`, Input: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}, RunOutput: false, Output: map[string]interface{}{"a": "^a\\.\\d+\\.b$", "b": "a+1+b"}},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

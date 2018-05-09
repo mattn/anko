@@ -5,11 +5,13 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestForLoop(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `break`, RunError: fmt.Errorf("unexpected break statement")},
 		{Script: `continue`, RunError: fmt.Errorf("unexpected continue statement")},
 		{Script: `for 1++ { }`, RunError: fmt.Errorf("invalid operation")},
@@ -165,5 +167,5 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = k }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = v }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": int64(2)}},
 	}
-	RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
