@@ -453,7 +453,7 @@ func TestDefineType(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
 		{testInfo: "string", varName: "a", varDefineValue: "a"},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("undefined type 'a.a'")},
 	}
 
 	// DefineType
@@ -730,16 +730,16 @@ func TestDefineTypeFail(t *testing.T) {
 		defineError    error
 		typeError      error
 	}{
-		{testInfo: "nil", varName: "a", varDefineValue: nil, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "bool", varName: "a", varDefineValue: true, typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int16", varName: "a", varDefineValue: int16(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int32", varName: "a", varDefineValue: int32(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "int64", varName: "a", varDefineValue: int64(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "float32", varName: "a", varDefineValue: float32(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "float64", varName: "a", varDefineValue: float64(1), typeError: fmt.Errorf("Undefined type 'a'")},
-		{testInfo: "string", varName: "a", varDefineValue: "a", typeError: fmt.Errorf("Undefined type 'a'")},
+		{testInfo: "nil", varName: "a", varDefineValue: nil, typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "bool", varName: "a", varDefineValue: true, typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "int32", varName: "a", varDefineValue: int32(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "int64", varName: "a", varDefineValue: int64(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "uint64", varName: "a", varDefineValue: uint64(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "float32", varName: "a", varDefineValue: float32(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "float64", varName: "a", varDefineValue: float64(1), typeError: fmt.Errorf("undefined type 'a'")},
+		{testInfo: "string", varName: "a", varDefineValue: "a", typeError: fmt.Errorf("undefined type 'a'")},
 	}
 
 	// DefineTypeFail
@@ -1156,7 +1156,7 @@ func TestExternalResolverTypeAndGet(t *testing.T) {
 		{testInfo: "float64", varName: "a", varDefineValue: float64(1)},
 		{testInfo: "string", varName: "a", varDefineValue: "a"},
 
-		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("Undefined type 'a.a'")},
+		{testInfo: "string with dot", varName: "a.a", varDefineValue: nil, defineError: fmt.Errorf("unknown symbol 'a.a'"), typeError: fmt.Errorf("undefined type 'a.a'")},
 	}
 
 	// DefineType

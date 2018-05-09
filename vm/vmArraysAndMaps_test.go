@@ -265,7 +265,7 @@ func TestArraysAutoAppend(t *testing.T) {
 func TestMakeArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []Test{
-		{Script: `make([]foo)`, RunError: fmt.Errorf("Undefined type 'foo'")},
+		{Script: `make([]foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 
 		{Script: `make([]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
 		{Script: `make([][]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},

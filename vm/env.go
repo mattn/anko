@@ -218,7 +218,7 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 		}
 	}
 	if e.parent == nil {
-		return nilType, fmt.Errorf("Undefined type '%s'", k)
+		return nilType, fmt.Errorf("undefined type '%s'", k)
 	}
 	return e.parent.Type(k)
 }
