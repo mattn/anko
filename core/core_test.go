@@ -20,7 +20,7 @@ func TestKeys(t *testing.T) {
 		{Script: `a = {"a": nil}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
 		{Script: `a = {"a": 1}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestKindOf(t *testing.T) {
@@ -52,7 +52,7 @@ func TestKindOf(t *testing.T) {
 
 		{Script: `a = make(interface); kindOf(a)`, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestRange(t *testing.T) {
@@ -67,7 +67,7 @@ func TestRange(t *testing.T) {
 		{Script: `range(-1,1)`, RunOutput: []int64{-1, 0, 1}},
 		{Script: `range(-1,0,1)`, RunError: fmt.Errorf("Too many arguments")},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestLoad(t *testing.T) {
@@ -82,7 +82,7 @@ func TestLoad(t *testing.T) {
 		{Script: `load('testdata/not-found.ank'); X(1)`, RunErrorFunc: &notFoundRunErrorFunc},
 		{Script: `load('testdata/broken.ank'); X(1)`, RunError: fmt.Errorf("syntax error")},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestAnk(t *testing.T) {
@@ -104,7 +104,7 @@ func TestAnk(t *testing.T) {
 		{Script: `load('testdata/testing.ank'); load('testdata/toRunes.ank')`},
 		{Script: `load('testdata/testing.ank'); load('testdata/chan.ank')`},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testEnvSetupFunc})
 }
 
 func TestDefined(t *testing.T) {
@@ -114,5 +114,5 @@ func TestDefined(t *testing.T) {
 		{Script: `defined("a")`, RunOutput: false},
 		{Script: `func(){ var a = 1 }(); defined("a")`, RunOutput: false},
 	}
-	vm.RunTests(t, tests, &vm.TestingOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	vm.RunTests(t, tests, &vm.OptionOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
 }

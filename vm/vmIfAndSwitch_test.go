@@ -49,7 +49,7 @@ func TestIf(t *testing.T) {
 		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
 		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestSwitch(t *testing.T) {
@@ -82,5 +82,5 @@ func TestSwitch(t *testing.T) {
 		{Script: `a=99; switch a {case 1,2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 		{Script: `a=99; switch a {case 1: return a; case 2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

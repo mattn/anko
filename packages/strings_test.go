@@ -14,5 +14,5 @@ func TestStrings(t *testing.T) {
 		{Script: `strings = import("strings"); a = "a b c d"; b = strings.Split(a, " ")`, RunOutput: []string{"a", "b", "c", "d"}, Output: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c", "d"}}},
 		{Script: `strings = import("strings"); a = "a b c d"; b = strings.SplitN(a, " ", 3)`, RunOutput: []string{"a", "b", "c d"}, Output: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c d"}}},
 	}
-	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

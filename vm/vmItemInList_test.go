@@ -141,5 +141,5 @@ func TestItemInList(t *testing.T) {
 		{Script: `[[1]] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
 		{Script: `[[1]] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: true},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

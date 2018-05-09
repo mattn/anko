@@ -20,19 +20,18 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
-type TestingOptions struct {
+type Options struct {
 	EnvSetupFunc *func(*testing.T, corelib.Env)
 }
 
-// RunTests runs VM tests
-func RunTests(t *testing.T, tests []Test, testingOptions *TestingOptions) {
+// Run runs VM tests
+func Run(t *testing.T, tests []Test, testingOptions *Options) {
 	for _, test := range tests {
-		RunTest(t, test, testingOptions)
+		run(t, test, testingOptions)
 	}
 }
 
-// RunTest runs a VM test
-func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
+func run(t *testing.T, test Test, testingOptions *Options) {
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)

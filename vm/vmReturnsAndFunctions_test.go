@@ -161,7 +161,7 @@ func TestReturns(t *testing.T) {
 		{Script: `func aFunc() {return 1.1, 2.2}; a, b = aFunc()`, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(1.1), "b": float64(2.2)}},
 		{Script: `func aFunc() {return "a", "b"}; a, b = aFunc()`, RunOutput: "b", Output: map[string]interface{}{"a": "a", "b": "b"}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctions(t *testing.T) {
@@ -368,7 +368,7 @@ func TestFunctions(t *testing.T) {
 		// {Script: `a = make(Buffer); n, err = a.WriteString("b")`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: []interface{}{1, nil}},
 		// {Script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "b"},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestPointerFunctions(t *testing.T) {
@@ -403,7 +403,7 @@ func TestPointerFunctions(t *testing.T) {
 	tests := []testlib.Test{
 		{Script: `b = 1; a(&b)`, Input: map[string]interface{}{"a": testFunctionPointer}, RunOutput: "good", Output: map[string]interface{}{"b": []interface{}{"b"}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVariadicFunctions(t *testing.T) {
@@ -465,7 +465,7 @@ func TestVariadicFunctions(t *testing.T) {
 		{Script: `func a(b, c) { return c }; a(1, [true, 2]...)`, RunOutput: true},
 		{Script: `func a(b, c) { return c }; a([1, true, 2]...)`, RunOutput: true},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctionsInArraysAndMaps(t *testing.T) {
@@ -507,7 +507,7 @@ func TestFunctionsInArraysAndMaps(t *testing.T) {
 		{Script: `a = {"b": func () { return 1.1 }}; func c(d) { return d() }; c(a.b)`, RunOutput: float64(1.1)},
 		{Script: `a = {"b": func () { return "a" }}; func c(d) { return d() }; c(a.b)`, RunOutput: "a"},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestFunctionConvertions(t *testing.T) {
@@ -523,7 +523,7 @@ func TestFunctionConvertions(t *testing.T) {
 		// {Script: `b = 1; c = &b; a(c); *c`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
 		// TODO: add more tests
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVariadicFunctionConvertions(t *testing.T) {
@@ -546,5 +546,5 @@ func TestVariadicFunctionConvertions(t *testing.T) {
 
 		// TODO: add more tests
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

@@ -196,7 +196,7 @@ func TestArrays(t *testing.T) {
 		{Script: `a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, 1]]`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][][]bool{{{}}}}},
 		{Script: `a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, false]]`, RunOutput: []interface{}{[]interface{}{true, false}}, Output: map[string]interface{}{"a": [][][]bool{{{true, false}}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestArraysAutoAppend(t *testing.T) {
@@ -260,7 +260,7 @@ func TestArraysAutoAppend(t *testing.T) {
 		{Script: `a = make([][][]bool); a[0] = [[true, 1]]`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][][]bool{}}},
 		{Script: `a = make([][][]bool); a[0] = [[true, false]]`, RunOutput: []interface{}{[]interface{}{true, false}}, Output: map[string]interface{}{"a": [][][]bool{{{true, false}}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeArrays(t *testing.T) {
@@ -357,7 +357,7 @@ func TestMakeArrays(t *testing.T) {
 		{Script: `make([][][]float64)`, RunOutput: [][][]float64{}},
 		{Script: `make([][][]string)`, RunOutput: [][][]string{}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestArraySlice(t *testing.T) {
@@ -516,7 +516,7 @@ func TestArraySlice(t *testing.T) {
 		{Script: `a = [["123"], ["456"]]; a[1][0][:2]`, RunOutput: "45", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 		{Script: `a = [["123"], ["456"]]; a[1][0][:3]`, RunOutput: "456", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestArrayAppendArrays(t *testing.T) {
@@ -777,7 +777,7 @@ func TestArrayAppendArrays(t *testing.T) {
 		{Script: `a = make([][][]interface); b = [1, 2]; c = [b]; b = [3, 4]; c += [b]; a += [c]`, RunOutput: [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, Output: map[string]interface{}{"a": [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 		{Script: `a = make([][][]interface); b = [1, 2]; c = []; c += [b]; b = [3, 4]; c += [b]; a += [c]`, RunOutput: [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, Output: map[string]interface{}{"a": [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMaps(t *testing.T) {
@@ -981,7 +981,7 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b": 1, "c": nil}; a.d == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestExistenceOfKeyInMaps(t *testing.T) {
@@ -996,7 +996,7 @@ func TestExistenceOfKeyInMaps(t *testing.T) {
 		{Script: `a = {"b":"b", "c":"c"}; v, ok = a["a"]`, RunOutput: nil, Output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": nil, "ok": false}},
 		{Script: `a = {"b":"b", "c":"c"}; v, ok = a["b"]`, RunOutput: "b", Output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": "b", "ok": true}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestDeleteMaps(t *testing.T) {
@@ -1043,7 +1043,7 @@ func TestDeleteMaps(t *testing.T) {
 		{Script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "a")`, Output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}, "c": []interface{}{"c"}}}},
 		{Script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "b")`, Output: map[string]interface{}{"a": map[string]interface{}{"c": []interface{}{"c"}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeMaps(t *testing.T) {
@@ -1074,7 +1074,7 @@ func TestMakeMaps(t *testing.T) {
 
 		{Script: `a = make(mapStringBool); a.b = true`, Types: map[string]interface{}{"mapStringBool": map[string]bool{"b": true}}, RunOutput: true, Output: map[string]interface{}{"a": map[string]bool{"b": true}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestArraysAndMaps(t *testing.T) {
@@ -1155,7 +1155,7 @@ func TestArraysAndMaps(t *testing.T) {
 		{Script: `a = {}; a.b = b; a.b[0] = [1.1]; a.b[0][1] = 2.2`, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": map[string]interface{}{"b": [][]interface{}{{float64(1.1), float64(2.2)}}}, "b": [][]interface{}{}}},
 		{Script: `a = {}; a.b = b; a.b[0] = ["c"]; a.b[0][1] = "d"`, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: "d", Output: map[string]interface{}{"a": map[string]interface{}{"b": [][]interface{}{{"c", "d"}}}, "b": [][]interface{}{}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeArraysAndMaps(t *testing.T) {
@@ -1169,7 +1169,7 @@ func TestMakeArraysAndMaps(t *testing.T) {
 		{Script: `a = make(mapArray2x); a`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 		{Script: `a = make(mapArray2x); a.b = b`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: [][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{"b": {}}, "b": [][]interface{}{}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeArraysData(t *testing.T) {

@@ -16,5 +16,5 @@ func TestJson(t *testing.T) {
 		{Script: `json = import("encoding/json"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); err`, Input: map[string]interface{}{"a": `{"b": "b"}`, "toByteSlice": toByteSlice}, Output: map[string]interface{}{"a": `{"b": "b"}`, "b": map[string]interface{}{"b": "b"}}},
 		{Script: `json = import("encoding/json"); b = 1; err = json.Unmarshal(toByteSlice(a), &b); err`, Input: map[string]interface{}{"a": `[["1", "2"],["3", "4"]]`, "toByteSlice": toByteSlice}, Output: map[string]interface{}{"a": `[["1", "2"],["3", "4"]]`, "b": []interface{}{[]interface{}{"1", "2"}, []interface{}{"3", "4"}}}},
 	}
-	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

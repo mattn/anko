@@ -239,7 +239,7 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: int64(1), B: int64(3)}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeStructs(t *testing.T) {
@@ -298,5 +298,5 @@ func TestMakeStructs(t *testing.T) {
 		}{}},
 			RunOutput: int64(1)},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

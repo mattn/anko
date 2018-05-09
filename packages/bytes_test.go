@@ -14,5 +14,5 @@ func TestBytes(t *testing.T) {
 		// {Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("b")`, RunOutput: []interface{}{1, nil}},
 		// {Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("b"); a.String()`, RunOutput: "b"},
 	}
-	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

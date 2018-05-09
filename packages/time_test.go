@@ -12,5 +12,5 @@ func TestTime(t *testing.T) {
 	tests := []testlib.Test{
 		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
 	}
-	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

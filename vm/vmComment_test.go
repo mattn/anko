@@ -120,5 +120,5 @@ func TestComment(t *testing.T) {
 		{Script: `1
 /**** 1 ****/`, RunOutput: int64(1)},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

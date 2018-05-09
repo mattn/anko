@@ -167,5 +167,5 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = k }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = v }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": int64(2)}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }

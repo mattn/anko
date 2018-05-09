@@ -72,7 +72,7 @@ func TestNumbers(t *testing.T) {
 		{Script: `-0xc`, RunOutput: int64(-12)},
 		{Script: `-0xf`, RunOutput: int64(-15)},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestStrings(t *testing.T) {
@@ -171,7 +171,7 @@ func TestStrings(t *testing.T) {
 		{Script: `a[9:]`, Input: map[string]interface{}{"a": "test data"}, RunOutput: "", Output: map[string]interface{}{"a": "test data"}},
 		{Script: `a[10:]`, Input: map[string]interface{}{"a": "test data"}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": "test data"}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVar(t *testing.T) {
@@ -198,7 +198,7 @@ func TestVar(t *testing.T) {
 		{Script: `var a = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestModule(t *testing.T) {
@@ -214,7 +214,7 @@ func TestModule(t *testing.T) {
 		{Script: `module a { b = 1.1 }; a.b`, RunOutput: float64(1.1)},
 		{Script: `module a { b = "a" }; a.b`, RunOutput: "a"},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestNew(t *testing.T) {
@@ -230,7 +230,7 @@ func TestNew(t *testing.T) {
 		{Script: `a = new(float64); *a`, RunOutput: float64(0)},
 		{Script: `a = new(string); *a`, RunOutput: ""},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMake(t *testing.T) {
@@ -249,7 +249,7 @@ func TestMake(t *testing.T) {
 		{Script: `make(float64)`, RunOutput: float64(0)},
 		{Script: `make(string)`, RunOutput: ""},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeType(t *testing.T) {
@@ -263,7 +263,7 @@ func TestMakeType(t *testing.T) {
 		{Script: `make(type a, make([]bool))`, RunOutput: reflect.TypeOf([]bool{})},
 		{Script: `make(type a, make([]bool)); a = make(a)`, RunOutput: []bool{}, Output: map[string]interface{}{"a": []bool{}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestLen(t *testing.T) {
@@ -332,7 +332,7 @@ func TestLen(t *testing.T) {
 
 		{Script: `len(a[0][0])`, Input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, RunOutput: int64(4), Output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestReferencingAndDereference(t *testing.T) {
@@ -341,7 +341,7 @@ func TestReferencingAndDereference(t *testing.T) {
 		// TOFIX:
 		// {Script: `a = 1; b = &a; *b = 2; *b`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestMakeChan(t *testing.T) {
@@ -353,7 +353,7 @@ func TestMakeChan(t *testing.T) {
 
 		{Script: `a = make(chan bool); b = func (c) { c <- true }; go b(a); <- a`, RunOutput: true},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestChan(t *testing.T) {
@@ -397,7 +397,7 @@ func TestChan(t *testing.T) {
 		// TOFIX: if variable is not created yet, should make variable instead of error
 		// {Script: `a = make(chan bool, 2); a <- true; b <- a`, RunOutput: true, Output: map[string]interface{}{"b": true}},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestVMDelete(t *testing.T) {
@@ -417,7 +417,7 @@ func TestVMDelete(t *testing.T) {
 		{Script: `a = 1; func b() { delete("a", false) }; b()`, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; func b() { delete("a", true) }; b(); a`, RunError: fmt.Errorf("undefined symbol 'a'")},
 	}
-	testlib.RunTests(t, tests, nil)
+	testlib.Run(t, tests, nil)
 }
 
 func TestInterrupts(t *testing.T) {
