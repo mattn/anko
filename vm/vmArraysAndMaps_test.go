@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/mattn/anko/internal/testlib"
 	"github.com/mattn/anko/parser"
 )
 
@@ -19,7 +20,7 @@ var (
 
 func TestArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `[1++]`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1++[0]`, RunError: fmt.Errorf("invalid operation")},
 
@@ -195,12 +196,12 @@ func TestArrays(t *testing.T) {
 		{Script: `a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, 1]]`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][][]bool{{{}}}}},
 		{Script: `a = make([][][]bool); a[0] = make([][]bool); a[0][0] = make([]bool); a[0] = [[true, false]]`, RunOutput: []interface{}{[]interface{}{true, false}}, Output: map[string]interface{}{"a": [][][]bool{{{true, false}}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestArraysAutoAppend(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a[2]`, Input: map[string]interface{}{"a": []bool{true, false}}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []bool{true, false}}},
 		{Script: `a[2]`, Input: map[string]interface{}{"a": []int32{1, 2}}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []int32{1, 2}}},
 		{Script: `a[2]`, Input: map[string]interface{}{"a": []int64{1, 2}}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []int64{1, 2}}},
@@ -259,12 +260,12 @@ func TestArraysAutoAppend(t *testing.T) {
 		{Script: `a = make([][][]bool); a[0] = [[true, 1]]`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][][]bool{}}},
 		{Script: `a = make([][][]bool); a[0] = [[true, false]]`, RunOutput: []interface{}{[]interface{}{true, false}}, Output: map[string]interface{}{"a": [][][]bool{{{true, false}}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMakeArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make([]foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 
 		{Script: `make([]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
@@ -356,12 +357,12 @@ func TestMakeArrays(t *testing.T) {
 		{Script: `make([][][]float64)`, RunOutput: [][][]float64{}},
 		{Script: `make([][][]string)`, RunOutput: [][][]string{}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestArraySlice(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 
 		{Script: `a = [1, 2]; a[:]`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `(1++)[0:0]`, RunError: fmt.Errorf("invalid operation")},
@@ -515,12 +516,12 @@ func TestArraySlice(t *testing.T) {
 		{Script: `a = [["123"], ["456"]]; a[1][0][:2]`, RunOutput: "45", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 		{Script: `a = [["123"], ["456"]]; a[1][0][:3]`, RunOutput: "456", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestArrayAppendArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a += nil`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += 1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += 1.1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
@@ -776,12 +777,12 @@ func TestArrayAppendArrays(t *testing.T) {
 		{Script: `a = make([][][]interface); b = [1, 2]; c = [b]; b = [3, 4]; c += [b]; a += [c]`, RunOutput: [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, Output: map[string]interface{}{"a": [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 		{Script: `a = make([][][]interface); b = [1, 2]; c = []; c += [b]; b = [3, 4]; c += [b]; a += [c]`, RunOutput: [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, Output: map[string]interface{}{"a": [][][]interface{}{{{int64(1), int64(2)}, {int64(3), int64(4)}}}, "b": []interface{}{int64(3), int64(4)}, "c": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `{"b": 1++}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = {}; a.b.c`, RunError: fmt.Errorf("type invalid does not support member operation")},
 
@@ -980,12 +981,12 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b": 1, "c": nil}; a.d == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestExistenceOfKeyInMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a = {"b":"b"}; v, ok = a[1++]`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = {"b":"b"}; b.c, ok = a["b"]`, RunError: fmt.Errorf("undefined symbol 'b'")},
 		{Script: `a = {"b":"b"}; v, b.c = a["b"]`, RunError: fmt.Errorf("undefined symbol 'b'")},
@@ -995,12 +996,12 @@ func TestExistenceOfKeyInMaps(t *testing.T) {
 		{Script: `a = {"b":"b", "c":"c"}; v, ok = a["a"]`, RunOutput: nil, Output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": nil, "ok": false}},
 		{Script: `a = {"b":"b", "c":"c"}; v, ok = a["b"]`, RunOutput: "b", Output: map[string]interface{}{"a": map[string]interface{}{"b": "b", "c": "c"}, "v": "b", "ok": true}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestDeleteMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `delete(1++, "b")`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete({}, 1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete(nil, "b")`, RunError: fmt.Errorf("first argument to delete cannot be type interface")},
@@ -1042,12 +1043,12 @@ func TestDeleteMaps(t *testing.T) {
 		{Script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "a")`, Output: map[string]interface{}{"a": map[string]interface{}{"b": []interface{}{"b"}, "c": []interface{}{"c"}}}},
 		{Script: `a = {"b": ["b"], "c": ["c"]}; b = &a; delete(*b, "b")`, Output: map[string]interface{}{"a": map[string]interface{}{"c": []interface{}{"c"}}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMakeMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make(mapStringBool)`, Types: map[string]interface{}{"mapStringBool": map[string]bool{}}, RunOutput: map[string]bool{}},
 		{Script: `make(mapStringInt32)`, Types: map[string]interface{}{"mapStringInt32": map[string]int32{}}, RunOutput: map[string]int32{}},
 		{Script: `make(mapStringInt64)`, Types: map[string]interface{}{"mapStringInt64": map[string]int64{}}, RunOutput: map[string]int64{}},
@@ -1073,12 +1074,12 @@ func TestMakeMaps(t *testing.T) {
 
 		{Script: `a = make(mapStringBool); a.b = true`, Types: map[string]interface{}{"mapStringBool": map[string]bool{"b": true}}, RunOutput: true, Output: map[string]interface{}{"a": map[string]bool{"b": true}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a = [{"b": nil}]`, RunOutput: []interface{}{map[string]interface{}{"b": interface{}(nil)}}, Output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": interface{}(nil)}}}},
 		{Script: `a = [{"b": true}]`, RunOutput: []interface{}{map[string]interface{}{"b": interface{}(true)}}, Output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": interface{}(true)}}}},
 		{Script: `a = [{"b": 1}]`, RunOutput: []interface{}{map[string]interface{}{"b": interface{}(int64(1))}}, Output: map[string]interface{}{"a": []interface{}{map[string]interface{}{"b": interface{}(int64(1))}}}},
@@ -1154,12 +1155,12 @@ func TestArraysAndMaps(t *testing.T) {
 		{Script: `a = {}; a.b = b; a.b[0] = [1.1]; a.b[0][1] = 2.2`, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": map[string]interface{}{"b": [][]interface{}{{float64(1.1), float64(2.2)}}}, "b": [][]interface{}{}}},
 		{Script: `a = {}; a.b = b; a.b[0] = ["c"]; a.b[0][1] = "d"`, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: "d", Output: map[string]interface{}{"a": map[string]interface{}{"b": [][]interface{}{{"c", "d"}}}, "b": [][]interface{}{}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMakeArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make([]map)`, Types: map[string]interface{}{"map": map[string]interface{}{}}, RunOutput: []map[string]interface{}{}},
 		{Script: `make([][]map)`, Types: map[string]interface{}{"map": map[string]interface{}{}}, RunOutput: [][]map[string]interface{}{}},
 
@@ -1168,7 +1169,7 @@ func TestMakeArraysAndMaps(t *testing.T) {
 		{Script: `a = make(mapArray2x); a`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
 		{Script: `a = make(mapArray2x); a.b = b`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: [][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{"b": {}}, "b": [][]interface{}{}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMakeArraysData(t *testing.T) {

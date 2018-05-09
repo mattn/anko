@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a["B"]`, Input: map[string]interface{}{"a": struct {
 			A interface{}
 			B interface{}
@@ -237,12 +239,12 @@ func TestStructs(t *testing.T) {
 				B interface{}
 			}{A: int64(1), B: int64(3)}}},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestMakeStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `make(struct)`, Types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
@@ -296,5 +298,5 @@ func TestMakeStructs(t *testing.T) {
 		}{}},
 			RunOutput: int64(1)},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }

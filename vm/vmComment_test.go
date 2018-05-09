@@ -3,11 +3,13 @@ package vm
 import (
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestComment(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `# 1`},
 		{Script: `# 1;`},
 		{Script: `# 1 // 2`},
@@ -118,5 +120,5 @@ func TestComment(t *testing.T) {
 		{Script: `1
 /**** 1 ****/`, RunOutput: int64(1)},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }

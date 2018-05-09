@@ -1,17 +1,17 @@
-package vm
+package testlib
 
 import (
 	"testing"
 
+	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/parser"
 )
 
-// Test is a struct use for testing VM
 type Test struct {
 	Script         string
 	ParseError     error
 	ParseErrorFunc *func(*testing.T, error)
-	EnvSetupFunc   *func(*testing.T, *Env)
+	EnvSetupFunc   *func(*testing.T, corelib.Env)
 	Types          map[string]interface{}
 	Input          map[string]interface{}
 	RunError       error
@@ -20,9 +20,8 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
-// TestingOptions are options to pass to RunTests or RunTest
 type TestingOptions struct {
-	EnvSetupFunc *func(*testing.T, *Env)
+	EnvSetupFunc *func(*testing.T, corelib.Env)
 }
 
 // RunTests runs VM tests
@@ -48,7 +47,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 	// Note: Still want to run the code even after a parse error to see what happens
 
-	env := NewEnv()
+	env := corelib.NewEnv()
 	if testingOptions != nil && testingOptions.EnvSetupFunc != nil {
 		(*testingOptions.EnvSetupFunc)(t, env)
 	}
@@ -73,7 +72,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 	}
 
 	var value interface{}
-	value, err = Run(stmts, env)
+	value, err = env.Run(stmts)
 	if test.RunErrorFunc != nil {
 		(*test.RunErrorFunc)(t, err)
 	} else if err != nil && test.RunError != nil {
@@ -86,7 +85,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 		return
 	}
 
-	if !ValueEqual(value, test.RunOutput) {
+	if !corelib.ValueEqual(value, test.RunOutput) {
 		t.Errorf("Run output - received: %#v - expected: %#v - script: %v", value, test.RunOutput, test.Script)
 		t.Errorf("received type: %T - expected: %T", value, test.RunOutput)
 		return
@@ -99,7 +98,7 @@ func RunTest(t *testing.T, test Test, testingOptions *TestingOptions) {
 			return
 		}
 
-		if !ValueEqual(value, outputValue) {
+		if !corelib.ValueEqual(value, outputValue) {
 			t.Errorf("outputName %v - received: %#v - expected: %#v - script: %v", outputName, value, outputValue, test.Script)
 			t.Errorf("received type: %T - expected: %T", value, outputValue)
 			continue

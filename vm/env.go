@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/parser"
 )
 
@@ -414,5 +415,10 @@ func (e *Env) Execute(src string) (interface{}, error) {
 	if err != nil {
 		return nilValue, err
 	}
+	return Run(stmts, e)
+}
+
+// Run runs statements in current scope.
+func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 	return Run(stmts, e)
 }

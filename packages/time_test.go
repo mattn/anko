@@ -3,12 +3,14 @@ package packages
 import (
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestTime(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
 	}
-	RunTests(t, tests, &TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }

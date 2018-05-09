@@ -5,12 +5,14 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestBasicOperators(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	testInput1 := map[string]interface{}{"b": func() {}}
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `1 = 2`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a, = 1, 2`, ParseError: fmt.Errorf("syntax error")},
@@ -192,12 +194,12 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `!true`, RunOutput: false},
 		{Script: `!1`, RunOutput: false},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }
 
 func TestComparisonOperators(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `a == 1`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a == 2`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a != 1`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
@@ -356,5 +358,5 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `a = "test"; a[1] != 'e'`, RunOutput: false},
 		{Script: `a = "test"; a[3] != 't'`, RunOutput: false},
 	}
-	RunTests(t, tests, nil)
+	testlib.RunTests(t, tests, nil)
 }

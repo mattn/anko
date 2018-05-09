@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestStrconv(t *testing.T) {
@@ -20,7 +22,7 @@ func TestStrconv(t *testing.T) {
 		}
 		return fmt.Sprint(v)
 	}
-	tests := []Test{
+	tests := []testlib.Test{
 		{Script: `strconv = import("strconv"); a = true; b = strconv.FormatBool(a)`, RunOutput: "true", Output: map[string]interface{}{"a": true, "b": "true"}},
 		{Script: `strconv = import("strconv"); a = 1.1; b = strconv.FormatFloat(a, toRune("f"), -1, 64)`, Input: map[string]interface{}{"toRune": toRune}, RunOutput: "1.1", Output: map[string]interface{}{"a": float64(1.1), "b": "1.1"}},
 		{Script: `strconv = import("strconv"); a = 1; b = strconv.FormatInt(a, 10)`, RunOutput: "1", Output: map[string]interface{}{"a": int64(1), "b": "1"}},
@@ -36,5 +38,5 @@ func TestStrconv(t *testing.T) {
 		{Script: `strconv = import("strconv"); a = "1"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)`, Input: map[string]interface{}{"toString": toString}, RunOutput: "<nil>", Output: map[string]interface{}{"a": "1", "b": uint64(1), "err": "<nil>"}},
 		{Script: `strconv = import("strconv"); a = "a"; b, err = strconv.ParseUint(a, 10, 64); err = toString(err)`, Input: map[string]interface{}{"toString": toString}, RunOutput: `strconv.ParseUint: parsing "a": invalid syntax`, Output: map[string]interface{}{"a": "a", "b": uint64(0), "err": `strconv.ParseUint: parsing "a": invalid syntax`}},
 	}
-	RunTests(t, tests, &TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	testlib.RunTests(t, tests, &testlib.TestingOptions{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }
