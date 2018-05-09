@@ -13,9 +13,14 @@ func TestBasicOperators(t *testing.T) {
 	tests := []Test{
 		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `1 = 2`, RunError: fmt.Errorf("invalid operation")},
-		// TOFIX:
-		{Script: `,b = 1, 2`, RunOutput: int64(2)},
-		{Script: `a, b = ,2`, RunOutput: int64(2)},
+		{Script: `a, = 1, 2`, ParseError: fmt.Errorf("syntax error")},
+		// TOFIX: should be syntax error
+		{Script: `,b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(1)}},
+		// TOFIX: should be error of some kind
+		{Script: `a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a, b = 1,`, ParseError: fmt.Errorf("syntax error")},
+		// TOFIX: should be syntax error
+		{Script: `a, b = ,2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 
 		{Script: `2 + 1`, RunOutput: int64(3)},
 		{Script: `2 - 1`, RunOutput: int64(1)},

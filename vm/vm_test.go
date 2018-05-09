@@ -177,6 +177,12 @@ func TestVar(t *testing.T) {
 		{Script: `a := 1`, ParseErrorFunc: &parseErrFunc},
 		{Script: `var a = 1++`, RunError: fmt.Errorf("invalid operation")},
 
+		{Script: `var , b = 1, 2`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(2), Output: map[string]interface{}{"b": int64(1)}},
+		{Script: `var a,  = 1, 2`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = 1,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = 1,,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = ,2,`, ParseError: fmt.Errorf("syntax error")},
+
 		{Script: `var a = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a, b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{Script: `var a, b, c = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},

@@ -76,47 +76,54 @@ type testInteractive struct {
 
 func TestRunInteractive(t *testing.T) {
 	tests := []testInteractive{
-		testInteractive{runSource: "1 + 1", runOutput: "2"},
+		testInteractive{runSource: "..", runError: "1:1 syntax error on '.' at 1:1"},
 		testInteractive{runSource: "1++", runError: "1:1 invalid operation"},
-		// TODO: add more tests
+		testInteractive{runSource: "var , b = 1, 2", runError: "1:7 syntax error: unexpected ','"},
+
+		testInteractive{runSource: "\r\n1", runOutput: "> 1"},
+		testInteractive{runSource: "1 + 1", runOutput: "2"},
 	}
 	runInteractiveTests(t, tests)
 }
 
 func runInteractiveTests(t *testing.T, tests []testInteractive) {
-	// Note: logger is only used for debugging since real stdout cannot be used
+	// Note: logger is used for debugging since real stdout cannot be used
 	logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.LUTC|log.Llongfile)
 	gopath := os.Getenv("GOPATH")
 	filehandle, err := os.OpenFile(gopath+"/bin/anko_test.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		t.Fatal("OpenFile error: ", err)
+		t.Fatal("OpenFile error:", err)
 	}
 	defer filehandle.Close()
 	logger.SetOutput(filehandle)
+	logger.Print("logger file created")
 
 	realStdin := os.Stdin
 	readFromIn, writeToIn, err := os.Pipe()
 	if err != nil {
-		t.Fatal("Pipe error: ", err)
+		t.Fatal("Pipe error:", err)
 	}
 	os.Stdin = readFromIn
+	logger.Print("pipe in created")
 
 	realStderr := os.Stderr
 	readFromErr, writeToErr, err := os.Pipe()
 	if err != nil {
 		os.Stdin = realStdin
-		t.Fatal("Pipe error: ", err)
+		t.Fatal("Pipe error:", err)
 	}
 	os.Stderr = writeToErr
+	logger.Print("pipe err created")
 
 	realStdout := os.Stdout
 	readFromOut, writeToOut, err := os.Pipe()
 	if err != nil {
 		os.Stdin = realStdin
 		os.Stderr = realStderr
-		t.Fatal("Pipe error: ", err)
+		t.Fatal("Pipe error:", err)
 	}
 	os.Stdout = writeToOut
+	logger.Print("pipe out created")
 
 	readerErr := bufio.NewReaderSize(readFromErr, 256)
 	readerOut := bufio.NewReaderSize(readFromOut, 256)
@@ -130,35 +137,23 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 	go readerToChan(t, chanQuit, readerErr, chanErr)
 	go readerToChan(t, chanQuit, readerOut, chanOut)
 
+	go runInteractive()
+
+	time.Sleep(readTimeout)
+
+	logger.Print("for loop start")
 	for _, test := range tests {
-		go runInteractive()
 
-		select {
-		case dataErr = <-chanErr:
-			os.Stdin = realStdin
-			os.Stderr = realStderr
-			os.Stdout = realStdout
-			t.Fatalf("Stderr - received: %v - expected: %v - runSource: %v", dataErr, "", test.runSource)
-		case <-time.After(readTimeout):
-		}
-
-		select {
-		case dataOut = <-chanOut:
-			os.Stdin = realStdin
-			os.Stderr = realStderr
-			os.Stdout = realStdout
-			t.Fatalf("Stdout - received: %v - expected: %v - runSource: %v", dataOut, "", test.runSource)
-		case <-time.After(readTimeout):
-		}
-
+		// write in
 		_, err = writeToIn.WriteString(test.runSource + "\n")
 		if err != nil {
 			os.Stdin = realStdin
 			os.Stderr = realStderr
 			os.Stdout = realStdout
-			t.Fatal("Stdin WriteString error: ", err)
+			t.Fatal("Stdin WriteString error:", err)
 		}
 
+		// read err
 		select {
 		case dataErr = <-chanErr:
 			dataErr = strings.TrimSpace(dataErr)
@@ -168,6 +163,37 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 				os.Stdout = realStdout
 				t.Fatalf("Stderr - received: %v - expected: %v - runSource: %v", dataErr, test.runError, test.runSource)
 			}
+
+			// to clean output from error
+			// write in
+			_, err = writeToIn.WriteString("1\n")
+			if err != nil {
+				os.Stdin = realStdin
+				os.Stderr = realStderr
+				os.Stdout = realStdout
+				t.Fatal("Stdin WriteString error:", err)
+			}
+
+			// read out
+			select {
+			case dataOut = <-chanOut:
+				for len(dataOut) > 0 && dataOut[0] == '>' {
+					dataOut = dataOut[1:]
+					dataOut = strings.TrimSpace(dataOut)
+				}
+				if dataOut != "1" {
+					os.Stdin = realStdin
+					os.Stderr = realStderr
+					os.Stdout = realStdout
+					t.Fatalf("Stdout - received: %v - expected: %v - runSource: %v", dataOut, "1", test.runSource)
+				}
+			case <-time.After(readTimeout):
+				os.Stdin = realStdin
+				os.Stderr = realStderr
+				os.Stdout = realStdout
+				t.Fatal("Stdout no prompt on runSource:", test.runSource)
+			}
+
 		case <-time.After(readTimeout):
 			if test.runError != "" {
 				os.Stdin = realStdin
@@ -177,6 +203,7 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 			}
 		}
 
+		// read out
 		select {
 		case dataOut = <-chanOut:
 			if len(dataOut) > 0 && dataOut[0] == '>' {
@@ -199,26 +226,24 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 		}
 
 	}
+	logger.Print("for loop end")
 
-	close(chanQuit)
-
-	_, err = writeToIn.WriteString("\n")
-	if err != nil {
-		os.Stdin = realStdin
-		os.Stderr = realStderr
-		os.Stdout = realStdout
-		t.Fatal("Stdin WriteString error: ", err)
-	}
+	// write in
 	_, err = writeToIn.WriteString("quit()\n")
 	if err != nil {
 		os.Stdin = realStdin
 		os.Stderr = realStderr
 		os.Stdout = realStdout
-		t.Fatal("Stdin WriteString error: ", err)
+		t.Fatal("Stdin WriteString error:", err)
 	}
+	logger.Print("quit() sent")
+
+	close(chanQuit)
+	logger.Print("chanQuit closed")
 
 	writeToErr.Close()
 	writeToOut.Close()
+	logger.Print("pipes closed")
 
 	os.Stdin = realStdin
 	os.Stderr = realStderr
@@ -226,13 +251,15 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 }
 
 func readerToChan(t *testing.T, chanQuit chan struct{}, reader *bufio.Reader, chanOut chan string) {
+	logger.Print("readerToChan start")
 	for {
 		data, err := reader.ReadString('\n')
 		if err != nil && err != io.EOF {
-			t.Fatal("readerToChan ReadString error: ", err)
+			t.Fatal("readerToChan ReadString error:", err)
 		}
 		select {
 		case <-chanQuit:
+			logger.Print("readerToChan end")
 			return
 		default:
 		}
