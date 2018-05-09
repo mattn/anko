@@ -7,25 +7,33 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mattn/anko/internal/corelib"
+	"github.com/mattn/anko/internal/testlib"
 	"github.com/mattn/anko/packages"
 	"github.com/mattn/anko/vm"
 )
 
-var testCoreEnvSetupFunc = func(t *testing.T, env *vm.Env) { Import(env) }
+var testCoreEnvSetupFunc = func(t *testing.T, env corelib.Env) { Import(env.(*vm.Env)) }
+
+func init() {
+	corelib.NewEnv = func() corelib.Env {
+		return vm.NewEnv()
+	}
+}
 
 func TestKeys(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `a = {}; b = keys(a)`, RunOutput: []string{}, Output: map[string]interface{}{"a": map[string]interface{}{}}},
 		{Script: `a = {"a": nil}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
 		{Script: `a = {"a": 1}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestKindOf(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": reflect.Value{}}, RunOutput: "struct", Output: map[string]interface{}{"a": reflect.Value{}}},
 		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": nil}, RunOutput: "nil", Output: map[string]interface{}{"a": nil}},
 		{Script: `kindOf(a)`, Input: map[string]interface{}{"a": true}, RunOutput: "bool", Output: map[string]interface{}{"a": true}},
@@ -52,12 +60,12 @@ func TestKindOf(t *testing.T) {
 
 		{Script: `a = make(interface); kindOf(a)`, RunOutput: "nil", Output: map[string]interface{}{"a": interface{}(nil)}},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestRange(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `range()`, RunError: fmt.Errorf("Missing arguments")},
 		{Script: `range(-1)`, RunOutput: []int64{}},
 		{Script: `range(0)`, RunOutput: []int64{}},
@@ -67,7 +75,7 @@ func TestRange(t *testing.T) {
 		{Script: `range(-1,1)`, RunOutput: []int64{-1, 0, 1}},
 		{Script: `range(-1,0,1)`, RunError: fmt.Errorf("Too many arguments")},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestLoad(t *testing.T) {
@@ -77,21 +85,22 @@ func TestLoad(t *testing.T) {
 			t.Errorf("load not-found.ank failed - received: %v", err)
 		}
 	}
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `load('testdata/test.ank'); X(1)`, RunOutput: int64(2)},
 		{Script: `load('testdata/not-found.ank'); X(1)`, RunErrorFunc: &notFoundRunErrorFunc},
 		{Script: `load('testdata/broken.ank'); X(1)`, RunError: fmt.Errorf("syntax error")},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
 
 func TestAnk(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
-	var testEnvSetupFunc = func(t *testing.T, env *vm.Env) {
-		Import(env)
-		packages.DefineImport(env)
+	var testEnvSetupFunc = func(t *testing.T, env corelib.Env) {
+		e := env.(*vm.Env)
+		Import(e)
+		packages.DefineImport(e)
 	}
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `load('testdata/testing.ank'); load('testdata/let.ank')`},
 		{Script: `load('testdata/testing.ank'); load('testdata/toString.ank')`},
 		{Script: `load('testdata/testing.ank'); load('testdata/op.ank')`},
@@ -104,15 +113,15 @@ func TestAnk(t *testing.T) {
 		{Script: `load('testdata/testing.ank'); load('testdata/toRunes.ank')`},
 		{Script: `load('testdata/testing.ank'); load('testdata/chan.ank')`},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testEnvSetupFunc})
 }
 
 func TestDefined(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `var a = 1; defined("a")`, RunOutput: true},
 		{Script: `defined("a")`, RunOutput: false},
 		{Script: `func(){ var a = 1 }(); defined("a")`, RunOutput: false},
 	}
-	vm.RunTests(t, tests, &vm.OptionOptions{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }

@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mattn/anko/vm"
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestToX(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	tests := []vm.Test{
+	tests := []testlib.Test{
 		{Script: `toBool(-2)`, RunOutput: false},
 		{Script: `toBool(-1.5)`, RunOutput: false},
 		{Script: `toBool(-1)`, RunOutput: false},
@@ -147,5 +147,5 @@ func TestToX(t *testing.T) {
 		{Script: `toDuration(a)`, Input: map[string]interface{}{"a": float64(time.Duration(123 * time.Minute))}, RunOutput: time.Duration(123 * time.Minute)},
 		{Script: `toDuration(a)`, Input: map[string]interface{}{"a": time.Duration(123 * time.Minute)}, RunOutput: time.Duration(123 * time.Minute)},
 	}
-	vm.RunTests(t, tests, &vm.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
+	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
