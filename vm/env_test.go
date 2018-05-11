@@ -1527,7 +1527,7 @@ func BenchmarkSet(b *testing.B) {
 func TestCopy(t *testing.T) {
 	env := NewEnv()
 	env.Define("a", "a")
-	copy := env.Copy(false)
+	copy := env.Copy()
 	if v, e := copy.Get("a"); e != nil || v != "a" {
 		t.Errorf("copy doesn't retain original values")
 	}
