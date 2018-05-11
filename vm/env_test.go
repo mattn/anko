@@ -1547,11 +1547,11 @@ func TestCopy(t *testing.T) {
 	}
 }
 
-func TestCopyRecursive(t *testing.T) {
+func TestDeepCopy(t *testing.T) {
 	parent := NewEnv()
 	parent.Define("a", "a")
 	env := parent.NewEnv()
-	copy := env.Copy(false)
+	copy := env.DeepCopy()
 	if v, e := copy.Get("a"); e != nil || v != "a" {
 		t.Errorf("copy doesn't retain original values")
 	}
