@@ -1579,7 +1579,7 @@ func TestDeepCopy(t *testing.T) {
 		t.Errorf("copy was modified")
 	}
 	parent.Define("b", "b")
-	if v, e := copy.Get("b"); e != nil || v != nil {
+	if v, e := copy.IsGet("b"); e == nil {
 		t.Errorf("copy parent was modified")
 	}
 }
