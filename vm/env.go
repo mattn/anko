@@ -444,8 +444,8 @@ func (e *Env) Copy() *Env {
 // DeepCopy copy recursively the state of the virtual machine environment
 func (e *Env) DeepCopy() *Env {
 	copy := e.Copy()
-	if e.parent != nil {
-		copy.parent = e.parent.DeepCopy()
+	if copy.parent != nil {
+		copy.parent = copy.parent.DeepCopy()
 	}
 	return &copy
 }
