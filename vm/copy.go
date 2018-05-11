@@ -2,6 +2,7 @@ package vm
 
 import "reflect"
 
+// Copy the state of the virtual machine environment
 func (env *Env) Copy() *Env {
 	b := false
 	copy := Env {
