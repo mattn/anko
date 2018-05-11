@@ -424,7 +424,8 @@ func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 }
 
 // Copy the state of the virtual machine environment
-func (e *Env) Copy() *Env {
+// - recursive: tells if copy is recursive with parents
+func (e *Env) Copy(recursive bool) *Env {
 	b := false
 	copy := Env {
 		env:       make(map[string]reflect.Value),
@@ -437,6 +438,11 @@ func (e *Env) Copy() *Env {
 	}
 	for name, typ := range e.typ {
 		copy.typ[name] = typ
+	}
+	if recursive && e.parent != nil {
+		copy.parent = e.parent.Copy(recursive)
+	} else {
+		copy.parent = e.parent
 	}
 	return &copy
 }
