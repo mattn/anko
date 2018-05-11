@@ -443,19 +443,7 @@ func (e *Env) Copy() *Env {
 
 // DeepCopy copy recursively the state of the virtual machine environment
 func (e *Env) DeepCopy() *Env {
-	b := false
-	copy := Env {
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e.parent,
-		interrupt: &b,
-	}
-	for name, value := range e.env {
-		copy.env[name] = value
-	}
-	for name, typ := range e.typ {
-		copy.typ[name] = typ
-	}
+	copy := e.Copy()
 	if e.parent != nil {
 		copy.parent = e.parent.DeepCopy()
 	}
