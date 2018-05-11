@@ -457,7 +457,7 @@ func (e *Env) DeepCopy() *Env {
 		copy.typ[name] = typ
 	}
 	if e.parent != nil {
-		copy.parent = e.parent.Copy(recursive)
+		copy.parent = e.parent.DeepCopy()
 	}
 	return &copy
 }
