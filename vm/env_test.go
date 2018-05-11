@@ -1551,8 +1551,8 @@ func TestCopy(t *testing.T) {
 		t.Errorf("copy parent doesn't retain original value")
 	}
 	parent.Set("b", "b")
-	if v, e := copy.Get("b"); e != nil || v != "a" {
-		t.Errorf("copy parent was modified")
+	if v, e := copy.Get("b"); e != nil || v != "b" {
+		t.Errorf("copy parent not modified")
 	}
 }
 
