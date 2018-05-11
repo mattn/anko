@@ -422,3 +422,21 @@ func (e *Env) Execute(src string) (interface{}, error) {
 func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 	return Run(stmts, e)
 }
+
+// Copy the state of the virtual machine environment
+func (e *Env) Copy() *Env {
+	b := false
+	copy := Env {
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    nil,
+		interrupt: &b,
+	}
+	for name, value := range e.env {
+		copy.env[name] = value
+	}
+	for name, typ := range e.typ {
+		copy.typ[name] = typ
+	}
+	return &copy
+}
