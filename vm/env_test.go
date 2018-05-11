@@ -1525,7 +1525,9 @@ func BenchmarkSet(b *testing.B) {
 }
 
 func TestCopy(t *testing.T) {
-	env := NewEnv()
+	parent := NewEnv()
+	parent.Define("b", "a")
+	env := parent.NewEnv()
 	env.Define("a", "a")
 	copy := env.Copy()
 	if v, e := copy.Get("a"); e != nil || v != "a" {
@@ -1545,6 +1547,13 @@ func TestCopy(t *testing.T) {
 	if v, e := copy.Get("a"); e != nil || v != "b" {
 		t.Errorf("copy was modified")
 	}
+	if v, e := copy.Get("b"); e != nil || v != "a" {
+		t.Errorf("copy parent doesn't retain original value")
+	}
+	parent.Set("b", "b")
+	if v, e := copy.Get("b"); e != nil || v != "a" {
+		t.Errorf("copy parent was modified")
+	}
 }
 
 func TestDeepCopy(t *testing.T) {
@@ -1556,8 +1565,8 @@ func TestDeepCopy(t *testing.T) {
 		t.Errorf("copy doesn't retain original values")
 	}
 	parent.Set("a", "b")
-	if v, e := env.Get("a"); e != nil || v != "a" {
-		t.Errorf("original was modified")
+	if v, e := env.Get("a"); e != nil || v != "b" {
+		t.Errorf("son was not modified")
 	}
 	if v, e := copy.Get("a"); e != nil || v != "b" {
 		t.Errorf("copy kept the old value")
@@ -1568,5 +1577,9 @@ func TestDeepCopy(t *testing.T) {
 	}
 	if v, e := copy.Get("a"); e != nil || v != "b" {
 		t.Errorf("copy was modified")
+	}
+	parent.Define("b", "b")
+	if v, e := copy.Get("b"); e != nil || v != "b" {
+		t.Errorf("copy parent was not modified")
 	}
 }
