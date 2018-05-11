@@ -9,20 +9,20 @@ func TestCopy(t *testing.T) {
 	env.Define("a", "a")
 	copy := env.Copy()
 	if v, e := copy.Get("a"); e != nil || v != "a" {
-		t.Errorf("Copy doesn't retain original values")
+		t.Errorf("copy doesn't retain original values")
 	}
 	copy.Set("a", "b")
 	if v, e := env.Get("a"); e != nil || v != "a" {
-		t.Errorf("Original was modified")
+		t.Errorf("original was modified")
 	}
 	if v, e := copy.Get("a"); e != nil || v != "b" {
-		t.Errorf("Copy kept the old value")
+		t.Errorf("copy kept the old value")
 	}
 	env.Set("a", "c")
 	if v, e := env.Get("a"); e != nil || v != "c" {
-		t.Errorf("Original was not modified")
+		t.Errorf("original was not modified")
 	}
 	if v, e := copy.Get("a"); e != nil || v != "b" {
-		t.Errorf("Copy was modified")
+		t.Errorf("copy was modified")
 	}
 }
