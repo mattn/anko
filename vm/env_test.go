@@ -1568,18 +1568,18 @@ func TestDeepCopy(t *testing.T) {
 	if v, e := env.Get("a"); e != nil || v != "b" {
 		t.Errorf("son was not modified")
 	}
-	if v, e := copy.Get("a"); e != nil || v != "b" {
-		t.Errorf("copy kept the old value")
+	if v, e := copy.Get("a"); e != nil || v != "a" {
+		t.Errorf("copy got the new value")
 	}
 	parent.Set("a", "c")
 	if v, e := env.Get("a"); e != nil || v != "c" {
 		t.Errorf("original was not modified")
 	}
-	if v, e := copy.Get("a"); e != nil || v != "b" {
+	if v, e := copy.Get("a"); e != nil || v != "a" {
 		t.Errorf("copy was modified")
 	}
 	parent.Define("b", "b")
-	if v, e := copy.Get("b"); e != nil || v != "b" {
-		t.Errorf("copy parent was not modified")
+	if v, e := copy.Get("b"); e != nil || v != nil {
+		t.Errorf("copy parent was modified")
 	}
 }
