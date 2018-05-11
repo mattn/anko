@@ -447,5 +447,5 @@ func (e *Env) DeepCopy() *Env {
 	if copy.parent != nil {
 		copy.parent = copy.parent.DeepCopy()
 	}
-	return &copy
+	return copy
 }
