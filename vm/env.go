@@ -425,6 +425,8 @@ func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 
 // Copy the state of the virtual machine environment
 func (e *Env) Copy() *Env {
+	e.Lock()
+	defer e.Unlock()
 	b := false
 	copy := Env {
 		name:      e.name,
