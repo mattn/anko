@@ -427,11 +427,11 @@ func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 func (e *Env) Copy() *Env {
 	b := false
 	copy := Env {
+		name:      e.name,
 		env:       make(map[string]reflect.Value),
 		typ:       make(map[string]reflect.Type),
 		parent:    e.parent,
 		interrupt: &b,
-		name:      e.name,
 		external:  e.external,
 	}
 	for name, value := range e.env {
