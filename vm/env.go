@@ -431,6 +431,8 @@ func (e *Env) Copy() *Env {
 		typ:       make(map[string]reflect.Type),
 		parent:    e.parent,
 		interrupt: &b,
+		name:      e.name,
+		external:  e.external,
 	}
 	for name, value := range e.env {
 		copy.env[name] = value
