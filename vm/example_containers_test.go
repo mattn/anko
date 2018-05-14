@@ -19,8 +19,6 @@ func Example_vmArrays() {
 a = [1, 2]
 println(a)
 
-println(len(a))
-
 a += 3
 println(a)
 
@@ -53,6 +51,14 @@ println(c)
 
 c = [[1, 2]] + [[3, 4]]
 println(c)
+
+println("")
+
+a = [1, 2]
+
+println(len(a))
+
+println(a[1])
 `
 
 	_, err = env.Execute(script)
@@ -62,7 +68,6 @@ println(c)
 
 	// output:
 	// [1 2]
-	// 2
 	// [1 2 3]
 	// [1]
 	//
@@ -72,6 +77,9 @@ println(c)
 	// [[1 2] 3 4]
 	// [[1 2] [3 4]]
 	// [[1 2] [3 4]]
+	//
+	// 2
+	// 2
 }
 
 func Example_vmMaps() {
@@ -83,13 +91,14 @@ func Example_vmMaps() {
 	}
 
 	script := `
-a = {"a": 1}
+a = {}
 println(a)
 
-a["b"] = 2
+a.b = 1
 println(a)
 
-a.c = 3
+a = {}
+a["b"] = 1
 println(a)
 
 println(len(a))
@@ -101,10 +110,10 @@ println(len(a))
 	}
 
 	// output:
-	// map[a:1]
-	// map[a:1 b:2]
-	// map[a:1 b:2 c:3]
-	// 3
+	// map[]
+	// map[b:1]
+	// map[b:1]
+	// 1
 }
 
 func Example_vmModule() {

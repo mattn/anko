@@ -176,3 +176,41 @@ println(a)
 	// true
 
 }
+
+func Example_vmSlice() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+a = "abc"
+println(a[1:])
+println(a[:2])
+println(a[1:2])
+
+println("")
+
+a = [1, 2, 3]
+println(a[1:])
+println(a[:2])
+println(a[1:2])
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// bc
+	// ab
+	// b
+	//
+	// [2 3]
+	// [1 2]
+	// [2]
+
+}
