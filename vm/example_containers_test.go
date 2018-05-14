@@ -19,6 +19,8 @@ func Example_vmArrays() {
 a = [1, 2]
 println(a)
 
+println(len(a))
+
 a += 3
 println(a)
 
@@ -60,6 +62,7 @@ println(c)
 
 	// output:
 	// [1 2]
+	// 2
 	// [1 2 3]
 	// [1]
 	//
@@ -69,6 +72,39 @@ println(c)
 	// [[1 2] 3 4]
 	// [[1 2] [3 4]]
 	// [[1 2] [3 4]]
+}
+
+func Example_vmMaps() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+a = {"a": 1}
+println(a)
+
+a["b"] = 2
+println(a)
+
+a.c = 3
+println(a)
+
+println(len(a))
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// map[a:1]
+	// map[a:1 b:2]
+	// map[a:1 b:2 c:3]
+	// 3
 }
 
 func Example_vmModule() {
