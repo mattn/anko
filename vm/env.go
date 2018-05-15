@@ -422,3 +422,34 @@ func (e *Env) Execute(src string) (interface{}, error) {
 func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
 	return Run(stmts, e)
 }
+
+// Copy the state of the virtual machine environment
+func (e *Env) Copy() *Env {
+	e.Lock()
+	defer e.Unlock()
+	b := false
+	copy := Env {
+		name:      e.name,
+		env:       make(map[string]reflect.Value),
+		typ:       make(map[string]reflect.Type),
+		parent:    e.parent,
+		interrupt: &b,
+		external:  e.external,
+	}
+	for name, value := range e.env {
+		copy.env[name] = value
+	}
+	for name, typ := range e.typ {
+		copy.typ[name] = typ
+	}
+	return &copy
+}
+
+// DeepCopy copy recursively the state of the virtual machine environment
+func (e *Env) DeepCopy() *Env {
+	copy := e.Copy()
+	if copy.parent != nil {
+		copy.parent = copy.parent.DeepCopy()
+	}
+	return copy
+}
