@@ -96,12 +96,30 @@ println(a)
 
 a.b = 1
 println(a)
+println(a.b)
+
+println("")
 
 a = {}
 a["b"] = 1
 println(a)
+println(a["b"])
 
+println("")
+
+b, ok = a["b"]
+println(b)
+println(ok)
+
+delete(a, "b")
+_, ok = a["b"]
+println(ok)
+
+println("")
+
+a = {"a": 1}
 println(len(a))
+
 `
 
 	_, err = env.Execute(script)
@@ -112,7 +130,15 @@ println(len(a))
 	// output:
 	// map[]
 	// map[b:1]
+	// 1
+	// 
 	// map[b:1]
+	// 1
+	//
+	// 1
+	// true
+	// false
+	//
 	// 1
 }
 
