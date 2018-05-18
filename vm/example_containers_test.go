@@ -51,6 +51,14 @@ println(c)
 
 c = [[1, 2]] + [[3, 4]]
 println(c)
+
+println("")
+
+a = [1, 2]
+
+println(len(a))
+
+println(a[1])
 `
 
 	_, err = env.Execute(script)
@@ -69,6 +77,69 @@ println(c)
 	// [[1 2] 3 4]
 	// [[1 2] [3 4]]
 	// [[1 2] [3 4]]
+	//
+	// 2
+	// 2
+}
+
+func Example_vmMaps() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+a = {}
+println(a)
+
+a.b = 1
+println(a)
+println(a.b)
+
+println("")
+
+a = {}
+a["b"] = 1
+println(a)
+println(a["b"])
+
+println("")
+
+b, ok = a["b"]
+println(b)
+println(ok)
+
+delete(a, "b")
+_, ok = a["b"]
+println(ok)
+
+println("")
+
+a = {"a": 1}
+println(len(a))
+
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// map[]
+	// map[b:1]
+	// 1
+	//
+	// map[b:1]
+	// 1
+	//
+	// 1
+	// true
+	// false
+	//
+	// 1
 }
 
 func Example_vmModule() {
