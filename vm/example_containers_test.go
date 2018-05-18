@@ -131,7 +131,7 @@ println(len(a))
 	// map[]
 	// map[b:1]
 	// 1
-	// 
+	//
 	// map[b:1]
 	// 1
 	//
