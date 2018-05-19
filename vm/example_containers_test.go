@@ -142,7 +142,7 @@ println(len(a))
 	// 1
 }
 
-func Example_vmModule() {
+func Example_vmModules() {
 	env := vm.NewEnv()
 
 	err := env.Define("println", fmt.Println)

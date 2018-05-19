@@ -128,3 +128,23 @@ func ExampleEnv_Dump() {
 	// Has parent: false
 	// a = "a"
 }
+
+func Example_vmHelloWorld() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+println("Hello World :)")
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output: Hello World :)
+}
