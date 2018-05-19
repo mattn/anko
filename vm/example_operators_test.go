@@ -207,6 +207,15 @@ if a == 3 {
 	println(a + b)
 }
 
+println("")
+
+if a == 2 || b == 2 {
+	println(4)
+}
+
+if a == 1 && b == 2 {
+	println(5)
+}
 `
 
 	_, err = env.Execute(script)
@@ -218,6 +227,69 @@ if a == 3 {
 	// 1
 	// 2
 	// 3
+	//
+	// 4
+	// 5
+
+}
+
+func Example_vmForLoops() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
+
+	script := `
+i = 0
+for {
+	println(i)
+	i++
+	if i > 1 {
+		break
+	}
+}
+
+println("")
+
+for i in [0, 1] {
+	println(i)
+}
+
+println("")
+
+i = 0
+for i < 2 {
+	println(i)
+	i++
+}
+
+println("")
+
+for i = 0; i < 2; i++ {
+	println(i)
+}
+
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// 0
+	// 1
+	//
+	// 0
+	// 1
+	//
+	// 0
+	// 1
+	//
+	// 0
+	// 1
 
 }
 
