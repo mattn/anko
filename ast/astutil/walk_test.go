@@ -228,6 +228,7 @@ func TestBadCode(t *testing.T) {
 		`for.true`,
 		`switch { var }`,
 		`case { var }`,
+		`v, ok = { "foo": "bar" }[const 1]`,
 	}
 	for _, code := range codes {
 		_, err := parser.ParseSrc(code)
