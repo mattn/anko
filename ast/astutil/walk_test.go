@@ -15,7 +15,9 @@ var fmt = import("fmt")
 
 a = "1"
 b = 2
+m = {}
 func testA(arg1, arg2, arg3) {
+	v, ok = m["foo"]
 	return "A" + arg1 + arg2 + arg3
 }
 

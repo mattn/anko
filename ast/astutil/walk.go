@@ -44,6 +44,11 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 	switch stmt := stmt.(type) {
 	case *ast.BreakStmt:
 	case *ast.ContinueStmt:
+	case *ast.LetMapItemStmt:
+		if err := walkExpr(stmt.Rhs, f); err != nil {
+			return err
+		}
+		return walkExprs(stmt.Lhss, f)
 	case *ast.ReturnStmt:
 		return walkExprs(stmt.Exprs, f)
 	case *ast.ExprStmt:
