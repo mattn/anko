@@ -95,7 +95,7 @@ println(f)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("execute error: %v\n", err)
+		log.Fatalf("Execute error: %v\n", err)
 	}
 
 	// output:
@@ -143,7 +143,7 @@ println("Hello World :)")
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("execute error: %v\n", err)
+		log.Fatalf("Execute error: %v\n", err)
 	}
 
 	// output: Hello World :)

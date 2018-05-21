@@ -63,7 +63,7 @@ println(a[1])
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("execute error: %v\n", err)
+		log.Fatalf("Execute error: %v\n", err)
 	}
 
 	// output:
@@ -124,7 +124,7 @@ println(len(a))
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("execute error: %v\n", err)
+		log.Fatalf("Execute error: %v\n", err)
 	}
 
 	// output:
@@ -197,7 +197,7 @@ println(rectangle2.perimeter())
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("execute error: %v\n", err)
+		log.Fatalf("Execute error: %v\n", err)
 	}
 
 	// output:
