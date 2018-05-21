@@ -271,6 +271,17 @@ for i = 0; i < 2; i++ {
 	println(i)
 }
 
+println("")
+
+
+for i = 0; i < 10; i++ {
+	println(i)
+	if i < 1 {
+		continue
+	}
+	break
+}
+
 `
 
 	_, err = env.Execute(script)
@@ -279,6 +290,9 @@ for i = 0; i < 2; i++ {
 	}
 
 	// output:
+	// 0
+	// 1
+	//
 	// 0
 	// 1
 	//
