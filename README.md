@@ -1,4 +1,4 @@
-# anko
+# Anko
 
 [![GoDoc Reference](https://godoc.org/github.com/mattn/anko/vm?status.svg)](http://godoc.org/github.com/mattn/anko/vm)
 [![Build Status](https://travis-ci.org/mattn/anko.svg)](https://travis-ci.org/mattn/anko)
@@ -11,101 +11,66 @@ Anko is a scriptable interpreter written in Go.
 
 (Picture licensed under CC BY-SA 3.0, photo by Ocdp)
 
-## Installation
-Requires Go.
+
+## Usage Example - Embedded
+
 ```
-$ go get -u github.com/mattn/anko
-```
+package main
 
-## Examples
+import (
+	"fmt"
+	"log"
 
-```bash
-# declare function
-func plus(n){
-  return n + 1
-}
+	"github.com/mattn/anko/vm"
+)
 
-# declare variables
-x = 1
-y = x + 1
+func main() {
+	env := vm.NewEnv()
 
-# print values
-println(x * (y + 2 * x + plus(x) / 2))
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("Define error: %v\n", err)
+	}
 
-# if/else condition
-if plus(y) > 1 {
-  println("こんにちわ世界")
-} else {
-  println("Hello, World")
-}
+	script := `
+println("Hello World :)")
+`
 
-# array type
-a = [1,2,3]
-println(a[2])
-println(len(a))
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("Execute error: %v\n", err)
+	}
 
-# map type
-m = {"foo": "bar", "far": "boo"}
-m.foo = "baz"
-for k in keys(m) {
-  println(m[k])
+	// output: Hello World :)
 }
 ```
 
-See `_examples/scripts` for more examples.
+More examples are located in the GoDoc:
+
+https://godoc.org/github.com/mattn/anko/vm
 
 
+## Usage Example - Command Line
 
-## Usage
-
-Embedding the interpreter into your own program:
-
-```Go
-var env = vm.NewEnv()
-
-env.Define("foo", 1)
-env.Define("bar", func() int {
-	return 2
-})
-
-val, err := env.Execute(`foo + bar()`)
-if err != nil {
-	panic(err)
-}
-
-fmt.Println(val)
-// output:
-// 3
+### Building
+```
+go get github.com/mattn/anko
+go install github.com/mattn/anko
 ```
 
-To import all core language builtins, allowing the example scripts to work:
-
-```Go
-import "github.com/mattn/anko/core"
-
-var env = vm.NewEnv()
-core.Import(env)
-
-_, err := env.Execute(`println("test")`)
-if err != nil {
-	panic(err)
-}
-// output:
-// "test"
+### Running an Anko script file named script.ank
+```
+./anko script.ank
 ```
 
-Running scripts using anko command-line tool:
 
-```
-$ anko script.ank
-```
+## Please note that the master branch is not stable
 
-# Author
-
-Yasuhiro Matsumoto (a.k.a mattn)
-
-# Note
-
-Please note that the master branch is not stable,  the language and API may change at any time.
+The master branch language and API may change at any time.
 
 To mitigate breaking changes, please use tagged branches. New tagged branches will be created for breaking changes.
+
+
+## Author
+
+Yasuhiro Matsumoto (a.k.a mattn)

@@ -19,11 +19,11 @@ func ExampleInterrupt() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("sleep", sleepMillisecond)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -56,32 +56,32 @@ func ExampleEnv_Define() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	err = env.Define("a", true)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("b", int64(1))
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("c", float64(1.1))
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("d", "d")
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("e", []interface{}{true, int64(1), float64(1.1), "d"})
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("f", map[string]interface{}{"a": true})
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -113,12 +113,12 @@ func ExampleEnv_Dump() {
 
 	err := env.Define("a", "a")
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	_, err = env.Get("a")
 	if err != nil {
-		log.Fatalf("Get error: %v\n", err)
+		log.Fatalf("get error: %v\n", err)
 	}
 
 	env.Dump()
@@ -134,7 +134,7 @@ func Example_vmHelloWorld() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `

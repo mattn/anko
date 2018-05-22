@@ -12,7 +12,7 @@ func Example_vmArrays() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -87,7 +87,7 @@ func Example_vmMaps() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -147,7 +147,7 @@ func Example_vmModules() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `

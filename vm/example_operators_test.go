@@ -12,7 +12,7 @@ func Example_vmBasicOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -125,7 +125,7 @@ func Example_vmComparisonOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -182,7 +182,7 @@ func Example_vmIfOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -238,7 +238,7 @@ func Example_vmForLoops() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -271,6 +271,17 @@ for i = 0; i < 2; i++ {
 	println(i)
 }
 
+println("")
+
+
+for i = 0; i < 10; i++ {
+	println(i)
+	if i < 1 {
+		continue
+	}
+	break
+}
+
 `
 
 	_, err = env.Execute(script)
@@ -290,6 +301,9 @@ for i = 0; i < 2; i++ {
 	//
 	// 0
 	// 1
+	//
+	// 0
+	// 1
 
 }
 
@@ -298,7 +312,7 @@ func Example_vmSlices() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -336,7 +350,7 @@ func Example_vmChannels() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
