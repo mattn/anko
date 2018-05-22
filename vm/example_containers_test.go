@@ -12,7 +12,7 @@ func Example_vmArrays() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -63,7 +63,7 @@ println(a[1])
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -87,7 +87,7 @@ func Example_vmMaps() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -124,7 +124,7 @@ println(len(a))
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -147,7 +147,7 @@ func Example_vmModules() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -197,7 +197,7 @@ println(rectangle2.perimeter())
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:

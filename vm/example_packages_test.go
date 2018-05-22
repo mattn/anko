@@ -25,7 +25,7 @@ fmt.Println(a)
 
 	_, err := env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -62,7 +62,7 @@ fmt.Println(result)
 
 	_, err := env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:

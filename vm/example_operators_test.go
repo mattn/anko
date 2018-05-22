@@ -12,7 +12,7 @@ func Example_vmBasicOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -85,7 +85,7 @@ println(a)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -125,7 +125,7 @@ func Example_vmComparisonOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -158,7 +158,7 @@ println(a)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -182,7 +182,7 @@ func Example_vmIfOperators() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -220,7 +220,7 @@ if a == 1 && b == 2 {
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -238,7 +238,7 @@ func Example_vmForLoops() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -286,7 +286,7 @@ for i = 0; i < 10; i++ {
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -312,7 +312,7 @@ func Example_vmSlices() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -331,7 +331,7 @@ println(a[1:2])
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -350,7 +350,7 @@ func Example_vmChannels() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -369,7 +369,7 @@ println(<- a)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:

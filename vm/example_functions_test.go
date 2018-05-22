@@ -12,7 +12,7 @@ func Example_vmFunctions() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -64,7 +64,7 @@ println(add([1, 2]...))
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -84,7 +84,7 @@ func Example_vmFunctionsScope() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -115,7 +115,7 @@ println(a)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
@@ -151,16 +151,16 @@ func Example_vmFunctionsOutside() {
 
 	err := env.Define("println", fmt.Println)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	err = env.Define("addString", func(a string, b string) string { return a + b })
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 	// uses the function that would be declared above
 	err = env.Define("aFunc", testFunc1)
 	if err != nil {
-		log.Fatalf("Define error: %v\n", err)
+		log.Fatalf("define error: %v\n", err)
 	}
 
 	script := `
@@ -173,7 +173,7 @@ println(a)
 
 	_, err = env.Execute(script)
 	if err != nil {
-		log.Fatalf("Execute error: %v\n", err)
+		log.Fatalf("execute error: %v\n", err)
 	}
 
 	// output:
