@@ -62,10 +62,6 @@ go install github.com/mattn/anko
 ```
 ./anko script.ank
 ```
-or 
-```
-anko.exe script.ank
-```
 
 
 ## Please note that the master branch is not stable
