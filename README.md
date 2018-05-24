@@ -14,7 +14,7 @@ Anko is a scriptable interpreter written in Go.
 
 ## Usage Example - Embedded
 
-```
+```go
 package main
 
 import (
