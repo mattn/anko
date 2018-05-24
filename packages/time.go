@@ -1,6 +1,7 @@
 package packages
 
 import (
+	"reflect"
 	"time"
 )
 
@@ -28,8 +29,10 @@ func init() {
 		"Minute":          time.Minute,
 		"Hour":            time.Hour,
 	}
+	var duration time.Duration
 	PackageTypes["time"] = map[string]interface{}{
-		"Ticker": time.Ticker{},
-		"Time":   time.Time{},
+		"Duration": reflect.TypeOf(&duration).Elem(),
+		"Ticker":   time.Ticker{},
+		"Time":     time.Time{},
 	}
 }
