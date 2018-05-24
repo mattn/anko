@@ -83,6 +83,7 @@ func Example_vmHttp() {
 fmt = import("fmt")
 io = import("io")
 ioutil = import("io/ioutil")
+net = import("net")
 http = import("net/http")
 time = import("time")
 
@@ -92,7 +93,12 @@ func handlerRoot(responseWriter, request) {
 
 serveMux = http.NewServeMux()
 serveMux.HandleFunc("/", handlerRoot)
-go http.ListenAndServe(":8080", serveMux)
+listener, err = net.Listen("tcp", ":8080")
+if err != nil {
+	fmt.Println(err)
+	return
+}
+go http.Serve(listener, serveMux)
 
 client = http.DefaultClient
 
