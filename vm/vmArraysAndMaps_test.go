@@ -1296,9 +1296,52 @@ func TestMakeMapsData(t *testing.T) {
 	}
 	value, err = env.Execute(`m["foo"]`)
 	if err != nil {
-		panic(err)
+		t.Errorf("Error evaluating map: %v", err)
 	}
 	if  value != 1 {
 		t.Errorf("Error evaluating map: %v != 1", value)
+	}
+
+	// maps with keys that are not strings won't return value
+	m = map[interface{}]interface{}{
+		1: "foo",
+		2: "bar",
+	}
+	env = NewEnv()
+	err = env.Define("m", m)
+	if err != nil {
+		t.Errorf("Error defining map: %v", err)
+	}
+	value, err = env.Execute(`m[1]`)
+	if err != nil {
+		t.Errorf("Error evaluating map: %v", err)
+	}
+	if  value != nil {
+		t.Errorf("Error evaluating map: %v != nil", value)
+	}
+
+	// maps with mixed keys can access string keys but not others
+	m = map[interface{}]interface{}{
+		"foo": 1,
+		2: "bar",
+	}
+	env = NewEnv()
+	err = env.Define("m", m)
+	if err != nil {
+		t.Errorf("Error defining map: %v", err)
+	}
+	value, err = env.Execute(`m["foo"]`)
+	if err != nil {
+		t.Errorf("Error evaluating map: %v", err)
+	}
+	if  value != 1 {
+		t.Errorf("Error evaluating map: %v != 1", value)
+	}
+	value, err = env.Execute(`m[2]`)
+	if err != nil {
+		t.Errorf("Error evaluating map: %v", err)
+	}
+	if  value != nil {
+		t.Errorf("Error evaluating map: %v != nil", value)
 	}
 }
