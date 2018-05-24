@@ -1283,4 +1283,22 @@ func TestMakeMapsData(t *testing.T) {
 	if b.Get("b") != "b" {
 		t.Errorf("Get value - received %#v - expected: %#v", b.Get("b"), "b")
 	}
+
+	// accept maps of interfaces with strings keys
+	m := map[interface{}]interface{}{
+		"foo": 1,
+		"bar": 2,
+	}
+	env = NewEnv()
+	err = env.Define("m", m)
+	if err != nil {
+		t.Errorf("Error defining map: %v", err)
+	}
+	value, err = env.Execute(`m["foo"]`)
+	if err != nil {
+		panic(err)
+	}
+	if  value != 1 {
+		t.Errorf("Error evaluating map: %v != 1", value)
+	}
 }
