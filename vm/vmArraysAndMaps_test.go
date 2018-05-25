@@ -980,6 +980,8 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b": 1, "c": nil}; a.c != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		// a["b"] = 1 should work but it doesn't
+		//{Script: `a = make(mapInterfaceInt); a["b"] = 1; a["b"] == 1`, RunOutput: false, Types: map[string]interface{}{"mapInterfaceInt": map[interface{}]int{}}},
 	}
 	testlib.Run(t, tests, nil)
 }
