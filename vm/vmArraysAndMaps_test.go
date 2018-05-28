@@ -980,8 +980,15 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b": 1, "c": nil}; a.c != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
-		// a["b"] = 1 should work but it doesn't
-		//{Script: `a = make(mapInterfaceInt); a["b"] = 1; a["b"] == 1`, RunOutput: false, Types: map[string]interface{}{"mapInterfaceInt": map[interface{}]int{}}},
+		{Script: `a = make(mapInterfaceInt64); a["b"] = 1; a == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}, Types: map[string]interface{}{"mapInterfaceInt64": map[interface{}]int64{}}},
+		{Script: `a = make(mapInterfaceInt64); a["b"] = 1; a["b"] == 1`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}, Types: map[string]interface{}{"mapInterfaceInt64": map[interface{}]int64{}}},
+		{Script: `a = make(mapInterfaceInt64); a["b"] = 1; a.b == 1`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}, Types: map[string]interface{}{"mapInterfaceInt64": map[interface{}]int64{}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a == "c"`, RunOutput: false, Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a["b"] == "c"`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a.b == "c"`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}},
+		{Script: `a = make(mapInterfaceBool); a["b"] = true; a == true`, RunOutput: false, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}, Types: map[string]interface{}{"mapInterfaceBool": map[interface{}]bool{}}},
+		{Script: `a = make(mapInterfaceBool); a["b"] = true; a["b"] == true`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}, Types: map[string]interface{}{"mapInterfaceBool": map[interface{}]bool{}}},
+		{Script: `a = make(mapInterfaceBool); a["b"] = true; a.b == true`, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}, Types: map[string]interface{}{"mapInterfaceBool": map[interface{}]bool{}}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1300,7 +1307,7 @@ func TestMakeMapsData(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error evaluating map: %v", err)
 	}
-	if  value != 1 {
+	if value != 1 {
 		t.Errorf("Error evaluating map: %v != 1", value)
 	}
 
@@ -1318,14 +1325,14 @@ func TestMakeMapsData(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error evaluating map: %v", err)
 	}
-	if  value != nil {
+	if value != nil {
 		t.Errorf("Error evaluating map: %v != nil", value)
 	}
 
 	// maps with mixed keys can access string keys but not others
 	m = map[interface{}]interface{}{
 		"foo": 1,
-		2: "bar",
+		2:     "bar",
 	}
 	env = NewEnv()
 	err = env.Define("m", m)
@@ -1336,14 +1343,14 @@ func TestMakeMapsData(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error evaluating map: %v", err)
 	}
-	if  value != 1 {
+	if value != 1 {
 		t.Errorf("Error evaluating map: %v != 1", value)
 	}
 	value, err = env.Execute(`m[2]`)
 	if err != nil {
 		t.Errorf("Error evaluating map: %v", err)
 	}
-	if  value != nil {
+	if value != nil {
 		t.Errorf("Error evaluating map: %v != nil", value)
 	}
 }
