@@ -162,7 +162,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 					keyType = i.Elem().Type()
 				}
 			}
-			if keyType != v.Type().Key() {
+			if keyType != v.Type().Key() && v.Type().Key() != interfaceType {
 				return nilValue, newStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
 			}
 
