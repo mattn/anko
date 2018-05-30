@@ -148,3 +148,64 @@ println("Hello World :)")
 
 	// output: Hello World :)
 }
+
+func Example_vmQuickStart() {
+	env := vm.NewEnv()
+
+	err := env.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("define error: %v\n", err)
+	}
+
+	script := `
+// declare variables
+x = 1
+y = x + 1
+
+// print using outside the script defined println function
+println(x + y) // 3
+
+// if else statement
+if x < 1 || y < 1 {
+	println(x)
+} else if x < 1 && y < 1 {
+	println(y)
+} else {
+	println(x + y)
+}
+
+// Array
+a = [1, 2, 3]
+println(a) // [1 2 3]
+println(a[0]) // 1
+
+// Map
+a = {"x": 1}
+println(a) // map[x:1]
+a.b = 2
+a["c"] = 3
+println(a["b"]) // 2
+println(a.c) // 3
+
+// function
+func a (x) {
+	println(x + 1)
+}
+a(3) // 4
+`
+
+	_, err = env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// 3
+	// 3
+	// [1 2 3]
+	// 1
+	// map[x:1]
+	// 2
+	// 3
+	// 4
+}
