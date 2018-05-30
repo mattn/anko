@@ -17,6 +17,7 @@ func init() {
 		"ListenAndServeTLS": http.ListenAndServeTLS,
 		"NewRequest":        http.NewRequest,
 		"NewServeMux":       http.NewServeMux,
+		"Serve":             http.Serve,
 		"SetCookie":         http.SetCookie,
 	}
 	PackageTypes["net/http"] = map[string]interface{}{

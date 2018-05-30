@@ -74,3 +74,54 @@ fmt.Println(result)
 	//
 	// bar
 }
+
+func Example_vmHttp() {
+	env := vm.NewEnv()
+	packages.DefineImport(env)
+
+	script := `
+fmt = import("fmt")
+io = import("io")
+ioutil = import("io/ioutil")
+net = import("net")
+http = import("net/http")
+time = import("time")
+
+func handlerRoot(responseWriter, request) {
+	io.WriteString(responseWriter, "Hello World :)")
+}
+
+serveMux = http.NewServeMux()
+serveMux.HandleFunc("/", handlerRoot)
+listener, err = net.Listen("tcp", ":8080")
+if err != nil {
+	fmt.Println(err)
+	return
+}
+go http.Serve(listener, serveMux)
+
+client = http.DefaultClient
+
+response, err = client.Get("http://localhost:8080/")
+if err != nil {
+	fmt.Println(err)
+	return
+}
+
+body, err = ioutil.ReadAll(response.Body)
+if err != nil {
+	fmt.Println(err)
+}
+response.Body.Close()
+
+fmt.Printf("%s\n", body)
+`
+
+	_, err := env.Execute(script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// Hello World :)
+}
