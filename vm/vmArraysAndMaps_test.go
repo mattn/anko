@@ -980,6 +980,20 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b": 1, "c": nil}; a.c != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d == 1`, RunOutput: false, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
 		{Script: `a = {"b": 1, "c": nil}; a.d != 1`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"b": int64(1), "c": nil}}},
+		{Script: `a = make(mapInterfaceInt64); a["b"] = 1; a["b"]`, Types: map[string]interface{}{"mapInterfaceInt64": map[interface{}]int64{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}},
+		{Script: `a = make(mapInterfaceInt64); a["b"] = 1; a.b`, Types: map[string]interface{}{"mapInterfaceInt64": map[interface{}]int64{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a["b"]`, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}, RunOutput: "c", Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a.b`, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}, RunOutput: "c", Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a = make(mapInterfaceBool); a["b"] = true; a["b"]`, Types: map[string]interface{}{"mapInterfaceBool": map[interface{}]bool{}}, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}},
+		{Script: `a = make(mapInterfaceBool); a["b"] = true; a.b`, Types: map[string]interface{}{"mapInterfaceBool": map[interface{}]bool{}}, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a["c"]`, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}, RunOutput: nil, Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a = make(mapInterfaceString); a["b"] = "c"; a.c`, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}, RunOutput: nil, Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a["b"]`, Input: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}, RunOutput: "c", Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a.b`, Input: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}, RunOutput: "c", Output: map[string]interface{}{"a": map[interface{}]string{"b": "c"}}},
+		{Script: `a["b"]`, Input: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}},
+		{Script: `a.b`, Input: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]int64{"b": int64(1)}}},
+		{Script: `a["b"]`, Input: map[string]interface{}{"a": map[interface{}]bool{"b": true}}, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}},
+		{Script: `a.b`, Input: map[string]interface{}{"a": map[interface{}]bool{"b": true}}, RunOutput: true, Output: map[string]interface{}{"a": map[interface{}]bool{"b": true}}},
 	}
 	testlib.Run(t, tests, nil)
 }

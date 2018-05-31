@@ -211,7 +211,7 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 			keyType = key.Elem().Type()
 		}
 	}
-	if keyType != aMap.Type().Key() {
+	if keyType != aMap.Type().Key() && aMap.Type().Key() != interfaceType {
 		return nilValue
 	}
 
