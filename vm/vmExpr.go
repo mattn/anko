@@ -561,7 +561,6 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return rhsV, nil
 
 	case *ast.IfInvalidOpExpr:
-		_, err := invokeExpr(e.Expr, env)
 		lhsV, err := invokeExpr(e.Lhs, env)
 		isZeroValue := reflect.DeepEqual(lhsV.Interface(), reflect.Zero(lhsV.Type()).Interface())
 		isEmpty := (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Map) && lhsV.Len() == 0
