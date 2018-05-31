@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/anko/ast"
 )
 
+// Env is an interface representing vm.Env.
 type Env interface {
 	DefineType(string, interface{}) error
 	Define(string, interface{}) error

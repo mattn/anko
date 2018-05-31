@@ -7,6 +7,7 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
+// Test is utility struct to make tests easy.
 type Test struct {
 	Script         string
 	ParseError     error
@@ -20,6 +21,7 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
+// Option is utility struct to pass options to the test.
 type Options struct {
 	EnvSetupFunc *func(*testing.T, corelib.Env)
 }

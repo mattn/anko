@@ -23,7 +23,7 @@ a += 3
 println(a)
 
 a = []
-// this automaticly appends to array
+// this automatically appends to array
 a[0] = 1
 println(a)
 

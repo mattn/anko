@@ -77,12 +77,12 @@ type testInteractive struct {
 
 func TestRunInteractive(t *testing.T) {
 	tests := []testInteractive{
-		testInteractive{runSource: "..", runError: "1:1 syntax error on '.' at 1:1"},
-		testInteractive{runSource: "1++", runError: "1:1 invalid operation"},
-		testInteractive{runSource: "var , b = 1, 2", runError: "1:7 syntax error: unexpected ','"},
+		{runSource: "..", runError: "1:1 syntax error on '.' at 1:1"},
+		{runSource: "1++", runError: "1:1 invalid operation"},
+		{runSource: "var , b = 1, 2", runError: "1:7 syntax error: unexpected ','"},
 
-		testInteractive{runSource: "\r\n1", runOutput: "> 1"},
-		testInteractive{runSource: "1 + 1", runOutput: "2"},
+		{runSource: "\r\n1", runOutput: "> 1"},
+		{runSource: "1 + 1", runOutput: "2"},
 	}
 	runInteractiveTests(t, tests)
 }
