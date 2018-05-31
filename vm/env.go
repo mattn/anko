@@ -428,7 +428,7 @@ func (e *Env) Copy() *Env {
 	e.Lock()
 	defer e.Unlock()
 	b := false
-	copy := Env {
+	copy := Env{
 		name:      e.name,
 		env:       make(map[string]reflect.Value),
 		typ:       make(map[string]reflect.Type),
