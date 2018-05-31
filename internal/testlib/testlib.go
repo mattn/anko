@@ -21,7 +21,7 @@ type Test struct {
 	Output         map[string]interface{}
 }
 
-// Option is utility struct to pass options to the test.
+// Options is utility struct to pass options to the test.
 type Options struct {
 	EnvSetupFunc *func(*testing.T, corelib.Env)
 }
