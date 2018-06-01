@@ -562,9 +562,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 
 	case *ast.IfInvalidOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
-		isZeroValue := reflect.DeepEqual(lhsV.Interface(), reflect.Zero(lhsV.Type()).Interface())
-		isEmpty := (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Map) && lhsV.Len() == 0
-		if err == nil && !isZeroValue && !isEmpty {
+		if exprBoolValue(lhsV) {
 			return lhsV, nil
 		}
 		rhsV, err := invokeExpr(e.Rhs, env)
@@ -792,4 +790,45 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 	default:
 		return nilValue, newStringError(e, "unknown expression")
 	}
+}
+
+// exprBoolValue attempts to evaluate the  true/false value of an expression.
+// When converting a string, the function returns
+// true if the string is the word "true", false if the string is "false",
+// false if the string is 0 or 0.0 and true otherwise if the string is nonempty.
+// The 'caseSensitive' flag affects the behavior when converting strings;
+// if set to true, the function only matches on "true" or "false", not
+// e.g. "True" or "FALSE"
+func exprBoolValue(v reflect.Value) bool {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+	switch v.Kind() {
+	case reflect.Float64, reflect.Float32:
+		return v.Float() != 0
+	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
+		return v.Int() != 0
+	case reflect.Bool:
+		return v.Bool()
+	case reflect.String:
+		s := v.String()
+		if s == "true" {
+			return true
+		} else if s == "false" {
+			return false
+		}
+		if toFloat64(v) != 0 {
+			return true
+		}
+		if v.Len() == 0 {
+			return false
+		}
+		return true
+	case reflect.Slice, reflect.Map:
+		if v.Len() > 0 {
+			return true
+		}
+		return false
+	}
+	return false
 }
