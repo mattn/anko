@@ -364,6 +364,7 @@ func TestComparisonOperators(t *testing.T) {
 func TestNilCoalescingOperator(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
+		{Script: `a = 1 ?? panic(2)`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = c ?? b`, RunError: fmt.Errorf("undefined symbol 'b'")},
 		{Script: `a = b ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": int64(0)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
