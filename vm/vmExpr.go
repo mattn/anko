@@ -812,15 +812,15 @@ func exprBoolValue(v reflect.Value) bool {
 		return v.Bool()
 	case reflect.String:
 		s := v.String()
+		if v.Len() == 0 {
+			return false
+		}
 		if s == "true" {
 			return true
 		} else if s == "false" {
 			return false
 		}
-		if toFloat64(v) != 0 {
-			return true
-		}
-		if v.Len() == 0 {
+		if f, err := tryToFloat64(v); err == nil && f == 0 {
 			return false
 		}
 		return true
