@@ -183,11 +183,11 @@ func equal(lhsV, rhsV reflect.Value) bool {
 
 	// Try to compare bools to strings and numbers
 	if lhsV.Kind() == reflect.Bool || rhsV.Kind() == reflect.Bool {
-		lhsB, err := tryToBool(lhsV, false)
+		lhsB, err := tryToBool(lhsV)
 		if err != nil {
 			return false
 		}
-		rhsB, err := tryToBool(rhsV, false)
+		rhsB, err := tryToBool(rhsV)
 		if err != nil {
 			return false
 		}
