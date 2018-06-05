@@ -449,3 +449,377 @@ func TestNilCoalescingOperator(t *testing.T) {
 	}
 	testlib.Run(t, tests, nil)
 }
+
+func TestIf(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `if false {} else if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `if false {} else if true { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `if true {}`, Input: map[string]interface{}{"a": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if true {}`, Input: map[string]interface{}{"a": true}, RunOutput: nil, Output: map[string]interface{}{"a": true}},
+		{Script: `if true {}`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `if true {}`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: nil, Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `if true {}`, Input: map[string]interface{}{"a": "a"}, RunOutput: nil, Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `if true {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if true {a = true}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `if true {a = 1}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `if true {a = 1.1}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `if true {a = "a"}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `if a == 1 {a = 1}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `if a == 2 {a = 1}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `if a == 1 {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `if a == 2 {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+
+		{Script: `if a == 1 {a = 1} else {a = 3}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `if a == 2 {a = 1} else {a = 3}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `if a == 1 {a = 1} else if a == 2 {a = 3}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else {a = 4}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+
+		{Script: `if a == 1 {a = 1} else {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if a == 2 {a = nil} else {a = 3}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if a == 1 {a = nil} else if a == 3 {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `if a == 1 {a = 1} else if a == 2 {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(5)}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+	}
+	testlib.Run(t, tests, nil)
+}
+
+func TestSwitch(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `switch {}`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a=1; switch a {case: return a}`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a=1; switch a; {}`, ParseError: fmt.Errorf("syntax error")},
+
+		{Script: `a=1; switch a {}`, RunOutput: int64(1)},
+
+		{Script: `a=1; switch a {case 1: return a}`, RunOutput: int64(1)},
+		{Script: `a=2; switch a {case 1,2: return a}`, RunOutput: int64(2)},
+		{Script: `a=3; switch a {case 1,2,3: return a}`, RunOutput: int64(3)},
+
+		{Script: `a=2; switch a {case 1: return a; case 2: return a}`, RunOutput: int64(2)},
+		{Script: `a=3; switch a {case 1,3: return a; case 2: return a}`, RunOutput: int64(3)},
+		{Script: `a=3; switch a {case 1: return a; case 2,3: return a}`, RunOutput: int64(3)},
+
+		{Script: `a=99; switch a {default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1: return a; default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1,2: return a; default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1,2,3: return a; default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1: return a; case 2: return a; default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1,3: return a; case 2: return a; default: return 'default'}`, RunOutput: "default"},
+		{Script: `a=99; switch a {case 1: return a; case 2,3: return a; default: return 'default'}`, RunOutput: "default"},
+
+		// TODO: After a parse error, the second default statement still runs and returns. Is this something to fix?
+		{Script: `a=99; switch a {case 1: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
+		{Script: `a=99; switch a {case 1,2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
+		{Script: `a=99; switch a {case 1: return a; case 2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
+	}
+	testlib.Run(t, tests, nil)
+}
+
+func TestForLoop(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `break`, RunError: fmt.Errorf("unexpected break statement")},
+		{Script: `continue`, RunError: fmt.Errorf("unexpected continue statement")},
+		{Script: `for 1++ { }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `for { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `for a in 1++ { }`, RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `for { break }`, RunOutput: nil},
+		{Script: `for {a = 1; if a == 1 { break } }`, RunOutput: nil},
+		{Script: `a = 1; for { if a == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for { if a == 1 { break }; a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+
+		{Script: `a = 1; for { a++; if a == 2 { continue } else { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `a = 1; for { a++; if a == 2 { continue }; if a == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `for a in [1] { if a == 1 { break } }`, RunOutput: nil},
+		{Script: `for a in [1, 2] { if a == 2 { break } }`, RunOutput: nil},
+		{Script: `for a in [1, 2, 3] { if a == 3 { break } }`, RunOutput: nil},
+
+		{Script: `a = [1]; for b in a { if b == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
+		{Script: `a = [1, 2]; for b in a { if b == 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{Script: `a = [1, 2, 3]; for b in a { if b == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		{Script: `a = [1]; b = 0; for c in a { b = c }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
+		{Script: `a = [1, 2]; b = 0; for c in a { b = c }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}, "b": int64(2)}},
+		{Script: `a = [1, 2, 3]; b = 0; for c in a { b = c }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}, "b": int64(3)}},
+
+		{Script: `a = 1; for a < 2 { a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for a < 3 { a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = 1; for nil { a++; if a > 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for nil { a++; if a > 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for true { a++; if a > 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `a = 1; for true { a++; if a > 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(4)}},
+
+		{Script: `func x() { return [1] }; for b in x() { if b == 1 { break } }`, RunOutput: nil},
+		{Script: `func x() { return [1, 2] }; for b in x() { if b == 2 { break } }`, RunOutput: nil},
+		{Script: `func x() { return [1, 2, 3] }; for b in x() { if b == 3 { break } }`, RunOutput: nil},
+
+		{Script: `func x() { a = 1; for { if a == 1 { return } } }; x()`, RunOutput: nil},
+		{Script: `func x() { a = 1; for { if a == 1 { return nil } } }; x()`, RunOutput: nil},
+		{Script: `func x() { a = 1; for { if a == 1 { return true } } }; x()`, RunOutput: true},
+		{Script: `func x() { a = 1; for { if a == 1 { return 1 } } }; x()`, RunOutput: int64(1)},
+		{Script: `func x() { a = 1; for { if a == 1 { return 1.1 } } }; x()`, RunOutput: float64(1.1)},
+		{Script: `func x() { a = 1; for { if a == 1 { return "a" } } }; x()`, RunOutput: "a"},
+
+		{Script: `func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()`, RunOutput: nil},
+		{Script: `func x() { for a in [1, 2, 3] { if a == 1 { continue } } }; x()`, RunOutput: nil},
+		{Script: `func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()`, RunOutput: nil},
+
+		{Script: `func x() { return [1, 2] }; a = 1; for i in x() { a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `func x() { return [1, 2, 3] }; a = 1; for i in x() { a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(4)}},
+
+		// TOFIX:
+		// {Script: `for a = 1, 2; nil; nil { return }`},
+		// {Script: `for a, b = 1; nil; nil { return }`},
+		// {Script: `for a, b = 1, 2; nil; nil { return }`},
+
+		{Script: `for a.b = 1; nil; nil { return }`, RunError: fmt.Errorf("undefined symbol 'a'")},
+
+		{Script: `for a = 1; nil; nil { if a == 1 { break } }`, RunOutput: nil},
+		{Script: `for a = 1; nil; nil { if a == 2 { break }; a++ }`, RunOutput: nil},
+		{Script: `for a = 1; nil; nil { a++; if a == 3 { break } }`, RunOutput: nil},
+
+		{Script: `for a = 1; a < 1; nil { }`, RunOutput: nil},
+		{Script: `for a = 1; a > 1; nil { }`, RunOutput: nil},
+		{Script: `for a = 1; a == 1; nil { break }`, RunOutput: nil},
+
+		{Script: `for a = 1; a == 1; a++ { }`, RunOutput: nil},
+		{Script: `for a = 1; a < 2; a++ { }`, RunOutput: nil},
+		{Script: `for a = 1; a < 3; a++ { }`, RunOutput: nil},
+
+		{Script: `a = 1; for b = 1; a < 1; a++ { }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 2; a++ { }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for b = 1; a < 3; a++ { }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = 1; for b = 1; a < 1; a++ {  if a == 1 { continue } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 2; a++ {  if a == 1 { continue } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for b = 1; a < 3; a++ {  if a == 1 { continue } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = 1; for b = 1; a < 1; a++ {  if a == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 2; a++ {  if a == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 3; a++ {  if a == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 1; a++ {  if a == 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 2; a++ {  if a == 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for b = 1; a < 3; a++ {  if a == 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for b = 1; a < 1; a++ {  if a == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for b = 1; a < 2; a++ {  if a == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1; for b = 1; a < 3; a++ {  if a == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = ["123", "456", "789"]; b = ""; for i = 0; i < len(a); i++ { b += a[i][len(a[i]) - 2:]; b += a[i][:len(a[i]) - 2] }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{"123", "456", "789"}, "b": "231564897"}},
+		{Script: `a = [[["123"], ["456"]], [["789"]]]; b = ""; for i = 0; i < len(a); i++ { for j = 0; j < len(a[i]); j++ {  for k = 0; k < len(a[i][j]); k++ { for l = 0; l < len(a[i][j][k]); l++ { b += a[i][j][k][l] + "-" } } } }`,
+			RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{[]interface{}{[]interface{}{"123"}, []interface{}{"456"}}, []interface{}{[]interface{}{"789"}}}, "b": "1-2-3-4-5-6-7-8-9-"}},
+
+		{Script: `func x() { for a = 1; a < 3; a++ { if a == 1 { return a } } }; x()`, RunOutput: int64(1)},
+		{Script: `func x() { for a = 1; a < 3; a++ { if a == 2 { return a } } }; x()`, RunOutput: int64(2)},
+		{Script: `func x() { for a = 1; a < 3; a++ { if a == 3 { return a } } }; x()`, RunOutput: nil},
+		{Script: `func x() { for a = 1; a < 3; a++ { if a == 4 { return a } } }; x()`, RunOutput: nil},
+
+		{Script: `func x() { a = 1; for b = 1; a < 3; a++ { if a == 1 { continue } }; return a }; x()`, RunOutput: int64(3)},
+		{Script: `func x() { a = 1; for b = 1; a < 3; a++ { if a == 2 { continue } }; return a }; x()`, RunOutput: int64(3)},
+		{Script: `func x() { a = 1; for b = 1; a < 3; a++ { if a == 3 { continue } }; return a }; x()`, RunOutput: int64(3)},
+		{Script: `func x() { a = 1; for b = 1; a < 3; a++ { if a == 4 { continue } }; return a }; x()`, RunOutput: int64(3)},
+
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{reflect.Value{}}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{reflect.Value{}}, "b": reflect.Value{}}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{nil}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{nil}, "b": nil}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{true}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{true}, "b": true}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{int32(1)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int32(1)}, "b": int32(1)}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{int64(1)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1)}, "b": int64(1)}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{float32(1.1)}, "b": float32(1.1)}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{float64(1.1)}, "b": float64(1.1)}},
+
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(reflect.Value{})}, "b": interface{}(reflect.Value{})}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(nil)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(nil)}, "b": interface{}(nil)}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(true)}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(true)}, "b": interface{}(true)}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(int32(1))}, "b": interface{}(int32(1))}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(int64(1))}, "b": interface{}(int64(1))}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(float32(1.1))}, "b": interface{}(float32(1.1))}},
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}}, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{interface{}(float64(1.1))}, "b": interface{}(float64(1.1))}},
+
+		{Script: `b = 0; for i in a { b = i }`, Input: map[string]interface{}{"a": interface{}([]interface{}{nil})}, RunOutput: nil, Output: map[string]interface{}{"a": interface{}([]interface{}{nil}), "b": nil}},
+
+		{Script: `for i in nil { }`, RunError: fmt.Errorf("for cannot loop over type interface")},
+		{Script: `for i in true { }`, RunError: fmt.Errorf("for cannot loop over type bool")},
+		{Script: `for i in a { }`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("for cannot loop over type struct"), Output: map[string]interface{}{"a": reflect.Value{}}},
+		{Script: `for i in a { }`, Input: map[string]interface{}{"a": interface{}(nil)}, RunError: fmt.Errorf("for cannot loop over type interface"), Output: map[string]interface{}{"a": interface{}(nil)}},
+		{Script: `for i in a { }`, Input: map[string]interface{}{"a": interface{}(true)}, RunError: fmt.Errorf("for cannot loop over type bool"), Output: map[string]interface{}{"a": interface{}(true)}},
+		{Script: `for i in [1, 2, 3] { b++ }`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `for a = 1; a < 3; a++ { b++ }`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `for a = b; a < 3; a++ { }`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `for a = 1; b < 3; a++ { }`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `for a = 1; a < 3; b++ { }`, RunError: fmt.Errorf("undefined symbol 'b'")},
+
+		{Script: `a = 1; b = [{"c": "c"}]; for i in b { a = i }`, RunOutput: nil, Output: map[string]interface{}{"a": map[string]interface{}{"c": "c"}, "b": []interface{}{map[string]interface{}{"c": "c"}}}},
+		{Script: `a = 1; b = {"x": [{"y": "y"}]};  for i in b.x { a = i }`, RunOutput: nil, Output: map[string]interface{}{"a": map[string]interface{}{"y": "y"}, "b": map[string]interface{}{"x": []interface{}{map[string]interface{}{"y": "y"}}}}},
+
+		{Script: `a = {}; b = 1; for i in a { b = i }; b`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[string]interface{}{}, "b": int64(1)}},
+		{Script: `a = {"x": 2}; b = 1; for i in a { b = i }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
+		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { b++ }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": int64(2)}},
+		{Script: `a = {"x": 2, "y": 3}; for i in a { b++ }`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
+
+		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { if i ==  "x" { continue }; b = i }; b`, RunOutput: "y", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": "y"}},
+		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { if i ==  "y" { continue }; b = i }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": "x"}},
+		{Script: `a = {"x": 2, "y": 3}; for i in a { if i ==  "x" { return 1 } }`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
+		{Script: `a = {"x": 2, "y": 3}; for i in a { if i ==  "y" { return 2 } }`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
+		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { if i ==  "x" { break }; b++ }; if b > 1 { return false } else { return true }`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
+		{Script: `a = {"x": 2, "y": 3}; b = 0; for i in a { if i ==  "y" { break }; b++ }; if b > 1 { return false } else { return true }`, RunOutput: true, Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}}},
+		{Script: `a = {"x": 2, "y": 3}; b = 1; for i in a { if (i ==  "x" || i ==  "y") { break }; b++ }; b`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2), "y": int64(3)}, "b": int64(1)}},
+
+		{Script: `a = ["123", "456", "789"]; b = ""; for v in a { b += v[len(v) - 2:]; b += v[:len(v) - 2] }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{"123", "456", "789"}, "b": "231564897"}},
+		{Script: `a = [[["123"], ["456"]], [["789"]]]; b = ""; for x in a { for y in x  {  for z in y { for i = 0; i < len(z); i++ { b += z[i] + "-" } } } }`,
+			RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{[]interface{}{[]interface{}{"123"}, []interface{}{"456"}}, []interface{}{[]interface{}{"789"}}}, "b": "1-2-3-4-5-6-7-8-9-"}},
+
+		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = k }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": "x"}},
+		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = v }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[string]interface{}{"x": int64(2)}, "b": int64(2)}},
+	}
+	testlib.Run(t, tests, nil)
+}
+
+func TestItemInList(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `"a" in ["a"]`, RunOutput: true},
+		{Script: `"a" in ["b"]`, RunOutput: false},
+		{Script: `"a" in ["c", "b", "a"]`, RunOutput: true},
+		{Script: `"a" in ["a", "b", 1]`, RunOutput: true},
+		{Script: `"a" in l`, Input: map[string]interface{}{"l": []interface{}{"a"}}, RunOutput: true},
+		{Script: `"a" in l`, Input: map[string]interface{}{"l": []interface{}{"b"}}, RunOutput: false},
+		{Script: `"a" in l`, Input: map[string]interface{}{"l": []interface{}{"c", "b", "a"}}, RunOutput: true},
+		{Script: `"a" in l`, Input: map[string]interface{}{"l": []interface{}{"a", "b", 1}}, RunOutput: true},
+
+		{Script: `1 in [1]`, RunOutput: true},
+		{Script: `1 in [2]`, RunOutput: false},
+		{Script: `1 in [3, 2, 1]`, RunOutput: true},
+		{Script: `1 in ["1"]`, RunOutput: true},
+		{Script: `1 in l`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `"1" in l`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1 in l`, Input: map[string]interface{}{"l": []interface{}{2}}, RunOutput: false},
+		{Script: `1 in l`, Input: map[string]interface{}{"l": []interface{}{3, 2, 1}}, RunOutput: true},
+		{Script: `1 in l`, Input: map[string]interface{}{"l": []interface{}{"1"}}, RunOutput: true},
+
+		{Script: `0.9 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `1.0 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1.1 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `1 in [0.9]`, Input: map[string]interface{}{"l": []interface{}{0.9}}, RunOutput: false},
+		{Script: `1 in [1.0]`, Input: map[string]interface{}{"l": []interface{}{1.0}}, RunOutput: true},
+		{Script: `1 in [1.1]`, Input: map[string]interface{}{"l": []interface{}{1.1}}, RunOutput: false},
+		{Script: `0.9 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `1.0 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1.1 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `1 in [0.9]`, Input: map[string]interface{}{"l": []interface{}{0.9}}, RunOutput: false},
+		{Script: `1 in [1.0]`, Input: map[string]interface{}{"l": []interface{}{1.0}}, RunOutput: true},
+		{Script: `1 in [1.1]`, Input: map[string]interface{}{"l": []interface{}{1.1}}, RunOutput: false},
+
+		{Script: `true in ["true"]`, RunOutput: true},
+		{Script: `true in [true]`, RunOutput: true},
+		{Script: `true in [true, false]`, RunOutput: true},
+		{Script: `false in [false, true]`, RunOutput: true},
+		{Script: `true in l`, Input: map[string]interface{}{"l": []interface{}{"true"}}, RunOutput: true},
+		{Script: `true in l`, Input: map[string]interface{}{"l": []interface{}{true}}, RunOutput: true},
+		{Script: `true in l`, Input: map[string]interface{}{"l": []interface{}{true, false}}, RunOutput: true},
+		{Script: `false in l`, Input: map[string]interface{}{"l": []interface{}{false, true}}, RunOutput: true},
+
+		{Script: `"a" in ["b", "a", "c"][1:]`, RunOutput: true},
+		{Script: `"a" in ["b", "a", "c"][:1]`, RunOutput: false},
+		{Script: `"a" in ["b", "a", "c"][1:2]`, RunOutput: true},
+		{Script: `l = ["b", "a", "c"];"a" in l[1:]`, RunOutput: true},
+		{Script: `l = ["b", "a", "c"];"a" in l[:1]`, RunOutput: false},
+		{Script: `l = ["b", "a", "c"];"a" in l[1:2]`, RunOutput: true},
+		{Script: `"a" in l[1:]`, Input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, RunOutput: true},
+		{Script: `"a" in l[:1]`, Input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, RunOutput: false},
+		{Script: `"a" in l[1:2]`, Input: map[string]interface{}{"l": []interface{}{"b", "a", "c"}}, RunOutput: true},
+
+		// for i in list && item in list
+		{Script: `list_of_list = [["a"]];for l in list_of_list { return "a" in l }`, RunOutput: true},
+		{Script: `for l in list_of_list { return "a" in l }`, Input: map[string]interface{}{"list_of_list": []interface{}{[]interface{}{"a"}}}, RunOutput: true},
+
+		// not slice or array
+		// todo: support `"a" in "aaa"` ?
+		{Script: `"a" in "aaa"`, RunError: fmt.Errorf("second argument must be slice or array; but have string")},
+		{Script: `1 in 12345`, RunError: fmt.Errorf("type int64 does not support slice operation")},
+
+		// a in item in list
+		{Script: `"a" in 5 in [1, 2, 3]`, RunError: fmt.Errorf("type bool does not support slice operation")},
+
+		// applying a in b in several part of expresstion/statement
+		{Script: `switch 1 in [1] {case true: return true;default: return false}`, RunOutput: true},
+		{Script: `switch 1 in [2,3] {case true: return true;default: return false}`, RunOutput: false},
+		{Script: `switch true {case 1 in [1]: return true;default: return false}`, RunOutput: true},
+		{Script: `switch false {case 1 in [1]: return true;default: return false}`, RunOutput: false},
+		{Script: `if 1 in [1] {return true} else {return false}`, RunOutput: true},
+		{Script: `if 1 in [2,3] {return true} else {return false}`, RunOutput: false},
+		{Script: `for i in [1,2,3] { i++ }`},
+		{Script: `a=1; a=a in [1]`, RunOutput: true},
+		{Script: `a=1; a=a in [2,3]`, RunOutput: false},
+		{Script: `1 in [1] && true`, RunOutput: true},
+		{Script: `1 in [1] && false`, RunOutput: false},
+		{Script: `1 in [1] || true`, RunOutput: true},
+		{Script: `1 in [1] || false`, RunOutput: true},
+		{Script: `1 in [2,3] && true`, RunOutput: false},
+		{Script: `1 in [2,3] && false`, RunOutput: false},
+		{Script: `1 in [2,3] || true`, RunOutput: true},
+		{Script: `1 in [2,3] || false`, RunOutput: false},
+		{Script: `1++ in [1, 2, 3]`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `3++ in [1, 2, 3]`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `1 in 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a=1;a++ in [1, 2, 3]`, RunOutput: true},
+		{Script: `a=3;a++ in [1, 2, 3]`, RunOutput: false},
+		{Script: `switch 1 in l {case true: return true;default: return false}`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `switch 1 in l {case true: return true;default: return false}`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `switch true {case 1 in l: return true;default: return false}`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `switch false {case 1 in l: return true;default: return false}`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `if 1 in l {return true} else {return false}`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `if 1 in l {return true} else {return false}`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `for i in l { i++ }`, Input: map[string]interface{}{"l": []interface{}{1, 2, 3}}},
+		{Script: `a=1; a=a in l`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `a=1; a=a in l`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `1 in l && true`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1 in l && false`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `1 in l || true`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1 in l || false`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1 in l && true`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `1 in l && false`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `1 in l || true`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: true},
+		{Script: `1 in l || false`, Input: map[string]interface{}{"l": []interface{}{2, 3}}, RunOutput: false},
+		{Script: `1++ in l`, Input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, RunError: fmt.Errorf("invalid operation")},
+		{Script: `3++ in l`, Input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a=1;a++ in l`, Input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, RunOutput: true},
+		{Script: `a=3;a++ in l`, Input: map[string]interface{}{"l": []interface{}{1, 2, 3}}, RunOutput: false},
+
+		// multidimensional slice
+		{Script: `1 in [1]`, RunOutput: true},
+		{Script: `1 in [[1]]`, RunOutput: false},
+		{Script: `1 in [[[1]]]`, RunOutput: false},
+		{Script: `1 in [[1],[[1]],1]`, RunOutput: true},
+		{Script: `[1] in [1]`, RunOutput: false},
+		{Script: `[1] in [[1]]`, RunOutput: true},
+		{Script: `[1] in [[[1]]]`, RunOutput: false},
+		{Script: `[[1]] in [1]`, RunOutput: false},
+		{Script: `[[1]] in [[1]]`, RunOutput: false},
+		{Script: `[[1]] in [[[1]]]`, RunOutput: true},
+		{Script: `1 in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: true},
+		{Script: `1 in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
+		{Script: `1 in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: false},
+		{Script: `1 in [[1],[[1]],1]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}, []interface{}{[]interface{}{1}}, 1}}, RunOutput: true},
+		{Script: `[1] in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `[1] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: true},
+		{Script: `[1] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: false},
+		{Script: `[[1]] in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
+		{Script: `[[1]] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
+		{Script: `[[1]] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: true},
+	}
+	testlib.Run(t, tests, nil)
+}

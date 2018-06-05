@@ -266,75 +266,6 @@ func TestMakeType(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
-func TestLen(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
-		{Script: `len(1++)`, RunError: fmt.Errorf("invalid operation")},
-		{Script: `len(true)`, RunError: fmt.Errorf("type bool does not support len operation")},
-
-		{Script: `a = ""; len(a)`, RunOutput: int64(0)},
-		{Script: `a = "test"; len(a)`, RunOutput: int64(4)},
-		{Script: `a = []; len(a)`, RunOutput: int64(0)},
-		{Script: `a = [nil]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [true]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = ["test"]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [1]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [1.1]; len(a)`, RunOutput: int64(1)},
-
-		{Script: `a = [[]]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [[nil]]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [[true]]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [["test"]]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [[1]]; len(a)`, RunOutput: int64(1)},
-		{Script: `a = [[1.1]]; len(a)`, RunOutput: int64(1)},
-
-		{Script: `a = [[]]; len(a[0])`, RunOutput: int64(0)},
-		{Script: `a = [[nil]]; len(a[0])`, RunOutput: int64(1)},
-		{Script: `a = [[true]]; len(a[0])`, RunOutput: int64(1)},
-		{Script: `a = [["test"]]; len(a[0])`, RunOutput: int64(1)},
-		{Script: `a = [[1]]; len(a[0])`, RunOutput: int64(1)},
-		{Script: `a = [[1.1]]; len(a[0])`, RunOutput: int64(1)},
-
-		{Script: `len(a)`, Input: map[string]interface{}{"a": "a"}, RunOutput: int64(1), Output: map[string]interface{}{"a": "a"}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": map[string]interface{}{}}, RunOutput: int64(0), Output: map[string]interface{}{"a": map[string]interface{}{}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}, RunOutput: int64(1), Output: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}},
-		{Script: `len(a["test"])`, Input: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}, RunOutput: int64(4), Output: map[string]interface{}{"a": map[string]interface{}{"test": "test"}}},
-
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{}}, RunOutput: int64(0), Output: map[string]interface{}{"a": []interface{}{}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{nil}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{nil}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{true}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{true}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{int32(1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{int32(1)}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{int64(1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{float32(1.1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{float32(1.1)}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{float64(1.1)}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{float64(1.1)}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": []interface{}{"a"}}, RunOutput: int64(1), Output: map[string]interface{}{"a": []interface{}{"a"}}},
-
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": []interface{}{"test"}}, RunOutput: int64(4), Output: map[string]interface{}{"a": []interface{}{"test"}}},
-
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{}}, RunOutput: int64(0), Output: map[string]interface{}{"a": [][]interface{}{}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{nil}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{nil}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{nil}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{nil}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{true}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{true}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
-		{Script: `len(a)`, Input: map[string]interface{}{"a": [][]interface{}{{"a"}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{"a"}}}},
-
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{nil}}, RunOutput: int64(0), Output: map[string]interface{}{"a": [][]interface{}{nil}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{nil}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{nil}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{true}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{true}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{int32(1)}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{int64(1)}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{float32(1.1)}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
-		{Script: `len(a[0])`, Input: map[string]interface{}{"a": [][]interface{}{{"a"}}}, RunOutput: int64(1), Output: map[string]interface{}{"a": [][]interface{}{{"a"}}}},
-
-		{Script: `len(a[0][0])`, Input: map[string]interface{}{"a": [][]interface{}{{"test"}}}, RunOutput: int64(4), Output: map[string]interface{}{"a": [][]interface{}{{"test"}}}},
-	}
-	testlib.Run(t, tests, nil)
-}
-
 func TestReferencingAndDereference(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
@@ -416,6 +347,122 @@ func TestVMDelete(t *testing.T) {
 		{Script: `a = 1; func b() { delete("a") }; b()`, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; func b() { delete("a", false) }; b()`, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; func b() { delete("a", true) }; b(); a`, RunError: fmt.Errorf("undefined symbol 'a'")},
+	}
+	testlib.Run(t, tests, nil)
+}
+
+func TestComment(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `# 1`},
+		{Script: `# 1;`},
+		{Script: `# 1 // 2`},
+		{Script: `# 1 \n 2`},
+		{Script: `# 1 # 2`},
+
+		{Script: `1# 1`, RunOutput: int64(1)},
+		{Script: `1# 1;`, RunOutput: int64(1)},
+		{Script: `1# 1 // 2`, RunOutput: int64(1)},
+		{Script: `1# 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1# 1 # 2`, RunOutput: int64(1)},
+
+		{Script: `1
+# 1`, RunOutput: int64(1)},
+		{Script: `1
+# 1;`, RunOutput: int64(1)},
+		{Script: `1
+# 1 // 2`, RunOutput: int64(1)},
+		{Script: `1
+# 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1
+# 1 # 2`, RunOutput: int64(1)},
+
+		{Script: `// 1`},
+		{Script: `// 1;`},
+		{Script: `// 1 // 2`},
+		{Script: `// 1 \n 2`},
+		{Script: `// 1 # 2`},
+
+		{Script: `1// 1`, RunOutput: int64(1)},
+		{Script: `1// 1;`, RunOutput: int64(1)},
+		{Script: `1// 1 // 2`, RunOutput: int64(1)},
+		{Script: `1// 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1// 1 # 2`, RunOutput: int64(1)},
+
+		{Script: `1
+// 1`, RunOutput: int64(1)},
+		{Script: `1
+// 1;`, RunOutput: int64(1)},
+		{Script: `1
+// 1 // 2`, RunOutput: int64(1)},
+		{Script: `1
+// 1 \n 2`, RunOutput: int64(1)},
+		{Script: `1
+// 1 # 2`, RunOutput: int64(1)},
+
+		{Script: `/* 1 */`},
+		{Script: `/* * 1 */`},
+		{Script: `/* 1 * */`},
+		{Script: `/** 1 */`},
+		{Script: `/*** 1 */`},
+		{Script: `/**** 1 */`},
+		{Script: `/* 1 **/`},
+		{Script: `/* 1 ***/`},
+		{Script: `/* 1 ****/`},
+		{Script: `/** 1 ****/`},
+		{Script: `/*** 1 ****/`},
+		{Script: `/**** 1 ****/`},
+
+		{Script: `1/* 1 */`, RunOutput: int64(1)},
+		{Script: `1/* * 1 */`, RunOutput: int64(1)},
+		{Script: `1/* 1 * */`, RunOutput: int64(1)},
+		{Script: `1/** 1 */`, RunOutput: int64(1)},
+		{Script: `1/*** 1 */`, RunOutput: int64(1)},
+		{Script: `1/**** 1 */`, RunOutput: int64(1)},
+		{Script: `1/* 1 **/`, RunOutput: int64(1)},
+		{Script: `1/* 1 ***/`, RunOutput: int64(1)},
+		{Script: `1/* 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/*** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1/**** 1 ****/`, RunOutput: int64(1)},
+
+		{Script: `/* 1 */1`, RunOutput: int64(1)},
+		{Script: `/* * 1 */1`, RunOutput: int64(1)},
+		{Script: `/* 1 * */1`, RunOutput: int64(1)},
+		{Script: `/** 1 */1`, RunOutput: int64(1)},
+		{Script: `/*** 1 */1`, RunOutput: int64(1)},
+		{Script: `/**** 1 */1`, RunOutput: int64(1)},
+		{Script: `/* 1 **/1`, RunOutput: int64(1)},
+		{Script: `/* 1 ***/1`, RunOutput: int64(1)},
+		{Script: `/* 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/** 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/*** 1 ****/1`, RunOutput: int64(1)},
+		{Script: `/**** 1 ****/1`, RunOutput: int64(1)},
+
+		{Script: `1
+/* 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* * 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 * */`, RunOutput: int64(1)},
+		{Script: `1
+/** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/*** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/**** 1 */`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 **/`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 ***/`, RunOutput: int64(1)},
+		{Script: `1
+/* 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/*** 1 ****/`, RunOutput: int64(1)},
+		{Script: `1
+/**** 1 ****/`, RunOutput: int64(1)},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -613,28 +660,6 @@ func TestRunSingleStmt(t *testing.T) {
 	}
 	if value != nil {
 		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, nil)
-	}
-}
-
-func TestCallFunctionWithVararg(t *testing.T) {
-	env := NewEnv()
-	err := env.Define("X", func(args ...string) []string {
-		return args
-	})
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-	want := []string{"foo", "bar", "baz"}
-	err = env.Define("a", want)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-	got, err := env.Execute(`X(a...)`)
-	if err != nil {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("execute error - received %#v - expected: %#v", got, want)
 	}
 }
 
