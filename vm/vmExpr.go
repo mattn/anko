@@ -560,7 +560,7 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		}
 		return rhsV, nil
 
-	case *ast.IfInvalidOpExpr:
+	case *ast.NilCoalescingOpExpr:
 		lhsV, err := invokeExpr(e.Lhs, env)
 		if toBool(lhsV) {
 			return lhsV, nil

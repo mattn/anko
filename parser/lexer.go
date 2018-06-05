@@ -149,7 +149,7 @@ retry:
 			s.next()
 			switch s.peek() {
 			case '?':
-				tok = IFINVALID
+				tok = NILCOALESCE
 				lit = "??"
 			default:
 				s.back()

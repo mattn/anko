@@ -58,7 +58,7 @@ const NEW = 57365
 const TRUE = 57366
 const FALSE = 57367
 const NIL = 57368
-const IFINVALID = 57369
+const NILCOALESCE = 57369
 const MODULE = 57370
 const TRY = 57371
 const CATCH = 57372
@@ -115,7 +115,7 @@ var yyToknames = [...]string{
 	"TRUE",
 	"FALSE",
 	"NIL",
-	"IFINVALID",
+	"NILCOALESCE",
 	"MODULE",
 	"TRY",
 	"CATCH",
@@ -1793,7 +1793,7 @@ yydefault:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		//line parser.go.y:508
 		{
-			yyVAL.expr = &ast.IfInvalidOpExpr{Expr: yyDollar[1].expr, Lhs: yyDollar[1].expr, Rhs: yyDollar[3].expr}
+			yyVAL.expr = &ast.NilCoalescingOpExpr{Lhs: yyDollar[1].expr, Rhs: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 83:
