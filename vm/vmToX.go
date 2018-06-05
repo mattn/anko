@@ -27,18 +27,16 @@ func toString(v reflect.Value) string {
 
 // toBool converts all reflect.Value-s into bool.
 func toBool(v reflect.Value) bool {
-	b, _ := tryToBool(v, true)
+	b, _ := tryToBool(v)
 	return b
 }
 
 // tryToBool attempts to convert the value 'v' to a boolean, returning
 // an error if it cannot. When converting a string, the function returns
-// true if the string is the word "true", false if the string is "false",
-// and returns false & an error if it is any other string.
-// The 'caseSensitive' flag affects the behavior when converting strings;
-// if set to true, the function only matches on "true" or "false", not
-// e.g. "True" or "FALSE"
-func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
+// true if the string nonempty and does not satisfy the condition for false
+// with parseBool https://golang.org/pkg/strconv/#ParseBool
+// and is not 0.0
+func tryToBool(v reflect.Value) (bool, error) {
 	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
@@ -50,19 +48,24 @@ func tryToBool(v reflect.Value, caseSensitive bool) (bool, error) {
 	case reflect.Bool:
 		return v.Bool(), nil
 	case reflect.String:
-		s := v.String()
-		if !caseSensitive {
-			s = strings.ToLower(s)
-		}
-		if s == "true" {
-			return true, nil
-		} else if s == "false" {
+		if v.Len() == 0 {
 			return false, nil
 		}
-		if toInt64(v) != 0 {
+
+		s := v.String()
+		if b, err := strconv.ParseBool(s); err == nil && !b {
+			return false, nil
+		}
+
+		if f, err := tryToFloat64(v); err == nil && f == 0 {
+			return false, nil
+		}
+		return true, nil
+	case reflect.Slice, reflect.Map:
+		if v.Len() > 0 {
 			return true, nil
 		}
-		return false, errors.New("couldn't convert string to bool")
+		return false, nil
 	}
 	return false, errors.New("unknown type")
 }

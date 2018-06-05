@@ -88,6 +88,13 @@ type BinOpExpr struct {
 	Rhs      Expr
 }
 
+// NilCoalescingOpExpr provide if invalid operator expression.
+type NilCoalescingOpExpr struct {
+	ExprImpl
+	Lhs Expr
+	Rhs Expr
+}
+
 // TernaryOpExpr provide ternary operator expression.
 type TernaryOpExpr struct {
 	ExprImpl
