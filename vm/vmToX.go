@@ -48,11 +48,11 @@ func tryToBool(v reflect.Value) (bool, error) {
 	case reflect.Bool:
 		return v.Bool(), nil
 	case reflect.String:
-		s := v.String()
 		if v.Len() == 0 {
 			return false, nil
 		}
 
+		s := v.String()
 		if b, err := strconv.ParseBool(s); err == nil && !b {
 			return false, nil
 		}
