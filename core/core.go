@@ -13,15 +13,15 @@ import (
 
 // Import defines core language builtins - keys, range, println,  etc.
 func Import(env *vm.Env) *vm.Env {
-	env.Define("keys", func(v interface{}) []string {
+	env.Define("keys", func(v interface{}) []interface{} {
 		rv := reflect.ValueOf(v)
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
 		mapKeysValue := rv.MapKeys()
-		mapKeys := make([]string, len(mapKeysValue))
+		mapKeys := make([]interface{}, len(mapKeysValue))
 		for i := 0; i < len(mapKeysValue); i++ {
-			mapKeys[i] = mapKeysValue[i].String()
+			mapKeys[i] = mapKeysValue[i].Interface()
 		}
 		return mapKeys
 	})

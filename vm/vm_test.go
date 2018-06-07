@@ -49,6 +49,14 @@ func init() {
 func TestNumbers(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
+		{Script: ``},
+		{Script: `;`},
+		{Script: `
+`},
+		{Script: `
+1
+`, RunOutput: int64(1)},
+
 		{Script: `1..1`, RunError: fmt.Errorf(`strconv.ParseFloat: parsing "1..1": invalid syntax`)},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, RunError: fmt.Errorf(`strconv.ParseInt: parsing "9223372036854775808": value out of range`)},
@@ -184,6 +192,10 @@ func TestVar(t *testing.T) {
 	tests := []testlib.Test{
 		{Script: `a := 1`, ParseErrorFunc: &parseErrFunc},
 		{Script: `var a = 1++`, RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `
+a  = 1;
+`, RunOutput: int64(1)},
 
 		{Script: `var , b = 1, 2`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(2), Output: map[string]interface{}{"b": int64(1)}},
 		{Script: `var a,  = 1, 2`, ParseError: fmt.Errorf("syntax error")},

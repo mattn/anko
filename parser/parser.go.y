@@ -18,8 +18,7 @@ import (
 %type<exprs> exprs
 %type<expr_many> expr_many
 %type<expr_lets> expr_lets
-%type<expr_pair> expr_pair
-%type<expr_pairs> expr_pairs
+%type<map_expr> map_expr
 %type<expr_idents> expr_idents
 %type<expr_type> expr_type
 %type<array_count> array_count
@@ -38,14 +37,10 @@ import (
 	exprs                  []ast.Expr
 	expr_many              []ast.Expr
 	expr_lets              ast.Expr
-	expr_pair              ast.Expr
-	expr_pairs             []ast.Expr
+	map_expr              map[ast.Expr]ast.Expr
 	expr_idents            []string
 	expr_type              string
 	tok                    ast.Token
-	term                   ast.Token
-	terms                  ast.Token
-	opt_terms              ast.Token
 	array_count            ast.ArrayCount
 	expr_slice             ast.Expr
 	stmt_multi_case        []ast.Stmt
@@ -69,31 +64,29 @@ import (
 
 %%
 
-compstmt : 
-	opt_terms
+compstmt :
+	opt_term
 	{
 		$$ = nil
 	}
-	| stmts opt_terms
+	| stmts opt_term
 	{
 		$$ = $1
 	}
 
 stmts :
+	opt_term stmt
 	{
-		$$ = nil
+		if $2 != nil {
+			$$ = []ast.Stmt{$2}
+		} else {
+			$$ = []ast.Stmt{}
+		}
 		if l, ok := yylex.(*Lexer); ok {
 			l.stmts = $$
 		}
 	}
-	| opt_terms stmt
-	{
-		$$ = []ast.Stmt{$2}
-		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
-		}
-	}
-	| stmts terms stmt
+	| stmts term stmt
 	{
 		if $3 != nil {
 			$$ = append($1, $3)
@@ -104,6 +97,11 @@ stmts :
 	}
 
 stmt :
+	/* nothing */
+	{
+		$$ = nil
+	}
+	|
 	VAR expr_idents '=' expr_many
 	{
 		$$ = &ast.VarStmt{Names: $2, Exprs: $4}
@@ -195,9 +193,9 @@ stmt :
 		$$ = &ast.TryStmt{Try: $3, Catch: $7}
 		$$.SetPosition($1.Position())
 	}
-	| SWITCH expr '{' stmt_cases '}'
+	| SWITCH expr '{' opt_newlines stmt_cases opt_newlines '}'
 	{
-		$$ = &ast.SwitchStmt{Expr: $2, Cases: $4}
+		$$ = &ast.SwitchStmt{Expr: $2, Cases: $5}
 		$$.SetPosition($1.Position())
 	}
 	| GO IDENT '(' exprs VARARG ')'
@@ -252,21 +250,21 @@ stmt_cases :
 	{
 		$$ = []ast.Stmt{}
 	}
-	| opt_terms stmt_case
+	| stmt_case
 	{
-		$$ = []ast.Stmt{$2}
+		$$ = []ast.Stmt{$1}
 	}
-	| opt_terms stmt_default
+	| stmt_default
 	{
-		$$ = []ast.Stmt{$2}
+		$$ = []ast.Stmt{$1}
 	}
 	| stmt_cases stmt_case
 	{
 		$$ = append($1, $2)
 	}
-	| opt_terms stmt_multi_case
+	| stmt_multi_case
 	{
-		$$ = $2
+		$$ = $1
 	}
 	| stmt_cases stmt_multi_case
 	{
@@ -283,25 +281,25 @@ stmt_cases :
 	}
 
 stmt_case :
-	CASE expr ':' opt_terms compstmt
+	CASE expr ':' compstmt
 	{
-		$$ = &ast.CaseStmt{Expr: $2, Stmts: $5}
+		$$ = &ast.CaseStmt{Expr: $2, Stmts: $4}
 	}
 
 stmt_multi_case :
-	CASE expr_many ':' opt_terms compstmt
+	CASE expr_many ':' compstmt
 	{
 	    var cases = []ast.Stmt{}
 		for _, stmt := range $2 {
-			cases = append(cases, &ast.CaseStmt{Expr: stmt, Stmts: $5})
+			cases = append(cases, &ast.CaseStmt{Expr: stmt, Stmts: $4})
 		}
 		$$ = cases
 	}
 
 stmt_default :
-	DEFAULT ':' opt_terms compstmt
+	DEFAULT ':' compstmt
 	{
-		$$ = &ast.DefaultStmt{Stmts: $4}
+		$$ = &ast.DefaultStmt{Stmts: $3}
 	}
 
 array_count :
@@ -317,26 +315,22 @@ array_count :
 		$$.Count = $$.Count + 1
 	}
 
-expr_pair :
-	STRING ':' expr
+map_expr :
 	{
-		$$ = &ast.PairExpr{Key: $1.Lit, Value: $3}
+		$$ = make(map[ast.Expr]ast.Expr)
 	}
-
-expr_pairs :
+	| expr ':' expr
 	{
-		$$ = []ast.Expr{}
+		mapExpr := make(map[ast.Expr]ast.Expr)
+		mapExpr[$1] = $3
+		$$ = mapExpr
 	}
-	| expr_pair
-	{
-		$$ = []ast.Expr{$1}
-	}
-	| expr_pairs ',' opt_terms expr_pair
+	| map_expr ',' opt_newlines expr ':' expr
 	{
 		if len($1) == 0 {
 			yylex.Error("syntax error: unexpected ','")
 		}
-		$$ = append($1, $4)
+		$1[$4] = $6
 	}
 
 expr_idents :
@@ -347,7 +341,7 @@ expr_idents :
 	{
 		$$ = []string{$1.Lit}
 	}
-	| expr_idents ',' opt_terms IDENT
+	| expr_idents ',' opt_newlines IDENT
 	{
 		if len($1) == 0 {
 			yylex.Error("syntax error: unexpected ','")
@@ -375,11 +369,11 @@ expr_many :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' opt_terms expr
+	| exprs ',' opt_newlines expr
 	{
 		$$ = append($1, $4)
 	}
-	| exprs ',' opt_terms IDENT
+	| exprs ',' opt_newlines IDENT
 	{
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
 	}
@@ -392,14 +386,14 @@ exprs :
 	{
 		$$ = []ast.Expr{$1}
 	}
-	| exprs ',' opt_terms expr
+	| exprs ',' opt_newlines expr
 	{
 		if len($1) == 0 {
 			yylex.Error("syntax error: unexpected ','")
 		}
 		$$ = append($1, $4)
 	}
-	| exprs ',' opt_terms IDENT
+	| exprs ',' opt_newlines IDENT
 	{
 		if len($1) == 0 {
 			yylex.Error("syntax error: unexpected ','")
@@ -534,32 +528,14 @@ expr :
 		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
-	| '[' opt_terms exprs opt_terms ']'
+	| '[' opt_newlines exprs opt_comma_newlines ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| '[' opt_terms exprs ',' opt_terms ']'
+	| '{' opt_newlines map_expr opt_comma_newlines '}'
 	{
-		$$ = &ast.ArrayExpr{Exprs: $3}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-	| '{' opt_terms expr_pairs opt_terms '}'
-	{
-		mapExpr := make(map[string]ast.Expr)
-		for _, v := range $3 {
-			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
-		}
-		$$ = &ast.MapExpr{MapExpr: mapExpr}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
-	}
-	| '{' opt_terms expr_pairs ',' opt_terms '}'
-	{
-		mapExpr := make(map[string]ast.Expr)
-		for _, v := range $3 {
-			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
-		}
-		$$ = &ast.MapExpr{MapExpr: mapExpr}
+		$$ = &ast.MapExpr{MapExpr: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
 	| '(' expr ')'
@@ -798,26 +774,30 @@ expr :
 		$$.SetPosition($1.Position())
 	}
 
-opt_terms : 
-	/* none */
-	| terms
-	;
 
-
-terms : 
-	term
-	{
-	}
-	| terms term
-	{
-	}
-
+opt_term : 
+	/* nothing */
+	| term
+	
 term :
-	';'
-	{
-	}
-	| '\n'
-	{
-	}
+	';' newlines
+	| newlines
+	| ';'
+
+opt_newlines : 
+	/* nothing */
+	| newlines
+
+newlines : 
+	newline
+	| newlines newline
+
+newline : '\n'
+
+opt_comma_newlines : 
+	/* nothing */
+	| ',' newlines
+	| newlines
+	| ','
 
 %%
