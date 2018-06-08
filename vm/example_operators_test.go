@@ -259,6 +259,12 @@ for i in [0, 1] {
 
 println("")
 
+for key, value in {"a": "b"} {
+	println(key, value)
+}
+
+println("")
+
 i = 0
 for i < 2 {
 	println(i)
@@ -295,6 +301,8 @@ for i = 0; i < 10; i++ {
 	//
 	// 0
 	// 1
+	//
+	// a b
 	//
 	// 0
 	// 1
