@@ -247,10 +247,17 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		switch v.Kind() {
 		case reflect.Struct:
 			field, found := v.Type().FieldByName(e.Name)
-			if !found {
-				return nilValue, newStringError(e, "no member named '"+e.Name+"' for struct")
+			if found {
+				return v.FieldByIndex(field.Index), nil
 			}
-			return v.FieldByIndex(field.Index), nil
+			if v.CanAddr() {
+				v = v.Addr()
+				method, found := v.Type().MethodByName(e.Name)
+				if found {
+					return v.Method(method.Index), nil
+				}
+			}
+			return nilValue, newStringError(e, "no member named '"+e.Name+"' for struct")
 		case reflect.Map:
 			v = getMapIndex(reflect.ValueOf(e.Name), v)
 			// Note if the map is of reflect.Value, it will incorrectly return nil when zero value

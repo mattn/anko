@@ -10,7 +10,7 @@ import (
 func TestTime(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, EnvSetupFunc: &testPackagesEnvSetupFunc, RunOutput: true},
+		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, RunOutput: true},
 	}
 	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
 }
