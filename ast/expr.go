@@ -36,17 +36,10 @@ type ArrayExpr struct {
 	Exprs []Expr
 }
 
-// PairExpr provide one of Map key/value pair.
-type PairExpr struct {
-	ExprImpl
-	Key   string
-	Value Expr
-}
-
 // MapExpr provide Map expression.
 type MapExpr struct {
 	ExprImpl
-	MapExpr map[string]Expr
+	MapExpr map[Expr]Expr
 }
 
 // IdentExpr provide identity expression.

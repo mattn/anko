@@ -24,9 +24,9 @@ func init() {
 func TestKeys(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `a = {}; b = keys(a)`, RunOutput: []string{}, Output: map[string]interface{}{"a": map[string]interface{}{}}},
-		{Script: `a = {"a": nil}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": nil}}},
-		{Script: `a = {"a": 1}; b = keys(a)`, RunOutput: []string{"a"}, Output: map[string]interface{}{"a": map[string]interface{}{"a": int64(1)}}},
+		{Script: `a = {}; b = keys(a)`, RunOutput: []interface{}{}, Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = {"a": nil}; b = keys(a)`, RunOutput: []interface{}{"a"}, Output: map[string]interface{}{"a": map[interface{}]interface{}{"a": nil}}},
+		{Script: `a = {"a": 1}; b = keys(a)`, RunOutput: []interface{}{"a"}, Output: map[string]interface{}{"a": map[interface{}]interface{}{"a": int64(1)}}},
 	}
 	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }

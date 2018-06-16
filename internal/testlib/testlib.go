@@ -34,6 +34,7 @@ func Run(t *testing.T, tests []Test, testingOptions *Options) {
 }
 
 func run(t *testing.T, test Test, testingOptions *Options) {
+	// parser.EnableErrorVerbose()
 	stmts, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)

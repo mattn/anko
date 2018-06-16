@@ -52,13 +52,20 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		return reflect.ValueOf(a), nil
 
 	case *ast.MapExpr:
-		m := make(map[string]interface{}, len(e.MapExpr))
-		for k, expr := range e.MapExpr {
-			v, err := invokeExpr(expr, env)
+		var err error
+		var key reflect.Value
+		var value reflect.Value
+		m := make(map[interface{}]interface{}, len(e.MapExpr))
+		for keyExpr, valueExpr := range e.MapExpr {
+			key, err = invokeExpr(keyExpr, env)
 			if err != nil {
-				return nilValue, newError(expr, err)
+				return nilValue, newError(keyExpr, err)
 			}
-			m[k] = v.Interface()
+			value, err = invokeExpr(valueExpr, env)
+			if err != nil {
+				return nilValue, newError(valueExpr, err)
+			}
+			m[key.Interface()] = value.Interface()
 		}
 		return reflect.ValueOf(m), nil
 
