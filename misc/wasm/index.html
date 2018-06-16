@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>Anko WebAssembly</title>
+    <script src="wasm_exec.js"></script>
+    <script type="text/javascript">
+    function fetchAndInstantiate(url, importObject) {
+      return fetch(url).then(response =>
+        response.arrayBuffer()
+      ).then(bytes =>
+        WebAssembly.instantiate(bytes, importObject)
+      ).then(results =>
+          results.instance
+      );
+    }
+    var go = new Go();
+    var mod = fetchAndInstantiate("/anko.wasm", go.importObject);
+    window.onload = function() {
+      mod.then(function(instance) {
+        go.run(instance);
+      });
+    };
+    </script>
+    <style>
+    #result { width: 100%; height: 300px; overflow-y: scroll; }
+    #input { width: 100%; }
+    .stdout { margin: 0px; }
+    .command { margin: 0px; color: gray; }
+    .stderr { margin: 0px; color: red; }
+    </style>
+  </head>
+  <body>
+    <div id="result">loading...</div>
+    <input id="input" type="text" value="" disabled=true /><br />
+  </body>
+</html>
