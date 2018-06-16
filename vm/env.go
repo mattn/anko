@@ -153,9 +153,10 @@ func (e *Env) Destroy() {
 // NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{
-		env:    make(map[string]reflect.Value),
-		parent: e,
-		name:   n,
+		env:       make(map[string]reflect.Value),
+		parent:    e,
+		name:      n,
+		interrupt: e.interrupt,
 	}
 	e.Define(n, m)
 	return m
