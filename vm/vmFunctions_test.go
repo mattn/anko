@@ -1,7 +1,7 @@
 package vm
 
 import (
-	// "bytes"
+	"bytes"
 	"fmt"
 	"os"
 	"reflect"
@@ -364,9 +364,8 @@ func TestFunctions(t *testing.T) {
 
 		{Script: `a = make(Time); a.IsZero()`, Types: map[string]interface{}{"Time": time.Time{}}, RunOutput: true},
 
-		// TOFIX:
-		// {Script: `a = make(Buffer); n, err = a.WriteString("b")`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: []interface{}{1, nil}},
-		// {Script: `a = make(Buffer); n, err = a.WriteString("b"); a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "b"},
+		{Script: `a = make(Buffer); n, err = a.WriteString("a"); if err != nil { return err }; n`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: 1},
+		{Script: `a = make(Buffer); n, err = a.WriteString("a"); if err != nil { return err }; a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "a"},
 	}
 	testlib.Run(t, tests, nil)
 }
