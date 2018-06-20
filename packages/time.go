@@ -60,7 +60,6 @@ func init() {
 		"Tuesday":         time.Tuesday,
 		"Unix":            time.Unix,
 		"UnixDate":        time.UnixDate,
-		"Until":           time.Until,
 		"Wednesday":       time.Wednesday,
 	}
 	PackageTypes["time"] = map[string]interface{}{
@@ -68,5 +67,6 @@ func init() {
 		"Ticker":   time.Ticker{},
 		"Time":     time.Time{},
 	}
+	timeGo18()
 	timeGo110()
 }
