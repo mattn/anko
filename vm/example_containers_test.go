@@ -59,6 +59,11 @@ a = [1, 2]
 println(len(a))
 
 println(a[1])
+
+println("")
+
+println(1 in a)
+println(3 in a)
 `
 
 	_, err = env.Execute(script)
@@ -80,6 +85,9 @@ println(a[1])
 	//
 	// 2
 	// 2
+	//
+	// true
+	// false
 }
 
 func Example_vmMaps() {
