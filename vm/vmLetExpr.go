@@ -26,9 +26,6 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		if v.Kind() == reflect.Slice {
-			v = v.Index(0)
-		}
 		if !v.IsValid() {
 			return nilValue, newStringError(expr, "type invalid does not support member operation")
 		}
@@ -70,7 +67,10 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 		case reflect.Map:
 			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+				rv, err = convertReflectValueToType(rv, v.Type().Elem())
+				if err != nil {
+					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+				}
 			}
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
@@ -89,7 +89,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
-		i, err := invokeExpr(lhs.Index, env)
+		index, err := invokeExpr(lhs.Index, env)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
@@ -99,12 +99,12 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 		switch v.Kind() {
 		case reflect.Slice, reflect.Array:
-			ii, err := tryToInt(i)
+			indexInt, err := tryToInt(index)
 			if err != nil {
 				return nilValue, newStringError(expr, "index must be a number")
 			}
 
-			if ii == v.Len() {
+			if indexInt == v.Len() {
 				// try to do automatic append
 				if v.Type().Elem() == rv.Type() {
 					v = reflect.Append(v, rv)
@@ -127,10 +127,10 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return invokeLetExpr(lhs.Value, v, env)
 			}
 
-			if ii < 0 || ii >= v.Len() {
+			if indexInt < 0 || indexInt >= v.Len() {
 				return nilValue, newStringError(expr, "index out of range")
 			}
-			v = v.Index(ii)
+			v = v.Index(indexInt)
 			if !v.CanSet() {
 				return nilValue, newStringError(expr, "index cannot be assigned")
 			}
@@ -156,32 +156,35 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v.Set(newSlice)
 
 		case reflect.Map:
-			keyType := i.Type()
-			if keyType == interfaceType && v.Type().Key() != interfaceType {
-				if i.Elem().IsValid() && !i.Elem().IsNil() {
-					keyType = i.Elem().Type()
+			if v.Type().Key() != interfaceType && v.Type().Key() != index.Type() {
+				index, err = convertReflectValueToType(index, v.Type().Key())
+				if err != nil {
+					return nilValue, newStringError(expr, "index type "+index.Type().String()+" cannot be used for map index type "+v.Type().Key().String())
 				}
 			}
-			if keyType != v.Type().Key() && v.Type().Key() != interfaceType {
-				return nilValue, newStringError(expr, "index type "+keyType.String()+" cannot be used for map index type "+v.Type().Key().String())
+			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
+				rv, err = convertReflectValueToType(rv, v.Type().Elem())
+				if err != nil {
+					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
+				}
 			}
 
-			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
-			}
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
-				v.SetMapIndex(i, rv)
+				v.SetMapIndex(index, rv)
 				return invokeLetExpr(lhs.Value, v, env)
 			}
-			v.SetMapIndex(i, rv)
+			v.SetMapIndex(index, rv)
 
 		case reflect.String:
 			return nilValue, newStringError(expr, "type string does not support index operation for assignment")
+
 		default:
 			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support index operation")
 		}
+
 		return v, nil
+
 	case *ast.SliceExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
