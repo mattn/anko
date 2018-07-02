@@ -140,52 +140,58 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		return rvs[0], nil
 	case *ast.IfStmt:
-		// If
+		// if
 		rv, err := invokeExpr(stmt.If, env)
 		if err != nil {
-			return rv, newError(stmt, err)
+			return rv, newError(stmt.If, err)
 		}
+
 		if toBool(rv) {
-			// Then
+			// then
 			newenv := env.NewEnv()
-			defer newenv.Destroy()
 			rv, err = run(stmt.Then, newenv)
+			newenv.Destroy()
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
 			return rv, nil
 		}
-		done := false
-		if len(stmt.ElseIf) > 0 {
-			for _, stmt := range stmt.ElseIf {
-				ifStmt := stmt.(*ast.IfStmt)
-				// ElseIf
-				rv, err = invokeExpr(ifStmt.If, env)
-				if err != nil {
-					return rv, newError(stmt, err)
-				}
-				if !toBool(rv) {
-					continue
-				}
-				// ElseIf Then
-				done = true
-				rv, err = run(ifStmt.Then, env)
-				if err != nil {
-					return rv, newError(stmt, err)
-				}
-				break
-			}
-		}
-		if !done && len(stmt.Else) > 0 {
-			// Else
+
+		for _, statment := range stmt.ElseIf {
+			elseIf := statment.(*ast.IfStmt)
+			// else if - if
 			newenv := env.NewEnv()
-			defer newenv.Destroy()
+			rv, err = invokeExpr(elseIf.If, newenv)
+			newenv.Destroy()
+			if err != nil {
+				return rv, newError(elseIf.If, err)
+			}
+			if !toBool(rv) {
+				continue
+			}
+
+			// else if - then
+			newenv = env.NewEnv()
+			rv, err = run(elseIf.Then, newenv)
+			newenv.Destroy()
+			if err != nil {
+				return rv, newError(elseIf, err)
+			}
+			return rv, nil
+		}
+
+		if len(stmt.Else) > 0 {
+			// else
+			newenv := env.NewEnv()
 			rv, err = run(stmt.Else, newenv)
+			newenv.Destroy()
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
 		}
+
 		return rv, nil
+
 	case *ast.TryStmt:
 		newenv := env.NewEnv()
 		defer newenv.Destroy()
