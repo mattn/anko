@@ -226,24 +226,24 @@ stmt :
 
 
 stmt_if :
-	stmt_if ELSE IF expr '{' compstmt '}'
+	IF expr '{' compstmt '}'
+	{
+		$$ = &ast.IfStmt{If: $2, Then: $4, Else: nil}
+		$$.SetPosition($1.Position())
+	}
+	| stmt_if ELSE IF expr '{' compstmt '}'
 	{
 		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
 		$$.SetPosition($1.Position())
 	}
 	| stmt_if ELSE '{' compstmt '}'
 	{
+		$$.SetPosition($1.Position())
 		if $$.(*ast.IfStmt).Else != nil {
 			yylex.Error("multiple else statement")
 		} else {
-			$$.(*ast.IfStmt).Else = append($$.(*ast.IfStmt).Else, $4...)
+			$$.(*ast.IfStmt).Else = $4
 		}
-		$$.SetPosition($1.Position())
-	}
-	| IF expr '{' compstmt '}'
-	{
-		$$ = &ast.IfStmt{If: $2, Then: $4, Else: nil}
-		$$.SetPosition($1.Position())
 	}
 
 stmt_cases :

@@ -490,6 +490,13 @@ func TestIf(t *testing.T) {
 		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 4 {a = 4} else {a = nil}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
 		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = 4} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
 		{Script: `if a == 1 {a = 1} else if a == 3 {a = 3} else if a == 2 {a = nil} else {a = 5}`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+
+		// check scope
+		{Script: `a = 1; if a == 1 { b = 2 }; b`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; if a == 2 { b = 3 } else { b = 4 }; b`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; if a == 2 { b = 3 } else if a == 1 { b = 4 }; b`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; if a == 2 { b = 4 } else if a == 5 { b = 6 } else if a == 1 { c = b }`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; if a == 2 { b = 4 } else if a == 5 { b = 6 } else if a == 1 { b = 7 }; b`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -523,7 +530,7 @@ func TestSwitch(t *testing.T) {
 		{Script: `a=99; switch a {case 1: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 		{Script: `a=99; switch a {case 1,2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
 		{Script: `a=99; switch a {case 1: return a; case 2: return a; default: return 'default'; default: return 'default2'}`, ParseError: fmt.Errorf("multiple default statement"), RunOutput: "default2"},
-		
+
 		{Script: `
 a = 1;
 switch a {

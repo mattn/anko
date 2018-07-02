@@ -1,4 +1,4 @@
-package parser //line parser.go.y:2
+package parser
 
 import __yyfmt__ "fmt"
 
@@ -681,8 +681,8 @@ var yyR2 = [...]int{
 
 	0, 1, 2, 2, 3, 0, 4, 3, 3, 1,
 	1, 2, 2, 5, 1, 4, 7, 9, 5, 13,
-	12, 9, 8, 7, 6, 5, 6, 5, 1, 7,
-	5, 5, 0, 1, 1, 2, 1, 2, 2, 4,
+	12, 9, 8, 7, 6, 5, 6, 5, 1, 5,
+	7, 5, 0, 1, 1, 2, 1, 2, 2, 4,
 	4, 3, 0, 2, 3, 0, 3, 6, 0, 1,
 	4, 1, 3, 3, 1, 4, 4, 0, 1, 4,
 	4, 6, 5, 5, 6, 5, 5, 1, 1, 2,
@@ -761,13 +761,13 @@ var yyDef = [...]int{
 	0, 0, 117, 73, 75, 0, 0, 0, -2, 0,
 	148, -2, 0, 0, 123, 0, 124, 0, 0, 0,
 	0, 43, 133, 0, -2, -2, 0, 50, 0, 65,
-	66, 80, 118, 59, -2, 13, 136, 30, 136, 0,
+	66, 80, 118, 59, -2, 13, 136, 31, 136, 0,
 	18, 0, 141, 33, 34, 36, 57, 0, 0, -2,
 	0, -2, 0, 62, 63, 116, 136, 0, 0, 0,
 	-2, 87, 0, 88, 46, 52, 125, 0, 44, 127,
-	0, 0, 0, 31, 64, 0, 0, 0, 0, 136,
+	0, 0, 0, 29, 64, 0, 0, 0, 0, 136,
 	0, 35, 37, 38, 58, 0, 136, -2, -2, 61,
-	0, 136, 136, 0, 0, 0, 0, 0, 134, 29,
+	0, 136, 136, 0, 0, 0, 0, 0, 134, 30,
 	16, 136, 136, 0, 23, 136, 136, 41, 83, 0,
 	0, 136, 0, 126, 128, 0, 130, 0, 0, 22,
 	39, 40, 84, 85, 0, 47, 0, 17, 21, 0,
@@ -1349,29 +1349,29 @@ yydefault:
 			yyVAL.stmt.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 29:
-		yyDollar = yyS[yypt-7 : yypt+1]
+		yyDollar = yyS[yypt-5 : yypt+1]
 		//line parser.go.y:230
+		{
+			yyVAL.stmt_if = &ast.IfStmt{If: yyDollar[2].expr, Then: yyDollar[4].compstmt, Else: nil}
+			yyVAL.stmt_if.SetPosition(yyDollar[1].tok.Position())
+		}
+	case 30:
+		yyDollar = yyS[yypt-7 : yypt+1]
+		//line parser.go.y:235
 		{
 			yyDollar[1].stmt_if.(*ast.IfStmt).ElseIf = append(yyDollar[1].stmt_if.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: yyDollar[4].expr, Then: yyDollar[6].compstmt})
 			yyVAL.stmt_if.SetPosition(yyDollar[1].stmt_if.Position())
 		}
-	case 30:
+	case 31:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line parser.go.y:235
+		//line parser.go.y:240
 		{
+			yyVAL.stmt_if.SetPosition(yyDollar[1].stmt_if.Position())
 			if yyVAL.stmt_if.(*ast.IfStmt).Else != nil {
 				yylex.Error("multiple else statement")
 			} else {
-				yyVAL.stmt_if.(*ast.IfStmt).Else = append(yyVAL.stmt_if.(*ast.IfStmt).Else, yyDollar[4].compstmt...)
+				yyVAL.stmt_if.(*ast.IfStmt).Else = yyDollar[4].compstmt
 			}
-			yyVAL.stmt_if.SetPosition(yyDollar[1].stmt_if.Position())
-		}
-	case 31:
-		yyDollar = yyS[yypt-5 : yypt+1]
-		//line parser.go.y:244
-		{
-			yyVAL.stmt_if = &ast.IfStmt{If: yyDollar[2].expr, Then: yyDollar[4].compstmt, Else: nil}
-			yyVAL.stmt_if.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 32:
 		yyDollar = yyS[yypt-0 : yypt+1]
