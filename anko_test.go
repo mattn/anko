@@ -70,24 +70,29 @@ func TestRunNonInteractiveExecute(t *testing.T) {
 }
 
 type testInteractive struct {
-	runSource string
-	runError  string
-	runOutput string
+	runLines   []string
+	runOutputs []string
+	runError   string
 }
 
 func TestRunInteractive(t *testing.T) {
+	// empty strings in runOutputs will ignore read timeouts
 	tests := []testInteractive{
-		{runSource: "..", runError: "1:1 syntax error on '.' at 1:1"},
-		{runSource: "1++", runError: "1:1 invalid operation"},
-		{runSource: "var , b = 1, 2", runError: "1:7 syntax error: unexpected ','"},
+		{runLines: []string{".."}, runError: "1:1 syntax error on '.' at 1:1"},
+		{runLines: []string{"1++"}, runError: "1:1 invalid operation"},
+		{runLines: []string{"var , b = 1, 2"}, runError: "1:7 syntax error: unexpected ','"},
 
-		{runSource: "\r\n1", runOutput: "> 1"},
-		{runSource: "1 + 1", runOutput: "2"},
+		{runLines: []string{"", "1"}, runOutputs: []string{"", "1"}},
+		{runLines: []string{"1 + 1"}, runOutputs: []string{"2"}},
+		{runLines: []string{"a = 1", "b = 2", "a + b"}, runOutputs: []string{"1", "2", "3"}},
+		{runLines: []string{"a = 1", "if a == 1 {", "b = 1", "b = 2", "}", "a"}, runOutputs: []string{"1", "", "", "", "2", "1"}},
+		{runLines: []string{"a = 1", "for i = 0; i < 2; i++ {", "a++", "}", "a"}, runOutputs: []string{"1", "", "", "<nil>", "3"}},
 	}
 	runInteractiveTests(t, tests)
 }
 
 func runInteractiveTests(t *testing.T, tests []testInteractive) {
+	// create logger
 	// Note: logger is used for debugging since real stdout cannot be used
 	logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.LUTC|log.Llongfile)
 	gopath := os.Getenv("GOPATH")
@@ -106,33 +111,33 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 	logger.SetOutput(filehandle)
 	logger.Print("logger file created")
 
+	// defer sending std back to real
 	realStdin := os.Stdin
+	realStderr := os.Stderr
+	realStdout := os.Stdout
+	defer setStd(realStdin, realStderr, realStdout)
+
+	// create pipes
 	readFromIn, writeToIn, err := os.Pipe()
 	if err != nil {
 		t.Fatal("Pipe error:", err)
 	}
 	os.Stdin = readFromIn
 	logger.Print("pipe in created")
-
-	realStderr := os.Stderr
 	readFromErr, writeToErr, err := os.Pipe()
 	if err != nil {
-		os.Stdin = realStdin
 		t.Fatal("Pipe error:", err)
 	}
 	os.Stderr = writeToErr
 	logger.Print("pipe err created")
-
-	realStdout := os.Stdout
 	readFromOut, writeToOut, err := os.Pipe()
 	if err != nil {
-		os.Stdin = realStdin
-		os.Stderr = realStderr
 		t.Fatal("Pipe error:", err)
 	}
 	os.Stdout = writeToOut
 	logger.Print("pipe out created")
 
+	// setup reader
 	readerErr := bufio.NewReaderSize(readFromErr, 256)
 	readerOut := bufio.NewReaderSize(readFromOut, 256)
 	chanQuit := make(chan struct{}, 1)
@@ -149,99 +154,88 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 
 	time.Sleep(readTimeout)
 
-	logger.Print("for loop start")
+	// basic read and write to make sure things are working
+	_, err = writeToIn.WriteString("1\n")
+	if err != nil {
+		t.Fatal("Stdin WriteString error:", err)
+	}
+	select {
+	case dataOut = <-chanOut:
+		if len(dataOut) > 0 && dataOut[0] == '>' {
+			dataOut = dataOut[1:]
+			dataOut = strings.TrimSpace(dataOut)
+		}
+		if dataOut != "1" {
+			t.Fatalf("Stdout - received: %v - expected: %v - basic test", dataOut, "1")
+		}
+	case dataErr = <-chanErr:
+		dataErr = strings.TrimSpace(dataErr)
+		if dataErr != "" {
+			t.Fatalf("Stderr - received: %v - expected: %v - basic test", dataErr, "")
+		}
+	case <-time.After(readTimeout):
+		t.Fatal("read timeout for basic test")
+	}
+
+	// run tests
+	logger.Print("running tests start")
 	for _, test := range tests {
 
-		// write in
-		_, err = writeToIn.WriteString(test.runSource + "\n")
-		if err != nil {
-			os.Stdin = realStdin
-			os.Stderr = realStderr
-			os.Stdout = realStdout
-			t.Fatal("Stdin WriteString error:", err)
-		}
+		for i, runLine := range test.runLines {
 
-		// read err
-		select {
-		case dataErr = <-chanErr:
-			dataErr = strings.TrimSpace(dataErr)
-			if dataErr != test.runError {
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
-				t.Fatalf("Stderr - received: %v - expected: %v - runSource: %v", dataErr, test.runError, test.runSource)
-			}
-
-			// to clean output from error
-			// write in
-			_, err = writeToIn.WriteString("1\n")
+			_, err = writeToIn.WriteString(runLine + "\n")
 			if err != nil {
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
 				t.Fatal("Stdin WriteString error:", err)
 			}
 
-			// read out
 			select {
+			case <-time.After(readTimeout):
+				if test.runOutputs[i] != "" {
+					t.Fatalf("read timeout for i: %v - runLines: %v", i, test.runLines)
+				}
 			case dataOut = <-chanOut:
 				for len(dataOut) > 0 && dataOut[0] == '>' {
 					dataOut = dataOut[1:]
 					dataOut = strings.TrimSpace(dataOut)
 				}
-				if dataOut != "1" {
-					os.Stdin = realStdin
-					os.Stderr = realStderr
-					os.Stdout = realStdout
-					t.Fatalf("Stdout - received: %v - expected: %v - runSource: %v", dataOut, "1", test.runSource)
+				if dataOut != test.runOutputs[i] {
+					t.Fatalf("Stdout - received: %v - expected: %v - i: %v - runLines: %v", dataOut, test.runOutputs[i], i, test.runLines)
 				}
-			case <-time.After(readTimeout):
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
-				t.Fatal("Stdout no prompt on runSource:", test.runSource)
+			case dataErr = <-chanErr:
+				dataErr = strings.TrimSpace(dataErr)
+				if dataErr != test.runError {
+					t.Fatalf("Stderr - received: %v - expected: %v - i: %v - runLines: %v", dataErr, test.runError, i, test.runLines)
+				}
+
+				// to clean output from error
+				_, err = writeToIn.WriteString("1\n")
+				if err != nil {
+					t.Fatal("Stdin WriteString error:", err)
+				}
+
+				select {
+				case dataOut = <-chanOut:
+					for len(dataOut) > 0 && dataOut[0] == '>' {
+						dataOut = dataOut[1:]
+						dataOut = strings.TrimSpace(dataOut)
+					}
+					if dataOut != "1" {
+						t.Fatalf("Stdout - received: %v - expected: %v - i: %v - runLines: %v", dataOut, test.runOutputs[i], i, test.runLines)
+					}
+				case <-time.After(readTimeout):
+					t.Fatalf("read timeout for i: %v - runLines: %v", i, test.runLines)
+				}
+
 			}
 
-		case <-time.After(readTimeout):
-			if test.runError != "" {
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
-				t.Fatalf("Stderr - received: %v - expected: %v - runSource: %v", "", test.runError, test.runSource)
-			}
-		}
-
-		// read out
-		select {
-		case dataOut = <-chanOut:
-			if len(dataOut) > 0 && dataOut[0] == '>' {
-				dataOut = dataOut[1:]
-			}
-			dataOut = strings.TrimSpace(dataOut)
-			if dataOut != test.runOutput {
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
-				t.Fatalf("Stdout - received: %v - expected: %v - runSource: %v", dataOut, test.runOutput, test.runSource)
-			}
-		case <-time.After(readTimeout):
-			if test.runOutput != "" {
-				os.Stdin = realStdin
-				os.Stderr = realStderr
-				os.Stdout = realStdout
-				t.Fatalf("Stdout - received: %v - expected: %v - runSource: %v", "", test.runOutput, test.runSource)
-			}
 		}
 
 	}
-	logger.Print("for loop end")
+	logger.Print("running tests end")
 
-	// write in
+	// quit
 	_, err = writeToIn.WriteString("quit()\n")
 	if err != nil {
-		os.Stdin = realStdin
-		os.Stderr = realStderr
-		os.Stdout = realStdout
 		t.Fatal("Stdin WriteString error:", err)
 	}
 	logger.Print("quit() sent")
@@ -252,10 +246,6 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 	writeToErr.Close()
 	writeToOut.Close()
 	logger.Print("pipes closed")
-
-	os.Stdin = realStdin
-	os.Stderr = realStderr
-	os.Stdout = realStdout
 }
 
 func readerToChan(t *testing.T, chanQuit chan struct{}, reader *bufio.Reader, chanOut chan string) {
@@ -273,4 +263,10 @@ func readerToChan(t *testing.T, chanQuit chan struct{}, reader *bufio.Reader, ch
 		}
 		chanOut <- data
 	}
+}
+
+func setStd(stdin *os.File, stderr *os.File, stdout *os.File) {
+	os.Stdin = stdin
+	os.Stderr = stderr
+	os.Stdout = stdout
 }
