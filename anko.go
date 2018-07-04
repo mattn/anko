@@ -97,6 +97,7 @@ func runInteractive() int {
 
 	for {
 		if following {
+			source += "\n"
 			fmt.Print("  ")
 		} else {
 			fmt.Print("> ")
