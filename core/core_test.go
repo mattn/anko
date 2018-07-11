@@ -66,14 +66,38 @@ func TestKindOf(t *testing.T) {
 func TestRange(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
 	tests := []testlib.Test{
-		{Script: `range()`, RunError: fmt.Errorf("Missing arguments")},
+		// 0 arguments
+		{Script: `range()`, RunError: fmt.Errorf("range expected at least 1 argument, got 0")},
+		// 1 arguments(step == 1, start == 0)
 		{Script: `range(-1)`, RunOutput: []int64{}},
 		{Script: `range(0)`, RunOutput: []int64{}},
 		{Script: `range(1)`, RunOutput: []int64{0}},
 		{Script: `range(2)`, RunOutput: []int64{0, 1}},
 		{Script: `range(10)`, RunOutput: []int64{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
-		{Script: `range(-1,1)`, RunOutput: []int64{-1, 0, 1}},
-		{Script: `range(-1,0,1)`, RunError: fmt.Errorf("Too many arguments")},
+		// 2 arguments(step == 1)
+		{Script: `range(-5,-1)`, RunOutput: []int64{-5, -4, -3, -2}},
+		{Script: `range(-1,1)`, RunOutput: []int64{-1, 0}},
+		{Script: `range(1,5)`, RunOutput: []int64{1, 2, 3, 4}},
+		// 3 arguments
+		// step == 2
+		{Script: `range(-5,-1,2)`, RunOutput: []int64{-5, -3}},
+		{Script: `range(1,5,2)`, RunOutput: []int64{1, 3}},
+		{Script: `range(-1,5,2)`, RunOutput: []int64{-1, 1, 3}},
+		// step < 0 and from small to large
+		{Script: `range(-5,-1,-1)`, RunOutput: []int64{}},
+		{Script: `range(1,5,-1)`, RunOutput: []int64{}},
+		{Script: `range(-1,5,-1)`, RunOutput: []int64{}},
+		// step < 0 and from large to small
+		{Script: `range(-1,-5,-1)`, RunOutput: []int64{-1, -2, -3, -4}},
+		{Script: `range(5,1,-1)`, RunOutput: []int64{5, 4, 3, 2}},
+		{Script: `range(5,-1,-1)`, RunOutput: []int64{5, 4, 3, 2, 1, 0}},
+		// 4,5 arguments
+		{Script: `range(1,5,1,1)`, RunError: fmt.Errorf("range expected at most 3 arguments, got 4")},
+		{Script: `range(1,5,1,1,1)`, RunError: fmt.Errorf("range expected at most 3 arguments, got 5")},
+		// more 0 test
+		{Script: `range(0,1,2)`, RunOutput: []int64{0}},
+		{Script: `range(1,0,2)`, RunOutput: []int64{}},
+		{Script: `range(1,2,0)`, RunError: fmt.Errorf("range argument 3 must not be zero")},
 	}
 	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testCoreEnvSetupFunc})
 }
