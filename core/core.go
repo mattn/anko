@@ -27,22 +27,30 @@ func Import(env *vm.Env) *vm.Env {
 	})
 
 	env.Define("range", func(args ...int64) []int64 {
-		if len(args) < 1 {
-			panic("Missing arguments")
+		var start, stop int64
+		var step int64 = 1
+
+		switch len(args) {
+		case 0:
+			panic("range expected at least 1 argument, got 0")
+		case 1:
+			stop = args[0]
+		case 2:
+			start = args[0]
+			stop = args[1]
+		case 3:
+			start = args[0]
+			stop = args[1]
+			step = args[2]
+			if step == 0 {
+				panic("range argument 3 must not be zero")
+			}
+		default:
+			panic(fmt.Sprintf("range expected at most 3 arguments, got %d", len(args)))
 		}
-		if len(args) > 2 {
-			panic("Too many arguments")
-		}
-		var min, max int64
-		if len(args) == 1 {
-			min = 0
-			max = args[0] - 1
-		} else {
-			min = args[0]
-			max = args[1]
-		}
+
 		arr := []int64{}
-		for i := min; i <= max; i++ {
+		for i := start; (step > 0 && i < stop) || (step < 0 && i > stop); i += step {
 			arr = append(arr, i)
 		}
 		return arr
