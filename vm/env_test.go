@@ -2,10 +2,13 @@ package vm
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestExecuteError(t *testing.T) {
@@ -108,8 +111,6 @@ func TestDefineAndGet(t *testing.T) {
 		if value != test.varGetValue {
 			t.Errorf("DefineAndGet %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
-
-		env.Destroy()
 	}
 
 	// DefineAndGet NewPackage
@@ -147,8 +148,6 @@ func TestDefineAndGet(t *testing.T) {
 		if env.String() != "package" {
 			t.Errorf("DefineAndGet NewPackage %v - String check - received %#v expected: %#v", test.testInfo, env.GetName(), "package")
 		}
-
-		env.Destroy()
 	}
 
 	// DefineAndGet NewEnv
@@ -180,8 +179,6 @@ func TestDefineAndGet(t *testing.T) {
 		if value != test.varGetValue {
 			t.Errorf("DefineAndGet NewEnv %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
-
-		envChild.Destroy()
 	}
 
 	// DefineAndGet DefineGlobal
@@ -213,8 +210,6 @@ func TestDefineAndGet(t *testing.T) {
 		if value != test.varGetValue {
 			t.Errorf("DefineAndGet DefineGlobal %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
-
-		envParent.Destroy()
 	}
 
 }
@@ -307,8 +302,6 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("DefineModify changeTest  %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
-
-		env.Destroy()
 	}
 
 	// DefineModify envParent
@@ -367,8 +360,6 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("DefineModify envParent changeTest %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
-
-		envChild.Destroy()
 	}
 
 	// DefineModify envChild
@@ -427,8 +418,6 @@ func TestDefineModify(t *testing.T) {
 				t.Errorf("DefineModify envChild changeTest %v - value check - received %#v expected: %#v", test.testInfo, value, changeTest.varGetValue)
 			}
 		}
-
-		envChild.Destroy()
 	}
 }
 
@@ -488,8 +477,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		env.Destroy()
 	}
 
 	// DefineType NewEnv
@@ -527,7 +514,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewEnv %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-		envChild.Destroy()
 	}
 
 	// DefineType NewPackage
@@ -564,8 +550,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewPackage %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		envChild.Destroy()
 	}
 
 	// DefineType NewModule
@@ -602,8 +586,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineType NewModule %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		envChild.Destroy()
 	}
 
 	// DefineGlobalType
@@ -659,8 +641,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineGlobalType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		envChild.Destroy()
 	}
 
 	// DefineGlobalReflectType
@@ -716,8 +696,6 @@ func TestDefineType(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("DefineGlobalReflectType %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		envChild.Destroy()
 	}
 }
 
@@ -769,8 +747,6 @@ func TestDefineTypeFail(t *testing.T) {
 		} else if err != test.typeError {
 			t.Errorf("TestDefineTypeFail %v - Type error - received: %v - expected: %v", test.testInfo, err, test.typeError)
 		}
-
-		envChild.Destroy()
 	}
 }
 
@@ -818,8 +794,6 @@ func TestAddr(t *testing.T) {
 			t.Errorf("TestAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 			continue
 		}
-
-		envChild.Destroy()
 	}
 }
 
@@ -1130,8 +1104,6 @@ func TestExternalResolverValueAndGet(t *testing.T) {
 		if value != test.varGetValue {
 			t.Errorf("TestExternalResolverValueAndGet %v - value check - received %#v expected: %#v", test.testInfo, value, test.varGetValue)
 		}
-
-		env.Destroy()
 	}
 }
 
@@ -1193,8 +1165,6 @@ func TestExternalResolverTypeAndGet(t *testing.T) {
 		} else if valueType.String() != reflect.TypeOf(test.varDefineValue).String() {
 			t.Errorf("TestExternalResolverTypeAndGet %v - Type check - received: %v - expected: %v", test.testInfo, valueType, reflect.TypeOf(test.varDefineValue))
 		}
-
-		env.Destroy()
 	}
 
 }
@@ -1244,8 +1214,6 @@ func TestExternalResolverAddr(t *testing.T) {
 			t.Errorf("TestExternalResolverAddr %v - Addr error - received: %v - expected: %v", test.testInfo, err, test.addrError)
 			continue
 		}
-
-		envChild.Destroy()
 	}
 }
 
@@ -1582,4 +1550,20 @@ func TestDeepCopy(t *testing.T) {
 	if _, e := copy.Get("b"); e == nil {
 		t.Errorf("copy parent was modified")
 	}
+}
+
+func TestEnvRef(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `func(x){return func(){return x}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){if true {return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){if false {} else if true {return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){if false {} else {return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){for a = 1; a < 2; a++ { return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){for a in [1] { return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `func(x){for { return func(){return x}}}(1)()`, RunOutput: int64(1)},
+		{Script: `module m { f=func(x){return func(){return x}} }; m.f(1)()`, RunOutput: int64(1)},
+		{Script: `module m { f=func(x){return func(){return x}}(1)() }; m.f`, RunOutput: int64(1)},
+	}
+	testlib.Run(t, tests, nil)
 }
