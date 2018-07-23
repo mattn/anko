@@ -274,6 +274,39 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `1 == 2 || 1  == 1`, RunOutput: true},
 		{Script: `1 == 2 || 1  == 2`, RunOutput: false},
 
+		{Script: `true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `true || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `true && func(){throw('abcde')}() && true`, RunError: fmt.Errorf("abcde")},
+		{Script: `false && func(){throw('abcde')}() && func(){throw('abcde')}() `, RunOutput: false},
+
+		{Script: `true && func(){throw('abcde')}() || false`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && true || func(){throw('abcde')}()`, RunOutput: true},
+
+		{Script: `true || func(){throw('abcde')}() || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
+		{Script: `false || true || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `false || false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `false || true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `1 == 1 && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `1 == 2 && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `1 == 1 || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `1 == 2 || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `(true || func(){throw('abcde')}()) && (true || func(){throw('hello')}())`, RunOutput: true},
+		{Script: `(true || func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
+		{Script: `(true || func(){throw('abcde')}()) || (true && func(){throw('hello')}())`, RunOutput: true},
+		{Script: `(true && func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("abcde")},
+		{Script: `(true || func(){throw('abcde')}()) && (false || func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
+
 		{Script: `true == "1"`, RunOutput: true},
 		{Script: `true == "t"`, RunOutput: true},
 		{Script: `true == "T"`, RunOutput: true},
