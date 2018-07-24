@@ -406,7 +406,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		env.defineGlobalValue(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
 	case *ast.SwitchStmt:
-		rv, err := invokeExpr(stmt.Expr, env)
+		newenv := env.NewEnv()
+		rv, err := invokeExpr(stmt.Expr, newenv)
 		if err != nil {
 			return rv, newError(stmt, err)
 		}
@@ -418,14 +419,14 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				continue
 			}
 			caseStmt := ss.(*ast.CaseStmt)
-			cv, err := invokeExpr(caseStmt.Expr, env)
+			cv, err := invokeExpr(caseStmt.Expr, newenv)
 			if err != nil {
 				return nilValue, newError(stmt, err)
 			}
 			if !equal(rv, cv) {
 				continue
 			}
-			rv, err = run(caseStmt.Stmts, env)
+			rv, err = run(caseStmt.Stmts, newenv)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
@@ -433,7 +434,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			break
 		}
 		if !done && defaultStmt != nil {
-			rv, err = run(defaultStmt.Stmts, env)
+			rv, err = run(defaultStmt.Stmts, newenv)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}

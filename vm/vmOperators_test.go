@@ -543,6 +543,16 @@ func TestSwitch(t *testing.T) {
 
 		{Script: `a=1; switch a {}`, RunOutput: int64(1)},
 
+		{Script: `a=1; switch a { case 1: b=1; };`, RunOutput: int64(1)},
+		{Script: `a=1; switch a { case 1: b=1; }; b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a=1; switch a { case 2: b=1; }; b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a=2; switch a { default: b=1; }; b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a=1; func f(){b=1; return 1;}; switch a { case f(): b=1; }; b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a=1; func f(x){x=2; return 1;}; switch a { case f(a): b=1; }; a`, RunOutput: int64(1)},
+		{Script: `a=1; b=2; switch a { case 1: b=1 }; b`, RunOutput: int64(1)},
+		{Script: `a=1; b=2; switch b { case 2: a=2 }; a`, RunOutput: int64(2)},
+		{Script: `a=1; switch b = 2; b { case 2: a = 2; }; a`, ParseError: fmt.Errorf("syntax error")},
+
 		{Script: `a=1; switch a {case 1: return a}`, RunOutput: int64(1)},
 		{Script: `a=2; switch a {case 1,2: return a}`, RunOutput: int64(2)},
 		{Script: `a=3; switch a {case 1,2,3: return a}`, RunOutput: int64(3)},
