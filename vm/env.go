@@ -133,23 +133,6 @@ func (e *Env) SetExternal(res EnvResolver) {
 	e.external = res
 }
 
-// Destroy deletes current scope.
-func (e *Env) Destroy() {
-	e.Lock()
-	defer e.Unlock()
-
-	if e.parent == nil {
-		return
-	}
-	for k, v := range e.parent.env {
-		if v.IsValid() && v.Interface() == e {
-			delete(e.parent.env, k)
-		}
-	}
-	e.parent = nil
-	e.env = nil
-}
-
 // NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{

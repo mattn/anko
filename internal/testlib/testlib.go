@@ -106,6 +106,4 @@ func run(t *testing.T, test Test, testingOptions *Options) {
 			continue
 		}
 	}
-
-	env.Destroy()
 }

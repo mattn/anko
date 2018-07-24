@@ -150,7 +150,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// then
 			newenv := env.NewEnv()
 			rv, err = run(stmt.Then, newenv)
-			newenv.Destroy()
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
@@ -162,7 +161,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// else if - if
 			newenv := env.NewEnv()
 			rv, err = invokeExpr(elseIf.If, newenv)
-			newenv.Destroy()
 			if err != nil {
 				return rv, newError(elseIf.If, err)
 			}
@@ -173,7 +171,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// else if - then
 			newenv = env.NewEnv()
 			rv, err = run(elseIf.Then, newenv)
-			newenv.Destroy()
 			if err != nil {
 				return rv, newError(elseIf, err)
 			}
@@ -184,7 +181,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			// else
 			newenv := env.NewEnv()
 			rv, err = run(stmt.Else, newenv)
-			newenv.Destroy()
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
@@ -194,12 +190,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 
 	case *ast.TryStmt:
 		newenv := env.NewEnv()
-		defer newenv.Destroy()
 		_, err := run(stmt.Try, newenv)
 		if err != nil {
 			// Catch
 			cenv := env.NewEnv()
-			defer cenv.Destroy()
 			if stmt.Var != "" {
 				cenv.defineValue(stmt.Var, reflect.ValueOf(err))
 			}
@@ -212,8 +206,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		if len(stmt.Finally) > 0 {
 			// Finally
-			fenv := env.NewEnv()
-			defer fenv.Destroy()
 			_, e2 := run(stmt.Finally, newenv)
 			if e2 != nil {
 				err = newError(stmt.Finally[0], e2)
@@ -222,7 +214,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		return nilValue, newError(stmt, err)
 	case *ast.LoopStmt:
 		newenv := env.NewEnv()
-		defer newenv.Destroy()
 		for {
 			if *(env.interrupt) {
 				return nilValue, ErrInterrupt
@@ -260,7 +251,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		switch val.Kind() {
 		case reflect.Slice, reflect.Array:
 			newenv := env.NewEnv()
-			defer newenv.Destroy()
 
 			for i := 0; i < val.Len(); i++ {
 				if *(env.interrupt) {
@@ -285,7 +275,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return nilValue, nil
 		case reflect.Map:
 			newenv := env.NewEnv()
-			defer newenv.Destroy()
 
 			keys := val.MapKeys()
 			for i := 0; i < len(keys); i++ {
@@ -310,7 +299,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return nilValue, nil
 		case reflect.Chan:
 			newenv := env.NewEnv()
-			defer newenv.Destroy()
 
 			for {
 				if *(env.interrupt) {
@@ -341,7 +329,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
-		defer newenv.Destroy()
 		_, err := invokeExpr(stmt.Expr1, newenv)
 		if err != nil {
 			return nilValue, err

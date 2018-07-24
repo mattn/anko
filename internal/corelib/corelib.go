@@ -12,7 +12,6 @@ type Env interface {
 	Define(string, interface{}) error
 	Get(string) (interface{}, error)
 	Run([]ast.Stmt) (interface{}, error)
-	Destroy()
 }
 
 // NewEnv is function provided for tests
