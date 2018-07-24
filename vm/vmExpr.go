@@ -459,6 +459,16 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		if lhsV.Kind() == reflect.Interface && !lhsV.IsNil() {
 			lhsV = lhsV.Elem()
 		}
+		switch e.Operator {
+		case "&&":
+			if !toBool(lhsV) {
+				return lhsV, nil
+			}
+		case "||":
+			if toBool(lhsV) {
+				return lhsV, nil
+			}
+		}
 		if e.Rhs != nil {
 			rhsV, err = invokeExpr(e.Rhs, env)
 			if err != nil {
