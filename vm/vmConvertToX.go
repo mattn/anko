@@ -35,7 +35,7 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		return rv.Convert(rt), nil
 	}
 	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
-		return convertVmFunctionToType(rv, rt)
+		return convertVMFunctionToType(rv, rt)
 	}
 	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
 		value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
@@ -58,12 +58,12 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 	return rv, fmt.Errorf("invalid type conversion")
 }
 
-func convertVmFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
-	if !checkIfRunVmFunction(rv.Type()) {
+func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
+	if !checkIfRunVMFunction(rv.Type()) {
 		return rv, fmt.Errorf("invalid type conversion")
 	}
 
-	runVmConvertFunction := func(in []reflect.Value) []reflect.Value {
+	runVMConvertFunction := func(in []reflect.Value) []reflect.Value {
 		args := make([]reflect.Value, 0, rt.NumIn())
 		for i := 0; i < rt.NumIn(); i++ {
 			args = append(args, reflect.ValueOf(in[i]))
@@ -107,5 +107,5 @@ func convertVmFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 		return rvs
 	}
 
-	return reflect.MakeFunc(rt, runVmConvertFunction), nil
+	return reflect.MakeFunc(rt, runVMConvertFunction), nil
 }

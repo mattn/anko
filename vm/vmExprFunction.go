@@ -18,7 +18,7 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 	}
 	funcType := reflect.FuncOf(inTypes, []reflect.Type{reflectValueType, reflectValueType}, funcExpr.VarArg)
 
-	runVmFunction := func(in []reflect.Value) []reflect.Value {
+	runVMFunction := func(in []reflect.Value) []reflect.Value {
 		var err error
 		var rv reflect.Value
 
@@ -55,7 +55,7 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 		return []reflect.Value{reflect.ValueOf(rv), reflectValueErrorNilValue}
 	}
 
-	rv := reflect.MakeFunc(funcType, runVmFunction)
+	rv := reflect.MakeFunc(funcType, runVMFunction)
 
 	if funcExpr.Name != "" {
 		err := env.defineValue(funcExpr.Name, rv)
@@ -113,8 +113,8 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 	var args []reflect.Value
 	var useCallSlice bool
 	fType := f.Type()
-	isRunVmFunction := checkIfRunVmFunction(fType)
-	args, useCallSlice, err = makeCallArgs(fType, isRunVmFunction, callExpr, env)
+	isRunVMFunction := checkIfRunVMFunction(fType)
+	args, useCallSlice, err = makeCallArgs(fType, isRunVMFunction, callExpr, env)
 	if err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 	// TOFIX: how VM pointers/addressing work
 	// Until then, this is a work around to set pointers back to VM variables
 	// This will probably panic for some functions and/or calls that are variadic
-	if !isRunVmFunction {
+	if !isRunVMFunction {
 		for i, expr := range callExpr.SubExprs {
 			if addrExpr, ok := expr.(*ast.AddrExpr); ok {
 				if identExpr, ok := addrExpr.Expr.(*ast.IdentExpr); ok {
@@ -154,12 +154,12 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 		}
 	}
 
-	rv, err = processCallReturnValues(rvs, isRunVmFunction, true)
+	rv, err = processCallReturnValues(rvs, isRunVMFunction, true)
 
 	return
 }
 
-func checkIfRunVmFunction(rt reflect.Type) bool {
+func checkIfRunVMFunction(rt reflect.Type) bool {
 	if rt.NumOut() != 2 || rt.Out(0) != reflectValueType || rt.Out(1) != reflectValueType {
 		return false
 	}
@@ -182,7 +182,7 @@ func checkIfRunVmFunction(rt reflect.Type) bool {
 	return true
 }
 
-func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr, env *Env) ([]reflect.Value, bool, error) {
+func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr, env *Env) ([]reflect.Value, bool, error) {
 	numIn := rt.NumIn()
 	if numIn < 1 {
 		return []reflect.Value{}, false, nil
@@ -213,7 +213,7 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
-		if isRunVmFunction {
+		if isRunVMFunction {
 			args = append(args, reflect.ValueOf(arg))
 		} else {
 			arg, err = convertReflectValueToType(arg, rt.In(indexIn))
@@ -232,7 +232,7 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
-		if isRunVmFunction {
+		if isRunVMFunction {
 			args = append(args, reflect.ValueOf(arg))
 		} else {
 			arg, err = convertReflectValueToType(arg, rt.In(indexIn))
@@ -255,7 +255,7 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 			if err != nil {
 				return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 			}
-			if isRunVmFunction {
+			if isRunVMFunction {
 				args = append(args, reflect.ValueOf(arg))
 			} else {
 				arg, err = convertReflectValueToType(arg, rt.In(indexIn))
@@ -323,7 +323,7 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 
 	indexSlice := 0
 	for indexIn < numIn {
-		if isRunVmFunction {
+		if isRunVMFunction {
 			args = append(args, reflect.ValueOf(arg.Index(indexSlice)))
 		} else {
 			arg, err = convertReflectValueToType(arg.Index(indexSlice), rt.In(indexIn))
@@ -339,8 +339,8 @@ func makeCallArgs(rt reflect.Type, isRunVmFunction bool, callExpr *ast.CallExpr,
 	return args, false, nil
 }
 
-func processCallReturnValues(rvs []reflect.Value, isRunVmFunction bool, convertToInterfaceSlice bool) (reflect.Value, error) {
-	if !isRunVmFunction {
+func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertToInterfaceSlice bool) (reflect.Value, error) {
+	if !isRunVMFunction {
 		switch len(rvs) {
 		case 0:
 			return nilValue, nil
