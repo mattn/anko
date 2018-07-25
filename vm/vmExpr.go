@@ -533,17 +533,11 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 		case "|":
 			return reflect.ValueOf(toInt64(lhsV) | toInt64(rhsV)), nil
 		case "||":
-			if toBool(lhsV) {
-				return lhsV, nil
-			}
 			return rhsV, nil
 		case "&":
 			return reflect.ValueOf(toInt64(lhsV) & toInt64(rhsV)), nil
 		case "&&":
-			if toBool(lhsV) {
-				return rhsV, nil
-			}
-			return lhsV, nil
+			return rhsV, nil
 		case "**":
 			if lhsV.Kind() == reflect.Float64 {
 				return reflect.ValueOf(math.Pow(lhsV.Float(), toFloat64(rhsV))), nil
