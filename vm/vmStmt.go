@@ -63,7 +63,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
-			return rv, newError(stmt, err)
+			return rv, newError(stmt.Expr, err)
 		}
 		return rv, nil
 	case *ast.VarStmt:
@@ -329,7 +329,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
-		_, err := invokeExpr(stmt.Expr1, newenv)
+		_, err := runSingleStmt(stmt.Stmt1, newenv)
 		if err != nil {
 			return nilValue, err
 		}
@@ -406,39 +406,43 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		env.defineGlobalValue(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
 	case *ast.SwitchStmt:
-		rv, err := invokeExpr(stmt.Expr, env)
+		newenv := env.NewEnv()
+		rv, err := invokeExpr(stmt.Expr, newenv)
 		if err != nil {
 			return rv, newError(stmt, err)
 		}
-		done := false
-		var defaultStmt *ast.DefaultStmt
-		for _, ss := range stmt.Cases {
-			if ssd, ok := ss.(*ast.DefaultStmt); ok {
-				defaultStmt = ssd
-				continue
-			}
-			caseStmt := ss.(*ast.CaseStmt)
-			cv, err := invokeExpr(caseStmt.Expr, env)
-			if err != nil {
-				return nilValue, newError(stmt, err)
-			}
-			if !equal(rv, cv) {
-				continue
-			}
-			rv, err = run(caseStmt.Stmts, env)
-			if err != nil {
-				return rv, newError(stmt, err)
-			}
-			done = true
-			break
+
+		var caseValue reflect.Value
+		body := stmt.Body.(*ast.SwitchBodyStmt)
+		var statments []ast.Stmt
+		if body.Default != nil {
+			statments = body.Default
 		}
-		if !done && defaultStmt != nil {
-			rv, err = run(defaultStmt.Stmts, env)
-			if err != nil {
-				return rv, newError(stmt, err)
+
+	Loop:
+		for _, switchCaseStmt := range body.Cases {
+			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
+			for _, expr := range caseStmt.Exprs {
+				caseValue, err = invokeExpr(expr, newenv)
+				if err != nil {
+					return nilValue, newError(expr, err)
+				}
+				if equal(rv, caseValue) {
+					statments = caseStmt.Stmts
+					break Loop
+				}
 			}
 		}
+
+		if statments != nil {
+			rv, err = run(statments, newenv)
+			if err != nil {
+				return rv, err
+			}
+		}
+
 		return rv, nil
+
 	case *ast.GoroutineStmt:
 		return invokeExpr(stmt.Expr, env)
 	default:
