@@ -123,10 +123,10 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return nilValue, newError(stmt, err)
 		}
 		var rvs []reflect.Value
-		if rv != zeroValue {
-			rvs = []reflect.Value{rv, trueValue}
-		} else {
+		if isNil(rv) {
 			rvs = []reflect.Value{nilValue, falseValue}
+		} else {
+			rvs = []reflect.Value{rv, trueValue}
 		}
 		for i, lhs := range stmt.Lhss {
 			v := rvs[i]

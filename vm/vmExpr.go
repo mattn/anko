@@ -304,6 +304,10 @@ func invokeExpr(expr ast.Expr, env *Env) (reflect.Value, error) {
 			return v.Index(ii).Convert(stringType), nil
 		case reflect.Map:
 			v = getMapIndex(i, v)
+			// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
+			if v == zeroValue {
+				return nilValue, nil
+			}
 			return v, nil
 		default:
 			return nilValue, newStringError(e, "type "+v.Kind().String()+" does not support index operation")

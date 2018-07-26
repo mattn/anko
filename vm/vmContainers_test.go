@@ -1021,6 +1021,11 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {}; a[b] = b; a[b]`, Input: map[string]interface{}{"b": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": map[interface{}]interface{}{float64(1.1): float64(1.1)}}},
 		{Script: `a = {}; a[b] = b; a[b]`, Input: map[string]interface{}{"b": "b"}, RunOutput: "b", Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": "b"}}},
 
+		// test equal nil when not found
+		{Script: `a = {"b":"b"}; if a.c == nil { return 1 }`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": "b"}}},
+		{Script: `a = {"b":"b"}; if a["c"] == nil { return 1 }`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": "b"}}},
+
+		// test map create with spacing and comma
 		{Script: `a = {"b": "b"
 }`, RunOutput: map[interface{}]interface{}{"b": "b"}},
 		{Script: `a = {"b": "b",}`, RunOutput: map[interface{}]interface{}{"b": "b"}},
