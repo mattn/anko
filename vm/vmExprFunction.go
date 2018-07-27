@@ -290,7 +290,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	}
 
 	if !rt.IsVariadic() && callExpr.VarArg {
-		// function is not variadic and call variadic
+		// function is not variadic and call is variadic
 		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
@@ -368,6 +368,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	}
 
 	// function is variadic and call is variadic
+	// the only time we return CallSlice is true
 	sliceType := rt.In(numIn - 1)
 	if sliceType.Kind() == reflect.Interface && !arg.IsNil() {
 		sliceType = sliceType.Elem()
@@ -386,19 +387,31 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	return args, true, nil
 }
 
+// processCallReturnValues get/converts the values returned from a function call into our normal reflect.Value, error
 func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertToInterfaceSlice bool) (reflect.Value, error) {
+	// check if it is not runVMFunction
 	if !isRunVMFunction {
+		// the function was a Go function, convert to our normal reflect.Value, error
 		switch len(rvs) {
 		case 0:
+			// no return values so return nil reflect.Value and nil error
 			return nilValue, nil
 		case 1:
+			// one return value but need to add nil error
 			return rvs[0], nil
 		}
 		if convertToInterfaceSlice {
+			// called from callExpr
+			// need to convert from a slice of reflect.Value to slice of interface
 			return reflectValueSlicetoInterfaceSlice(rvs), nil
 		}
+		// called from runVMConvertFunction
+		// need to keep as slice of reflect.Value
 		return reflect.ValueOf(rvs), nil
 	}
+
+	// is a runVMFunction, expect return in the runVMFunction format
+	// some of the below checks probably can be removed because they are done in checkIfRunVMFunction
 
 	if len(rvs) != 2 {
 		return nilValue, fmt.Errorf("VM function did not return 2 values but returned %v values", len(rvs))
@@ -428,8 +441,11 @@ func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertT
 		return rvs[0].Interface().(reflect.Value), nil
 	}
 
+	// VM returns two types of errors, check to see which type
 	if rvError.Type() == vmErrorType {
+		// convert to VM *Error
 		return nilValue, rvError.Interface().(*Error)
 	}
+	// convert to error
 	return nilValue, rvError.Interface().(error)
 }

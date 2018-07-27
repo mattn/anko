@@ -5,6 +5,8 @@ import (
 	"reflect"
 )
 
+// reflectValueSlicetoInterfaceSlice convert from a slice of reflect.Value to a interface slice
+// returned in normal reflect.Value form
 func reflectValueSlicetoInterfaceSlice(valueSlice []reflect.Value) reflect.Value {
 	interfaceSlice := make([]interface{}, 0, len(valueSlice))
 	for _, value := range valueSlice {
@@ -24,36 +26,47 @@ func reflectValueSlicetoInterfaceSlice(valueSlice []reflect.Value) reflect.Value
 	return reflect.ValueOf(interfaceSlice)
 }
 
+// convertReflectValueToType trys to covert the reflect.Value to the reflect.Type
+// if it can not, it returns the orginal rv and an error
 func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
 	if !rv.IsValid() {
+		// if not valid return a valid reflect.Value of the reflect.Type
 		return makeValue(rt)
 	}
 	if rt == interfaceType || rv.Type() == rt {
+		// if reflect.Type is interface or the types match, return the provided reflect.Value
 		return rv, nil
 	}
 	if rv.Type().ConvertibleTo(rt) {
+		// if reflect can covert, do that convertion and return
 		return rv.Convert(rt), nil
 	}
 	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
+		// for function convertions, call convertVMFunctionToType
 		return convertVMFunctionToType(rv, rt)
 	}
 	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
+		// both rv and rt are pointers
+		// convert what they are pointing to
 		value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
 		if err != nil {
 			return rv, err
 		}
+		// need to make a new value to be able to set it
 		ptrV, err := makeValue(rt)
 		if err != nil {
 			return rv, err
 		}
+		// set value and return new pointer
 		ptrV.Elem().Set(value)
 		return ptrV, nil
 	}
 	if rv.Type() == interfaceType {
+		// reflect.Value is an interface, so try to convert the element
 		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
-	// TOFIX: handle if only one is PTR
+	// TOFIX: need to handle the case where rv or rt are a pointer but not both
 
 	return rv, fmt.Errorf("invalid type conversion")
 }
