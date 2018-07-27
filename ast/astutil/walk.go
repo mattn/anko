@@ -98,7 +98,7 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 			return err
 		}
 	case *ast.CForStmt:
-		if err := walkExpr(stmt.Expr1, f); err != nil {
+		if err := walkStmt(stmt.Stmt1, f); err != nil {
 			return err
 		}
 		if err := walkExpr(stmt.Expr2, f); err != nil {
@@ -122,19 +122,15 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 		if err := walkExpr(stmt.Expr, f); err != nil {
 			return err
 		}
-		for _, ss := range stmt.Cases {
-			if ssd, ok := ss.(*ast.DefaultStmt); ok {
-				if err := Walk(ssd.Stmts, f); err != nil {
-					return err
-				}
-				continue
-			}
-			if err := walkExpr(ss.(*ast.CaseStmt).Expr, f); err != nil {
+		body := stmt.Body.(*ast.SwitchBodyStmt)
+		for _, switchCaseStmt := range body.Cases {
+			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
+			if err := Walk(caseStmt.Stmts, f); err != nil {
 				return err
 			}
-			if err := Walk(ss.(*ast.CaseStmt).Stmts, f); err != nil {
-				return err
-			}
+		}
+		if err := Walk(body.Default, f); err != nil {
+			return err
 		}
 	case *ast.GoroutineStmt:
 		return walkExpr(stmt.Expr, f)

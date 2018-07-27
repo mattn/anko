@@ -49,7 +49,7 @@ var (
 // newStringError makes error interface with message.
 func newStringError(pos ast.Pos, err string) error {
 	if pos == nil {
-		return &Error{Message: err, Pos: ast.Position{1, 1}}
+		return &Error{Message: err, Pos: ast.Position{Line: 1, Column: 1}}
 	}
 	return &Error{Message: err, Pos: pos.Position()}
 }

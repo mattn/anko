@@ -992,16 +992,16 @@ func TestAddPackage(t *testing.T) {
 	}
 }
 
-type externalResolver struct {
+type ExternalResolver struct {
 	values map[string]reflect.Value
 	types  map[string]reflect.Type
 }
 
-func NewExternalResolver() *externalResolver {
-	return &externalResolver{values: make(map[string]reflect.Value), types: make(map[string]reflect.Type)}
+func NewExternalResolver() *ExternalResolver {
+	return &ExternalResolver{values: make(map[string]reflect.Value), types: make(map[string]reflect.Type)}
 }
 
-func (er *externalResolver) SetValue(name string, value interface{}) error {
+func (er *ExternalResolver) SetValue(name string, value interface{}) error {
 	if strings.Contains(name, ".") {
 		return fmt.Errorf("unknown symbol '%s'", name)
 	}
@@ -1014,14 +1014,14 @@ func (er *externalResolver) SetValue(name string, value interface{}) error {
 	return nil
 }
 
-func (er *externalResolver) Get(name string) (reflect.Value, error) {
+func (er *ExternalResolver) Get(name string) (reflect.Value, error) {
 	if v, ok := er.values[name]; ok {
 		return v, nil
 	}
 	return nilValue, fmt.Errorf("undefined symbol '%s'", name)
 }
 
-func (er *externalResolver) DefineType(name string, t interface{}) error {
+func (er *ExternalResolver) DefineType(name string, t interface{}) error {
 	if strings.Contains(name, ".") {
 		return fmt.Errorf("unknown symbol '%s'", name)
 	}
@@ -1041,7 +1041,7 @@ func (er *externalResolver) DefineType(name string, t interface{}) error {
 	return nil
 }
 
-func (er *externalResolver) Type(name string) (reflect.Type, error) {
+func (er *ExternalResolver) Type(name string) (reflect.Type, error) {
 	if v, ok := er.types[name]; ok {
 		return v, nil
 	}
