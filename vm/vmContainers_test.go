@@ -366,7 +366,6 @@ func TestMakeArrays(t *testing.T) {
 func TestArraySlice(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-
 		{Script: `a = [1, 2]; a[:]`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `(1++)[0:0]`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = [1, 2]; a[1++:0]`, RunError: fmt.Errorf("invalid operation"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
@@ -415,6 +414,9 @@ func TestArraySlice(t *testing.T) {
 		{Script: `a = [1, 2, 3]; a[:3]`, RunOutput: []interface{}{int64(1), int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[:4]`, RunError: fmt.Errorf("index out of range"), RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
+		{Script: `b[1:2] = 4`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a = [1, 2, 3]; a[1++:2] = 4`, RunError: fmt.Errorf("invalid operation"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = [1, 2, 3]; a[1:2++] = 4`, RunError: fmt.Errorf("invalid operation"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[nil:2] = 4`, RunError: fmt.Errorf("index must be a number"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:nil] = 4`, RunError: fmt.Errorf("index must be a number"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
@@ -789,7 +791,11 @@ func TestMaps(t *testing.T) {
 		{Script: `{"b": 1++}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `{1++: 1}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = {}; a.b.c`, RunError: fmt.Errorf("type invalid does not support member operation")},
-		{Script: `a = {}; a.b.c  = 1`, RunError: fmt.Errorf("type invalid does not support member operation")},
+		{Script: `a = {}; a.b.c = 1`, RunError: fmt.Errorf("type invalid does not support member operation")},
+		{Script: `a = {}; a[1++]`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a = {}; a[1++] = 1`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `b[1]`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `b[1] = 1`, RunError: fmt.Errorf("undefined symbol 'b'")},
 
 		{Script: `{}`, RunOutput: map[interface{}]interface{}{}},
 		{Script: `{"b": nil}`, RunOutput: map[interface{}]interface{}{"b": nil}},
