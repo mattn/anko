@@ -74,7 +74,7 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 		return []reflect.Value{reflect.ValueOf(rv), reflectValueErrorNilValue}
 	}
 
-	// create a reflect.Value that can be called by reflect Call
+	// make the reflect.Value function that calls runVMFunction
 	rv := reflect.MakeFunc(funcType, runVMFunction)
 
 	// if function name is not empty, define it in the env
@@ -401,16 +401,15 @@ func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertT
 			return rvs[0], nil
 		}
 		if convertToInterfaceSlice {
-			// called from callExpr
 			// need to convert from a slice of reflect.Value to slice of interface
 			return reflectValueSlicetoInterfaceSlice(rvs), nil
 		}
-		// called from runVMConvertFunction
 		// need to keep as slice of reflect.Value
 		return reflect.ValueOf(rvs), nil
 	}
 
 	// is a runVMFunction, expect return in the runVMFunction format
+	// convertToInterfaceSlice is ignored
 	// some of the below checks probably can be removed because they are done in checkIfRunVMFunction
 
 	if len(rvs) != 2 {
@@ -438,6 +437,7 @@ func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertT
 	}
 
 	if rvError.IsNil() {
+		// no error, so return the normal VM reflect.Value form
 		return rvs[0].Interface().(reflect.Value), nil
 	}
 

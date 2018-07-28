@@ -42,7 +42,7 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		return rv.Convert(rt), nil
 	}
 	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
-		// for function convertions, call convertVMFunctionToType
+		// for runVMFunction convertions, call convertVMFunctionToType
 		return convertVMFunctionToType(rv, rt)
 	}
 	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
@@ -71,28 +71,45 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 	return rv, fmt.Errorf("invalid type conversion")
 }
 
+// convertVMFunctionToType is for translating a runVMFunction into the correct type
+// so it can be passed to a Go function argument with the correct static types
+// it creates a translate function runVMConvertFunction
 func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
+	// only translates runVMFunction type
 	if !checkIfRunVMFunction(rv.Type()) {
 		return rv, fmt.Errorf("invalid type conversion")
 	}
 
+	// create runVMConvertFunction to match reflect.Type
+	// this function is being called by the Go function
 	runVMConvertFunction := func(in []reflect.Value) []reflect.Value {
+		// note: this function is being called by another reflect Call
+		// only way to pass along any errors is by panic
+
+		// make the reflect.Value slice of each of the VM reflect.Value
 		args := make([]reflect.Value, 0, rt.NumIn())
 		for i := 0; i < rt.NumIn(); i++ {
+			// have to do the double reflect.ValueOf that runVMFunction expects
 			args = append(args, reflect.ValueOf(in[i]))
 		}
 
+		// Call runVMFunction
 		rvs := rv.Call(args)
 
+		// call processCallReturnValues to process runVMFunction return values
+		// returns normal VM reflect.Value form
 		rv, err := processCallReturnValues(rvs, true, false)
 		if err != nil {
 			panic("function run error: " + err.Error())
 		}
 
 		if rt.NumOut() < 1 {
+			// Go function does not want any return values, so give it none
 			return []reflect.Value{}
 		}
 		if rt.NumOut() < 2 {
+			// Go function wants one return value
+			// will try to covert to reflect.Value correct type and return
 			rv, err = convertReflectValueToType(rv, rt.Out(0))
 			if err != nil {
 				panic("function wants return type " + rt.Out(0).String() + " but received type " + rv.Type().String())
@@ -100,25 +117,32 @@ func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 			return []reflect.Value{rv}
 		}
 
-		if rv.Type() != reflectValueSliceType {
-			panic("bad function return type: " + rv.Type().String())
+		// Go function wants more than one return value
+		// make sure we have a slice/array with enought values
+
+		if !rv.IsValid() {
+			panic(fmt.Sprintf("function wants %v return values but received invalid", rt.NumOut()))
+		}
+		if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
+			panic(fmt.Sprintf("function wants %v return values but received %v", rt.NumOut(), rv.Kind().String()))
+		}
+		if rv.Len() < rt.NumOut() {
+			panic(fmt.Sprintf("function wants %v return values but received %v values", rt.NumOut(), rv.Len()))
 		}
 
-		outValues := rv.Interface().([]reflect.Value)
-		if len(outValues) < rt.NumOut() {
-			panic(fmt.Sprintf("function wants %v return values but received %v values", rt.NumOut(), len(outValues)))
-		}
-
-		rvs = make([]reflect.Value, 0, rt.NumOut())
-		for i := 0; i < rt.NumOut(); i++ {
-			rv, err = convertReflectValueToType(outValues[i], rt.Out(i))
+		// try to covert each value in slice to wanted type and put into a reflect.Value slice
+		rvs = make([]reflect.Value, rt.NumOut())
+		for i := 0; i < rv.Len(); i++ {
+			rvs[i], err = convertReflectValueToType(rv.Index(i), rt.Out(i))
 			if err != nil {
-				panic("function wants return type " + rt.Out(i).String() + " but received type " + rv.Type().String())
+				panic("function wants return type " + rt.Out(i).String() + " but received type " + rvs[i].Type().String())
 			}
-			rvs = append(rvs, rv)
 		}
+
+		// return created reflect.Value slice
 		return rvs
 	}
 
+	// make the reflect.Value function that calls runVMConvertFunction
 	return reflect.MakeFunc(rt, runVMConvertFunction), nil
 }
