@@ -238,6 +238,14 @@ func TestFunctions(t *testing.T) {
 				return a, b, c, d, e, f, g
 			}}, RunOutput: []interface{}{nil, true, int32(1), int64(2), float32(1.1), float64(2.2), "g"}, Output: map[string]interface{}{"a": nil, "b": true, "c": int32(1), "d": int64(2), "e": float32(1.1), "f": float64(2.2), "g": "g"}},
 
+		{Script: `b = a()`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: []interface{}{true, int32(1), int64(2), float32(3.3), float64(4.4), "5"}, Output: map[string]interface{}{"b": []interface{}{true, int32(1), int64(2), float32(3.3), float64(4.4), "5"}}},
+		{Script: `b = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: []interface{}{true, int32(1), int64(2), float32(3.3), float64(4.4), "5"}, Output: map[string]interface{}{"b": []interface{}{true, int32(1), int64(2), float32(3.3), float64(4.4), "5"}}},
+		{Script: `b, c = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: true, Output: map[string]interface{}{"b": true, "c": int32(1)}},
+		{Script: `b, c, d = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: true, Output: map[string]interface{}{"b": true, "c": int32(1), "d": int64(2)}},
+		{Script: `b, c, d, e = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: true, Output: map[string]interface{}{"b": true, "c": int32(1), "d": int64(2), "e": float32(3.3)}},
+		{Script: `b, c, d, e, f = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: true, Output: map[string]interface{}{"b": true, "c": int32(1), "d": int64(2), "e": float32(3.3), "f": float64(4.4)}},
+		{Script: `b, c, d, e, f, g = a(); b`, Input: map[string]interface{}{"a": func() (bool, int32, int64, float32, float64, string) { return true, 1, 2, 3.3, 4.4, "5" }}, RunOutput: true, Output: map[string]interface{}{"b": true, "c": int32(1), "d": int64(2), "e": float32(3.3), "f": float64(4.4), "g": "5"}},
+
 		{Script: `a = nil; b(a)`, Input: map[string]interface{}{"b": func(c interface{}) bool { return c == nil }}, RunOutput: true, Output: map[string]interface{}{"a": nil}},
 		{Script: `a = true; b(a)`, Input: map[string]interface{}{"b": func(c bool) bool { return c == true }}, RunOutput: true, Output: map[string]interface{}{"a": true}},
 		{Script: `a = 1; b(a)`, Input: map[string]interface{}{"b": func(c int64) bool { return c == 1 }}, RunOutput: true, Output: map[string]interface{}{"a": int64(1)}},
@@ -366,6 +374,13 @@ func TestFunctions(t *testing.T) {
 
 		{Script: `a = make(Buffer); n, err = a.WriteString("a"); if err != nil { return err }; n`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: 1},
 		{Script: `a = make(Buffer); n, err = a.WriteString("a"); if err != nil { return err }; a.String()`, Types: map[string]interface{}{"Buffer": bytes.Buffer{}}, RunOutput: "a"},
+
+		{Script: `b = {}; c = a(b.c); c`, Input: map[string]interface{}{"a": func(b string) bool {
+			if b == "" {
+				return true
+			}
+			return false
+		}}, RunOutput: true},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -510,7 +525,7 @@ func TestFunctionsInArraysAndMaps(t *testing.T) {
 }
 
 func TestFunctionConvertions(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "0")
+	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
 		{Script: `b = func(c){ return c }; a("x", b)`, Input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, RunOutput: "x"},
 		{Script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, Types: map[string]interface{}{"struct": &struct {
@@ -518,9 +533,42 @@ func TestFunctionConvertions(t *testing.T) {
 		}{}},
 			RunOutput: true},
 		{Script: `b = 1; a(&b)`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, Output: map[string]interface{}{"b": int64(2)}},
-		// TOFIX:
+		{Script: `b = func(){ return true, 1, 2, 3.3, 4.4, "5" }; c, d, e, f, g, h = a(b); c`,
+			Input: map[string]interface{}{"a": func(b func() (bool, int32, int64, float32, float64, string)) (bool, int32, int64, float32, float64, string) {
+				return b()
+			}}, RunOutput: true, Output: map[string]interface{}{"c": true, "d": int32(1), "e": int64(2), "f": float32(3.3), "g": float64(4.4), "h": "5"}},
+
+		// TOFIX: not able to change pointer value
 		// {Script: `b = 1; c = &b; a(c); *c`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
-		// TODO: add more tests
+	}
+	testlib.Run(t, tests, nil)
+
+	os.Unsetenv("ANKO_DEBUG")
+	tests = []testlib.Test{
+		{Script: `c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() bool) bool {
+				return b()
+			}, "b": func(c func(bool)) { c(true) }}, RunError: fmt.Errorf("function wants argument type func() bool but received type func(func(bool))")},
+		{Script: `b = func(){ return 1++ }; c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() bool) bool {
+				return b()
+			}}, RunError: fmt.Errorf("function run error: invalid operation")},
+		{Script: `b = func(){ return true }; c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() string) string {
+				return b()
+			}}, RunError: fmt.Errorf("function wants return type string but received type bool")},
+		{Script: `b = func(){ return true }; c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() (bool, string)) (bool, string) {
+				return b()
+			}}, RunError: fmt.Errorf("function wants 2 return values but received bool")},
+		{Script: `b = func(){ return true, 1 }; c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() (bool, int64, string)) (bool, int64, string) {
+				return b()
+			}}, RunError: fmt.Errorf("function wants 3 return values but received 2 values")},
+		{Script: `b = func(){ return "1", true }; c = a(b)`,
+			Input: map[string]interface{}{"a": func(b func() (bool, string)) (bool, string) {
+				return b()
+			}}, RunError: fmt.Errorf("function wants return type bool but received type string")},
 	}
 	testlib.Run(t, tests, nil)
 }

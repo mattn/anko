@@ -156,8 +156,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return rv, nil
 		}
 
-		for _, statment := range stmt.ElseIf {
-			elseIf := statment.(*ast.IfStmt)
+		for _, statement := range stmt.ElseIf {
+			elseIf := statement.(*ast.IfStmt)
 			// else if - if
 			newenv := env.NewEnv()
 			rv, err = invokeExpr(elseIf.If, newenv)
@@ -414,9 +414,9 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 
 		var caseValue reflect.Value
 		body := stmt.Body.(*ast.SwitchBodyStmt)
-		var statments []ast.Stmt
+		var statements []ast.Stmt
 		if body.Default != nil {
-			statments = body.Default
+			statements = body.Default
 		}
 
 	Loop:
@@ -428,14 +428,14 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 					return nilValue, newError(expr, err)
 				}
 				if equal(rv, caseValue) {
-					statments = caseStmt.Stmts
+					statements = caseStmt.Stmts
 					break Loop
 				}
 			}
 		}
 
-		if statments != nil {
-			rv, err = run(statments, newenv)
+		if statements != nil {
+			rv, err = run(statements, newenv)
 			if err != nil {
 				return rv, err
 			}

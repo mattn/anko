@@ -105,7 +105,7 @@ type SwitchStmt struct {
 	Body Stmt
 }
 
-// SwitchBodyStmt provide switch case statements and default statment.
+// SwitchBodyStmt provide switch case statements and default statement.
 type SwitchBodyStmt struct {
 	StmtImpl
 	Cases   []Stmt
