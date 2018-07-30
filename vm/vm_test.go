@@ -184,31 +184,168 @@ func TestStrings(t *testing.T) {
 
 func TestVar(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
-	var parseErrFunc = func(t *testing.T, err error) {
-		if !ValueEqual("syntax error", err.Error()) {
-			t.Errorf("err: %s, not equal syntax error", err)
-		}
-	}
+	testInput1 := map[string]interface{}{"b": func() {}}
 	tests := []testlib.Test{
-		{Script: `a := 1`, ParseErrorFunc: &parseErrFunc},
+		// simple one variable
+		{Script: `1 = 2`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `var 1 = 2`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a = 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `var a = 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a := 1`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a := 1`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `y = z`, RunError: fmt.Errorf("undefined symbol 'z'")},
 
+		{Script: `a = nil`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1.1`, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `a = "a"`, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `var a = nil`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `var a = true`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `var a = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `var a = 1.1`, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1)}},
+		{Script: `var a = "a"`, RunOutput: "a", Output: map[string]interface{}{"a": "a"}},
+
+		{Script: `a = b`, Input: map[string]interface{}{"b": reflect.Value{}}, RunOutput: reflect.Value{}, Output: map[string]interface{}{"a": reflect.Value{}, "b": reflect.Value{}}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil, "b": nil}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": true}, RunOutput: true, Output: map[string]interface{}{"a": true, "b": true}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": int32(1)}, RunOutput: int32(1), Output: map[string]interface{}{"a": int32(1), "b": int32(1)}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1), "b": int64(1)}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": float32(1.1)}, RunOutput: float32(1.1), Output: map[string]interface{}{"a": float32(1.1), "b": float32(1.1)}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1), "b": float64(1.1)}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": "a"}, RunOutput: "a", Output: map[string]interface{}{"a": "a", "b": "a"}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": 'a'}, RunOutput: 'a', Output: map[string]interface{}{"a": 'a', "b": 'a'}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": struct{}{}}, RunOutput: struct{}{}, Output: map[string]interface{}{"a": struct{}{}, "b": struct{}{}}},
+
+		{Script: `var a = b`, Input: map[string]interface{}{"b": reflect.Value{}}, RunOutput: reflect.Value{}, Output: map[string]interface{}{"a": reflect.Value{}, "b": reflect.Value{}}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": nil}, RunOutput: nil, Output: map[string]interface{}{"a": nil, "b": nil}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": true}, RunOutput: true, Output: map[string]interface{}{"a": true, "b": true}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": int32(1)}, RunOutput: int32(1), Output: map[string]interface{}{"a": int32(1), "b": int32(1)}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1), "b": int64(1)}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": float32(1.1)}, RunOutput: float32(1.1), Output: map[string]interface{}{"a": float32(1.1), "b": float32(1.1)}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": float64(1.1)}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": float64(1.1), "b": float64(1.1)}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": "a"}, RunOutput: "a", Output: map[string]interface{}{"a": "a", "b": "a"}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": 'a'}, RunOutput: 'a', Output: map[string]interface{}{"a": 'a', "b": 'a'}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": struct{}{}}, RunOutput: struct{}{}, Output: map[string]interface{}{"a": struct{}{}, "b": struct{}{}}},
+
+		// simple one variable overwrite
+		{Script: `a = true; a = nil`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = nil; a = true`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 1; a = 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 1.1; a = 2.2`, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `a = "a"; a = "b"`, RunOutput: "b", Output: map[string]interface{}{"a": "b"}},
+
+		{Script: `var a = true; var a = nil`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `var a = nil; var a = true`, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `var a = 1; var a = 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `var a = 1.1; var a = 2.2`, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `var a = "a"; var a = "b"`, RunOutput: "b", Output: map[string]interface{}{"a": "b"}},
+
+		{Script: `a = nil`, Input: map[string]interface{}{"a": true}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `a = true`, Input: map[string]interface{}{"a": nil}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `a = 2`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 2`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 2.2`, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `a = 2.2`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `a = "b"`, Input: map[string]interface{}{"a": "a"}, RunOutput: "b", Output: map[string]interface{}{"a": "b"}},
+
+		{Script: `var a = nil`, Input: map[string]interface{}{"a": true}, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `var a = true`, Input: map[string]interface{}{"a": nil}, RunOutput: true, Output: map[string]interface{}{"a": true}},
+		{Script: `var a = 2`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `var a = 2`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `var a = 2.2`, Input: map[string]interface{}{"a": float32(1.1)}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `var a = 2.2`, Input: map[string]interface{}{"a": float64(1.1)}, RunOutput: float64(2.2), Output: map[string]interface{}{"a": float64(2.2)}},
+		{Script: `var a = "b"`, Input: map[string]interface{}{"a": "a"}, RunOutput: "b", Output: map[string]interface{}{"a": "b"}},
+
+		// Go variable copy
+		{Script: `a = b`, Input: testInput1, RunOutput: testInput1["b"], Output: map[string]interface{}{"a": testInput1["b"], "b": testInput1["b"]}},
+		{Script: `var a = b`, Input: testInput1, RunOutput: testInput1["b"], Output: map[string]interface{}{"a": testInput1["b"], "b": testInput1["b"]}},
+
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValue}, RunOutput: testVarValue, Output: map[string]interface{}{"a": testVarValue, "b": testVarValue}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarBoolP}, RunOutput: testVarBoolP, Output: map[string]interface{}{"a": testVarBoolP, "b": testVarBoolP}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarInt32P}, RunOutput: testVarInt32P, Output: map[string]interface{}{"a": testVarInt32P, "b": testVarInt32P}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarInt64P}, RunOutput: testVarInt64P, Output: map[string]interface{}{"a": testVarInt64P, "b": testVarInt64P}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarFloat32P}, RunOutput: testVarFloat32P, Output: map[string]interface{}{"a": testVarFloat32P, "b": testVarFloat32P}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarFloat64P}, RunOutput: testVarFloat64P, Output: map[string]interface{}{"a": testVarFloat64P, "b": testVarFloat64P}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarStringP}, RunOutput: testVarStringP, Output: map[string]interface{}{"a": testVarStringP, "b": testVarStringP}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarFuncP}, RunOutput: testVarFuncP, Output: map[string]interface{}{"a": testVarFuncP, "b": testVarFuncP}},
+
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValue}, RunOutput: testVarValue, Output: map[string]interface{}{"a": testVarValue, "b": testVarValue}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarBoolP}, RunOutput: testVarBoolP, Output: map[string]interface{}{"a": testVarBoolP, "b": testVarBoolP}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarInt32P}, RunOutput: testVarInt32P, Output: map[string]interface{}{"a": testVarInt32P, "b": testVarInt32P}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarInt64P}, RunOutput: testVarInt64P, Output: map[string]interface{}{"a": testVarInt64P, "b": testVarInt64P}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarFloat32P}, RunOutput: testVarFloat32P, Output: map[string]interface{}{"a": testVarFloat32P, "b": testVarFloat32P}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarFloat64P}, RunOutput: testVarFloat64P, Output: map[string]interface{}{"a": testVarFloat64P, "b": testVarFloat64P}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarStringP}, RunOutput: testVarStringP, Output: map[string]interface{}{"a": testVarStringP, "b": testVarStringP}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarFuncP}, RunOutput: testVarFuncP, Output: map[string]interface{}{"a": testVarFuncP, "b": testVarFuncP}},
+
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueBool}, RunOutput: testVarValueBool, Output: map[string]interface{}{"a": testVarValueBool, "b": testVarValueBool}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueInt32}, RunOutput: testVarValueInt32, Output: map[string]interface{}{"a": testVarValueInt32, "b": testVarValueInt32}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueInt64}, RunOutput: testVarValueInt64, Output: map[string]interface{}{"a": testVarValueInt64, "b": testVarValueInt64}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueFloat32}, RunOutput: testVarValueFloat32, Output: map[string]interface{}{"a": testVarValueFloat32, "b": testVarValueFloat32}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueFloat64}, RunOutput: testVarValueFloat64, Output: map[string]interface{}{"a": testVarValueFloat64, "b": testVarValueFloat64}},
+		{Script: `a = b`, Input: map[string]interface{}{"b": testVarValueString}, RunOutput: testVarValueString, Output: map[string]interface{}{"a": testVarValueString, "b": testVarValueString}},
+
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueBool}, RunOutput: testVarValueBool, Output: map[string]interface{}{"a": testVarValueBool, "b": testVarValueBool}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueInt32}, RunOutput: testVarValueInt32, Output: map[string]interface{}{"a": testVarValueInt32, "b": testVarValueInt32}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueInt64}, RunOutput: testVarValueInt64, Output: map[string]interface{}{"a": testVarValueInt64, "b": testVarValueInt64}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueFloat32}, RunOutput: testVarValueFloat32, Output: map[string]interface{}{"a": testVarValueFloat32, "b": testVarValueFloat32}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueFloat64}, RunOutput: testVarValueFloat64, Output: map[string]interface{}{"a": testVarValueFloat64, "b": testVarValueFloat64}},
+		{Script: `var a = b`, Input: map[string]interface{}{"b": testVarValueString}, RunOutput: testVarValueString, Output: map[string]interface{}{"a": testVarValueString, "b": testVarValueString}},
+
+		// one variable spacing
 		{Script: `
-a  = 1;
+a  =  1
+`, RunOutput: int64(1)},
+		{Script: `
+a  =  1;
 `, RunOutput: int64(1)},
 
+		// one variable many values
+		{Script: `, b = 1, 2`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(2), Output: map[string]interface{}{"b": int64(1)}},
 		{Script: `var , b = 1, 2`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(2), Output: map[string]interface{}{"b": int64(1)}},
+		{Script: `a,  = 1, 2`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `var a,  = 1, 2`, ParseError: fmt.Errorf("syntax error")},
-		{Script: `var a, b  = 1,`, ParseError: fmt.Errorf("syntax error")},
-		{Script: `var a, b  = 1,,`, ParseError: fmt.Errorf("syntax error")},
-		{Script: `var a, b  = ,2,`, ParseError: fmt.Errorf("syntax error")},
 
-		{Script: `var a = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `var a, b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		{Script: `var a, b, c = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
-
+		// TOFIX: should not error?
+		{Script: `a = 1, 2`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `var a = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
+		// TOFIX: should not error?
+		{Script: `a = 1, 2, 3`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1)}},
+
+		// two variables many values
+		{Script: `a, b  = 1,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = 1,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a, b  = ,1`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(1)},
+		{Script: `var a, b  = ,1`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(1)},
+		{Script: `a, b  = 1,,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = 1,,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a, b  = ,1,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = ,1,`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a, b  = ,,1`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `var a, b  = ,,1`, ParseError: fmt.Errorf("syntax error")},
+
+		{Script: `a.c, b = 1, 2`, RunError: fmt.Errorf("undefined symbol 'a'")},
+		{Script: `a, b.c = 1, 2`, RunError: fmt.Errorf("undefined symbol 'b'")},
+
+		{Script: `a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a, b = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a, b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `var a, b = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `a, b = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `var a, b = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+
+		// three variables many values
+		{Script: `a, b, c = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `var a, b, c = 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a, b, c = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `var a, b, c = 1, 2`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `a, b, c = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{Script: `var a, b, c = 1, 2, 3`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{Script: `a, b, c = 1, 2, 3, 4`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
+		{Script: `var a, b, c = 1, 2, 3, 4`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(1), "b": int64(2), "c": int64(3)}},
 	}
 	testlib.Run(t, tests, nil)
 }

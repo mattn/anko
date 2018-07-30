@@ -796,6 +796,7 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {}; a[1++] = 1`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `b[1]`, RunError: fmt.Errorf("undefined symbol 'b'")},
 		{Script: `b[1] = 1`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `z.y.x = 1`, RunError: fmt.Errorf("undefined symbol 'z'")},
 
 		{Script: `{}`, RunOutput: map[interface{}]interface{}{}},
 		{Script: `{"b": nil}`, RunOutput: map[interface{}]interface{}{"b": nil}},
