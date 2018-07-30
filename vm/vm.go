@@ -21,14 +21,13 @@ type (
 )
 
 var (
-	nilType               = reflect.TypeOf(nil)
-	stringType            = reflect.TypeOf("a")
-	interfaceType         = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
-	interfaceSliceType    = reflect.TypeOf([]interface{}{})
-	reflectValueType      = reflect.TypeOf(reflect.Value{})
-	reflectValueSliceType = reflect.TypeOf([]reflect.Value{})
-	errorType             = reflect.ValueOf([]error{nil}).Index(0).Type()
-	vmErrorType           = reflect.TypeOf(&Error{})
+	nilType            = reflect.TypeOf(nil)
+	stringType         = reflect.TypeOf("a")
+	interfaceType      = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
+	interfaceSliceType = reflect.TypeOf([]interface{}{})
+	reflectValueType   = reflect.TypeOf(reflect.Value{})
+	errorType          = reflect.ValueOf([]error{nil}).Index(0).Type()
+	vmErrorType        = reflect.TypeOf(&Error{})
 
 	nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	trueValue                 = reflect.ValueOf(true)
