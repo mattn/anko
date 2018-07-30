@@ -830,3 +830,19 @@ func TestAssignToInterface(t *testing.T) {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
+
+// TestValueEqual do some basic ValueEqual tests for coverage
+func TestValueEqual(t *testing.T) {
+	result := ValueEqual(true, true)
+	if result != true {
+		t.Fatal("ValueEqual")
+	}
+	result = ValueEqual(true, false)
+	if result != false {
+		t.Fatal("ValueEqual")
+	}
+	result = ValueEqual(false, true)
+	if result != false {
+		t.Fatal("ValueEqual")
+	}
+}
