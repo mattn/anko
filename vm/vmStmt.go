@@ -60,14 +60,20 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		return nilValue, ErrInterrupt
 	}
 	switch stmt := stmt.(type) {
+
+	// ExprStmt
 	case *ast.ExprStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
 			return rv, newError(stmt.Expr, err)
 		}
 		return rv, nil
+
+	// VarStmt
 	case *ast.VarStmt:
 		var err error
+
+		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.Exprs))
 		for i, expr := range stmt.Exprs {
 			rvs[i], err = invokeExpr(expr, env)
@@ -75,15 +81,36 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				return nilValue, newError(expr, err)
 			}
 		}
-		for i, name := range stmt.Names {
-			if i >= len(rvs) {
-				break
+
+		if len(rvs) == 1 && len(stmt.Names) > 1 {
+			// only one right side value but many left side names
+			value := rvs[0]
+			if value.Kind() == reflect.Interface && !value.IsNil() {
+				value = value.Elem()
 			}
-			env.defineValue(name, rvs[i])
+			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
+				// value is slice/array, add each value to left side names
+				for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
+					env.defineValue(stmt.Names[i], value.Index(i))
+				}
+				// return last value of slice/array
+				return value.Index(value.Len() - 1), nil
+			}
 		}
+
+		// define all names with right side values
+		for i := 0; i < len(rvs) && i < len(stmt.Names); i++ {
+			env.defineValue(stmt.Names[i], rvs[i])
+		}
+
+		// return last right side value
 		return rvs[len(rvs)-1], nil
+
+	// LetsStmt
 	case *ast.LetsStmt:
 		var err error
+
+		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.Rhss))
 		for i, rhs := range stmt.Rhss {
 			rvs[i], err = invokeExpr(rhs, env)
@@ -91,32 +118,42 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 				return nilValue, newError(rhs, err)
 			}
 		}
-		if len(stmt.Lhss) > 1 && len(rvs) == 1 {
-			v := rvs[0]
-			if v.Kind() == reflect.Interface && !v.IsNil() {
-				v = v.Elem()
+
+		if len(rvs) == 1 && len(stmt.Lhss) > 1 {
+			// only one right side value but many left side expressions
+			value := rvs[0]
+			if value.Kind() == reflect.Interface && !value.IsNil() {
+				value = value.Elem()
 			}
-			if v.Kind() == reflect.Slice {
-				rvs = make([]reflect.Value, v.Len())
-				for i := 0; i < v.Len(); i++ {
-					rvs[i] = v.Index(i)
+			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
+				// value is slice/array, add each value to left side expression
+				for i := 0; i < value.Len() && i < len(stmt.Lhss); i++ {
+					_, err = invokeLetExpr(stmt.Lhss[i], value.Index(i), env)
+					if err != nil {
+						return nilValue, newError(stmt.Lhss[i], err)
+					}
 				}
+				// return last value of slice/array
+				return value.Index(value.Len() - 1), nil
 			}
 		}
-		for i, lhs := range stmt.Lhss {
-			if i >= len(rvs) {
-				break
+
+		// invoke all left side expressions with right side values
+		for i := 0; i < len(rvs) && i < len(stmt.Lhss); i++ {
+			value := rvs[i]
+			if value.Kind() == reflect.Interface && !value.IsNil() {
+				value = value.Elem()
 			}
-			v := rvs[i]
-			if v.Kind() == reflect.Interface && !v.IsNil() {
-				v = v.Elem()
-			}
-			_, err = invokeLetExpr(lhs, v, env)
+			_, err = invokeLetExpr(stmt.Lhss[i], value, env)
 			if err != nil {
-				return nilValue, newError(lhs, err)
+				return nilValue, newError(stmt.Lhss[i], err)
 			}
 		}
+
+		// return last right side value
 		return rvs[len(rvs)-1], nil
+
+	// LetMapItemStmt
 	case *ast.LetMapItemStmt:
 		rv, err := invokeExpr(stmt.Rhs, env)
 		if err != nil {
@@ -139,6 +176,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return rvs[0], nil
+
+	// IfStmt
 	case *ast.IfStmt:
 		// if
 		rv, err := invokeExpr(stmt.If, env)
@@ -188,6 +227,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 
 		return rv, nil
 
+	// TryStmt
 	case *ast.TryStmt:
 		newenv := env.NewEnv()
 		_, err := run(stmt.Try, newenv)
@@ -212,6 +252,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return nilValue, newError(stmt, err)
+
+	// LoopStmt
 	case *ast.LoopStmt:
 		newenv := env.NewEnv()
 		for {
@@ -240,6 +282,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return nilValue, nil
+
+	// ForStmt
 	case *ast.ForStmt:
 		val, ee := invokeExpr(stmt.Value, env)
 		if ee != nil {
@@ -327,6 +371,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		default:
 			return nilValue, newStringError(stmt, "for cannot loop over type "+val.Kind().String())
 		}
+
+	// CForStmt
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
 		_, err := runSingleStmt(stmt.Stmt1, newenv)
@@ -361,6 +407,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return nilValue, nil
+
+	// ReturnStmt
 	case *ast.ReturnStmt:
 		var err error
 		rv := nilValue
@@ -387,6 +435,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			}
 		}
 		return reflect.ValueOf(rvs), nil
+
+	// ThrowStmt
 	case *ast.ThrowStmt:
 		rv, err := invokeExpr(stmt.Expr, env)
 		if err != nil {
@@ -396,6 +446,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 			return nilValue, newError(stmt, err)
 		}
 		return rv, newStringError(stmt, fmt.Sprint(rv.Interface()))
+
+	// ModuleStmt
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
@@ -405,6 +457,8 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 		}
 		env.defineGlobalValue(stmt.Name, reflect.ValueOf(newenv))
 		return rv, nil
+
+	// SwitchStmt
 	case *ast.SwitchStmt:
 		newenv := env.NewEnv()
 		rv, err := invokeExpr(stmt.Expr, newenv)
@@ -443,8 +497,11 @@ func runSingleStmt(stmt ast.Stmt, env *Env) (reflect.Value, error) {
 
 		return rv, nil
 
+	// GoroutineStmt
 	case *ast.GoroutineStmt:
 		return invokeExpr(stmt.Expr, env)
+
+	// default
 	default:
 		return nilValue, newStringError(stmt, "unknown statement")
 	}

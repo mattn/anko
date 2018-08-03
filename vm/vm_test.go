@@ -357,11 +357,12 @@ a  =  1;
 		{Script: `var a = 1; func(){ var a = 2 }()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
 
 		// function return
+		{Script: `a, 1++ = func(){ return 1, 2 }()`, RunError: fmt.Errorf("invalid operation"), Output: map[string]interface{}{"a": int64(1)}},
+
 		{Script: `a = func(){ return 1 }()`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `var a = func(){ return 1 }()`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a, b = func(){ return 1, 2 }()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
-		// TOFIX: should output to a, b, not a slice interface
-		{Script: `var a, b = func(){ return 1, 2 }()`, RunOutput: []interface{}{int64(1), int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+		{Script: `var a, b = func(){ return 1, 2 }()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 	}
 	testlib.Run(t, tests, nil)
 }
