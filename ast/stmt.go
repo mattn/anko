@@ -91,13 +91,6 @@ type ModuleStmt struct {
 	Stmts []Stmt
 }
 
-// VarStmt provide statement to let variables in current scope.
-type VarStmt struct {
-	StmtImpl
-	Names []string
-	Exprs []Expr
-}
-
 // SwitchStmt provide switch statement.
 type SwitchStmt struct {
 	StmtImpl
@@ -117,6 +110,13 @@ type SwitchCaseStmt struct {
 	StmtImpl
 	Exprs []Expr
 	Stmts []Stmt
+}
+
+// VarStmt provide statement to let variables in current scope.
+type VarStmt struct {
+	StmtImpl
+	Names []string
+	Exprs []Expr
 }
 
 // LetsStmt provide multiple statement of let.
