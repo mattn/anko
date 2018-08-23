@@ -557,7 +557,22 @@ func TestFunctionConvertions(t *testing.T) {
 		// array sub mismatch
 		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [2]int) int { return len(b) }, "b": [1][2]int64{[2]int64{1, 2}}}, RunError: fmt.Errorf("function wants argument type [2]int but received type [1][2]int64"), Output: map[string]interface{}{"b": [1][2]int64{[2]int64{1, 2}}}},
 
-		// TODO: sub slice/array
+		// slice with sub int64 to int convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]int) int { return len(b) }, "b": [][]int64{[]int64{1, 2}, []int64{3, 4}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [][]int64{[]int64{1, 2}, []int64{3, 4}}}},
+		// array with sub int64 to int convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]int) int { return len(b) }, "b": [2][2]int64{[2]int64{1, 2}, [2]int64{3, 4}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [2][2]int64{[2]int64{1, 2}, [2]int64{3, 4}}}},
+		// slice with sub interface to int convertion
+		{Script: `b = [[1, 2], [3, 4]]; a(b)`, Input: map[string]interface{}{"a": func(b [][]int) int { return len(b) }}, RunOutput: int(2), Output: map[string]interface{}{"b": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		// slice with sub interface to int convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]int) int { return len(b) }, "b": [][]interface{}{[]interface{}{int64(1), int32(2)}, []interface{}{float64(3.3), float32(4.4)}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [][]interface{}{[]interface{}{int64(1), int32(2)}, []interface{}{float64(3.3), float32(4.4)}}}},
+		// array with sub interface to int convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]int) int { return len(b) }, "b": [2][2]interface{}{[2]interface{}{1, 2}, [2]interface{}{3, 4}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [2][2]interface{}{[2]interface{}{1, 2}, [2]interface{}{3, 4}}}},
+		// slice with single interface to double interface
+		{Script: `b = [[1, 2], [3, 4]]; a(b)`, Input: map[string]interface{}{"a": func(b [][]interface{}) int { return len(b) }}, RunOutput: int(2), Output: map[string]interface{}{"b": []interface{}{[]interface{}{int64(1), int64(2)}, []interface{}{int64(3), int64(4)}}}},
+		// slice with sub int64 to double interface convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]interface{}) int { return len(b) }, "b": [][]int64{[]int64{1, 2}, []int64{3, 4}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [][]int64{[]int64{1, 2}, []int64{3, 4}}}},
+		// array with sub int64 to double interface convertion
+		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b [][]interface{}) int { return len(b) }, "b": [2][2]int64{[2]int64{1, 2}, [2]int64{3, 4}}}, RunOutput: int(2), Output: map[string]interface{}{"b": [2][2]int64{[2]int64{1, 2}, [2]int64{3, 4}}}},
 
 		// TOFIX: not able to change pointer value
 		// {Script: `b = 1; c = &b; a(c); *c`, Input: map[string]interface{}{"a": func(b *int64) { *b = int64(2) }}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},

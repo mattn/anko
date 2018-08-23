@@ -78,45 +78,34 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 }
 
 func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
-	rvElemType := rv.Type().Elem()
 	rtElemType := rt.Elem()
 
-	rvHasSubSlice := rvElemType.Kind() == reflect.Slice || rvElemType.Kind() == reflect.Array
-	rtHasSubSlice := rtElemType.Kind() == reflect.Slice || rtElemType.Kind() == reflect.Array
-	if rvHasSubSlice != rtHasSubSlice && rvElemType != interfaceType && rtElemType != interfaceType {
-		return rv, fmt.Errorf("invalid type conversion")
+	// try to covert elements to new slice/array
+	var value reflect.Value
+	if rt.Kind() == reflect.Slice {
+		// make slice
+		value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
+	} else {
+		// make array
+		value = reflect.New(rt).Elem()
 	}
 
-	if !rvHasSubSlice && !rtHasSubSlice {
-		// try to covert elements to new slice/array
-		var value reflect.Value
-		if rt.Kind() == reflect.Slice {
-			// make slice
-			value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
-		} else {
-			// make array
-			value = reflect.New(rt).Elem()
+	var err error
+	var v reflect.Value
+	for i := 0; i < rv.Len(); i++ {
+		if !value.Index(i).CanSet() {
+			// is there a way for new slice/array not to be settable?
+			return rv, fmt.Errorf("invalid type conversion")
 		}
-		var err error
-		var v reflect.Value
-		for i := 0; i < rv.Len(); i++ {
-			if !value.Index(i).CanSet() {
-				// is there a way for new slice/array not to be settable?
-				return rv, fmt.Errorf("invalid type conversion")
-			}
-			v, err = convertReflectValueToType(rv.Index(i), rtElemType)
-			if err != nil {
-				return rv, err
-			}
-			value.Index(i).Set(v)
+		v, err = convertReflectValueToType(rv.Index(i), rtElemType)
+		if err != nil {
+			return rv, err
 		}
-		// return new converted slice or array
-		return value, nil
+		value.Index(i).Set(v)
 	}
 
-	// TODO: sub slice/array
-
-	return rv, fmt.Errorf("invalid type conversion")
+	// return new converted slice or array
+	return value, nil
 }
 
 // convertVMFunctionToType is for translating a runVMFunction into the correct type
