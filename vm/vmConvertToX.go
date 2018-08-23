@@ -41,32 +41,110 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		// if reflect can covert, do that convertion and return
 		return rv.Convert(rt), nil
 	}
-	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
-		// for runVMFunction convertions, call convertVMFunctionToType
-		return convertVMFunctionToType(rv, rt)
+	if (rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array) &&
+		(rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array) {
+		return convertSliceOrArray(rv, rt)
 	}
-	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
-		// both rv and rt are pointers
-		// convert what they are pointing to
-		value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
-		if err != nil {
-			return rv, err
+	if rv.Kind() == rt.Kind() {
+		// kind matches
+		switch rv.Kind() {
+		case reflect.Func:
+			// for runVMFunction convertions, call convertVMFunctionToType
+			return convertVMFunctionToType(rv, rt)
+		case reflect.Ptr:
+			// both rv and rt are pointers, convert what they are pointing to
+			value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
+			if err != nil {
+				return rv, err
+			}
+			// need to make a new value to be able to set it
+			ptrV, err := makeValue(rt)
+			if err != nil {
+				return rv, err
+			}
+			// set value and return new pointer
+			ptrV.Elem().Set(value)
+			return ptrV, nil
 		}
-		// need to make a new value to be able to set it
-		ptrV, err := makeValue(rt)
-		if err != nil {
-			return rv, err
-		}
-		// set value and return new pointer
-		ptrV.Elem().Set(value)
-		return ptrV, nil
 	}
 	if rv.Type() == interfaceType {
 		// reflect.Value is an interface, so try to convert the element
 		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
-	// TOFIX: need to handle the case where rv or rt are a pointer but not both
+	// TODO: need to handle the case where either rv or rt are a pointer but not both
+
+	return rv, fmt.Errorf("invalid type conversion")
+}
+
+func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
+	rvElemType := rv.Type().Elem()
+	rtElemType := rt.Elem()
+
+	/*
+		if rvElemType.ConvertibleTo(rtElemType) {
+			// can covert elements
+			var value reflect.Value
+			if rt.Kind() == reflect.Slice {
+				// make slice
+				value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
+			} else {
+				// make array
+				value = reflect.New(rt).Elem()
+			}
+			// covert and set elements
+			for i := 0; i < rv.Len(); i++ {
+				// is there anytime when the new element can not be set? if so, need to check CanSet before setting
+				value.Index(i).Set(rv.Index(i).Convert(rtElemType))
+			}
+			// return new converted slice or array
+			return value, nil
+		}
+	*/
+
+	rvHasSubSlice := rvElemType.Kind() == reflect.Slice || rvElemType.Kind() == reflect.Array
+	rtHasSubSlice := rtElemType.Kind() == reflect.Slice || rtElemType.Kind() == reflect.Array
+	if rvHasSubSlice != rtHasSubSlice && rvElemType != interfaceType && rtElemType != interfaceType {
+		return rv, fmt.Errorf("invalid type conversion")
+	}
+
+	if !rvHasSubSlice && !rtHasSubSlice {
+		// try to covert elements to new slice/array
+		var value reflect.Value
+		if rt.Kind() == reflect.Slice {
+			// make slice
+			value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
+		} else {
+			// make array
+			value = reflect.New(rt).Elem()
+		}
+		for i := 0; i < rv.Len(); i++ {
+			if !value.Index(i).CanSet() {
+				// is there a way for new slice/array not to be settable?
+				return rv, fmt.Errorf("invalid type conversion")
+			}
+			v := rv.Index(i)
+			if rvElemType == interfaceType {
+				// get element from interface
+				v = v.Elem()
+			}
+			vType := v.Type()
+			if rtElemType == interfaceType || rtElemType == vType {
+				// value is interface or matching type
+				value.Index(i).Set(v)
+			} else if vType.ConvertibleTo(rtElemType) {
+				// can convert to correct type
+				value.Index(i).Set(v.Convert(rtElemType))
+			} else {
+				// can not convert
+				return rv, fmt.Errorf("invalid type conversion")
+			}
+		}
+		// return new converted slice or array
+		return value, nil
+	}
+
+	// TODO: sub slice/array
 
 	return rv, fmt.Errorf("invalid type conversion")
 }
