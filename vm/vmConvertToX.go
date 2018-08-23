@@ -81,27 +81,6 @@ func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, erro
 	rvElemType := rv.Type().Elem()
 	rtElemType := rt.Elem()
 
-	/*
-		if rvElemType.ConvertibleTo(rtElemType) {
-			// can covert elements
-			var value reflect.Value
-			if rt.Kind() == reflect.Slice {
-				// make slice
-				value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
-			} else {
-				// make array
-				value = reflect.New(rt).Elem()
-			}
-			// covert and set elements
-			for i := 0; i < rv.Len(); i++ {
-				// is there anytime when the new element can not be set? if so, need to check CanSet before setting
-				value.Index(i).Set(rv.Index(i).Convert(rtElemType))
-			}
-			// return new converted slice or array
-			return value, nil
-		}
-	*/
-
 	rvHasSubSlice := rvElemType.Kind() == reflect.Slice || rvElemType.Kind() == reflect.Array
 	rtHasSubSlice := rtElemType.Kind() == reflect.Slice || rtElemType.Kind() == reflect.Array
 	if rvHasSubSlice != rtHasSubSlice && rvElemType != interfaceType && rtElemType != interfaceType {
@@ -118,27 +97,18 @@ func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, erro
 			// make array
 			value = reflect.New(rt).Elem()
 		}
+		var err error
+		var v reflect.Value
 		for i := 0; i < rv.Len(); i++ {
 			if !value.Index(i).CanSet() {
 				// is there a way for new slice/array not to be settable?
 				return rv, fmt.Errorf("invalid type conversion")
 			}
-			v := rv.Index(i)
-			if rvElemType == interfaceType {
-				// get element from interface
-				v = v.Elem()
+			v, err = convertReflectValueToType(rv.Index(i), rtElemType)
+			if err != nil {
+				return rv, err
 			}
-			vType := v.Type()
-			if rtElemType == interfaceType || rtElemType == vType {
-				// value is interface or matching type
-				value.Index(i).Set(v)
-			} else if vType.ConvertibleTo(rtElemType) {
-				// can convert to correct type
-				value.Index(i).Set(v.Convert(rtElemType))
-			} else {
-				// can not convert
-				return rv, fmt.Errorf("invalid type conversion")
-			}
+			value.Index(i).Set(v)
 		}
 		// return new converted slice or array
 		return value, nil

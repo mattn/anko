@@ -537,6 +537,8 @@ func TestFunctionConvertions(t *testing.T) {
 			return b()
 		}}, RunOutput: true, Output: map[string]interface{}{"c": true, "d": int32(1), "e": int64(2), "f": float32(3.3), "g": float64(4.4), "h": "5"}},
 
+		// slice inteface unable to convert to int
+		{Script: `b = [1, 2.2, "3"]; a(b)`, Input: map[string]interface{}{"a": func(b []int) int { return len(b) }}, RunError: fmt.Errorf("function wants argument type []int but received type []interface {}"), Output: map[string]interface{}{"b": []interface{}{int64(1), float64(2.2), "3"}}},
 		// slice no sub convertible convertion
 		{Script: `a(b)`, Input: map[string]interface{}{"a": func(b []int) int { return len(b) }, "b": []int64{1}}, RunOutput: int(1), Output: map[string]interface{}{"b": []int64{1}}},
 		// array no sub convertible convertion
