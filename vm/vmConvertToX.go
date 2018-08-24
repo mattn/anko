@@ -41,34 +41,71 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		// if reflect can covert, do that convertion and return
 		return rv.Convert(rt), nil
 	}
-	if rv.Kind() == reflect.Func && rt.Kind() == reflect.Func {
-		// for runVMFunction convertions, call convertVMFunctionToType
-		return convertVMFunctionToType(rv, rt)
+	if (rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array) &&
+		(rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array) {
+		return convertSliceOrArray(rv, rt)
 	}
-	if rv.Kind() == reflect.Ptr && rt.Kind() == reflect.Ptr {
-		// both rv and rt are pointers
-		// convert what they are pointing to
-		value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
-		if err != nil {
-			return rv, err
+	if rv.Kind() == rt.Kind() {
+		// kind matches
+		switch rv.Kind() {
+		case reflect.Func:
+			// for runVMFunction convertions, call convertVMFunctionToType
+			return convertVMFunctionToType(rv, rt)
+		case reflect.Ptr:
+			// both rv and rt are pointers, convert what they are pointing to
+			value, err := convertReflectValueToType(rv.Elem(), rt.Elem())
+			if err != nil {
+				return rv, err
+			}
+			// need to make a new value to be able to set it
+			ptrV, err := makeValue(rt)
+			if err != nil {
+				return rv, err
+			}
+			// set value and return new pointer
+			ptrV.Elem().Set(value)
+			return ptrV, nil
 		}
-		// need to make a new value to be able to set it
-		ptrV, err := makeValue(rt)
-		if err != nil {
-			return rv, err
-		}
-		// set value and return new pointer
-		ptrV.Elem().Set(value)
-		return ptrV, nil
 	}
 	if rv.Type() == interfaceType {
 		// reflect.Value is an interface, so try to convert the element
 		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
-	// TOFIX: need to handle the case where rv or rt are a pointer but not both
+	// TODO: need to handle the case where either rv or rt are a pointer but not both
 
 	return rv, fmt.Errorf("invalid type conversion")
+}
+
+func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
+	rtElemType := rt.Elem()
+
+	// try to covert elements to new slice/array
+	var value reflect.Value
+	if rt.Kind() == reflect.Slice {
+		// make slice
+		value = reflect.MakeSlice(rt, rv.Len(), rv.Len())
+	} else {
+		// make array
+		value = reflect.New(rt).Elem()
+	}
+
+	var err error
+	var v reflect.Value
+	for i := 0; i < rv.Len(); i++ {
+		if !value.Index(i).CanSet() {
+			// is there a way for new slice/array not to be settable?
+			return rv, fmt.Errorf("invalid type conversion")
+		}
+		v, err = convertReflectValueToType(rv.Index(i), rtElemType)
+		if err != nil {
+			return rv, err
+		}
+		value.Index(i).Set(v)
+	}
+
+	// return new converted slice or array
+	return value, nil
 }
 
 // convertVMFunctionToType is for translating a runVMFunction into the correct type
