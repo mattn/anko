@@ -9,6 +9,8 @@ import (
 
 func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
 	switch lhs := expr.(type) {
+
+	// IdentExpr
 	case *ast.IdentExpr:
 		if env.setValue(lhs.Lit, rv) != nil {
 			if strings.Contains(lhs.Lit, ".") {
@@ -17,6 +19,8 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			env.defineValue(lhs.Lit, rv)
 		}
 		return rv, nil
+
+	// MemberExpr
 	case *ast.MemberExpr:
 		v, err := invokeExpr(lhs.Expr, env)
 		if err != nil {
@@ -37,6 +41,8 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		}
 
 		switch v.Kind() {
+
+		// Struct
 		case reflect.Struct:
 			field, found := v.Type().FieldByName(lhs.Name)
 			if !found {
@@ -65,6 +71,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 			return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for struct")
 
+		// Map
 		case reflect.Map:
 			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
 				rv, err = convertReflectValueToType(rv, v.Type().Elem())
@@ -84,6 +91,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		}
 		return v, nil
 
+	// ItemExpr
 	case *ast.ItemExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
@@ -98,6 +106,8 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		}
 
 		switch v.Kind() {
+
+		// Slice && Array
 		case reflect.Slice, reflect.Array:
 			indexInt, err := tryToInt(index)
 			if err != nil {
@@ -155,6 +165,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.Set(newSlice)
 
+		// Map
 		case reflect.Map:
 			if v.Type().Key() != interfaceType && v.Type().Key() != index.Type() {
 				index, err = convertReflectValueToType(index, v.Type().Key())
@@ -176,8 +187,39 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			}
 			v.SetMapIndex(index, rv)
 
+		// String
 		case reflect.String:
-			return nilValue, newStringError(expr, "type string does not support index operation for assignment")
+			rv, err = convertReflectValueToType(rv, v.Type())
+			if err != nil {
+				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String())
+			}
+
+			indexInt, err := tryToInt(index)
+			if err != nil {
+				return nilValue, newStringError(expr, "index must be a number")
+			}
+
+			if indexInt == v.Len() {
+				// try to do automatic append
+
+				if v.CanSet() {
+					v.SetString(v.String() + rv.String())
+					return v, nil
+				}
+
+				return invokeLetExpr(lhs.Value, reflect.ValueOf(v.String()+rv.String()), env)
+			}
+
+			if indexInt < 0 || indexInt >= v.Len() {
+				return nilValue, newStringError(expr, "index out of range")
+			}
+
+			if v.CanSet() {
+				v.SetString(v.Slice(0, indexInt).String() + rv.String() + v.Slice(indexInt+1, v.Len()).String())
+				return v, nil
+			}
+
+			return invokeLetExpr(lhs.Value, reflect.ValueOf(v.Slice(0, indexInt).String()+rv.String()+v.Slice(indexInt+1, v.Len()).String()), env)
 
 		default:
 			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support index operation")
@@ -185,6 +227,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 		return v, nil
 
+	// SliceExpr
 	case *ast.SliceExpr:
 		v, err := invokeExpr(lhs.Value, env)
 		if err != nil {
@@ -194,6 +237,8 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			v = v.Elem()
 		}
 		switch v.Kind() {
+
+		// Slice && Array
 		case reflect.Slice, reflect.Array:
 			var rbi, rei int
 			if lhs.Begin != nil {
@@ -234,12 +279,17 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return nilValue, newStringError(expr, "slice cannot be assigned")
 			}
 			v.Set(rv)
+
+		// String
 		case reflect.String:
 			return nilValue, newStringError(expr, "type string does not support slice operation for assignment")
+
 		default:
 			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
 		}
 		return v, nil
+
+	// DerefExpr
 	case *ast.DerefExpr:
 		v, err := invokeExpr(lhs.Expr, env)
 		if err != nil {
@@ -248,5 +298,6 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		v.Elem().Set(rv)
 		return v, nil
 	}
+
 	return nilValue, newStringError(expr, "invalid operation")
 }
