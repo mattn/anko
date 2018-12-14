@@ -1578,7 +1578,26 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: int64(1), B: int64(3)}}},
-
+		{Script: `a.A = 1.2; a.B = 1.3;`, Input: map[string]interface{}{"a": &struct {
+			A float64
+			B int64
+		}{A: float64(1), B: int64(2)}},
+			RunOutput: float64(1.3),
+			Output: map[string]interface{}{"a": &struct {
+				A float64
+				B int64
+			}{A: float64(1.2), B: int64(1)}}},
+		{Script: `a.A = nil; a.B = nil; a.C = nil;`, Input: map[string]interface{}{"a": &struct {
+			A []interface{}
+			B *int64
+			C interface{}
+		}{A: []interface{}{"1"}, B: new(int64), C: 99}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A []interface{}
+				B *int64
+				C interface{}
+			}{}}},
 		{Script: `a.B = 3; a = *a`, Input: map[string]interface{}{"a": &struct {
 			A interface{}
 			B interface{}

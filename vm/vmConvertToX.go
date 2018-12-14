@@ -29,6 +29,10 @@ func reflectValueSlicetoInterfaceSlice(valueSlice []reflect.Value) reflect.Value
 // convertReflectValueToType trys to covert the reflect.Value to the reflect.Type
 // if it can not, it returns the orginal rv and an error
 func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
+	if isNil(rv) {
+		return reflect.Zero(rt), nil
+	}
+
 	if !rv.IsValid() {
 		// if not valid return a valid reflect.Value of the reflect.Type
 		return makeValue(rt)
