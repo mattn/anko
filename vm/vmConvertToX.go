@@ -72,7 +72,11 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		}
 	}
 	if rv.Type() == interfaceType {
-		// reflect.Value is an interface, so try to convert the element
+		if rv.IsNil() {
+			// return nil of correct type
+			return reflect.Zero(rt), nil
+		}
+		// try to convert the element
 		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
