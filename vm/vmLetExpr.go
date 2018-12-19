@@ -56,20 +56,13 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return nilValue, newStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
 			}
 
-			if v.Type().Kind() == reflect.Interface && rv.Type().ConvertibleTo(v.Type()) {
-				v.Set(rv)
-				return v, nil
+			rv, err = convertReflectValueToType(rv, v.Type())
+			if err != nil {
+				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for struct")
 			}
 
-			if v.Kind() == reflect.Func && rv.Kind() == reflect.Func {
-				rv, err = convertReflectValueToType(rv, v.Type())
-				if err == nil {
-					v.Set(rv)
-					return v, nil
-				}
-			}
-
-			return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for struct")
+			v.Set(rv)
+			return v, nil
 
 		// Map
 		case reflect.Map:

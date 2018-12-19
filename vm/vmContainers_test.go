@@ -1591,6 +1591,68 @@ func TestStructs(t *testing.T) {
 				A interface{}
 				B interface{}
 			}{A: int64(1), B: int64(3)}}},
+
+		// nil tests
+		{Script: `a.A = nil; a.B = nil; a.C = nil;`, Input: map[string]interface{}{"a": &struct {
+			A *bool
+			B *int32
+			C *int64
+		}{A: new(bool), B: new(int32), C: new(int64)}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A *bool
+				B *int32
+				C *int64
+			}{A: nil, B: nil, C: nil}}},
+		{Script: `a.A = nil; a.B = nil; a.C = nil;`, Input: map[string]interface{}{"a": &struct {
+			A *float32
+			B *float64
+			C *string
+		}{A: new(float32), B: new(float64), C: new(string)}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A *float32
+				B *float64
+				C *string
+			}{A: nil, B: nil, C: nil}}},
+		{Script: `a.A = nil; a.B = nil; a.C = nil;`, Input: map[string]interface{}{"a": &struct {
+			A interface{}
+			B []interface{}
+			C [][]interface{}
+		}{A: "a", B: []interface{}{"b"}, C: [][]interface{}{[]interface{}{"c"}}}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A interface{}
+				B []interface{}
+				C [][]interface{}
+			}{A: nil, B: nil, C: nil}}},
+		{Script: `a.A = nil; a.B = nil; a.C = nil; a.D = nil;`, Input: map[string]interface{}{"a": &struct {
+			A map[string]string
+			B map[string]interface{}
+			C map[interface{}]string
+			D map[interface{}]interface{}
+		}{A: map[string]string{"a": "a"}, B: map[string]interface{}{"b": "b"}, C: map[interface{}]string{"c": "c"}, D: map[interface{}]interface{}{"d": "d"}}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A map[string]string
+				B map[string]interface{}
+				C map[interface{}]string
+				D map[interface{}]interface{}
+			}{A: nil, B: nil, C: nil, D: nil}}},
+		{Script: `a.A.AA = nil;`, Input: map[string]interface{}{"a": &struct {
+			A struct{ AA *int64 }
+		}{A: struct{ AA *int64 }{AA: new(int64)}}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A struct{ AA *int64 }
+			}{A: struct{ AA *int64 }{AA: nil}}}},
+		{Script: `a.A = nil;`, Input: map[string]interface{}{"a": &struct {
+			A *struct{ AA *int64 }
+		}{A: &struct{ AA *int64 }{AA: new(int64)}}},
+			RunOutput: nil,
+			Output: map[string]interface{}{"a": &struct {
+				A *struct{ AA *int64 }
+			}{A: nil}}},
 	}
 	testlib.Run(t, tests, nil)
 }
