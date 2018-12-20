@@ -1,13 +1,14 @@
 package vm
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
 	"github.com/mattn/anko/ast"
 )
 
-func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
+func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env, ctx context.Context) (reflect.Value, error) {
 	switch lhs := expr.(type) {
 
 	// IdentExpr
@@ -22,7 +23,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 	// MemberExpr
 	case *ast.MemberExpr:
-		v, err := invokeExpr(lhs.Expr, env)
+		v, err := invokeExpr(lhs.Expr, env, ctx)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
@@ -75,7 +76,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
 				v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
-				return invokeLetExpr(lhs.Expr, v, env)
+				return invokeLetExpr(lhs.Expr, v, env, ctx)
 			}
 			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
 
@@ -86,11 +87,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 	// ItemExpr
 	case *ast.ItemExpr:
-		v, err := invokeExpr(lhs.Value, env)
+		v, err := invokeExpr(lhs.Value, env, ctx)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
-		index, err := invokeExpr(lhs.Index, env)
+		index, err := invokeExpr(lhs.Index, env, ctx)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
@@ -111,11 +112,11 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				// try to do automatic append
 				if v.Type().Elem() == rv.Type() {
 					v = reflect.Append(v, rv)
-					return invokeLetExpr(lhs.Value, v, env)
+					return invokeLetExpr(lhs.Value, v, env, ctx)
 				}
 				if rv.Type().ConvertibleTo(v.Type().Elem()) {
 					v = reflect.Append(v, rv.Convert(v.Type().Elem()))
-					return invokeLetExpr(lhs.Value, v, env)
+					return invokeLetExpr(lhs.Value, v, env, ctx)
 				}
 				if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
 					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
@@ -127,7 +128,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 					return nilValue, err
 				}
 				v = reflect.Append(v, newSlice)
-				return invokeLetExpr(lhs.Value, v, env)
+				return invokeLetExpr(lhs.Value, v, env, ctx)
 			}
 
 			if indexInt < 0 || indexInt >= v.Len() {
@@ -176,7 +177,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 			if v.IsNil() {
 				v = reflect.MakeMap(v.Type())
 				v.SetMapIndex(index, rv)
-				return invokeLetExpr(lhs.Value, v, env)
+				return invokeLetExpr(lhs.Value, v, env, ctx)
 			}
 			v.SetMapIndex(index, rv)
 
@@ -200,7 +201,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 					return v, nil
 				}
 
-				return invokeLetExpr(lhs.Value, reflect.ValueOf(v.String()+rv.String()), env)
+				return invokeLetExpr(lhs.Value, reflect.ValueOf(v.String()+rv.String()), env, ctx)
 			}
 
 			if indexInt < 0 || indexInt >= v.Len() {
@@ -212,7 +213,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				return v, nil
 			}
 
-			return invokeLetExpr(lhs.Value, reflect.ValueOf(v.Slice(0, indexInt).String()+rv.String()+v.Slice(indexInt+1, v.Len()).String()), env)
+			return invokeLetExpr(lhs.Value, reflect.ValueOf(v.Slice(0, indexInt).String()+rv.String()+v.Slice(indexInt+1, v.Len()).String()), env, ctx)
 
 		default:
 			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support index operation")
@@ -222,7 +223,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 	// SliceExpr
 	case *ast.SliceExpr:
-		v, err := invokeExpr(lhs.Value, env)
+		v, err := invokeExpr(lhs.Value, env, ctx)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}
@@ -235,7 +236,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 		case reflect.Slice, reflect.Array:
 			var rbi, rei int
 			if lhs.Begin != nil {
-				rb, err := invokeExpr(lhs.Begin, env)
+				rb, err := invokeExpr(lhs.Begin, env, ctx)
 				if err != nil {
 					return nilValue, newError(expr, err)
 				}
@@ -250,7 +251,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 				rbi = 0
 			}
 			if lhs.End != nil {
-				re, err := invokeExpr(lhs.End, env)
+				re, err := invokeExpr(lhs.End, env, ctx)
 				if err != nil {
 					return nilValue, newError(expr, err)
 				}
@@ -284,7 +285,7 @@ func invokeLetExpr(expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, er
 
 	// DerefExpr
 	case *ast.DerefExpr:
-		v, err := invokeExpr(lhs.Expr, env)
+		v, err := invokeExpr(lhs.Expr, env, ctx)
 		if err != nil {
 			return nilValue, newError(expr, err)
 		}

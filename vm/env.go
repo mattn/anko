@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -395,16 +396,26 @@ func (e *Env) Dump() {
 
 // Execute parses and runs source in current scope.
 func (e *Env) Execute(src string) (interface{}, error) {
+	return e.ExecuteContext(src, context.Background())
+}
+
+// Execute parses and runs source in current scope.
+func (e *Env) ExecuteContext(src string, ctx context.Context) (interface{}, error) {
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
 		return nilValue, err
 	}
-	return Run(stmts, e)
+	return RunContext(stmts, e, ctx)
 }
 
 // Run runs statements in current scope.
 func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
-	return Run(stmts, e)
+	return RunContext(stmts, e, context.Background())
+}
+
+// Run runs statements in current scope.
+func (e *Env) RunContext(stmts []ast.Stmt, ctx context.Context) (interface{}, error) {
+	return RunContext(stmts, e, ctx)
 }
 
 // Copy the state of the virtual machine environment

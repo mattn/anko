@@ -1,10 +1,12 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -758,6 +760,9 @@ for i in a {
 	for _, script := range scripts {
 		runInterruptTest(t, script)
 	}
+	for _, script := range scripts {
+		runInterruptTestWithContext(t, script)
+	}
 }
 
 func runInterruptTest(t *testing.T, script string) {
@@ -787,6 +792,62 @@ func runInterruptTest(t *testing.T, script string) {
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
+}
+
+func runInterruptTestWithContext(t *testing.T, script string) {
+	waitChan := make(chan struct{}, 1)
+	closeWaitChan := func() {
+		close(waitChan)
+	}
+	toString := func(value interface{}) string {
+		return fmt.Sprintf("%v", value)
+	}
+	env := NewEnv()
+	err := env.Define("closeWaitChan", closeWaitChan)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	err = env.Define("toString", toString)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-waitChan
+		cancel()
+	}()
+
+	_, err = env.ExecuteContext(script, ctx)
+	if err == nil || !strings.Contains(err.Error(), ErrInterrupt.Error()) {
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+	}
+}
+
+func TestInterruptChannelWithContext(t *testing.T) {
+	canCancelCh := make(chan struct{})
+	testDoneCh := make(chan struct{})
+
+	env := NewEnv()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		defer close(testDoneCh)
+		close(canCancelCh)
+		_, err := env.ExecuteContext("c = make(chan string)\n<-c", ctx)
+		if err == nil || err.Error() != ErrInterrupt.Error() {
+			t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		}
+	}()
+
+	// Cancel context after the script is executing
+	go func() {
+		<-canCancelCh
+		cancel()
+	}()
+
+	// Wait for script to complete execution
+	<-testDoneCh
 }
 
 func TestInterruptConcurrency(t *testing.T) {
