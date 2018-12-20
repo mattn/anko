@@ -792,29 +792,27 @@ func runCancelTestWithContext(t *testing.T, script string) {
 }
 
 func TestCancelChannelWithContext(t *testing.T) {
-	canCancelCh := make(chan struct{})
-	testDoneCh := make(chan struct{})
-
 	env := NewEnv()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		defer close(testDoneCh)
-		close(canCancelCh)
-		_, err := env.ExecuteContext("c = make(chan string)\n<-c", ctx)
-		if err == nil || err.Error() != ErrInterrupt.Error() {
-			t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
-		}
-	}()
-
-	// Cancel context after the script is executing
-	go func() {
-		<-canCancelCh
+		time.Sleep(time.Millisecond)
 		cancel()
 	}()
+	_, err := env.ExecuteContext("<-make(chan string)", ctx)
+	if err == nil || err.Error() != ErrInterrupt.Error() {
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+	}
 
-	// Wait for script to complete execution
-	<-testDoneCh
+	ctx, cancel = context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(time.Millisecond)
+		cancel()
+	}()
+	_, err = env.ExecuteContext(`a = ""; a <-make(chan string)`, ctx)
+	if err == nil || err.Error() != ErrInterrupt.Error() {
+		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+	}
 }
 
 func TestContextConcurrency(t *testing.T) {
