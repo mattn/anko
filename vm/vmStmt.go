@@ -30,26 +30,21 @@ func run(stmts []ast.Stmt, env *Env, ctx context.Context) (reflect.Value, error)
 	rv := nilValue
 	var err error
 	for _, stmt := range stmts {
-		select {
-		case <-ctx.Done():
-			return rv, ErrInterrupt
+		switch stmt.(type) {
+		case *ast.BreakStmt:
+			return nilValue, ErrBreak
+		case *ast.ContinueStmt:
+			return nilValue, ErrContinue
+		case *ast.ReturnStmt:
+			rv, err = runSingleStmt(stmt, env, ctx)
+			if err != nil {
+				return rv, err
+			}
+			return rv, ErrReturn
 		default:
-			switch stmt.(type) {
-			case *ast.BreakStmt:
-				return nilValue, ErrBreak
-			case *ast.ContinueStmt:
-				return nilValue, ErrContinue
-			case *ast.ReturnStmt:
-				rv, err = runSingleStmt(stmt, env, ctx)
-				if err != nil {
-					return rv, err
-				}
-				return rv, ErrReturn
-			default:
-				rv, err = runSingleStmt(stmt, env, ctx)
-				if err != nil {
-					return rv, err
-				}
+			rv, err = runSingleStmt(stmt, env, ctx)
+			if err != nil {
+				return rv, err
 			}
 		}
 	}
@@ -369,11 +364,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 			newenv := env.NewEnv()
 
 			for {
-				select {
-				case <-ctx.Done():
-					return nilValue, ErrInterrupt
-				default:
-				}
 				var iv reflect.Value
 				var ok bool
 				cases := []reflect.SelectCase{{

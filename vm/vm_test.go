@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -787,7 +786,7 @@ func runInterruptTestWithContext(t *testing.T, script string) {
 	}()
 
 	_, err = env.ExecuteContext(script, ctx)
-	if err == nil || !strings.Contains(err.Error(), ErrInterrupt.Error()) {
+	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
@@ -818,7 +817,7 @@ func TestInterruptChannelWithContext(t *testing.T) {
 	<-testDoneCh
 }
 
-func TestInterruptConcurrency(t *testing.T) {
+func TestContextConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
 	env := NewEnv()
 
