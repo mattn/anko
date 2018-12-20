@@ -674,7 +674,7 @@ func TestComment(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
-func TestInterrupts(t *testing.T) {
+func TestCancelWithContext(t *testing.T) {
 	scripts := []string{
 		`
 b = 0
@@ -757,11 +757,11 @@ for i in a {
 `,
 	}
 	for _, script := range scripts {
-		runInterruptTestWithContext(t, script)
+		runCancelTestWithContext(t, script)
 	}
 }
 
-func runInterruptTestWithContext(t *testing.T, script string) {
+func runCancelTestWithContext(t *testing.T, script string) {
 	waitChan := make(chan struct{}, 1)
 	closeWaitChan := func() {
 		close(waitChan)
@@ -791,7 +791,7 @@ func runInterruptTestWithContext(t *testing.T, script string) {
 	}
 }
 
-func TestInterruptChannelWithContext(t *testing.T) {
+func TestCancelChannelWithContext(t *testing.T) {
 	canCancelCh := make(chan struct{})
 	testDoneCh := make(chan struct{})
 

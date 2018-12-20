@@ -364,8 +364,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 			newenv := env.NewEnv()
 
 			for {
-				var iv reflect.Value
-				var ok bool
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
 					Chan: reflect.ValueOf(ctx.Done()),
@@ -375,8 +373,7 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 					Chan: val,
 					Send: reflect.ValueOf(nil),
 				}}
-				var chosen int
-				chosen, iv, ok = reflect.Select(cases)
+				chosen, iv, ok := reflect.Select(cases)
 				if chosen == 0 {
 					return nilValue, ErrInterrupt
 				}

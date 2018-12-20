@@ -707,7 +707,6 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 
 		if e.Lhs == nil {
 			if rhs.Kind() == reflect.Chan {
-				var rv reflect.Value
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
 					Chan: reflect.ValueOf(ctx.Done()),
@@ -717,8 +716,7 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 					Chan: rhs,
 					Send: reflect.ValueOf(nil),
 				}}
-				var chosen int
-				chosen, rv, _ = reflect.Select(cases)
+				chosen, rv, _ := reflect.Select(cases)
 				if chosen == 0 {
 					return nilValue, ErrInterrupt
 				}
@@ -742,8 +740,6 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 				}
 				return nilValue, nil
 			} else if rhs.Kind() == reflect.Chan {
-				var rv reflect.Value
-				var ok bool
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
 					Chan: reflect.ValueOf(ctx.Done()),
@@ -753,8 +749,7 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 					Chan: rhs,
 					Send: reflect.ValueOf(nil),
 				}}
-				var chosen int
-				chosen, rv, ok = reflect.Select(cases)
+				chosen, rv, ok := reflect.Select(cases)
 				if chosen == 0 {
 					return nilValue, ErrInterrupt
 				}
