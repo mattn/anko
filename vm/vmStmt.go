@@ -72,9 +72,6 @@ func RunSingleStmtContext(stmt ast.Stmt, env *Env, ctx context.Context) (interfa
 
 // runSingleStmt executes one statement in the specified environment.
 func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value, error) {
-	if *(env.interrupt) {
-		return nilValue, ErrInterrupt
-	}
 	select {
 	case <-ctx.Done():
 		return nilValue, ErrInterrupt
@@ -278,9 +275,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 	case *ast.LoopStmt:
 		newenv := env.NewEnv()
 		for {
-			if *(env.interrupt) {
-				return nilValue, ErrInterrupt
-			}
 			select {
 			case <-ctx.Done():
 				return nilValue, ErrInterrupt
@@ -323,9 +317,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 			newenv := env.NewEnv()
 
 			for i := 0; i < val.Len(); i++ {
-				if *(env.interrupt) {
-					return nilValue, ErrInterrupt
-				}
 				select {
 				case <-ctx.Done():
 					return nilValue, ErrInterrupt
@@ -353,9 +344,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 
 			keys := val.MapKeys()
 			for i := 0; i < len(keys); i++ {
-				if *(env.interrupt) {
-					return nilValue, ErrInterrupt
-				}
 				select {
 				case <-ctx.Done():
 					return nilValue, ErrInterrupt
@@ -381,9 +369,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 			newenv := env.NewEnv()
 
 			for {
-				if *(env.interrupt) {
-					return nilValue, ErrInterrupt
-				}
 				select {
 				case <-ctx.Done():
 					return nilValue, ErrInterrupt
@@ -436,9 +421,6 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 			return nilValue, err
 		}
 		for {
-			if *(env.interrupt) {
-				return nilValue, ErrInterrupt
-			}
 			select {
 			case <-ctx.Done():
 				return nilValue, ErrInterrupt

@@ -81,25 +81,6 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// Interrupt interrupts the execution of any running statements in the specified environment.
-// This includes all parent & child environments.
-// Note that the execution is not instantly aborted: after a call to Interrupt,
-// the current running statement will finish, but the next statement will not run,
-// and instead will return a nilValue and an ErrInterrupt.
-func Interrupt(env *Env) {
-	env.Lock()
-	*(env.interrupt) = true
-	env.Unlock()
-}
-
-// ClearInterrupt removes the interrupt flag from specified environment.
-// This includes all parent & child environments.
-func ClearInterrupt(env *Env) {
-	env.Lock()
-	*(env.interrupt) = false
-	env.Unlock()
-}
-
 func isNil(v reflect.Value) bool {
 	if !v.IsValid() {
 		return false

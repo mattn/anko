@@ -1,6 +1,7 @@
 package vm_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -35,15 +36,16 @@ for i = 0; i < 10000; i++ {
 println("this line should not be printed")
 `
 
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		close(waitChan)
-		v, err := env.Execute(script)
+		v, err := env.ExecuteContext(script, ctx)
 		fmt.Println(v, err)
 		waitGroup.Done()
 	}()
 
 	<-waitChan
-	vm.Interrupt(env)
+	cancel()
 
 	waitGroup.Wait()
 

@@ -758,39 +758,7 @@ for i in a {
 `,
 	}
 	for _, script := range scripts {
-		runInterruptTest(t, script)
-	}
-	for _, script := range scripts {
 		runInterruptTestWithContext(t, script)
-	}
-}
-
-func runInterruptTest(t *testing.T, script string) {
-	waitChan := make(chan struct{}, 1)
-	closeWaitChan := func() {
-		close(waitChan)
-	}
-	toString := func(value interface{}) string {
-		return fmt.Sprintf("%v", value)
-	}
-	env := NewEnv()
-	err := env.Define("closeWaitChan", closeWaitChan)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-	err = env.Define("toString", toString)
-	if err != nil {
-		t.Errorf("Define error: %v", err)
-	}
-
-	go func() {
-		<-waitChan
-		Interrupt(env)
-	}()
-
-	_, err = env.Execute(script)
-	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 }
 
@@ -854,10 +822,11 @@ func TestInterruptConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
 	env := NewEnv()
 
+	ctx, cancel := context.WithCancel(context.Background())
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.Execute("for { }")
+			_, err := env.ExecuteContext("for { }", ctx)
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
@@ -865,15 +834,15 @@ func TestInterruptConcurrency(t *testing.T) {
 		}()
 	}
 	time.Sleep(time.Millisecond)
-	Interrupt(env)
+	cancel()
 	waitGroup.Wait()
 
-	_, err := env.Execute("for { }")
+	_, err := env.ExecuteContext("for { }", ctx)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 
-	ClearInterrupt(env)
+	ctx, cancel = context.WithCancel(context.Background())
 
 	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
 	if err != nil {
@@ -883,7 +852,7 @@ func TestInterruptConcurrency(t *testing.T) {
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.Execute("for { }")
+			_, err := env.ExecuteContext("for { }", ctx)
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
@@ -891,7 +860,7 @@ func TestInterruptConcurrency(t *testing.T) {
 		}()
 	}
 	time.Sleep(time.Millisecond)
-	Interrupt(env)
+	cancel()
 	waitGroup.Wait()
 }
 

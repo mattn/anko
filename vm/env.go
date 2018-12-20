@@ -20,12 +20,11 @@ type EnvResolver interface {
 // Env provides interface to run VM. This mean function scope and blocked-scope.
 // If stack goes to blocked-scope, it will make new Env.
 type Env struct {
-	name      string
-	env       map[string]reflect.Value
-	typ       map[string]reflect.Type
-	parent    *Env
-	interrupt *bool
-	external  EnvResolver
+	name     string
+	env      map[string]reflect.Value
+	typ      map[string]reflect.Type
+	parent   *Env
+	external EnvResolver
 	sync.RWMutex
 }
 
@@ -58,48 +57,40 @@ func newBasicTypes() map[string]reflect.Type {
 
 // NewEnv creates new global scope.
 func NewEnv() *Env {
-	b := false
-
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       newBasicTypes(),
-		parent:    nil,
-		interrupt: &b,
+		env:    make(map[string]reflect.Value),
+		typ:    newBasicTypes(),
+		parent: nil,
 	}
 }
 
 // NewEnv creates new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e,
-		name:      e.name,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   e.name,
 	}
 }
 
 // NewPackage creates a new env with a name
 func NewPackage(n string) *Env {
-	b := false
-
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    nil,
-		name:      n,
-		interrupt: &b,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: nil,
+		name:   n,
 	}
 }
 
 // NewPackage creates a new env with a name under the parent env
 func (e *Env) NewPackage(n string) *Env {
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e,
-		name:      n,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   n,
 	}
 }
 
@@ -137,10 +128,9 @@ func (e *Env) SetExternal(res EnvResolver) {
 // NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{
-		env:       make(map[string]reflect.Value),
-		parent:    e,
-		name:      n,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		parent: e,
+		name:   n,
 	}
 	e.Define(n, m)
 	return m
@@ -422,14 +412,12 @@ func (e *Env) RunContext(stmts []ast.Stmt, ctx context.Context) (interface{}, er
 func (e *Env) Copy() *Env {
 	e.Lock()
 	defer e.Unlock()
-	b := false
 	copy := Env{
-		name:      e.name,
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e.parent,
-		interrupt: &b,
-		external:  e.external,
+		name:     e.name,
+		env:      make(map[string]reflect.Value),
+		typ:      make(map[string]reflect.Type),
+		parent:   e.parent,
+		external: e.external,
 	}
 	for name, value := range e.env {
 		copy.env[name] = value
