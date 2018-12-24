@@ -159,8 +159,8 @@ func runTest(t *testing.T, test Test, testOptions *TestOptions, options *Options
 	} else if err != nil && test.ParseError != nil {
 		if err.Error() != test.ParseError.Error() {
 			t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.ParseError, test.Script)
-			return
 		}
+		return
 	} else if err != test.ParseError {
 		t.Errorf("ParseSrc error - received: %v - expected: %v - script: %v", err, test.ParseError, test.Script)
 		return
