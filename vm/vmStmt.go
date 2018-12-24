@@ -618,6 +618,94 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		}
 		runInfo.rv = nilValue
 
+	// SelectStmt
+	case *ast.SelectStmt:
+		env := runInfo.env
+		runInfo.env = env.NewEnv()
+
+		body := stmt.Body.(*ast.SelectBodyStmt)
+		letsStmts := []*ast.LetsStmt{nil}
+		bodies := []ast.Stmt{nil}
+		cases := []reflect.SelectCase{{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(runInfo.ctx.Done()),
+			Send: zeroValue,
+		}}
+		for _, selectCaseStmt := range body.Cases {
+			caseStmt := selectCaseStmt.(*ast.SelectCaseStmt)
+			var letStmt *ast.LetsStmt
+			var che *ast.ChanExpr
+			var ok bool
+			var pos ast.Pos = caseStmt.Expr
+			switch e := caseStmt.Expr.(type) {
+			case *ast.LetsStmt:
+				letStmt = e
+				pos = e.RHSS[0]
+				che, ok = e.RHSS[0].(*ast.ChanExpr)
+			case *ast.ExprStmt:
+				pos = e.Expr
+				che, ok = e.Expr.(*ast.ChanExpr)
+			}
+			if !ok {
+				runInfo.err = newStringError(pos, "invalid operation")
+				runInfo.rv = nilValue
+				return
+			}
+			ident, ok := che.RHS.(*ast.IdentExpr)
+			if !ok {
+				runInfo.err = newStringError(pos, "invalid operation")
+				runInfo.rv = nilValue
+				return
+			}
+			v, err := env.GetValue(ident.Lit)
+			if err != nil {
+				runInfo.err = newError(che, err)
+				runInfo.rv = nilValue
+				return
+			}
+			letsStmts = append(letsStmts, letStmt)
+			bodies = append(bodies, caseStmt.Stmt)
+			cases = append(cases, reflect.SelectCase{
+				Dir:  reflect.SelectRecv,
+				Chan: v,
+				Send: zeroValue,
+			})
+		}
+		if body.Default != nil {
+			letsStmts = append(letsStmts, nil)
+			bodies = append(bodies, body.Default)
+			cases = append(cases, reflect.SelectCase{
+				Dir:  reflect.SelectDefault,
+				Chan: zeroValue,
+				Send: zeroValue,
+			})
+		}
+		chosen, rv, _ := reflect.Select(cases)
+		if chosen == 0 {
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			runInfo.env = env
+			return
+		}
+		if letStmt := letsStmts[chosen]; letStmt != nil {
+			runInfo.expr = letStmt.LHSS[0]
+			runInfo.rv = rv
+			runInfo.invokeLetExpr()
+			if runInfo.err != nil {
+				return
+			}
+		}
+		if statement := bodies[chosen]; statement != nil {
+			if tmp, ok := statement.(*ast.SelectCaseStmt); ok && tmp.Stmt == nil {
+				runInfo.env = env
+				return
+			}
+			runInfo.stmt = statement
+			runInfo.runSingleStmt()
+		}
+		runInfo.env = env
+		return
+
 	// SwitchStmt
 	case *ast.SwitchStmt:
 		env := runInfo.env

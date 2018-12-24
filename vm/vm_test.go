@@ -968,6 +968,10 @@ try {
 	for { }
 } catch { }
 `,
+		`
+close(waitChan)
+select { }
+`,
 	}
 	for _, script := range scripts {
 		runCancelTestWithContext(t, script)
