@@ -781,6 +781,11 @@ a = make(chan interface)
 closeWaitChan()
 a <- nil
 `,
+		`
+a = make(chan int64, 1)
+closeWaitChan()
+for v in a { }
+`,
 	}
 	for _, script := range scripts {
 		runCancelTestWithContext(t, script)
