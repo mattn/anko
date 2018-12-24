@@ -771,6 +771,11 @@ for {
 	a <-make(chan string)
 }
 `,
+		`
+a = make(chan int)
+closeWaitChan()
+a <- 1
+`,
 	}
 	for _, script := range scripts {
 		runCancelTestWithContext(t, script)

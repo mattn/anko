@@ -736,7 +736,18 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 					if err != nil {
 						return nilValue, newStringError(e, "cannot use type "+rhs.Type().String()+" as type "+chanType.String()+" to send to chan")
 					}
-					lhs.Send(rhs)
+					cases := []reflect.SelectCase{{
+						Dir:  reflect.SelectRecv,
+						Chan: reflect.ValueOf(ctx.Done()),
+						Send: reflect.ValueOf(nil),
+					}, {
+						Dir:  reflect.SelectSend,
+						Chan: lhs,
+						Send: rhs,
+					}}
+					if chosen, _, _ := reflect.Select(cases); chosen == 0 {
+						return nilValue, ErrInterrupt
+					}
 				}
 				return nilValue, nil
 			} else if rhs.Kind() == reflect.Chan {
