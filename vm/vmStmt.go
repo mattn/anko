@@ -367,11 +367,11 @@ func runSingleStmt(stmt ast.Stmt, env *Env, ctx context.Context) (reflect.Value,
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
 					Chan: reflect.ValueOf(ctx.Done()),
-					Send: reflect.ValueOf(nil),
+					Send: zeroValue,
 				}, {
 					Dir:  reflect.SelectRecv,
 					Chan: val,
-					Send: reflect.ValueOf(nil),
+					Send: zeroValue,
 				}}
 				chosen, iv, ok := reflect.Select(cases)
 				if chosen == 0 {
