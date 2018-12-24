@@ -400,7 +400,7 @@ func (e *Env) ExecuteContext(src string, ctx context.Context) (interface{}, erro
 
 // Run runs statements in current scope.
 func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
-	return RunContext(stmts, e, context.Background())
+	return e.RunContext(stmts, context.Background())
 }
 
 // Run runs statements in current scope.
