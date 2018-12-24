@@ -730,7 +730,18 @@ func invokeExpr(expr ast.Expr, env *Env, ctx context.Context) (reflect.Value, er
 			if lhs.Kind() == reflect.Chan {
 				chanType := lhs.Type().Elem()
 				if chanType == interfaceType || (rhs.IsValid() && rhs.Type() == chanType) {
-					lhs.Send(rhs)
+					cases := []reflect.SelectCase{{
+						Dir:  reflect.SelectRecv,
+						Chan: reflect.ValueOf(ctx.Done()),
+						Send: zeroValue,
+					}, {
+						Dir:  reflect.SelectSend,
+						Chan: lhs,
+						Send: rhs,
+					}}
+					if chosen, _, _ := reflect.Select(cases); chosen == 0 {
+						return nilValue, ErrInterrupt
+					}
 				} else {
 					rhs, err = convertReflectValueToType(rhs, chanType)
 					if err != nil {
