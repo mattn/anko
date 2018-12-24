@@ -755,6 +755,22 @@ for i in a {
 	}
 }
 `,
+		`
+closeWaitChan()
+<-make(chan string)
+`,
+		`
+a = ""
+closeWaitChan()
+a <-make(chan string)
+`,
+		`
+for {
+	a = ""
+	closeWaitChan()
+	a <-make(chan string)
+}
+`,
 	}
 	for _, script := range scripts {
 		runCancelTestWithContext(t, script)
@@ -786,30 +802,6 @@ func runCancelTestWithContext(t *testing.T, script string) {
 	}()
 
 	_, err = env.ExecuteContext(script, ctx)
-	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
-	}
-}
-
-func TestCancelChannelWithContext(t *testing.T) {
-	env := NewEnv()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		time.Sleep(time.Millisecond)
-		cancel()
-	}()
-	_, err := env.ExecuteContext("<-make(chan string)", ctx)
-	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
-	}
-
-	ctx, cancel = context.WithCancel(context.Background())
-	go func() {
-		time.Sleep(time.Millisecond)
-		cancel()
-	}()
-	_, err = env.ExecuteContext(`a = ""; a <-make(chan string)`, ctx)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
