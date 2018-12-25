@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -10,7 +11,7 @@ import (
 
 // funcExpr creates a function that reflect Call can use.
 // When called, it will run runVMFunction, to run the function statements
-func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
+func funcExpr(funcExpr *ast.FuncExpr, env *Env, ctx context.Context) (reflect.Value, error) {
 	// create the inTypes needed by reflect.FuncOf
 	inTypes := make([]reflect.Type, len(funcExpr.Params), len(funcExpr.Params))
 	for i := 0; i < len(inTypes); i++ {
@@ -60,7 +61,7 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 		}
 
 		// run function statements
-		rv, err = run(funcExpr.Stmts, newEnv)
+		rv, err = run(funcExpr.Stmts, newEnv, ctx)
 		if err != nil && err != ErrReturn {
 			err = newError(funcExpr, err)
 			// return nil value and error
@@ -90,8 +91,8 @@ func funcExpr(funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
 }
 
 // anonCallExpr handles ast.AnonCallExpr which calls a function anonymously
-func anonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
-	f, err := invokeExpr(e.Expr, env)
+func anonCallExpr(e *ast.AnonCallExpr, env *Env, ctx context.Context) (reflect.Value, error) {
+	f, err := invokeExpr(e.Expr, env, ctx)
 	if err != nil {
 		return nilValue, newError(e, err)
 	}
@@ -99,7 +100,7 @@ func anonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 		f = f.Elem()
 	}
 	if f.Kind() == reflect.Func {
-		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
+		return invokeExpr(&ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env, ctx)
 	}
 	if !f.IsValid() {
 		return nilValue, newStringError(e, "cannot call type invalid")
@@ -108,7 +109,7 @@ func anonCallExpr(e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
 }
 
 // callExpr handles *ast.CallExpr which calls a function
-func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
+func callExpr(callExpr *ast.CallExpr, env *Env, ctx context.Context) (rv reflect.Value, err error) {
 	// Note that if the function type looks the same as the VM function type, the returned values will probably be wrong
 
 	rv = nilValue
@@ -142,7 +143,7 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 	// check if this is a runVMFunction type
 	isRunVMFunction := checkIfRunVMFunction(fType)
 	// create/convert the args to the function
-	args, useCallSlice, err = makeCallArgs(fType, isRunVMFunction, callExpr, env)
+	args, useCallSlice, err = makeCallArgs(fType, isRunVMFunction, callExpr, env, ctx)
 	if err != nil {
 		return
 	}
@@ -178,7 +179,7 @@ func callExpr(callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
 		for i, expr := range callExpr.SubExprs {
 			if addrExpr, ok := expr.(*ast.AddrExpr); ok {
 				if identExpr, ok := addrExpr.Expr.(*ast.IdentExpr); ok {
-					invokeLetExpr(identExpr, args[i].Elem(), env)
+					invokeLetExpr(identExpr, args[i].Elem(), env, ctx)
 				}
 			}
 		}
@@ -217,7 +218,7 @@ func checkIfRunVMFunction(rt reflect.Type) bool {
 
 // makeCallArgs creates the arguments reflect.Value slice for the four diffrent kinds of functions.
 // Also returns true if CallSlice should be used on the arguments, or false if Call should be used.
-func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr, env *Env) ([]reflect.Value, bool, error) {
+func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr, env *Env, ctx context.Context) ([]reflect.Value, bool, error) {
 	// number of arguments
 	numIn := rt.NumIn()
 	if numIn < 1 {
@@ -251,7 +252,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 
 	// create arguments except the last one
 	for indexIn < numIn-1 && indexExpr < numExprs-1 {
-		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
@@ -272,7 +273,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	if !rt.IsVariadic() && !callExpr.VarArg {
 		// function is not variadic and call is not variadic
 		// add last arguments and return
-		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
@@ -291,7 +292,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 
 	if !rt.IsVariadic() && callExpr.VarArg {
 		// function is not variadic and call is variadic
-		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
@@ -330,7 +331,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	if numIn > numExprs {
 		// there are more arguments after this one, so does not matter if call is variadic or not
 		// add the last argument then return what we have and let reflect Call handle if call is variadic or not
-		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+		arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 		if err != nil {
 			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 		}
@@ -351,7 +352,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 		// function is variadic and call is not variadic
 		sliceType := rt.In(numIn - 1).Elem()
 		for indexExpr < numExprs {
-			arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+			arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 			if err != nil {
 				return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 			}
@@ -373,7 +374,7 @@ func makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr,
 	if sliceType.Kind() == reflect.Interface && !arg.IsNil() {
 		sliceType = sliceType.Elem()
 	}
-	arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env)
+	arg, err = invokeExpr(callExpr.SubExprs[indexExpr], env, ctx)
 	if err != nil {
 		return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
 	}

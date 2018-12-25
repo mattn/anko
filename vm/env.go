@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -19,12 +20,11 @@ type EnvResolver interface {
 // Env provides interface to run VM. This mean function scope and blocked-scope.
 // If stack goes to blocked-scope, it will make new Env.
 type Env struct {
-	name      string
-	env       map[string]reflect.Value
-	typ       map[string]reflect.Type
-	parent    *Env
-	interrupt *bool
-	external  EnvResolver
+	name     string
+	env      map[string]reflect.Value
+	typ      map[string]reflect.Type
+	parent   *Env
+	external EnvResolver
 	sync.RWMutex
 }
 
@@ -57,48 +57,40 @@ func newBasicTypes() map[string]reflect.Type {
 
 // NewEnv creates new global scope.
 func NewEnv() *Env {
-	b := false
-
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       newBasicTypes(),
-		parent:    nil,
-		interrupt: &b,
+		env:    make(map[string]reflect.Value),
+		typ:    newBasicTypes(),
+		parent: nil,
 	}
 }
 
 // NewEnv creates new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e,
-		name:      e.name,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   e.name,
 	}
 }
 
 // NewPackage creates a new env with a name
 func NewPackage(n string) *Env {
-	b := false
-
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    nil,
-		name:      n,
-		interrupt: &b,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: nil,
+		name:   n,
 	}
 }
 
 // NewPackage creates a new env with a name under the parent env
 func (e *Env) NewPackage(n string) *Env {
 	return &Env{
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e,
-		name:      n,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
+		parent: e,
+		name:   n,
 	}
 }
 
@@ -136,10 +128,9 @@ func (e *Env) SetExternal(res EnvResolver) {
 // NewModule creates new module scope as global.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{
-		env:       make(map[string]reflect.Value),
-		parent:    e,
-		name:      n,
-		interrupt: e.interrupt,
+		env:    make(map[string]reflect.Value),
+		parent: e,
+		name:   n,
 	}
 	e.Define(n, m)
 	return m
@@ -395,30 +386,38 @@ func (e *Env) Dump() {
 
 // Execute parses and runs source in current scope.
 func (e *Env) Execute(src string) (interface{}, error) {
+	return e.ExecuteContext(src, context.Background())
+}
+
+// Execute parses and runs source in current scope.
+func (e *Env) ExecuteContext(src string, ctx context.Context) (interface{}, error) {
 	stmts, err := parser.ParseSrc(src)
 	if err != nil {
 		return nilValue, err
 	}
-	return Run(stmts, e)
+	return RunContext(stmts, e, ctx)
 }
 
 // Run runs statements in current scope.
 func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
-	return Run(stmts, e)
+	return e.RunContext(stmts, context.Background())
+}
+
+// Run runs statements in current scope.
+func (e *Env) RunContext(stmts []ast.Stmt, ctx context.Context) (interface{}, error) {
+	return RunContext(stmts, e, ctx)
 }
 
 // Copy the state of the virtual machine environment
 func (e *Env) Copy() *Env {
 	e.Lock()
 	defer e.Unlock()
-	b := false
 	copy := Env{
-		name:      e.name,
-		env:       make(map[string]reflect.Value),
-		typ:       make(map[string]reflect.Type),
-		parent:    e.parent,
-		interrupt: &b,
-		external:  e.external,
+		name:     e.name,
+		env:      make(map[string]reflect.Value),
+		typ:      make(map[string]reflect.Type),
+		parent:   e.parent,
+		external: e.external,
 	}
 	for name, value := range e.env {
 		copy.env[name] = value
