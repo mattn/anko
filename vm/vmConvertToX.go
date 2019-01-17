@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 )
@@ -166,7 +167,10 @@ func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 		// only way to pass along any errors is by panic
 
 		// make the reflect.Value slice of each of the VM reflect.Value
-		args := make([]reflect.Value, 0, rt.NumIn())
+		args := make([]reflect.Value, 0, rt.NumIn()+1)
+		// for runVMFunction first arg is always context
+		// TOFIX: use normal context
+		args = append(args, reflect.ValueOf(context.Background()))
 		for i := 0; i < rt.NumIn(); i++ {
 			// have to do the double reflect.ValueOf that runVMFunction expects
 			args = append(args, reflect.ValueOf(in[i]))
