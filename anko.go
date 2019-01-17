@@ -110,7 +110,9 @@ func main() {
 			}
 			code += string(b)
 		} else {
-			code = string(b)
+			for _, line := range strings.Split(code, "\n") {
+				code += strings.Split(line, "//")[0]
+			}
 		}
 
 		parser.EnableErrorVerbose()
