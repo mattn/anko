@@ -816,7 +816,7 @@ func runCancelTestWithContext(t *testing.T, script string) {
 		cancel()
 	}()
 
-	_, err = env.ExecuteContext(script, ctx)
+	_, err = env.ExecuteContext(ctx, script)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
@@ -826,37 +826,47 @@ func TestContextConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
 	env := NewEnv()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.ExecuteContext("for { }", ctx)
+			_, err := env.ExecuteContext(ctx, "for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
 			waitGroup.Done()
 		}()
 	}
-	time.Sleep(time.Millisecond)
 	cancel()
 	waitGroup.Wait()
+	cancel()
 
-	_, err := env.ExecuteContext("for { }", ctx)
+	_, err := env.ExecuteContext(ctx, "for { }")
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 
 	ctx, cancel = context.WithCancel(context.Background())
-
-	_, err = env.Execute("for i = 0; i < 1000; i ++ {}")
+	_, err = env.ExecuteContext(ctx, "for i = 0; i < 1000; i++ {}")
 	if err != nil {
 		t.Errorf("execute error - received: %v - expected: %v", err, nil)
 	}
+	waitGroup.Add(100)
+	for i := 0; i < 100; i++ {
+		go func() {
+			_, err := env.ExecuteContext(ctx, "for i = 0; i < 1000; i++ { }")
+			if err != nil {
+				t.Errorf("execute error - received: %v - expected: %v", err, nil)
+			}
+			waitGroup.Done()
+		}()
+	}
+	waitGroup.Wait()
 
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.ExecuteContext("for { }", ctx)
+			_, err := env.ExecuteContext(ctx, "for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
@@ -866,6 +876,43 @@ func TestContextConcurrency(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	cancel()
 	waitGroup.Wait()
+
+	waitGroup.Add(100)
+	for i := 0; i < 100; i++ {
+		go func() {
+			_, err := env.Execute("for i = 0; i < 1000; i++ { }")
+			if err != nil {
+				t.Errorf("execute error - received: %v - expected: %v", err, nil)
+			}
+			waitGroup.Done()
+		}()
+	}
+	waitGroup.Wait()
+}
+
+func TestContextFunction(t *testing.T) {
+	env := NewEnv()
+	script := `
+func myFunc(myVar) {
+	myVar = 3
+}`
+	envModule := env.NewModule("a")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	_, err := envModule.ExecuteContext(ctx, script)
+	if err != nil {
+		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
+	}
+	cancel()
+
+	script = "a.myFunc(2)"
+
+	ctx, cancel = context.WithCancel(context.Background())
+	_, err = env.ExecuteContext(ctx, script)
+	if err != nil {
+		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
+	}
+	cancel()
 }
 
 func TestRunSingleStmt(t *testing.T) {
