@@ -229,18 +229,18 @@ stmt_var :
 stmt_lets :
 	expr '=' expr
 	{
-		$$ = &ast.LetsStmt{Lhss: []ast.Expr{$1}, Operator: "=", Rhss: []ast.Expr{$3}}
+		$$ = &ast.LetsStmt{LHSS: []ast.Expr{$1}, Operator: "=", RHSS: []ast.Expr{$3}}
 	}
 	| exprs '=' exprs
 	{
 		if len($1) == 2 && len($3) == 1 {
 			if _, ok := $3[0].(*ast.ItemExpr); ok {
-				$$ = &ast.LetMapItemStmt{Lhss: $1, Rhs: $3[0]}
+				$$ = &ast.LetMapItemStmt{LHSS: $1, RHS: $3[0]}
 			} else {
-				$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+				$$ = &ast.LetsStmt{LHSS: $1, Operator: "=", RHSS: $3}
 			}
 		} else {
-			$$ = &ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+			$$ = &ast.LetsStmt{LHSS: $1, Operator: "=", RHSS: $3}
 		}
 	}
 
@@ -492,12 +492,12 @@ expr :
 	}
 	| expr '?' expr ':' expr
 	{
-		$$ = &ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
+		$$ = &ast.TernaryOpExpr{Expr: $1, LHS: $3, RHS: $5}
 		$$.SetPosition($1.Position())
 	}
 	| expr NILCOALESCE expr
 	{
-		$$ = &ast.NilCoalescingOpExpr{Lhs: $1, Rhs: $3}
+		$$ = &ast.NilCoalescingOpExpr{LHS: $1, RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '.' IDENT
@@ -542,132 +542,132 @@ expr :
 	}
 	| expr '+' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "+", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "+", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '-' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "-", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "-", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '*' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "*", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "*", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '/' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "/", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "/", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '%' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "%", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr POW expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "**", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "**", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr SHIFTLEFT expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<<", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<<", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr SHIFTRIGHT expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">>", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">>", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr EQEQ expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "==", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr NEQ expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "!=", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "!=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '>' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr GE expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: ">=", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '<' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr LE expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "<=", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr PLUSEQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "+=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr MINUSEQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "-=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr MULEQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "*=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr DIVEQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "/=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr ANDEQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "&=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr OREQ expr
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "|=", Rhs: $3}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr PLUSPLUS
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "++"}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
 		$$.SetPosition($1.Position())
 	}
 	| expr MINUSMINUS
 	{
-		$$ = &ast.AssocExpr{Lhs: $1, Operator: "--"}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
 		$$.SetPosition($1.Position())
 	}
 	| expr '|' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "|", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr OROR expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "||", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '&' expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "&", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr ANDAND expr
 	{
-		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
+		$$ = &ast.BinOpExpr{LHS: $1, Operator: "&&", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| IDENT '(' exprs VARARG ')'
@@ -747,12 +747,12 @@ expr :
 	}
 	| expr OPCHAN expr
 	{
-		$$ = &ast.ChanExpr{Lhs: $1, Rhs: $3}
+		$$ = &ast.ChanExpr{LHS: $1, RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| OPCHAN expr
 	{
-		$$ = &ast.ChanExpr{Rhs: $2}
+		$$ = &ast.ChanExpr{RHS: $2}
 		$$.SetPosition($2.Position())
 	}
 	| DELETE '(' expr ')'

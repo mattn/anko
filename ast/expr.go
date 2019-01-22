@@ -7,16 +7,12 @@ import (
 // Expr provides all of interfaces for expression.
 type Expr interface {
 	Pos
-	expr()
 }
 
 // ExprImpl provide commonly implementations for Expr.
 type ExprImpl struct {
 	PosImpl // ExprImpl provide Pos() function.
 }
-
-// expr provide restraint interface.
-func (x *ExprImpl) expr() {}
 
 // NumberExpr provide Number expression.
 type NumberExpr struct {
@@ -76,24 +72,24 @@ type ParenExpr struct {
 // BinOpExpr provide binary operator expression.
 type BinOpExpr struct {
 	ExprImpl
-	Lhs      Expr
+	LHS      Expr
 	Operator string
-	Rhs      Expr
+	RHS      Expr
 }
 
 // NilCoalescingOpExpr provide if invalid operator expression.
 type NilCoalescingOpExpr struct {
 	ExprImpl
-	Lhs Expr
-	Rhs Expr
+	LHS Expr
+	RHS Expr
 }
 
 // TernaryOpExpr provide ternary operator expression.
 type TernaryOpExpr struct {
 	ExprImpl
 	Expr Expr
-	Lhs  Expr
-	Rhs  Expr
+	LHS  Expr
+	RHS  Expr
 }
 
 // CallExpr provide calling expression.
@@ -149,17 +145,17 @@ type FuncExpr struct {
 // LetsExpr provide multiple expression of let.
 type LetsExpr struct {
 	ExprImpl
-	Lhss     []Expr
+	LHSS     []Expr
 	Operator string
-	Rhss     []Expr
+	RHSS     []Expr
 }
 
 // AssocExpr provide expression to assoc operation.
 type AssocExpr struct {
 	ExprImpl
-	Lhs      Expr
+	LHS      Expr
 	Operator string
-	Rhs      Expr
+	RHS      Expr
 }
 
 // ConstExpr provide expression for constant variable.
@@ -171,8 +167,8 @@ type ConstExpr struct {
 // ChanExpr provide chan expression.
 type ChanExpr struct {
 	ExprImpl
-	Lhs Expr
-	Rhs Expr
+	LHS Expr
+	RHS Expr
 }
 
 // NewExpr provide expression to make new instance.

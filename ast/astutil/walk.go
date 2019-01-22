@@ -45,10 +45,10 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 	case *ast.BreakStmt:
 	case *ast.ContinueStmt:
 	case *ast.LetMapItemStmt:
-		if err := walkExpr(stmt.Rhs, f); err != nil {
+		if err := walkExpr(stmt.RHS, f); err != nil {
 			return err
 		}
-		return walkExprs(stmt.Lhss, f)
+		return walkExprs(stmt.LHSS, f)
 	case *ast.ReturnStmt:
 		return walkExprs(stmt.Exprs, f)
 	case *ast.ExprStmt:
@@ -56,10 +56,10 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 	case *ast.VarStmt:
 		return walkExprs(stmt.Exprs, f)
 	case *ast.LetsStmt:
-		if err := walkExprs(stmt.Rhss, f); err != nil {
+		if err := walkExprs(stmt.RHSS, f); err != nil {
 			return err
 		}
-		return walkExprs(stmt.Lhss, f)
+		return walkExprs(stmt.LHSS, f)
 	case *ast.IfStmt:
 		if err := walkExpr(stmt.If, f); err != nil {
 			return err
@@ -187,18 +187,18 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 	case *ast.FuncExpr:
 		return Walk(expr.Stmts, f)
 	case *ast.AssocExpr:
-		return walkExpr(expr.Lhs, f)
+		return walkExpr(expr.LHS, f)
 	case *ast.LetsExpr:
-		if err := walkExprs(expr.Lhss, f); err != nil {
+		if err := walkExprs(expr.LHSS, f); err != nil {
 			return err
 		}
-		return walkExprs(expr.Rhss, f)
+		return walkExprs(expr.RHSS, f)
 	case *ast.NewExpr:
 	case *ast.BinOpExpr:
-		if err := walkExpr(expr.Lhs, f); err != nil {
+		if err := walkExpr(expr.LHS, f); err != nil {
 			return err
 		}
-		return walkExpr(expr.Rhs, f)
+		return walkExpr(expr.RHS, f)
 	case *ast.ConstExpr:
 	case *ast.AnonCallExpr:
 		if err := walkExpr(expr.Expr, f); err != nil {
@@ -211,10 +211,10 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		if err := walkExpr(expr.Expr, f); err != nil {
 			return err
 		}
-		if err := walkExpr(expr.Lhs, f); err != nil {
+		if err := walkExpr(expr.LHS, f); err != nil {
 			return err
 		}
-		return walkExpr(expr.Rhs, f)
+		return walkExpr(expr.RHS, f)
 	case *ast.MakeChanExpr:
 		return walkExpr(expr.SizeExpr, f)
 	case *ast.MakeExpr:
@@ -223,10 +223,10 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		}
 		return walkExpr(expr.CapExpr, f)
 	case *ast.ChanExpr:
-		if err := walkExpr(expr.Rhs, f); err != nil {
+		if err := walkExpr(expr.RHS, f); err != nil {
 			return err
 		}
-		return walkExpr(expr.Lhs, f)
+		return walkExpr(expr.LHS, f)
 	default:
 		return fmt.Errorf("unknown expression %v", reflect.TypeOf(expr))
 	}

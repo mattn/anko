@@ -3,16 +3,12 @@ package ast
 // Stmt provides all of interfaces for statement.
 type Stmt interface {
 	Pos
-	stmt()
 }
 
 // StmtImpl provide commonly implementations for Stmt..
 type StmtImpl struct {
 	PosImpl // StmtImpl provide Pos() function.
 }
-
-// stmt provide restraint interface.
-func (x *StmtImpl) stmt() {}
 
 // ExprStmt provide expression statement.
 type ExprStmt struct {
@@ -122,16 +118,16 @@ type VarStmt struct {
 // LetsStmt provide multiple statement of let.
 type LetsStmt struct {
 	StmtImpl
-	Lhss     []Expr
+	LHSS     []Expr
 	Operator string
-	Rhss     []Expr
+	RHSS     []Expr
 }
 
 // LetMapItemStmt provide statement of let for map item.
 type LetMapItemStmt struct {
 	StmtImpl
-	Lhss []Expr
-	Rhs  Expr
+	LHSS []Expr
+	RHS  Expr
 }
 
 // GoroutineStmt provide statement of groutine.

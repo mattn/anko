@@ -366,7 +366,7 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 	case *ast.AssocExpr:
 		switch e.Operator {
 		case "++":
-			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
+			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
 				v, err := env.get(alhs.Lit)
 				if err != nil {
 					return nilValue, newError(e, err)
@@ -390,7 +390,7 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 				return v, nil
 			}
 		case "--":
-			if alhs, ok := e.Lhs.(*ast.IdentExpr); ok {
+			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
 				v, err := env.get(alhs.Lit)
 				if err != nil {
 					return nilValue, newError(e, err)
@@ -415,29 +415,29 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			}
 		}
 
-		if e.Rhs == nil {
+		if e.RHS == nil {
 			// TODO: Can this be fixed in the parser so that Rhs is not nil?
-			e.Rhs = &ast.NumberExpr{Lit: "1"}
+			e.RHS = &ast.NumberExpr{Lit: "1"}
 		}
-		v, err := invokeExpr(ctx, &ast.BinOpExpr{Lhs: e.Lhs, Operator: e.Operator[0:1], Rhs: e.Rhs}, env)
+		v, err := invokeExpr(ctx, &ast.BinOpExpr{LHS: e.LHS, Operator: e.Operator[0:1], RHS: e.RHS}, env)
 		if err != nil {
 			return nilValue, newError(e, err)
 		}
 		if v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		return invokeLetExpr(ctx, e.Lhs, v, env)
+		return invokeLetExpr(ctx, e.LHS, v, env)
 
 	case *ast.LetsExpr:
 		var err error
-		rvs := make([]reflect.Value, len(e.Rhss))
-		for i, rhs := range e.Rhss {
+		rvs := make([]reflect.Value, len(e.RHSS))
+		for i, rhs := range e.RHSS {
 			rvs[i], err = invokeExpr(ctx, rhs, env)
 			if err != nil {
 				return nilValue, newError(rhs, err)
 			}
 		}
-		for i, lhs := range e.Lhss {
+		for i, lhs := range e.LHSS {
 			if i >= len(rvs) {
 				break
 			}
@@ -457,9 +457,9 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		rhsV := nilValue
 		var err error
 
-		lhsV, err = invokeExpr(ctx, e.Lhs, env)
+		lhsV, err = invokeExpr(ctx, e.LHS, env)
 		if err != nil {
-			return nilValue, newError(e.Lhs, err)
+			return nilValue, newError(e.LHS, err)
 		}
 		if lhsV.Kind() == reflect.Interface && !lhsV.IsNil() {
 			lhsV = lhsV.Elem()
@@ -474,10 +474,10 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 				return lhsV, nil
 			}
 		}
-		if e.Rhs != nil {
-			rhsV, err = invokeExpr(ctx, e.Rhs, env)
+		if e.RHS != nil {
+			rhsV, err = invokeExpr(ctx, e.RHS, env)
 			if err != nil {
-				return nilValue, newError(e.Rhs, err)
+				return nilValue, newError(e.RHS, err)
 			}
 			if rhsV.Kind() == reflect.Interface && !rhsV.IsNil() {
 				rhsV = rhsV.Elem()
@@ -571,27 +571,27 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			return nilValue, newError(e.Expr, err)
 		}
 		if toBool(rv) {
-			lhsV, err := invokeExpr(ctx, e.Lhs, env)
+			lhsV, err := invokeExpr(ctx, e.LHS, env)
 			if err != nil {
-				return nilValue, newError(e.Lhs, err)
+				return nilValue, newError(e.LHS, err)
 			}
 			return lhsV, nil
 		}
-		rhsV, err := invokeExpr(ctx, e.Rhs, env)
+		rhsV, err := invokeExpr(ctx, e.RHS, env)
 		if err != nil {
-			return nilValue, newError(e.Rhs, err)
+			return nilValue, newError(e.RHS, err)
 		}
 		return rhsV, nil
 
 	case *ast.NilCoalescingOpExpr:
 		var err error
-		rv, _ := invokeExpr(ctx, e.Lhs, env)
+		rv, _ := invokeExpr(ctx, e.LHS, env)
 		if toBool(rv) {
 			return rv, nil
 		}
-		rv, err = invokeExpr(ctx, e.Rhs, env)
+		rv, err = invokeExpr(ctx, e.RHS, env)
 		if err != nil {
-			return nilValue, newError(e.Rhs, err)
+			return nilValue, newError(e.RHS, err)
 		}
 		return rv, nil
 
@@ -700,12 +700,12 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		return reflect.MakeChan(reflect.ChanOf(reflect.BothDir, t), size), nil
 
 	case *ast.ChanExpr:
-		rhs, err := invokeExpr(ctx, e.Rhs, env)
+		rhs, err := invokeExpr(ctx, e.RHS, env)
 		if err != nil {
-			return nilValue, newError(e.Rhs, err)
+			return nilValue, newError(e.RHS, err)
 		}
 
-		if e.Lhs == nil {
+		if e.LHS == nil {
 			if rhs.Kind() == reflect.Chan {
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
@@ -723,9 +723,9 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 				return rv, nil
 			}
 		} else {
-			lhs, err := invokeExpr(ctx, e.Lhs, env)
+			lhs, err := invokeExpr(ctx, e.LHS, env)
 			if err != nil {
-				return nilValue, newError(e.Lhs, err)
+				return nilValue, newError(e.LHS, err)
 			}
 			if lhs.Kind() == reflect.Chan {
 				chanType := lhs.Type().Elem()
@@ -778,7 +778,7 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 				if !ok {
 					return nilValue, newErrorf(expr, "failed to send to channel")
 				}
-				return invokeLetExpr(ctx, e.Lhs, rv, env)
+				return invokeLetExpr(ctx, e.LHS, rv, env)
 			}
 		}
 
