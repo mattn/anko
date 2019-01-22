@@ -18,14 +18,21 @@ import (
 %type<stmt_switch_cases> stmt_switch_cases
 %type<stmt_switch_case> stmt_switch_case
 %type<stmt_switch_default> stmt_switch_default
-%type<expr> expr
 %type<exprs> exprs
+%type<expr> expr
 %type<map_expr> map_expr
 %type<expr_idents> expr_idents
 %type<expr_type> expr_type
 %type<array_count> array_count
 %type<expr_slice> expr_slice
 %type<expr_ident> expr_ident
+%type<expr> expr_op
+%type<expr> expr_unary
+%type<expr> expr_binary
+%type<expr> op_binary
+%type<expr> op_comparison
+%type<expr> op_add
+%type<expr> op_multiply
 
 %union{
 	compstmt               []ast.Stmt
@@ -39,8 +46,8 @@ import (
 	stmt_switch_default    []ast.Stmt
 	stmts                  []ast.Stmt
 	stmt                   ast.Stmt
-	expr                   ast.Expr
 	exprs                  []ast.Expr
+	expr                   ast.Expr
 	map_expr               map[ast.Expr]ast.Expr
 	expr_idents            []string
 	expr_type              string
@@ -48,6 +55,13 @@ import (
 	array_count            ast.ArrayCount
 	expr_slice             ast.Expr
 	expr_ident             ast.Expr
+	expr_op                ast.Expr
+	expr_unary             ast.Expr
+	expr_binary            ast.Expr
+	op_binary              ast.Operator
+	op_comparison          ast.Operator
+	op_add                 ast.Operator
+	op_multiply            ast.Operator
 }
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE
@@ -376,29 +390,6 @@ expr_type :
 		$$ = $$ + "." + $3.Lit
 	}
 
-exprs :
-	{
-		$$ = nil
-	}
-	| expr 
-	{
-		$$ = []ast.Expr{$1}
-	}
-	| exprs ',' opt_newlines expr
-	{
-		if len($1) == 0 {
-			yylex.Error("syntax error: unexpected ','")
-		}
-		$$ = append($1, $4)
-	}
-	| exprs ',' opt_newlines expr_ident
-	{
-		if len($1) == 0 {
-			yylex.Error("syntax error: unexpected ','")
-		}
-		$$ = append($1, $4)
-	}
-
 expr_slice :
 	expr_ident '[' expr ':' expr ']'
 	{
@@ -425,6 +416,30 @@ expr_slice :
 		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
 	}
 
+exprs :
+	/* nothing */
+	{
+		$$ = nil
+	}
+	| expr 
+	{
+		$$ = []ast.Expr{$1}
+	}
+	| exprs ',' opt_newlines expr
+	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
+		$$ = append($1, $4)
+	}
+	| exprs ',' opt_newlines expr_ident
+	{
+		if len($1) == 0 {
+			yylex.Error("syntax error: unexpected ','")
+		}
+		$$ = append($1, $4)
+	}
+
 expr :
 	expr_ident
 	{
@@ -434,41 +449,6 @@ expr :
 	{
 		$$ = &ast.NumberExpr{Lit: $1.Lit}
 		$$.SetPosition($1.Position())
-	}
-	| '-' expr %prec UNARY
-	{
-		$$ = &ast.UnaryExpr{Operator: "-", Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '!' expr %prec UNARY
-	{
-		$$ = &ast.UnaryExpr{Operator: "!", Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '^' expr %prec UNARY
-	{
-		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '&' expr_ident %prec UNARY
-	{
-		$$ = &ast.AddrExpr{Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '&' expr '.' IDENT %prec UNARY
-	{
-		$$ = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
-		$$.SetPosition($2.Position())
-	}
-	| '*' expr_ident %prec UNARY
-	{
-		$$ = &ast.DerefExpr{Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '*' expr '.' IDENT %prec UNARY
-	{
-		$$ = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
-		$$.SetPosition($2.Position())
 	}
 	| STRING
 	{
@@ -540,76 +520,6 @@ expr :
 		$$ = &ast.ParenExpr{SubExpr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| expr '+' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "+", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '-' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "-", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '*' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "*", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '/' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "/", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '%' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "%", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr POW expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "**", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr SHIFTLEFT expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<<", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr SHIFTRIGHT expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">>", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr EQEQ expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "==", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr NEQ expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "!=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '>' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr GE expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: ">=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '<' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr LE expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "<=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
 	| expr PLUSEQ expr
 	{
 		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
@@ -648,26 +558,6 @@ expr :
 	| expr MINUSMINUS
 	{
 		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
-		$$.SetPosition($1.Position())
-	}
-	| expr '|' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "|", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr OROR expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "||", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '&' expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "&", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDAND expr
-	{
-		$$ = &ast.BinOpExpr{LHS: $1, Operator: "&&", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 	| IDENT '(' exprs VARARG ')'
@@ -770,11 +660,174 @@ expr :
 		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: &ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
 		$$.SetPosition($1.Position())
 	}
+	| expr_op
 
 expr_ident :
 	IDENT
 	{
 		$$ = &ast.IdentExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+
+expr_op :
+	expr_unary
+	| expr_binary
+
+expr_unary :
+	'-' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "-", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+	| '!' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "!", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+	| '^' expr %prec UNARY
+	{
+		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+	| '&' expr_ident %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+	| '&' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
+		$$.SetPosition($2.Position())
+	}
+	| '*' expr_ident %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+	| '*' expr '.' IDENT %prec UNARY
+	{
+		$$ = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
+		$$.SetPosition($2.Position())
+	}
+
+expr_binary :
+	op_binary
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+	| op_comparison
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+	| op_add
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+	| op_multiply
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+
+
+op_binary :
+	expr OROR expr
+	{
+		$$ = &ast.BinaryOperator{LHS: $1, Operator: "||", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr ANDAND expr
+	{
+		$$ = &ast.BinaryOperator{LHS: $1, Operator: "&&", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+
+op_comparison :
+	expr EQEQ expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: "==", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr NEQ expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: "!=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '<' expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: "<", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr LE expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: "<=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '>' expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: ">", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr GE expr
+	{
+		$$ = &ast.ComparisonOperator{LHS: $1, Operator: ">=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+
+op_add :
+	expr '+' expr
+	{
+		$$ = &ast.AddOperator{LHS: $1, Operator: "+", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '-' expr
+	{
+		$$ = &ast.AddOperator{LHS: $1, Operator: "-", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '|' expr
+	{
+		$$ = &ast.AddOperator{LHS: $1, Operator: "|", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+
+op_multiply :
+	expr '*' expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "*", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '/' expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "/", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '%' expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "%", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr SHIFTLEFT expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "<<", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr SHIFTRIGHT expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: ">>", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr '&' expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "&", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr POW expr
+	{
+		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "**", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 

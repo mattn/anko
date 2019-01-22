@@ -3,7 +3,6 @@ package vm
 import (
 	"context"
 	"fmt"
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,6 +13,14 @@ import (
 // invokeExpr evaluates one expression.
 func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, error) {
 	switch e := expr.(type) {
+
+	// OpExpr
+	case *ast.OpExpr:
+		rv, err := invokeOperator(ctx, e.Op, env)
+		if err != nil {
+			return rv, newError(e.Op, err)
+		}
+		return rv, nil
 
 	// NumberExpr
 	case *ast.NumberExpr:
@@ -380,51 +387,51 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		switch e.Operator {
 		case "++":
 			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
-				v, err := env.get(alhs.Lit)
+				rv, err := env.get(alhs.Lit)
 				if err != nil {
 					return nilValue, newError(e, err)
 				}
-				switch v.Kind() {
+				switch rv.Kind() {
 				case reflect.Float64, reflect.Float32:
-					v = reflect.ValueOf(v.Float() + 1)
+					rv = reflect.ValueOf(rv.Float() + 1)
 				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
-					v = reflect.ValueOf(v.Int() + 1)
+					rv = reflect.ValueOf(rv.Int() + 1)
 				case reflect.Bool:
-					if v.Bool() {
-						v = reflect.ValueOf(int64(2))
+					if rv.Bool() {
+						rv = reflect.ValueOf(int64(2))
 					} else {
-						v = reflect.ValueOf(int64(1))
+						rv = reflect.ValueOf(int64(1))
 					}
 				default:
-					v = reflect.ValueOf(toInt64(v) + 1)
+					rv = reflect.ValueOf(toInt64(rv) + 1)
 				}
 				// not checking err because checked above in get
-				env.setValue(alhs.Lit, v)
-				return v, nil
+				env.setValue(alhs.Lit, rv)
+				return rv, nil
 			}
 		case "--":
 			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
-				v, err := env.get(alhs.Lit)
+				rv, err := env.get(alhs.Lit)
 				if err != nil {
 					return nilValue, newError(e, err)
 				}
-				switch v.Kind() {
+				switch rv.Kind() {
 				case reflect.Float64, reflect.Float32:
-					v = reflect.ValueOf(v.Float() - 1)
+					rv = reflect.ValueOf(rv.Float() - 1)
 				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
-					v = reflect.ValueOf(v.Int() - 1)
+					rv = reflect.ValueOf(rv.Int() - 1)
 				case reflect.Bool:
-					if v.Bool() {
-						v = reflect.ValueOf(int64(0))
+					if rv.Bool() {
+						rv = reflect.ValueOf(int64(0))
 					} else {
-						v = reflect.ValueOf(int64(-1))
+						rv = reflect.ValueOf(int64(-1))
 					}
 				default:
-					v = reflect.ValueOf(toInt64(v) - 1)
+					rv = reflect.ValueOf(toInt64(rv) - 1)
 				}
 				// not checking err because checked above in get
-				env.setValue(alhs.Lit, v)
-				return v, nil
+				env.setValue(alhs.Lit, rv)
+				return rv, nil
 			}
 		}
 
@@ -432,14 +439,24 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			// TODO: Can this be fixed in the parser so that Rhs is not nil?
 			e.RHS = &ast.NumberExpr{Lit: "1"}
 		}
-		v, err := invokeExpr(ctx, &ast.BinOpExpr{LHS: e.LHS, Operator: e.Operator[0:1], RHS: e.RHS}, env)
+
+		var err error
+		rv := nilValue
+		operator := e.Operator[0:1]
+		switch operator {
+		case "+", "-", "|":
+			rv, err = invokeOperator(ctx, &ast.AddOperator{LHS: e.LHS, Operator: operator, RHS: e.RHS}, env)
+		default:
+			rv, err = invokeOperator(ctx, &ast.MultiplyOperator{LHS: e.LHS, Operator: operator, RHS: e.RHS}, env)
+		}
 		if err != nil {
 			return nilValue, newError(e, err)
 		}
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
+		if rv.Kind() == reflect.Interface && !rv.IsNil() {
+			rv = rv.Elem()
 		}
-		return invokeLetExpr(ctx, e.LHS, v, env)
+
+		return invokeLetExpr(ctx, e.LHS, rv, env)
 
 	// LetsExpr
 	case *ast.LetsExpr:
@@ -465,111 +482,6 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			}
 		}
 		return rvs[len(rvs)-1], nil
-
-	// BinOpExpr
-	case *ast.BinOpExpr:
-		lhsV := nilValue
-		rhsV := nilValue
-		var err error
-
-		lhsV, err = invokeExpr(ctx, e.LHS, env)
-		if err != nil {
-			return nilValue, newError(e.LHS, err)
-		}
-		if lhsV.Kind() == reflect.Interface && !lhsV.IsNil() {
-			lhsV = lhsV.Elem()
-		}
-		switch e.Operator {
-		case "&&":
-			if !toBool(lhsV) {
-				return lhsV, nil
-			}
-		case "||":
-			if toBool(lhsV) {
-				return lhsV, nil
-			}
-		}
-		if e.RHS != nil {
-			rhsV, err = invokeExpr(ctx, e.RHS, env)
-			if err != nil {
-				return nilValue, newError(e.RHS, err)
-			}
-			if rhsV.Kind() == reflect.Interface && !rhsV.IsNil() {
-				rhsV = rhsV.Elem()
-			}
-		}
-		switch e.Operator {
-		case "+":
-			if (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Array) && (rhsV.Kind() != reflect.Slice && rhsV.Kind() != reflect.Array) {
-				rhsT := rhsV.Type()
-				lhsT := lhsV.Type().Elem()
-				if lhsT.Kind() != rhsT.Kind() {
-					if !rhsT.ConvertibleTo(lhsT) {
-						return nilValue, newStringError(e, "invalid type conversion")
-					}
-					rhsV = rhsV.Convert(lhsT)
-				}
-				return reflect.Append(lhsV, rhsV), nil
-			}
-			if (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Array) && (rhsV.Kind() == reflect.Slice || rhsV.Kind() == reflect.Array) {
-				return appendSlice(expr, lhsV, rhsV)
-			}
-			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
-				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
-			}
-			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
-				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
-			}
-			return reflect.ValueOf(toInt64(lhsV) + toInt64(rhsV)), nil
-		case "-":
-			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
-				return reflect.ValueOf(toFloat64(lhsV) - toFloat64(rhsV)), nil
-			}
-			return reflect.ValueOf(toInt64(lhsV) - toInt64(rhsV)), nil
-		case "*":
-			if lhsV.Kind() == reflect.String && (rhsV.Kind() == reflect.Int || rhsV.Kind() == reflect.Int32 || rhsV.Kind() == reflect.Int64) {
-				return reflect.ValueOf(strings.Repeat(toString(lhsV), int(toInt64(rhsV)))), nil
-			}
-			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
-				return reflect.ValueOf(toFloat64(lhsV) * toFloat64(rhsV)), nil
-			}
-			return reflect.ValueOf(toInt64(lhsV) * toInt64(rhsV)), nil
-		case "/":
-			return reflect.ValueOf(toFloat64(lhsV) / toFloat64(rhsV)), nil
-		case "%":
-			return reflect.ValueOf(toInt64(lhsV) % toInt64(rhsV)), nil
-		case "==":
-			return reflect.ValueOf(equal(lhsV, rhsV)), nil
-		case "!=":
-			return reflect.ValueOf(equal(lhsV, rhsV) == false), nil
-		case ">":
-			return reflect.ValueOf(toFloat64(lhsV) > toFloat64(rhsV)), nil
-		case ">=":
-			return reflect.ValueOf(toFloat64(lhsV) >= toFloat64(rhsV)), nil
-		case "<":
-			return reflect.ValueOf(toFloat64(lhsV) < toFloat64(rhsV)), nil
-		case "<=":
-			return reflect.ValueOf(toFloat64(lhsV) <= toFloat64(rhsV)), nil
-		case "|":
-			return reflect.ValueOf(toInt64(lhsV) | toInt64(rhsV)), nil
-		case "||":
-			return rhsV, nil
-		case "&":
-			return reflect.ValueOf(toInt64(lhsV) & toInt64(rhsV)), nil
-		case "&&":
-			return rhsV, nil
-		case "**":
-			if lhsV.Kind() == reflect.Float64 {
-				return reflect.ValueOf(math.Pow(lhsV.Float(), toFloat64(rhsV))), nil
-			}
-			return reflect.ValueOf(int64(math.Pow(toFloat64(lhsV), toFloat64(rhsV)))), nil
-		case ">>":
-			return reflect.ValueOf(toInt64(lhsV) >> uint64(toInt64(rhsV))), nil
-		case "<<":
-			return reflect.ValueOf(toInt64(lhsV) << uint64(toInt64(rhsV))), nil
-		default:
-			return nilValue, newStringError(e, "unknown operator")
-		}
 
 	// ConstExpr
 	case *ast.ConstExpr:

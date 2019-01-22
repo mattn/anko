@@ -149,6 +149,8 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		return err
 	}
 	switch expr := expr.(type) {
+	case *ast.OpExpr:
+		return walkOperator(expr.Op, f)
 	case *ast.LenExpr:
 	case *ast.NumberExpr:
 	case *ast.IdentExpr:
@@ -194,11 +196,6 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		}
 		return walkExprs(expr.RHSS, f)
 	case *ast.NewExpr:
-	case *ast.BinOpExpr:
-		if err := walkExpr(expr.LHS, f); err != nil {
-			return err
-		}
-		return walkExpr(expr.RHS, f)
 	case *ast.ConstExpr:
 	case *ast.AnonCallExpr:
 		if err := walkExpr(expr.Expr, f); err != nil {
@@ -229,6 +226,39 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		return walkExpr(expr.LHS, f)
 	default:
 		return fmt.Errorf("unknown expression %v", reflect.TypeOf(expr))
+	}
+	return nil
+}
+
+func walkOperator(op ast.Operator, f WalkFunc) error {
+	//short circuit out if there are no functions
+	if op == nil || f == nil {
+		return nil
+	}
+	if err := callFunc(op, f); err != nil {
+		return err
+	}
+	switch op := op.(type) {
+	case *ast.BinaryOperator:
+		if err := walkExpr(op.LHS, f); err != nil {
+			return err
+		}
+		return walkExpr(op.RHS, f)
+	case *ast.ComparisonOperator:
+		if err := walkExpr(op.LHS, f); err != nil {
+			return err
+		}
+		return walkExpr(op.RHS, f)
+	case *ast.AddOperator:
+		if err := walkExpr(op.LHS, f); err != nil {
+			return err
+		}
+		return walkExpr(op.RHS, f)
+	case *ast.MultiplyOperator:
+		if err := walkExpr(op.LHS, f); err != nil {
+			return err
+		}
+		return walkExpr(op.RHS, f)
 	}
 	return nil
 }

@@ -11,7 +11,13 @@ type Expr interface {
 
 // ExprImpl provide commonly implementations for Expr.
 type ExprImpl struct {
-	PosImpl // ExprImpl provide Pos() function.
+	PosImpl // PosImpl provide Pos() function.
+}
+
+// OpExpr provide operator expression.
+type OpExpr struct {
+	ExprImpl
+	Op Operator
 }
 
 // NumberExpr provide Number expression.
@@ -67,14 +73,6 @@ type DerefExpr struct {
 type ParenExpr struct {
 	ExprImpl
 	SubExpr Expr
-}
-
-// BinOpExpr provide binary operator expression.
-type BinOpExpr struct {
-	ExprImpl
-	LHS      Expr
-	Operator string
-	RHS      Expr
 }
 
 // NilCoalescingOpExpr provide if invalid operator expression.
