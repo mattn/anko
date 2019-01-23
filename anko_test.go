@@ -87,6 +87,7 @@ func TestRunInteractive(t *testing.T) {
 		{runLines: []string{"a = 1", "b = 2", "a + b"}, runOutputs: []string{"1", "2", "3"}},
 		{runLines: []string{"a = 1", "if a == 1 {", "b = 1", "b = 2", "}", "a"}, runOutputs: []string{"1", "", "", "", "2", "1"}},
 		{runLines: []string{"a = 1", "for i = 0; i < 2; i++ {", "a++", "}", "a"}, runOutputs: []string{"1", "", "", "<nil>", "3"}},
+		{runLines: []string{"1 + 1", "// comment 1", "2 + 2 // comment 2", "// 3 + 3"}, runOutputs: []string{"2", "<nil>", "4", "<nil>"}},
 	}
 	runInteractiveTests(t, tests)
 }

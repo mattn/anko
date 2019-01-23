@@ -124,15 +124,15 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 		var err error
 
 		// get right side expression values
-		rvs := make([]reflect.Value, len(stmt.Rhss))
-		for i, rhs := range stmt.Rhss {
+		rvs := make([]reflect.Value, len(stmt.RHSS))
+		for i, rhs := range stmt.RHSS {
 			rvs[i], err = invokeExpr(ctx, rhs, env)
 			if err != nil {
 				return nilValue, newError(rhs, err)
 			}
 		}
 
-		if len(rvs) == 1 && len(stmt.Lhss) > 1 {
+		if len(rvs) == 1 && len(stmt.LHSS) > 1 {
 			// only one right side value but many left side expressions
 			value := rvs[0]
 			if value.Kind() == reflect.Interface && !value.IsNil() {
@@ -140,10 +140,10 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 			}
 			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
 				// value is slice/array, add each value to left side expression
-				for i := 0; i < value.Len() && i < len(stmt.Lhss); i++ {
-					_, err = invokeLetExpr(ctx, stmt.Lhss[i], value.Index(i), env)
+				for i := 0; i < value.Len() && i < len(stmt.LHSS); i++ {
+					_, err = invokeLetExpr(ctx, stmt.LHSS[i], value.Index(i), env)
 					if err != nil {
-						return nilValue, newError(stmt.Lhss[i], err)
+						return nilValue, newError(stmt.LHSS[i], err)
 					}
 				}
 				// return last value of slice/array
@@ -152,14 +152,14 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 		}
 
 		// invoke all left side expressions with right side values
-		for i := 0; i < len(rvs) && i < len(stmt.Lhss); i++ {
+		for i := 0; i < len(rvs) && i < len(stmt.LHSS); i++ {
 			value := rvs[i]
 			if value.Kind() == reflect.Interface && !value.IsNil() {
 				value = value.Elem()
 			}
-			_, err = invokeLetExpr(ctx, stmt.Lhss[i], value, env)
+			_, err = invokeLetExpr(ctx, stmt.LHSS[i], value, env)
 			if err != nil {
-				return nilValue, newError(stmt.Lhss[i], err)
+				return nilValue, newError(stmt.LHSS[i], err)
 			}
 		}
 
@@ -168,7 +168,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 
 	// LetMapItemStmt
 	case *ast.LetMapItemStmt:
-		rv, err := invokeExpr(ctx, stmt.Rhs, env)
+		rv, err := invokeExpr(ctx, stmt.RHS, env)
 		if err != nil {
 			return nilValue, newError(stmt, err)
 		}
@@ -178,7 +178,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 		} else {
 			rvs = []reflect.Value{rv, trueValue}
 		}
-		for i, lhs := range stmt.Lhss {
+		for i, lhs := range stmt.LHSS {
 			v := rvs[i]
 			if v.Kind() == reflect.Interface && !v.IsNil() {
 				v = v.Elem()
