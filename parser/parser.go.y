@@ -66,19 +66,22 @@ import (
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE
 
-%right '='
-%right '?' ':'
-%right NILCOALESCE
+/* lowest precedence */
+%left ,
+%right '=' PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ
+%right ':'
+%right '?' NILCOALESCE
 %left OROR
 %left ANDAND
+%left EQEQ NEQ '<' LE '>' GE
+%left '+' '-' '|' '^'
+%left '*' '/' '%' SHIFTLEFT SHIFTRIGHT '&' POW
 %right IN
-%left IDENT
-%nonassoc EQEQ NEQ ','
-%left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
-
-%left '+' '-' PLUSPLUS MINUSMINUS
-%left '*' '/' '%'
+%right PLUSPLUS MINUSMINUS
 %right UNARY
+/* highest precedence */
+/* https://golang.org/ref/spec#Expression */
+
 
 %%
 
@@ -711,12 +714,7 @@ expr_unary :
 	}
 
 expr_binary :
-	op_binary
-	{
-		$$ = &ast.OpExpr{Op: $1}
-		$$.SetPosition($1.Position())
-	}
-	| op_comparison
+	op_multiply
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
@@ -726,22 +724,26 @@ expr_binary :
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
 	}
-	| op_multiply
+	| op_comparison
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+	| op_binary
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
 	}
 
-
 op_binary :
-	expr OROR expr
-	{
-		$$ = &ast.BinaryOperator{LHS: $1, Operator: "||", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDAND expr
+	expr ANDAND expr
 	{
 		$$ = &ast.BinaryOperator{LHS: $1, Operator: "&&", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr OROR expr
+	{
+		$$ = &ast.BinaryOperator{LHS: $1, Operator: "||", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 

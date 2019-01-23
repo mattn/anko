@@ -26,18 +26,18 @@ func invokeOperator(ctx context.Context, operator ast.Operator, env *Env) (refle
 		switch op.Operator {
 		case "||":
 			if toBool(rv) {
-				return rv, nil
+				return trueValue, nil
 			}
 		case "&&":
 			if !toBool(rv) {
-				return rv, nil
+				return falseValue, nil
 			}
 		default:
 			return nilValue, newStringError(op, "unknown operator")
 		}
 
 		if op.RHS == nil {
-			return nilValue, nil
+			return falseValue, nil
 		}
 
 		rv, err = invokeExpr(ctx, op.RHS, env)
@@ -47,7 +47,10 @@ func invokeOperator(ctx context.Context, operator ast.Operator, env *Env) (refle
 		if rv.Kind() == reflect.Interface && !rv.IsNil() {
 			rv = rv.Elem()
 		}
-		return rv, nil
+		if toBool(rv) {
+			return trueValue, nil
+		}
+		return falseValue, nil
 
 	// ComparisonOperator
 	case *ast.ComparisonOperator:

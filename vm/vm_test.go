@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	// "net/http"
+	// _ "net/http/pprof"
+
 	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/internal/testlib"
 	"github.com/mattn/anko/parser"
@@ -45,6 +48,8 @@ func init() {
 	corelib.NewEnv = func() corelib.Env {
 		return NewEnv()
 	}
+
+	// go http.ListenAndServe(":6060", nil)
 }
 
 func TestNumbers(t *testing.T) {
@@ -982,5 +987,48 @@ func TestValueEqual(t *testing.T) {
 	result = ValueEqual(false, true)
 	if result != false {
 		t.Fatal("ValueEqual")
+	}
+}
+
+func fib(x int) int {
+	if x < 2 {
+		return x
+	}
+	return fib(x-1) + fib(x-2)
+}
+
+func BenchmarkFibGo(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		fib(16)
+	}
+}
+
+func BenchmarkFibVM(b *testing.B) {
+	b.StopTimer()
+
+	env := NewEnv()
+	envA := env.NewModule("a")
+
+	script := `
+fib = func(x) {
+	if x < 2 {
+		return x
+	}
+	return fib(x-1) + fib(x-2)
+}`
+
+	_, err := envA.Execute(script)
+	if err != nil {
+		b.Fatal("Execute error:", err)
+	}
+
+	b.ResetTimer()
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, err = env.Execute("a.fib(16)")
+		if err != nil {
+			b.Fatal("Execute error:", err)
+		}
 	}
 }

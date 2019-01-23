@@ -226,9 +226,12 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		case "^":
 			return reflect.ValueOf(^toInt64(v)), nil
 		case "!":
-			return reflect.ValueOf(!toBool(v)), nil
+			if toBool(v) {
+				return falseValue, nil
+			}
+			return trueValue, nil
 		default:
-			return nilValue, newStringError(e, "unknown operator ''")
+			return nilValue, newStringError(e, "unknown operator")
 		}
 
 	// ParenExpr
