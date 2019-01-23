@@ -523,46 +523,6 @@ expr :
 		$$ = &ast.ParenExpr{SubExpr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| expr PLUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MULEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr DIVEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr OREQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr PLUSPLUS
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSMINUS
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
-		$$.SetPosition($1.Position())
-	}
 	| IDENT '(' exprs VARARG ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3, VarArg: true}
@@ -714,7 +674,47 @@ expr_unary :
 	}
 
 expr_binary :
-	op_multiply
+	expr PLUSEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr MINUSEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr MULEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr DIVEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr ANDEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr OREQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr PLUSPLUS
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
+		$$.SetPosition($1.Position())
+	}
+	| expr MINUSMINUS
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
+		$$.SetPosition($1.Position())
+	}
+	| op_multiply
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
