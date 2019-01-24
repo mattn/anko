@@ -208,14 +208,23 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `a <= 2.0`, Input: map[string]interface{}{"a": float64(2)}, RunOutput: true, Output: map[string]interface{}{"a": float64(2)}},
 		{Script: `a <= 3.0`, Input: map[string]interface{}{"a": float64(2)}, RunOutput: true, Output: map[string]interface{}{"a": float64(2)}},
 
-		{Script: `1 == 1 && 1  == 1`, RunOutput: true},
-		{Script: `1 == 1 && 1  == 2`, RunOutput: false},
-		{Script: `1 == 2 && 1  == 1`, RunOutput: false},
-		{Script: `1 == 2 && 1  == 2`, RunOutput: false},
-		{Script: `1 == 1 || 1  == 1`, RunOutput: true},
-		{Script: `1 == 1 || 1  == 2`, RunOutput: true},
-		{Script: `1 == 2 || 1  == 1`, RunOutput: true},
-		{Script: `1 == 2 || 1  == 2`, RunOutput: false},
+		{Script: `0 && 0`, RunOutput: false},
+		{Script: `0 && 1`, RunOutput: false},
+		{Script: `1 && 0`, RunOutput: false},
+		{Script: `1 && 1`, RunOutput: true},
+		{Script: `0 || 0`, RunOutput: false},
+		{Script: `0 || 1`, RunOutput: true},
+		{Script: `1 || 0`, RunOutput: true},
+		{Script: `1 || 1`, RunOutput: true},
+
+		{Script: `1 == 1 && 1 == 1`, RunOutput: true},
+		{Script: `1 == 1 && 1 == 2`, RunOutput: false},
+		{Script: `1 == 2 && 1 == 1`, RunOutput: false},
+		{Script: `1 == 2 && 1 == 2`, RunOutput: false},
+		{Script: `1 == 1 || 1 == 1`, RunOutput: true},
+		{Script: `1 == 1 || 1 == 2`, RunOutput: true},
+		{Script: `1 == 2 || 1 == 1`, RunOutput: true},
+		{Script: `1 == 2 || 1 == 2`, RunOutput: false},
 
 		{Script: `true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
 		{Script: `false && func(){throw('abcde')}()`, RunOutput: false},
@@ -633,6 +642,15 @@ func TestForLoop(t *testing.T) {
 		// {Script: `for a, b = 1; nil; nil { return }`},
 		// {Script: `for a, b = 1, 2; nil; nil { return }`},
 
+		{Script: `var a = 1; for ; ; { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; a > 0 ; { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; a > 0 ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; ; { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; a > 0 ; { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; a > 0 ; a++ { return a }`, RunOutput: int64(1)},
+
 		{Script: `for var a = 1; nil; nil { return }`},
 		{Script: `for var a = 1, 2; nil; nil { return }`},
 		{Script: `for var a, b = 1; nil; nil { return }`},
@@ -873,6 +891,49 @@ func TestItemInList(t *testing.T) {
 		{Script: `[[1]] in [1]`, Input: map[string]interface{}{"l": []interface{}{1}}, RunOutput: false},
 		{Script: `[[1]] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
 		{Script: `[[1]] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: true},
+	}
+	testlib.Run(t, tests, nil)
+}
+
+func TestOperatorPrecedence(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		// test && > ||
+		{Script: `true || true && false`, RunOutput: true},
+		{Script: `(true || true) && false`, RunOutput: false},
+		{Script: `false && true || true`, RunOutput: true},
+		{Script: `false && (true || true)`, RunOutput: false},
+
+		// test == > ||
+		{Script: `0 == 1 || 1 == 1`, RunOutput: true},
+		{Script: `0 == (1 || 1) == 1`, RunOutput: false},
+
+		// test + > ==
+		{Script: `1 + 2 == 2 + 1`, RunOutput: true},
+		{Script: `1 + (2 == 2) + 1`, RunOutput: int64(3)},
+
+		// test * > +
+		{Script: `2 * 3 + 4 * 5`, RunOutput: int64(26)},
+		{Script: `2 * (3 + 4) * 5`, RunOutput: int64(70)},
+
+		// test * > &&
+		{Script: `2 * 0 && 3 * 4`, RunOutput: false},
+		{Script: `2 * (0 && 3) * 4`, RunOutput: int64(0)},
+
+		// test ++ > *
+		{Script: `a = 1; b = 2; a++ * b++`, RunOutput: int64(6)},
+
+		// test ++ > *
+		{Script: `a = 1; b = 2; a++ * b++`, RunOutput: int64(6)},
+
+		// test unary - > +
+		{Script: `a = 1; b = 2; -a + b`, RunOutput: int64(1)},
+		{Script: `a = 1; b = 2; -(a + b)`, RunOutput: int64(-3)},
+		{Script: `a = 1; b = 2; a + -b`, RunOutput: int64(-1)},
+
+		// test ! > ||
+		{Script: `!true || true`, RunOutput: true},
+		{Script: `!(true || true)`, RunOutput: false},
 	}
 	testlib.Run(t, tests, nil)
 }

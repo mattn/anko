@@ -14,6 +14,7 @@ import (
 %type<stmt_var> stmt_var
 %type<stmt_lets> stmt_lets
 %type<stmt_if> stmt_if
+%type<stmt_for> stmt_for
 %type<stmt_switch> stmt_switch
 %type<stmt_switch_cases> stmt_switch_cases
 %type<stmt_switch_case> stmt_switch_case
@@ -40,6 +41,7 @@ import (
 	stmt_var               ast.Stmt
 	stmt_lets              ast.Stmt
 	stmt_if                ast.Stmt
+	stmt_for               ast.Stmt
 	stmt_switch            ast.Stmt
 	stmt_switch_cases      ast.Stmt
 	stmt_switch_case       ast.Stmt
@@ -66,19 +68,22 @@ import (
 
 %token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE
 
-%right '='
-%right '?' ':'
-%right NILCOALESCE
+/* lowest precedence */
+%left ,
+%right '=' PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ
+%right ':'
+%right '?' NILCOALESCE
 %left OROR
 %left ANDAND
+%left EQEQ NEQ '<' LE '>' GE
+%left '+' '-' '|' '^'
+%left '*' '/' '%' SHIFTLEFT SHIFTRIGHT '&' POW
 %right IN
-%left IDENT
-%nonassoc EQEQ NEQ ','
-%left '>' GE '<' LE SHIFTLEFT SHIFTRIGHT
-
-%left '+' '-' PLUSPLUS MINUSMINUS
-%left '*' '/' '%'
+%right PLUSPLUS MINUSMINUS
 %right UNARY
+/* highest precedence */
+/* https://golang.org/ref/spec#Expression */
+
 
 %%
 
@@ -151,27 +156,10 @@ stmt :
 	| stmt_if
 	{
 		$$ = $1
-		$$.SetPosition($1.Position())
 	}
-	| FOR '{' compstmt '}'
+	| stmt_for
 	{
-		$$ = &ast.LoopStmt{Stmts: $3}
-		$$.SetPosition($1.Position())
-	}
-	| FOR expr_idents IN expr '{' compstmt '}'
-	{
-		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
-		$$.SetPosition($1.Position())
-	}
-	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
-	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
-		$$.SetPosition($1.Position())
-	}
-	| FOR expr '{' compstmt '}'
-	{
-		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
-		$$.SetPosition($1.Position())
+		$$ = $1
 	}
 	| TRY '{' compstmt '}' CATCH IDENT '{' compstmt '}' FINALLY '{' compstmt '}'
 	{
@@ -244,6 +232,7 @@ stmt_lets :
 	expr '=' expr
 	{
 		$$ = &ast.LetsStmt{LHSS: []ast.Expr{$1}, Operator: "=", RHSS: []ast.Expr{$3}}
+		$$.SetPosition($1.Position())
 	}
 	| exprs '=' exprs
 	{
@@ -267,11 +256,9 @@ stmt_if :
 	| stmt_if ELSE IF expr '{' compstmt '}'
 	{
 		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
-		$$.SetPosition($1.Position())
 	}
 	| stmt_if ELSE '{' compstmt '}'
 	{
-		$$.SetPosition($1.Position())
 		if $$.(*ast.IfStmt).Else != nil {
 			yylex.Error("multiple else statement")
 		} else {
@@ -279,6 +266,62 @@ stmt_if :
 		}
 	}
 
+stmt_for :
+	FOR '{' compstmt '}'
+	{
+		$$ = &ast.LoopStmt{Stmts: $3}
+		$$.SetPosition($1.Position())
+	}
+	| FOR expr_idents IN expr '{' compstmt '}'
+	{
+		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR expr '{' compstmt '}'
+	{
+		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmts: $5}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr3: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' expr ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr2: $3, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr2: $3, Expr3: $5, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr3: $5, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' expr ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+		$$.SetPosition($1.Position())
+	}
 
 stmt_switch :
 	SWITCH expr '{' opt_newlines stmt_switch_cases opt_newlines '}'
@@ -313,7 +356,6 @@ stmt_switch_cases :
 		}
 		body.Default = $2
 	}
-
 
 stmt_switch_case :
 	CASE expr ':' compstmt
@@ -520,46 +562,6 @@ expr :
 		$$ = &ast.ParenExpr{SubExpr: $2}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-	| expr PLUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MULEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr DIVEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr OREQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr PLUSPLUS
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSMINUS
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
-		$$.SetPosition($1.Position())
-	}
 	| IDENT '(' exprs VARARG ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3, VarArg: true}
@@ -711,12 +713,47 @@ expr_unary :
 	}
 
 expr_binary :
-	op_binary
+	expr PLUSEQ expr
 	{
-		$$ = &ast.OpExpr{Op: $1}
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
-	| op_comparison
+	| expr MINUSEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr MULEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr DIVEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr ANDEQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr OREQ expr
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr PLUSPLUS
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
+		$$.SetPosition($1.Position())
+	}
+	| expr MINUSMINUS
+	{
+		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
+		$$.SetPosition($1.Position())
+	}
+	| op_multiply
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
@@ -726,22 +763,26 @@ expr_binary :
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
 	}
-	| op_multiply
+	| op_comparison
+	{
+		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+	| op_binary
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
 	}
 
-
 op_binary :
-	expr OROR expr
-	{
-		$$ = &ast.BinaryOperator{LHS: $1, Operator: "||", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDAND expr
+	expr ANDAND expr
 	{
 		$$ = &ast.BinaryOperator{LHS: $1, Operator: "&&", RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| expr OROR expr
+	{
+		$$ = &ast.BinaryOperator{LHS: $1, Operator: "||", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 
