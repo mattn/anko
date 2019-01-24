@@ -642,6 +642,15 @@ func TestForLoop(t *testing.T) {
 		// {Script: `for a, b = 1; nil; nil { return }`},
 		// {Script: `for a, b = 1, 2; nil; nil { return }`},
 
+		{Script: `var a = 1; for ; ; { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; a > 0 ; { return a }`, RunOutput: int64(1)},
+		{Script: `var a = 1; for ; a > 0 ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; ; { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; ; a++ { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; a > 0 ; { return a }`, RunOutput: int64(1)},
+		{Script: `for var a = 1 ; a > 0 ; a++ { return a }`, RunOutput: int64(1)},
+
 		{Script: `for var a = 1; nil; nil { return }`},
 		{Script: `for var a = 1, 2; nil; nil { return }`},
 		{Script: `for var a, b = 1; nil; nil { return }`},

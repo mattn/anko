@@ -403,9 +403,11 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 	// CForStmt
 	case *ast.CForStmt:
 		newenv := env.NewEnv()
-		_, err := runSingleStmt(ctx, stmt.Stmt1, newenv)
-		if err != nil {
-			return nilValue, err
+		if stmt.Stmt1 != nil {
+			_, err := runSingleStmt(ctx, stmt.Stmt1, newenv)
+			if err != nil {
+				return nilValue, err
+			}
 		}
 		for {
 			select {
@@ -413,12 +415,15 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 				return nilValue, ErrInterrupt
 			default:
 			}
-			fb, err := invokeExpr(ctx, stmt.Expr2, newenv)
-			if err != nil {
-				return nilValue, err
-			}
-			if !toBool(fb) {
-				break
+
+			if stmt.Expr2 != nil {
+				fb, err := invokeExpr(ctx, stmt.Expr2, newenv)
+				if err != nil {
+					return nilValue, err
+				}
+				if !toBool(fb) {
+					break
+				}
 			}
 
 			rv, err := run(ctx, stmt.Stmts, newenv)
@@ -431,9 +436,12 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 				}
 				return nilValue, newError(stmt, err)
 			}
-			_, err = invokeExpr(ctx, stmt.Expr3, newenv)
-			if err != nil {
-				return nilValue, err
+
+			if stmt.Expr3 != nil {
+				_, err = invokeExpr(ctx, stmt.Expr3, newenv)
+				if err != nil {
+					return nilValue, err
+				}
 			}
 		}
 		return nilValue, nil

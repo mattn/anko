@@ -277,14 +277,49 @@ stmt_for :
 		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
 		$$.SetPosition($1.Position())
 	}
-	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
-	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
-		$$.SetPosition($1.Position())
-	}
 	| FOR expr '{' compstmt '}'
 	{
 		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmts: $5}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr3: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' expr ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr2: $3, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Expr2: $3, Expr3: $5, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr3: $5, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' expr ';' '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
 		$$.SetPosition($1.Position())
 	}
 
