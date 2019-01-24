@@ -14,6 +14,7 @@ import (
 %type<stmt_var> stmt_var
 %type<stmt_lets> stmt_lets
 %type<stmt_if> stmt_if
+%type<stmt_for> stmt_for
 %type<stmt_switch> stmt_switch
 %type<stmt_switch_cases> stmt_switch_cases
 %type<stmt_switch_case> stmt_switch_case
@@ -40,6 +41,7 @@ import (
 	stmt_var               ast.Stmt
 	stmt_lets              ast.Stmt
 	stmt_if                ast.Stmt
+	stmt_for               ast.Stmt
 	stmt_switch            ast.Stmt
 	stmt_switch_cases      ast.Stmt
 	stmt_switch_case       ast.Stmt
@@ -154,27 +156,10 @@ stmt :
 	| stmt_if
 	{
 		$$ = $1
-		$$.SetPosition($1.Position())
 	}
-	| FOR '{' compstmt '}'
+	| stmt_for
 	{
-		$$ = &ast.LoopStmt{Stmts: $3}
-		$$.SetPosition($1.Position())
-	}
-	| FOR expr_idents IN expr '{' compstmt '}'
-	{
-		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
-		$$.SetPosition($1.Position())
-	}
-	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
-	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
-		$$.SetPosition($1.Position())
-	}
-	| FOR expr '{' compstmt '}'
-	{
-		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
-		$$.SetPosition($1.Position())
+		$$ = $1
 	}
 	| TRY '{' compstmt '}' CATCH IDENT '{' compstmt '}' FINALLY '{' compstmt '}'
 	{
@@ -247,6 +232,7 @@ stmt_lets :
 	expr '=' expr
 	{
 		$$ = &ast.LetsStmt{LHSS: []ast.Expr{$1}, Operator: "=", RHSS: []ast.Expr{$3}}
+		$$.SetPosition($1.Position())
 	}
 	| exprs '=' exprs
 	{
@@ -270,11 +256,9 @@ stmt_if :
 	| stmt_if ELSE IF expr '{' compstmt '}'
 	{
 		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
-		$$.SetPosition($1.Position())
 	}
 	| stmt_if ELSE '{' compstmt '}'
 	{
-		$$.SetPosition($1.Position())
 		if $$.(*ast.IfStmt).Else != nil {
 			yylex.Error("multiple else statement")
 		} else {
@@ -282,6 +266,27 @@ stmt_if :
 		}
 	}
 
+stmt_for :
+	FOR '{' compstmt '}'
+	{
+		$$ = &ast.LoopStmt{Stmts: $3}
+		$$.SetPosition($1.Position())
+	}
+	| FOR expr_idents IN expr '{' compstmt '}'
+	{
+		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+		$$.SetPosition($1.Position())
+	}
+	| FOR expr '{' compstmt '}'
+	{
+		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
+		$$.SetPosition($1.Position())
+	}
 
 stmt_switch :
 	SWITCH expr '{' opt_newlines stmt_switch_cases opt_newlines '}'
@@ -316,7 +321,6 @@ stmt_switch_cases :
 		}
 		body.Default = $2
 	}
-
 
 stmt_switch_case :
 	CASE expr ':' compstmt
