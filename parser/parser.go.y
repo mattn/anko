@@ -231,7 +231,7 @@ stmt_var :
 stmt_lets :
 	expr '=' expr
 	{
-		$$ = &ast.LetsStmt{LHSS: []ast.Expr{$1}, Operator: "=", RHSS: []ast.Expr{$3}}
+		$$ = &ast.LetsStmt{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{$3}}
 		$$.SetPosition($1.Position())
 	}
 	| exprs '=' exprs
@@ -240,10 +240,10 @@ stmt_lets :
 			if _, ok := $3[0].(*ast.ItemExpr); ok {
 				$$ = &ast.LetMapItemStmt{LHSS: $1, RHS: $3[0]}
 			} else {
-				$$ = &ast.LetsStmt{LHSS: $1, Operator: "=", RHSS: $3}
+				$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
 			}
 		} else {
-			$$ = &ast.LetsStmt{LHSS: $1, Operator: "=", RHSS: $3}
+			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
 		}
 	}
 
@@ -489,12 +489,16 @@ expr :
 	}
 	| NUMBER
 	{
-		$$ = &ast.NumberExpr{Lit: $1.Lit}
+		num, err := toNumber($1.Lit)
+		if err != nil {
+			yylex.Error("invalid number: " + $1.Lit)
+		}
+		$$ = &ast.LiteralExpr{Literal: num}
 		$$.SetPosition($1.Position())
 	}
 	| STRING
 	{
-		$$ = &ast.StringExpr{Lit: $1.Lit}
+		$$ = &ast.LiteralExpr{Literal: stringToValue($1.Lit)}
 		$$.SetPosition($1.Position())
 	}
 	| TRUE
@@ -745,12 +749,18 @@ expr_binary :
 	}
 	| expr PLUSPLUS
 	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "++"}
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "+", RHS: oneLiteral}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
 		$$.SetPosition($1.Position())
 	}
 	| expr MINUSMINUS
 	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "--"}
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "-", RHS: oneLiteral}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
 		$$.SetPosition($1.Position())
 	}
 	| op_multiply

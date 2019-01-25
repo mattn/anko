@@ -20,16 +20,10 @@ type OpExpr struct {
 	Op Operator
 }
 
-// NumberExpr provide Number expression.
-type NumberExpr struct {
+// LiteralExpr provide literal expression.
+type LiteralExpr struct {
 	ExprImpl
-	Lit string
-}
-
-// StringExpr provide String expression.
-type StringExpr struct {
-	ExprImpl
-	Lit string
+	Literal reflect.Value
 }
 
 // ArrayExpr provide Array expression.
@@ -143,9 +137,8 @@ type FuncExpr struct {
 // LetsExpr provide multiple expression of let.
 type LetsExpr struct {
 	ExprImpl
-	LHSS     []Expr
-	Operator string
-	RHSS     []Expr
+	LHSS []Expr
+	RHSS []Expr
 }
 
 // AssocExpr provide expression to assoc operation.

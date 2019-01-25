@@ -527,13 +527,15 @@ func TestArraySlice(t *testing.T) {
 func TestArrayAppendArrays(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `a += nil`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += 1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += 1.1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += "a"`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
+		{Script: `a += b`, Input: map[string]interface{}{"a": "a", "b": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 
 		{Script: `a += b`, Input: map[string]interface{}{"a": []bool{true}, "b": []string{"b"}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `b += a`, Input: map[string]interface{}{"a": []bool{true}, "b": []string{"b"}}, RunError: fmt.Errorf("invalid type conversion")},
+
+		{Script: `a += nil`, Input: map[string]interface{}{"a": []bool{true}}, RunOutput: []bool{true, false}, Output: map[string]interface{}{"a": []bool{true, false}}},
 
 		{Script: `b = []; b += a`, Input: map[string]interface{}{"a": []bool{}}, RunOutput: []interface{}{}, Output: map[string]interface{}{"a": []bool{}, "b": []interface{}{}}},
 		{Script: `b = []; b += a`, Input: map[string]interface{}{"a": []bool{true}}, RunOutput: []interface{}{true}, Output: map[string]interface{}{"a": []bool{true}, "b": []interface{}{true}}},

@@ -118,9 +118,8 @@ type VarStmt struct {
 // LetsStmt provide multiple statement of let.
 type LetsStmt struct {
 	StmtImpl
-	LHSS     []Expr
-	Operator string
-	RHSS     []Expr
+	LHSS []Expr
+	RHSS []Expr
 }
 
 // LetMapItemStmt provide statement of let for map item.

@@ -152,11 +152,10 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 	case *ast.OpExpr:
 		return walkOperator(expr.Op, f)
 	case *ast.LenExpr:
-	case *ast.NumberExpr:
+	case *ast.LiteralExpr:
 	case *ast.IdentExpr:
 	case *ast.MemberExpr:
 		return walkExpr(expr.Expr, f)
-	case *ast.StringExpr:
 	case *ast.ItemExpr:
 		if err := walkExpr(expr.Value, f); err != nil {
 			return err

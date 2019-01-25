@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"github.com/mattn/anko/ast"
 )
@@ -22,34 +20,13 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		}
 		return rv, nil
 
-	// NumberExpr
-	case *ast.NumberExpr:
-		if strings.Contains(e.Lit, ".") || strings.Contains(e.Lit, "e") {
-			v, err := strconv.ParseFloat(e.Lit, 64)
-			if err != nil {
-				return nilValue, newError(e, err)
-			}
-			return reflect.ValueOf(float64(v)), nil
-		}
-		var i int64
-		var err error
-		if strings.HasPrefix(e.Lit, "0x") {
-			i, err = strconv.ParseInt(e.Lit[2:], 16, 64)
-		} else {
-			i, err = strconv.ParseInt(e.Lit, 10, 64)
-		}
-		if err != nil {
-			return nilValue, newError(e, err)
-		}
-		return reflect.ValueOf(i), nil
-
 	// IdentExpr
 	case *ast.IdentExpr:
 		return env.get(e.Lit)
 
-	// StringExpr
-	case *ast.StringExpr:
-		return reflect.ValueOf(e.Lit), nil
+	// LiteralExpr
+	case *ast.LiteralExpr:
+		return e.Literal, nil
 
 	// ArrayExpr
 	case *ast.ArrayExpr:
@@ -387,62 +364,6 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 
 	// AssocExpr
 	case *ast.AssocExpr:
-		switch e.Operator {
-		case "++":
-			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
-				rv, err := env.get(alhs.Lit)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
-				switch rv.Kind() {
-				case reflect.Float64, reflect.Float32:
-					rv = reflect.ValueOf(rv.Float() + 1)
-				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
-					rv = reflect.ValueOf(rv.Int() + 1)
-				case reflect.Bool:
-					if rv.Bool() {
-						rv = reflect.ValueOf(int64(2))
-					} else {
-						rv = reflect.ValueOf(int64(1))
-					}
-				default:
-					rv = reflect.ValueOf(toInt64(rv) + 1)
-				}
-				// not checking err because checked above in get
-				env.setValue(alhs.Lit, rv)
-				return rv, nil
-			}
-		case "--":
-			if alhs, ok := e.LHS.(*ast.IdentExpr); ok {
-				rv, err := env.get(alhs.Lit)
-				if err != nil {
-					return nilValue, newError(e, err)
-				}
-				switch rv.Kind() {
-				case reflect.Float64, reflect.Float32:
-					rv = reflect.ValueOf(rv.Float() - 1)
-				case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
-					rv = reflect.ValueOf(rv.Int() - 1)
-				case reflect.Bool:
-					if rv.Bool() {
-						rv = reflect.ValueOf(int64(0))
-					} else {
-						rv = reflect.ValueOf(int64(-1))
-					}
-				default:
-					rv = reflect.ValueOf(toInt64(rv) - 1)
-				}
-				// not checking err because checked above in get
-				env.setValue(alhs.Lit, rv)
-				return rv, nil
-			}
-		}
-
-		if e.RHS == nil {
-			// TODO: Can this be fixed in the parser so that Rhs is not nil?
-			e.RHS = &ast.NumberExpr{Lit: "1"}
-		}
-
 		var err error
 		rv := nilValue
 		operator := e.Operator[0:1]
