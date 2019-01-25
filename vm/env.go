@@ -28,38 +28,27 @@ type Env struct {
 	sync.RWMutex
 }
 
-var basicTypes = []struct {
-	name string
-	typ  reflect.Type
-}{
-	{name: "interface", typ: reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()},
-	{name: "bool", typ: reflect.TypeOf(true)},
-	{name: "string", typ: reflect.TypeOf("a")},
-	{name: "int", typ: reflect.TypeOf(int(1))},
-	{name: "int32", typ: reflect.TypeOf(int32(1))},
-	{name: "int64", typ: reflect.TypeOf(int64(1))},
-	{name: "uint", typ: reflect.TypeOf(uint(1))},
-	{name: "uint32", typ: reflect.TypeOf(uint32(1))},
-	{name: "uint64", typ: reflect.TypeOf(uint64(1))},
-	{name: "byte", typ: reflect.TypeOf(byte(1))},
-	{name: "rune", typ: reflect.TypeOf('a')},
-	{name: "float32", typ: reflect.TypeOf(float32(1))},
-	{name: "float64", typ: reflect.TypeOf(float64(1))},
-}
-
-func newBasicTypes() map[string]reflect.Type {
-	types := make(map[string]reflect.Type, len(basicTypes))
-	for i := 0; i < len(basicTypes); i++ {
-		types[basicTypes[i].name] = basicTypes[i].typ
-	}
-	return types
+var basicTypes = map[string]reflect.Type{
+	"interface": reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type(),
+	"bool":      reflect.TypeOf(true),
+	"string":    reflect.TypeOf("a"),
+	"int":       reflect.TypeOf(int(1)),
+	"int32":     reflect.TypeOf(int32(1)),
+	"int64":     reflect.TypeOf(int64(1)),
+	"uint":      reflect.TypeOf(uint(1)),
+	"uint32":    reflect.TypeOf(uint32(1)),
+	"uint64":    reflect.TypeOf(uint64(1)),
+	"byte":      reflect.TypeOf(byte(1)),
+	"rune":      reflect.TypeOf('a'),
+	"float32":   reflect.TypeOf(float32(1)),
+	"float64":   reflect.TypeOf(float64(1)),
 }
 
 // NewEnv creates new global scope.
 func NewEnv() *Env {
 	return &Env{
 		env:    make(map[string]reflect.Value),
-		typ:    newBasicTypes(),
+		typ:    make(map[string]reflect.Type),
 		parent: nil,
 	}
 }
@@ -194,6 +183,9 @@ func (e *Env) Type(k string) (reflect.Type, error) {
 		}
 	}
 	if e.parent == nil {
+		if v, ok := basicTypes[k]; ok {
+			return v, nil
+		}
 		return nilType, fmt.Errorf("undefined type '%s'", k)
 	}
 	return e.parent.Type(k)
