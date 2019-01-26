@@ -208,6 +208,8 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	return value
 }
 
+// appendSlice appends rhs to lhs
+// function assumes lhsV and rhsV are slice or array
 func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect.Value, error) {
 	lhsT := lhsV.Type().Elem()
 	rhsT := rhsV.Type().Elem()
@@ -338,4 +340,28 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 // If passed function, does extra checks otherwise just doing reflect.DeepEqual
 func ValueEqual(v1 interface{}, v2 interface{}) bool {
 	return corelib.ValueEqual(v1, v2)
+}
+
+// precedenceOfKinds returns the greater of two kinds
+// string > float > int
+func precedenceOfKinds(kind1 reflect.Kind, kind2 reflect.Kind) reflect.Kind {
+	if kind1 == kind2 {
+		return kind1
+	}
+	switch kind1 {
+	case reflect.String:
+		return kind1
+	case reflect.Float64, reflect.Float32:
+		switch kind2 {
+		case reflect.String:
+			return kind2
+		}
+		return kind1
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		switch kind2 {
+		case reflect.String, reflect.Float64, reflect.Float32:
+			return kind2
+		}
+	}
+	return kind1
 }

@@ -4,6 +4,9 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
 	"unicode"
 
 	"github.com/mattn/anko/ast"
@@ -68,6 +71,11 @@ var opName = map[string]int{
 	"len":      LEN,
 	"delete":   DELETE,
 }
+
+var (
+	nilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	oneLiteral = &ast.LiteralExpr{Literal: reflect.ValueOf(int64(1))}
+)
 
 // Init resets code to scan.
 func (s *Scanner) Init(src string) {
@@ -552,4 +560,29 @@ func ParseSrc(src string) ([]ast.Stmt, error) {
 		src: []rune(src),
 	}
 	return Parse(scanner)
+}
+
+func toNumber(numString string) (reflect.Value, error) {
+	if strings.Contains(numString, ".") || strings.Contains(numString, "e") {
+		v, err := strconv.ParseFloat(numString, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return reflect.ValueOf(float64(v)), nil
+	}
+	var i int64
+	var err error
+	if strings.HasPrefix(numString, "0x") {
+		i, err = strconv.ParseInt(numString[2:], 16, 64)
+	} else {
+		i, err = strconv.ParseInt(numString, 10, 64)
+	}
+	if err != nil {
+		return nilValue, err
+	}
+	return reflect.ValueOf(i), nil
+}
+
+func stringToValue(aString string) reflect.Value {
+	return reflect.ValueOf(aString)
 }

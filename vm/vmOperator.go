@@ -36,10 +36,6 @@ func invokeOperator(ctx context.Context, operator ast.Operator, env *Env) (refle
 			return nilValue, newStringError(op, "unknown operator")
 		}
 
-		if op.RHS == nil {
-			return falseValue, nil
-		}
-
 		rv, err = invokeExpr(ctx, op.RHS, env)
 		if err != nil {
 			return nilValue, newError(op.RHS, err)
@@ -109,29 +105,41 @@ func invokeOperator(ctx context.Context, operator ast.Operator, env *Env) (refle
 
 		switch op.Operator {
 		case "+":
-			if (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Array) && (rhsV.Kind() != reflect.Slice && rhsV.Kind() != reflect.Array) {
-				rhsT := rhsV.Type()
-				lhsT := lhsV.Type().Elem()
-				if lhsT.Kind() != rhsT.Kind() {
-					if !rhsT.ConvertibleTo(lhsT) {
-						return nilValue, newStringError(op, "invalid type conversion")
-					}
-					rhsV = rhsV.Convert(lhsT)
+			lhsKind := lhsV.Kind()
+			rhsKind := rhsV.Kind()
+
+			if lhsKind == reflect.Slice || lhsKind == reflect.Array {
+				if rhsV.Kind() == reflect.Slice || rhsV.Kind() == reflect.Array {
+					// append slice to slice
+					return appendSlice(op, lhsV, rhsV)
+				}
+				// try to append rhs non-slice to lhs slice
+				rhsV, err = convertReflectValueToType(rhsV, lhsV.Type().Elem())
+				if err != nil {
+					return nilValue, newStringError(op, "invalid type conversion")
 				}
 				return reflect.Append(lhsV, rhsV), nil
 			}
-			if (lhsV.Kind() == reflect.Slice || lhsV.Kind() == reflect.Array) && (rhsV.Kind() == reflect.Slice || rhsV.Kind() == reflect.Array) {
-				return appendSlice(op, lhsV, rhsV)
+			if rhsKind == reflect.Slice || rhsKind == reflect.Array {
+				// can not append rhs slice to lhs non-slice
+				return nilValue, newStringError(op, "invalid type conversion")
 			}
-			if lhsV.Kind() == reflect.String || rhsV.Kind() == reflect.String {
+
+			kind := precedenceOfKinds(lhsKind, rhsKind)
+			switch kind {
+			case reflect.String:
 				return reflect.ValueOf(toString(lhsV) + toString(rhsV)), nil
-			}
-			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
+			case reflect.Float64, reflect.Float32:
 				return reflect.ValueOf(toFloat64(lhsV) + toFloat64(rhsV)), nil
 			}
 			return reflect.ValueOf(toInt64(lhsV) + toInt64(rhsV)), nil
 		case "-":
-			if lhsV.Kind() == reflect.Float64 || rhsV.Kind() == reflect.Float64 {
+			switch lhsV.Kind() {
+			case reflect.Float64, reflect.Float32:
+				return reflect.ValueOf(toFloat64(lhsV) - toFloat64(rhsV)), nil
+			}
+			switch rhsV.Kind() {
+			case reflect.Float64, reflect.Float32:
 				return reflect.ValueOf(toFloat64(lhsV) - toFloat64(rhsV)), nil
 			}
 			return reflect.ValueOf(toInt64(lhsV) - toInt64(rhsV)), nil
