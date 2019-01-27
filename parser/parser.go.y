@@ -23,6 +23,7 @@ import (
 %type<expr> expr
 %type<map_expr> map_expr
 %type<expr_idents> expr_idents
+%type<expr_literals> expr_literals
 %type<expr_type> expr_type
 %type<array_count> array_count
 %type<expr_slice> expr_slice
@@ -53,6 +54,7 @@ import (
 	expr                   ast.Expr
 	map_expr               map[ast.Expr]ast.Expr
 	expr_idents            []string
+	expr_literals          ast.Expr
 	expr_type              string
 	tok                    ast.Token
 	array_count            ast.ArrayCount
@@ -489,34 +491,9 @@ expr :
 	{
 		$$ = $1
 	}
-	| NUMBER
+	| expr_literals
 	{
-		num, err := toNumber($1.Lit)
-		if err != nil {
-			yylex.Error("invalid number: " + $1.Lit)
-		}
-		$$ = &ast.LiteralExpr{Literal: num}
-		$$.SetPosition($1.Position())
-	}
-	| STRING
-	{
-		$$ = &ast.LiteralExpr{Literal: stringToValue($1.Lit)}
-		$$.SetPosition($1.Position())
-	}
-	| TRUE
-	{
-		$$ = &ast.LiteralExpr{Literal: trueValue}
-		$$.SetPosition($1.Position())
-	}
-	| FALSE
-	{
-		$$ = &ast.LiteralExpr{Literal: falseValue}
-		$$.SetPosition($1.Position())
-	}
-	| NIL
-	{
-		$$ = &ast.LiteralExpr{Literal: nilValue}
-		$$.SetPosition($1.Position())
+		$$ = $1
 	}
 	| expr '?' expr ':' expr
 	{
@@ -674,6 +651,37 @@ expr_ident :
 	IDENT
 	{
 		$$ = &ast.IdentExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+
+expr_literals :
+	NUMBER
+	{
+		num, err := toNumber($1.Lit)
+		if err != nil {
+			yylex.Error("invalid number: " + $1.Lit)
+		}
+		$$ = &ast.LiteralExpr{Literal: num}
+		$$.SetPosition($1.Position())
+	}
+	| STRING
+	{
+		$$ = &ast.LiteralExpr{Literal: stringToValue($1.Lit)}
+		$$.SetPosition($1.Position())
+	}
+	| TRUE
+	{
+		$$ = &ast.LiteralExpr{Literal: trueValue}
+		$$.SetPosition($1.Position())
+	}
+	| FALSE
+	{
+		$$ = &ast.LiteralExpr{Literal: falseValue}
+		$$.SetPosition($1.Position())
+	}
+	| NIL
+	{
+		$$ = &ast.LiteralExpr{Literal: nilValue}
 		$$.SetPosition($1.Position())
 	}
 
