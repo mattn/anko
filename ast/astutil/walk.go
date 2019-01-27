@@ -187,8 +187,6 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		return walkExpr(expr.SubExpr, f)
 	case *ast.FuncExpr:
 		return Walk(expr.Stmts, f)
-	case *ast.AssocExpr:
-		return walkExpr(expr.LHS, f)
 	case *ast.LetsExpr:
 		if err := walkExprs(expr.LHSS, f); err != nil {
 			return err

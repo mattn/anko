@@ -141,14 +141,6 @@ type LetsExpr struct {
 	RHSS []Expr
 }
 
-// AssocExpr provide expression to assoc operation.
-type AssocExpr struct {
-	ExprImpl
-	LHS      Expr
-	Operator string
-	RHS      Expr
-}
-
 // ConstExpr provide expression for constant variable.
 type ConstExpr struct {
 	ExprImpl
