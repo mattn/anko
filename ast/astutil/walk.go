@@ -193,7 +193,6 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 		}
 		return walkExprs(expr.RHSS, f)
 	case *ast.NewExpr:
-	case *ast.ConstExpr:
 	case *ast.AnonCallExpr:
 		if err := walkExpr(expr.Expr, f); err != nil {
 			return err

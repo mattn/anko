@@ -141,12 +141,6 @@ type LetsExpr struct {
 	RHSS []Expr
 }
 
-// ConstExpr provide expression for constant variable.
-type ConstExpr struct {
-	ExprImpl
-	Value string
-}
-
 // ChanExpr provide chan expression.
 type ChanExpr struct {
 	ExprImpl

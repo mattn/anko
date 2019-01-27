@@ -1750,21 +1750,21 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:507
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyDollar[1].tok.Lit}
+			yyVAL.expr = &ast.LiteralExpr{Literal: trueValue}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 77:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:512
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyDollar[1].tok.Lit}
+			yyVAL.expr = &ast.LiteralExpr{Literal: falseValue}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 78:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:517
 		{
-			yyVAL.expr = &ast.ConstExpr{Value: yyDollar[1].tok.Lit}
+			yyVAL.expr = &ast.LiteralExpr{Literal: nilValue}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 79:

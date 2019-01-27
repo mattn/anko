@@ -505,17 +505,17 @@ expr :
 	}
 	| TRUE
 	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
+		$$ = &ast.LiteralExpr{Literal: trueValue}
 		$$.SetPosition($1.Position())
 	}
 	| FALSE
 	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
+		$$ = &ast.LiteralExpr{Literal: falseValue}
 		$$.SetPosition($1.Position())
 	}
 	| NIL
 	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
+		$$ = &ast.LiteralExpr{Literal: nilValue}
 		$$.SetPosition($1.Position())
 	}
 	| expr '?' expr ':' expr

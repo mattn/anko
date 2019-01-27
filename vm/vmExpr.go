@@ -387,16 +387,6 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 		}
 		return rvs[len(rvs)-1], nil
 
-	// ConstExpr
-	case *ast.ConstExpr:
-		switch e.Value {
-		case "true":
-			return trueValue, nil
-		case "false":
-			return falseValue, nil
-		}
-		return nilValue, nil
-
 	// TernaryOpExpr
 	case *ast.TernaryOpExpr:
 		rv, err := invokeExpr(ctx, e.Expr, env)
