@@ -383,21 +383,21 @@ func (e *Env) Execute(src string) (interface{}, error) {
 
 // ExecuteContext parses and runs source in current scope.
 func (e *Env) ExecuteContext(ctx context.Context, src string) (interface{}, error) {
-	stmts, err := parser.ParseSrc(src)
+	stmt, err := parser.ParseSrc(src)
 	if err != nil {
 		return nilValue, err
 	}
-	return RunContext(ctx, stmts, e)
+	return RunContext(ctx, stmt, e)
 }
 
-// Run runs statements in current scope.
-func (e *Env) Run(stmts []ast.Stmt) (interface{}, error) {
-	return e.RunContext(context.Background(), stmts)
+// Run runs statement in current scope.
+func (e *Env) Run(stmt ast.Stmt) (interface{}, error) {
+	return e.RunContext(context.Background(), stmt)
 }
 
-// RunContext runs statements in current scope.
-func (e *Env) RunContext(ctx context.Context, stmts []ast.Stmt) (interface{}, error) {
-	return RunContext(ctx, stmts, e)
+// RunContext runs statement in current scope.
+func (e *Env) RunContext(ctx context.Context, stmt ast.Stmt) (interface{}, error) {
+	return RunContext(ctx, stmt, e)
 }
 
 // Copy the state of the virtual machine environment

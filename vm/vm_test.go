@@ -15,7 +15,6 @@ import (
 
 	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/internal/testlib"
-	"github.com/mattn/anko/parser"
 )
 
 var (
@@ -918,41 +917,6 @@ func myFunc(myVar) {
 		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
 	}
 	cancel()
-}
-
-func TestRunSingleStmt(t *testing.T) {
-	stmts, err := parser.ParseSrc(`a = 1`)
-	if err != nil {
-		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
-	}
-
-	env := NewEnv()
-	value, err := RunSingleStmt(stmts[0], env)
-	if err != nil {
-		t.Errorf("RunSingleStmt error - received: %v - expected: %v", err, nil)
-	}
-	if value != int64(1) {
-		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, int64(1))
-	}
-
-	stmts, err = parser.ParseSrc(`return a`)
-	if err != nil {
-		t.Errorf("ParseSrc error - received: %v - expected: %v", err, nil)
-	}
-
-	env = NewEnv()
-	err = env.defineValue("a", reflect.Value{})
-	if err != nil {
-		t.Errorf("defineValue error - received: %v - expected: %v", err, nil)
-	}
-
-	value, err = RunSingleStmt(stmts[0], env)
-	if err != nil {
-		t.Errorf("RunSingleStmt error - received: %v - expected: %v", err, nil)
-	}
-	if value != nil {
-		t.Errorf("RunSingleStmt value - received: %v - expected: %v", value, nil)
-	}
 }
 
 func TestAssignToInterface(t *testing.T) {

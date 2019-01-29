@@ -65,7 +65,7 @@ func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Va
 		ctx := in[0].Interface().(context.Context)
 
 		// run function statements
-		rv, err = run(ctx, funcExpr.Stmts, newEnv)
+		rv, err = runSingleStmt(ctx, funcExpr.Stmt, newEnv)
 		if err != nil && err != ErrReturn {
 			err = newError(funcExpr, err)
 			// return nil value and error

@@ -8,14 +8,14 @@ import (
 	"github.com/mattn/anko/ast"
 )
 
-// Run executes statements in the specified environment.
-func Run(stmts []ast.Stmt, env *Env) (interface{}, error) {
-	return RunContext(context.Background(), stmts, env)
+// Run executes statement in the specified environment.
+func Run(stmt ast.Stmt, env *Env) (interface{}, error) {
+	return RunContext(context.Background(), stmt, env)
 }
 
-// RunContext executes statements in the specified environment with context.
-func RunContext(ctx context.Context, stmts []ast.Stmt, env *Env) (interface{}, error) {
-	rv, err := run(ctx, stmts, env)
+// RunContext executes statement in the specified environment with context.
+func RunContext(ctx context.Context, stmt ast.Stmt, env *Env) (interface{}, error) {
+	rv, err := runSingleStmt(ctx, stmt, env)
 	if err == ErrReturn {
 		err = nil
 	}
@@ -25,54 +25,44 @@ func RunContext(ctx context.Context, stmts []ast.Stmt, env *Env) (interface{}, e
 	return rv.Interface(), err
 }
 
-// run executes statements in the specified environment with context.
-func run(ctx context.Context, stmts []ast.Stmt, env *Env) (reflect.Value, error) {
-	rv := nilValue
-	var err error
-	for _, stmt := range stmts {
-		switch stmt.(type) {
-		case *ast.BreakStmt:
-			return nilValue, ErrBreak
-		case *ast.ContinueStmt:
-			return nilValue, ErrContinue
-		case *ast.ReturnStmt:
-			rv, err = runSingleStmt(ctx, stmt, env)
-			if err != nil {
-				return rv, err
-			}
-			return rv, ErrReturn
-		default:
-			rv, err = runSingleStmt(ctx, stmt, env)
-			if err != nil {
-				return rv, err
-			}
-		}
-	}
-	return rv, nil
-}
-
-// RunSingleStmt executes one statement in the specified environment.
-func RunSingleStmt(stmt ast.Stmt, env *Env) (interface{}, error) {
-	return RunSingleStmtContext(context.Background(), stmt, env)
-}
-
-// RunSingleStmtContext executes one statement in the specified environment with context.
-func RunSingleStmtContext(ctx context.Context, stmt ast.Stmt, env *Env) (interface{}, error) {
-	rv, err := runSingleStmt(ctx, stmt, env)
-	if !rv.IsValid() || !rv.CanInterface() {
-		return nil, err
-	}
-	return rv.Interface(), err
-}
-
-// runSingleStmt executes one statement in the specified environment with context.
+// runSingleStmt executes statement in the specified environment with context.
 func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value, error) {
 	select {
 	case <-ctx.Done():
 		return nilValue, ErrInterrupt
 	default:
 	}
+
+	if stmt == nil {
+		return nilValue, nil
+	}
+
 	switch stmt := stmt.(type) {
+
+	// StmtsStmt
+	case *ast.StmtsStmt:
+		rv := nilValue
+		var err error
+		for _, stmt := range stmt.Stmts {
+			switch stmt.(type) {
+			case *ast.BreakStmt:
+				return nilValue, ErrBreak
+			case *ast.ContinueStmt:
+				return nilValue, ErrContinue
+			case *ast.ReturnStmt:
+				rv, err = runSingleStmt(ctx, stmt, env)
+				if err != nil {
+					return rv, err
+				}
+				return rv, ErrReturn
+			default:
+				rv, err = runSingleStmt(ctx, stmt, env)
+				if err != nil {
+					return rv, err
+				}
+			}
+		}
+		return rv, err
 
 	// ExprStmt
 	case *ast.ExprStmt:
@@ -201,7 +191,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 		if toBool(rv) {
 			// then
 			newenv := env.NewEnv()
-			rv, err = run(ctx, stmt.Then, newenv)
+			rv, err = runSingleStmt(ctx, stmt.Then, newenv)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
@@ -222,17 +212,17 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 
 			// else if - then
 			newenv = env.NewEnv()
-			rv, err = run(ctx, elseIf.Then, newenv)
+			rv, err = runSingleStmt(ctx, elseIf.Then, newenv)
 			if err != nil {
 				return rv, newError(elseIf, err)
 			}
 			return rv, nil
 		}
 
-		if len(stmt.Else) > 0 {
+		if stmt.Else != nil {
 			// else
 			newenv := env.NewEnv()
-			rv, err = run(ctx, stmt.Else, newenv)
+			rv, err = runSingleStmt(ctx, stmt.Else, newenv)
 			if err != nil {
 				return rv, newError(stmt, err)
 			}
@@ -243,25 +233,25 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 	// TryStmt
 	case *ast.TryStmt:
 		newenv := env.NewEnv()
-		_, err := run(ctx, stmt.Try, newenv)
+		_, err := runSingleStmt(ctx, stmt.Try, newenv)
 		if err != nil {
 			// Catch
 			cenv := env.NewEnv()
 			if stmt.Var != "" {
 				cenv.defineValue(stmt.Var, reflect.ValueOf(err))
 			}
-			_, e1 := run(ctx, stmt.Catch, cenv)
+			_, e1 := runSingleStmt(ctx, stmt.Catch, cenv)
 			if e1 != nil {
-				err = newError(stmt.Catch[0], e1)
+				err = newError(stmt.Catch, e1)
 			} else {
 				err = nil
 			}
 		}
-		if len(stmt.Finally) > 0 {
+		if stmt.Finally != nil {
 			// Finally
-			_, e2 := run(ctx, stmt.Finally, newenv)
+			_, e2 := runSingleStmt(ctx, stmt.Finally, newenv)
 			if e2 != nil {
-				err = newError(stmt.Finally[0], e2)
+				err = newError(stmt.Finally, e2)
 			}
 		}
 		return nilValue, newError(stmt, err)
@@ -285,7 +275,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 				}
 			}
 
-			rv, err := run(ctx, stmt.Stmts, newenv)
+			rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 			if err != nil && err != ErrContinue {
 				if err == ErrBreak {
 					break
@@ -322,7 +312,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 					iv = iv.Elem()
 				}
 				newenv.defineValue(stmt.Vars[0], iv)
-				rv, err := run(ctx, stmt.Stmts, newenv)
+				rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 				if err != nil && err != ErrContinue {
 					if err == ErrBreak {
 						break
@@ -348,7 +338,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 				if len(stmt.Vars) > 1 {
 					newenv.defineValue(stmt.Vars[1], val.MapIndex(keys[i]))
 				}
-				rv, err := run(ctx, stmt.Stmts, newenv)
+				rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 				if err != nil && err != ErrContinue {
 					if err == ErrBreak {
 						break
@@ -384,7 +374,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 					iv = iv.Elem()
 				}
 				newenv.defineValue(stmt.Vars[0], iv)
-				rv, err := run(ctx, stmt.Stmts, newenv)
+				rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 				if err != nil && err != ErrContinue {
 					if err == ErrBreak {
 						break
@@ -426,7 +416,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 				}
 			}
 
-			rv, err := run(ctx, stmt.Stmts, newenv)
+			rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 			if err != nil && err != ErrContinue {
 				if err == ErrBreak {
 					break
@@ -489,7 +479,7 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 	case *ast.ModuleStmt:
 		newenv := env.NewEnv()
 		newenv.SetName(stmt.Name)
-		rv, err := run(ctx, stmt.Stmts, newenv)
+		rv, err := runSingleStmt(ctx, stmt.Stmt, newenv)
 		if err != nil {
 			return rv, newError(stmt, err)
 		}
@@ -506,9 +496,9 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 
 		var caseValue reflect.Value
 		body := stmt.Body.(*ast.SwitchBodyStmt)
-		var statements []ast.Stmt
+		var statement ast.Stmt
 		if body.Default != nil {
-			statements = body.Default
+			statement = body.Default
 		}
 
 	Loop:
@@ -520,14 +510,14 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 					return nilValue, newError(expr, err)
 				}
 				if equal(rv, caseValue) {
-					statements = caseStmt.Stmts
+					statement = caseStmt.Stmt
 					break Loop
 				}
 			}
 		}
 
-		if statements != nil {
-			rv, err = run(ctx, statements, newenv)
+		if statement != nil {
+			rv, err = runSingleStmt(ctx, statement, newenv)
 			if err != nil {
 				return rv, err
 			}
@@ -543,4 +533,5 @@ func runSingleStmt(ctx context.Context, stmt ast.Stmt, env *Env) (reflect.Value,
 	default:
 		return nilValue, newStringError(stmt, "unknown statement")
 	}
+
 }

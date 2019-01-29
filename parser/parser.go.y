@@ -38,7 +38,7 @@ import (
 %type<expr> op_multiply
 
 %union{
-	compstmt               []ast.Stmt
+	compstmt               ast.Stmt
 	stmt_var_or_lets       ast.Stmt
 	stmt_var               ast.Stmt
 	stmt_lets              ast.Stmt
@@ -47,8 +47,8 @@ import (
 	stmt_switch            ast.Stmt
 	stmt_switch_cases      ast.Stmt
 	stmt_switch_case       ast.Stmt
-	stmt_switch_default    []ast.Stmt
-	stmts                  []ast.Stmt
+	stmt_switch_default    ast.Stmt
+	stmts                  ast.Stmt
 	stmt                   ast.Stmt
 	exprs                  []ast.Expr
 	expr                   ast.Expr
@@ -63,7 +63,7 @@ import (
 	expr_op                ast.Expr
 	expr_unary             ast.Expr
 	expr_binary            ast.Expr
-	expr_lets            ast.Expr
+	expr_lets              ast.Expr
 	op_binary              ast.Operator
 	op_comparison          ast.Operator
 	op_add                 ast.Operator
@@ -105,20 +105,23 @@ stmts :
 	opt_term stmt
 	{
 		if $2 != nil {
-			$$ = []ast.Stmt{$2}
-		} else {
-			$$ = []ast.Stmt{}
+			$$ = &ast.StmtsStmt{Stmts: []ast.Stmt{$2}}
 		}
 		if l, ok := yylex.(*Lexer); ok {
-			l.stmts = $$
+			l.stmt = $$
 		}
 	}
 	| stmts term stmt
 	{
 		if $3 != nil {
-			$$ = append($1, $3)
+			if $1 == nil {
+				$$ = &ast.StmtsStmt{Stmts: []ast.Stmt{$3}}
+			} else {
+				stmts := $1.(*ast.StmtsStmt)
+				stmts.Stmts = append(stmts.Stmts, $3)
+			}
 			if l, ok := yylex.(*Lexer); ok {
-				l.stmts = $$
+				l.stmt = $$
 			}
 		}
 	}
@@ -154,7 +157,7 @@ stmt :
 	}
 	| MODULE IDENT '{' compstmt '}'
 	{
-		$$ = &ast.ModuleStmt{Name: $2.Lit, Stmts: $4}
+		$$ = &ast.ModuleStmt{Name: $2.Lit, Stmt: $4}
 		$$.SetPosition($1.Position())
 	}
 	| stmt_if
@@ -259,71 +262,72 @@ stmt_if :
 	}
 	| stmt_if ELSE IF expr '{' compstmt '}'
 	{
-		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &ast.IfStmt{If: $4, Then: $6})
+		ifStmt := $1.(*ast.IfStmt)
+		ifStmt.ElseIf = append(ifStmt.ElseIf, &ast.IfStmt{If: $4, Then: $6})
 	}
 	| stmt_if ELSE '{' compstmt '}'
 	{
-		if $$.(*ast.IfStmt).Else != nil {
+		ifStmt := $1.(*ast.IfStmt)
+		if ifStmt.Else != nil {
 			yylex.Error("multiple else statement")
-		} else {
-			$$.(*ast.IfStmt).Else = $4
 		}
+		ifStmt.Else = $4
 	}
 
 stmt_for :
 	FOR '{' compstmt '}'
 	{
-		$$ = &ast.LoopStmt{Stmts: $3}
+		$$ = &ast.LoopStmt{Stmt: $3}
 		$$.SetPosition($1.Position())
 	}
 	| FOR expr_idents IN expr '{' compstmt '}'
 	{
-		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
+		$$ = &ast.ForStmt{Vars: $2, Value: $4, Stmt: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FOR expr '{' compstmt '}'
 	{
-		$$ = &ast.LoopStmt{Expr: $2, Stmts: $4}
+		$$ = &ast.LoopStmt{Expr: $2, Stmt: $4}
 		$$.SetPosition($1.Position())
 	}
 	| FOR ';' ';' '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Stmts: $5}
+		$$ = &ast.CForStmt{Stmt: $5}
 		$$.SetPosition($1.Position())
 	}
 	| FOR ';' ';' expr '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Expr3: $4, Stmts: $6}
+		$$ = &ast.CForStmt{Expr3: $4, Stmt: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FOR ';' expr ';' '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Expr2: $3, Stmts: $6}
+		$$ = &ast.CForStmt{Expr2: $3, Stmt: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FOR ';' expr ';' expr '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Expr2: $3, Expr3: $5, Stmts: $7}
+		$$ = &ast.CForStmt{Expr2: $3, Expr3: $5, Stmt: $7}
 		$$.SetPosition($1.Position())
 	}
 	| FOR stmt_var_or_lets ';' ';' '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Stmt1: $2, Stmts: $6}
+		$$ = &ast.CForStmt{Stmt1: $2, Stmt: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FOR stmt_var_or_lets ';' ';' expr '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr3: $5, Stmts: $7}
+		$$ = &ast.CForStmt{Stmt1: $2, Expr3: $5, Stmt: $7}
 		$$.SetPosition($1.Position())
 	}
 	| FOR stmt_var_or_lets ';' expr ';' '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Stmts: $7}
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Stmt: $7}
 		$$.SetPosition($1.Position())
 	}
 	| FOR stmt_var_or_lets ';' expr ';' expr '{' compstmt '}'
 	{
-		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmt: $8}
 		$$.SetPosition($1.Position())
 	}
 
@@ -364,12 +368,12 @@ stmt_switch_cases :
 stmt_switch_case :
 	CASE expr ':' compstmt
 	{
-		$$ = &ast.SwitchCaseStmt{Exprs: []ast.Expr{$2}, Stmts: $4}
+		$$ = &ast.SwitchCaseStmt{Exprs: []ast.Expr{$2}, Stmt: $4}
 		$$.SetPosition($1.Position())
 	}
 	| CASE exprs ':' compstmt
 	{
-		$$ = &ast.SwitchCaseStmt{Exprs: $2, Stmts: $4}
+		$$ = &ast.SwitchCaseStmt{Exprs: $2, Stmt: $4}
 		$$.SetPosition($1.Position())
 	}
 
@@ -512,22 +516,22 @@ expr :
 	}
 	| FUNC '(' expr_idents ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Params: $3, Stmts: $6}
+		$$ = &ast.FuncExpr{Params: $3, Stmt: $6}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Params: $3, Stmts: $7, VarArg: true}
+		$$ = &ast.FuncExpr{Params: $3, Stmt: $7, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC IDENT '(' expr_idents ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $7}
+		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmt: $7}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC IDENT '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
-		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $8, VarArg: true}
+		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmt: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
 	| '[' opt_newlines exprs opt_comma_newlines ']'

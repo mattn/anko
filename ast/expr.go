@@ -129,7 +129,7 @@ type SliceExpr struct {
 type FuncExpr struct {
 	ExprImpl
 	Name   string
-	Stmts  []Stmt
+	Stmt   Stmt
 	Params []string
 	VarArg bool
 }
