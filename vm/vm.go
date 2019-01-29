@@ -19,6 +19,18 @@ type (
 		Message string
 		Pos     ast.Position
 	}
+
+	// runInfo provides run incoming and outgoing information
+	runInfoStruct struct {
+		// incoming
+		ctx  context.Context
+		env  *Env
+		stmt ast.Stmt
+
+		// outgoing
+		rv  reflect.Value
+		err error
+	}
 )
 
 var (
@@ -35,6 +47,7 @@ var (
 	trueValue                 = reflect.ValueOf(true)
 	falseValue                = reflect.ValueOf(false)
 	zeroValue                 = reflect.Value{}
+	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
 	// ErrBreak when there is an unexpected break statement

@@ -40,7 +40,7 @@ func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Va
 			rv = in[i+1].Interface().(reflect.Value)
 			err = newEnv.defineValue(funcExpr.Params[i], rv)
 			if err != nil {
-				return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
+				return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
 			}
 		}
 		// add last Params to newEnv
@@ -50,14 +50,14 @@ func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Va
 				rv = in[len(funcExpr.Params)]
 				err = newEnv.defineValue(funcExpr.Params[len(funcExpr.Params)-1], rv)
 				if err != nil {
-					return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
+					return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
 				}
 			} else {
 				// function is not variadic, add last Params to newEnv
 				rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
 				err = newEnv.defineValue(funcExpr.Params[len(funcExpr.Params)-1], rv)
 				if err != nil {
-					return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
+					return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
 				}
 			}
 		}
@@ -65,18 +65,19 @@ func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Va
 		ctx := in[0].Interface().(context.Context)
 
 		// run function statements
-		rv, err = runSingleStmt(ctx, funcExpr.Stmt, newEnv)
-		if err != nil && err != ErrReturn {
-			err = newError(funcExpr, err)
+		runInfo := runInfoStruct{ctx: ctx, env: newEnv, stmt: funcExpr.Stmt, rv: nilValue}
+		runInfo.runSingleStmt()
+		if runInfo.err != nil && runInfo.err != ErrReturn {
+			err = newError(funcExpr, runInfo.err)
 			// return nil value and error
 			// need to do single reflect.ValueOf because nilValue is already reflect.Value of nil
 			// need to do double reflect.ValueOf of newError in order to match
-			return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
+			return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
 		}
 
 		// the reflect.ValueOf of rv is needed to work in the reflect.Value slice
 		// reflectValueErrorNilValue is already a double reflect.ValueOf
-		return []reflect.Value{reflect.ValueOf(rv), reflectValueErrorNilValue}
+		return []reflect.Value{reflect.ValueOf(runInfo.rv), reflectValueErrorNilValue}
 	}
 
 	// make the reflect.Value function that calls runVMFunction
