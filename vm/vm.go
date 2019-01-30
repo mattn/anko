@@ -23,9 +23,11 @@ type (
 	// runInfo provides run incoming and outgoing information
 	runInfoStruct struct {
 		// incoming
-		ctx  context.Context
-		env  *Env
-		stmt ast.Stmt
+		ctx      context.Context
+		env      *Env
+		stmt     ast.Stmt
+		expr     ast.Expr
+		operator ast.Operator
 
 		// outgoing
 		rv  reflect.Value

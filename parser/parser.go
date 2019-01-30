@@ -1671,37 +1671,37 @@ yydefault:
 		yyDollar = yyS[yypt-6 : yypt+1]
 //line parser.go.y:445
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 64:
 		yyDollar = yyS[yypt-5 : yypt+1]
 //line parser.go.y:449
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: nil}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 65:
 		yyDollar = yyS[yypt-5 : yypt+1]
 //line parser.go.y:453
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr_ident, Begin: nil, End: yyDollar[4].expr}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 66:
 		yyDollar = yyS[yypt-6 : yypt+1]
 //line parser.go.y:457
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 67:
 		yyDollar = yyS[yypt-5 : yypt+1]
 //line parser.go.y:461
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: yyDollar[3].expr, End: nil}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 68:
 		yyDollar = yyS[yypt-5 : yypt+1]
 //line parser.go.y:465
 		{
-			yyVAL.expr_slice = &ast.SliceExpr{Value: yyDollar[1].expr, Begin: nil, End: yyDollar[4].expr}
+			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 69:
 		yyDollar = yyS[yypt-0 : yypt+1]
@@ -1853,14 +1853,14 @@ yydefault:
 		yyDollar = yyS[yypt-4 : yypt+1]
 //line parser.go.y:573
 		{
-			yyVAL.expr = &ast.ItemExpr{Value: yyDollar[1].expr_ident, Index: yyDollar[3].expr}
+			yyVAL.expr = &ast.ItemExpr{Item: yyDollar[1].expr_ident, Index: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr_ident.Position())
 		}
 	case 90:
 		yyDollar = yyS[yypt-4 : yypt+1]
 //line parser.go.y:578
 		{
-			yyVAL.expr = &ast.ItemExpr{Value: yyDollar[1].expr, Index: yyDollar[3].expr}
+			yyVAL.expr = &ast.ItemExpr{Item: yyDollar[1].expr, Index: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 91:
@@ -1958,7 +1958,7 @@ yydefault:
 		yyDollar = yyS[yypt-3 : yypt+1]
 //line parser.go.y:648
 		{
-			yyVAL.expr = &ast.IncludeExpr{ItemExpr: yyDollar[1].expr, ListExpr: &ast.SliceExpr{Value: yyDollar[3].expr, Begin: nil, End: nil}}
+			yyVAL.expr = &ast.IncludeExpr{ItemExpr: yyDollar[1].expr, ListExpr: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 106:

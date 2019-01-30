@@ -443,27 +443,27 @@ expr_type :
 expr_slice :
 	expr_ident '[' expr ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5}
 	}
 	| expr_ident '[' expr ':' ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: nil}
 	}
 	| expr_ident '[' ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$ = &ast.SliceExpr{Item: $1, Begin: nil, End: $4}
 	}
 	| expr '[' expr ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5}
 	}
 	| expr '[' expr ':' ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: nil}
 	}
 	| expr '[' ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$ = &ast.SliceExpr{Item: $1, Begin: nil, End: $4}
 	}
 
 exprs :
@@ -571,12 +571,12 @@ expr :
 	}
 	| expr_ident '[' expr ']'
 	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		$$ = &ast.ItemExpr{Item: $1, Index: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr '[' expr ']'
 	{
-		$$ = &ast.ItemExpr{Value: $1, Index: $3}
+		$$ = &ast.ItemExpr{Item: $1, Index: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr_slice
@@ -646,7 +646,7 @@ expr :
 	}
 	| expr IN expr
 	{
-		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: &ast.SliceExpr{Value: $3, Begin: nil, End: nil}}
+		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
 		$$.SetPosition($1.Position())
 	}
 	| expr_op

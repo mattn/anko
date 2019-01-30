@@ -69,17 +69,20 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// ExprStmt
 	case *ast.ExprStmt:
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr, runInfo.env)
+		runInfo.expr = stmt.Expr
+		runInfo.invokeExpr()
 
 	// VarStmt
 	case *ast.VarStmt:
 		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.Exprs))
-		for i, expr := range stmt.Exprs {
-			rvs[i], runInfo.err = invokeExpr(runInfo.ctx, expr, runInfo.env)
+		var i int
+		for i, runInfo.expr = range stmt.Exprs {
+			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
+			rvs[i] = runInfo.rv
 		}
 
 		if len(rvs) == 1 && len(stmt.Names) > 1 {
@@ -93,6 +96,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
 					runInfo.err = runInfo.env.defineValue(stmt.Names[i], value.Index(i))
 					if runInfo.err != nil {
+						runInfo.err = newError(stmt, runInfo.err)
 						return
 					}
 				}
@@ -106,6 +110,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		for i := 0; i < len(rvs) && i < len(stmt.Names); i++ {
 			runInfo.err = runInfo.env.defineValue(stmt.Names[i], rvs[i])
 			if runInfo.err != nil {
+				runInfo.err = newError(stmt, runInfo.err)
 				return
 			}
 		}
@@ -118,10 +123,12 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.RHSS))
 		for i, rhs := range stmt.RHSS {
-			rvs[i], runInfo.err = invokeExpr(runInfo.ctx, rhs, runInfo.env)
+			runInfo.expr = rhs
+			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
+			rvs[i] = runInfo.rv
 		}
 
 		if len(rvs) == 1 && len(stmt.LHSS) > 1 {
@@ -133,7 +140,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
 				// value is slice/array, add each value to left side expression
 				for i := 0; i < value.Len() && i < len(stmt.LHSS); i++ {
-					_, runInfo.err = invokeLetExpr(runInfo.ctx, stmt.LHSS[i], value.Index(i), runInfo.env)
+					runInfo.rv = value.Index(i)
+					runInfo.expr = stmt.LHSS[i]
+					runInfo.invokeLetExpr()
 					if runInfo.err != nil {
 						return
 					}
@@ -150,7 +159,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if value.Kind() == reflect.Interface && !value.IsNil() {
 				value = value.Elem()
 			}
-			_, runInfo.err = invokeLetExpr(runInfo.ctx, stmt.LHSS[i], value, runInfo.env)
+			runInfo.rv = value
+			runInfo.expr = stmt.LHSS[i]
+			runInfo.invokeLetExpr()
 			if runInfo.err != nil {
 				return
 			}
@@ -161,7 +172,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// LetMapItemStmt
 	case *ast.LetMapItemStmt:
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.RHS, runInfo.env)
+		runInfo.expr = stmt.RHS
+		runInfo.invokeExpr()
 		if runInfo.err != nil {
 			return
 		}
@@ -171,12 +183,13 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		} else {
 			rvs = []reflect.Value{runInfo.rv, trueValue}
 		}
-		for i, lhs := range stmt.LHSS {
-			v := rvs[i]
-			if v.Kind() == reflect.Interface && !v.IsNil() {
-				v = v.Elem()
+		var i int
+		for i, runInfo.expr = range stmt.LHSS {
+			runInfo.rv = rvs[i]
+			if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+				runInfo.rv = runInfo.rv.Elem()
 			}
-			_, runInfo.err = invokeLetExpr(runInfo.ctx, lhs, v, runInfo.env)
+			runInfo.invokeLetExpr()
 			if runInfo.err != nil {
 				return
 			}
@@ -186,7 +199,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	// IfStmt
 	case *ast.IfStmt:
 		// if
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.If, runInfo.env)
+		runInfo.expr = stmt.If
+		runInfo.invokeExpr()
 		if runInfo.err != nil {
 			return
 		}
@@ -207,7 +221,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 			// else if - if
 			runInfo.env = env.NewEnv()
-			runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, elseIf.If, runInfo.env)
+			runInfo.expr = elseIf.If
+			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				runInfo.env = env
 				return
@@ -257,6 +272,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if stmt.Var != "" {
 				runInfo.err = runInfo.env.defineValue(stmt.Var, reflect.ValueOf(runInfo.err))
 				if runInfo.err != nil {
+					runInfo.err = newError(stmt, runInfo.err)
 					runInfo.env = env
 					return
 				}
@@ -292,7 +308,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			}
 
 			if stmt.Expr != nil {
-				runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr, runInfo.env)
+				runInfo.expr = stmt.Expr
+				runInfo.invokeExpr()
 				if runInfo.err != nil {
 					break
 				}
@@ -315,8 +332,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// ForStmt
 	case *ast.ForStmt:
-		var value reflect.Value
-		value, runInfo.err = invokeExpr(runInfo.ctx, stmt.Value, runInfo.env)
+		runInfo.expr = stmt.Value
+		runInfo.invokeExpr()
+		value := runInfo.rv
 		if runInfo.err != nil {
 			return
 		}
@@ -344,6 +362,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				}
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], iv)
 				if runInfo.err != nil {
+					runInfo.err = newError(stmt, runInfo.err)
 					break
 				}
 
@@ -371,12 +390,14 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], keys[i])
 				if runInfo.err != nil {
+					runInfo.err = newError(stmt, runInfo.err)
 					break
 				}
 
 				if len(stmt.Vars) > 1 {
 					runInfo.err = runInfo.env.defineValue(stmt.Vars[1], value.MapIndex(keys[i]))
 					if runInfo.err != nil {
+						runInfo.err = newError(stmt, runInfo.err)
 						break
 					}
 				}
@@ -399,11 +420,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				cases := []reflect.SelectCase{{
 					Dir:  reflect.SelectRecv,
 					Chan: reflect.ValueOf(runInfo.ctx.Done()),
-					Send: zeroValue,
 				}, {
 					Dir:  reflect.SelectRecv,
 					Chan: value,
-					Send: zeroValue,
 				}}
 				chosen, runInfo.rv, ok = reflect.Select(cases)
 				if chosen == 0 {
@@ -419,6 +438,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				}
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], runInfo.rv)
 				if runInfo.err != nil {
+					runInfo.err = newError(stmt, runInfo.err)
 					break
 				}
 
@@ -462,7 +482,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			}
 
 			if stmt.Expr2 != nil {
-				runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr2, runInfo.env)
+				runInfo.expr = stmt.Expr2
+				runInfo.invokeExpr()
 				if runInfo.err != nil {
 					break
 				}
@@ -481,7 +502,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			}
 
 			if stmt.Expr3 != nil {
-				runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr3, runInfo.env)
+				runInfo.expr = stmt.Expr3
+				runInfo.invokeExpr()
 				if runInfo.err != nil {
 					break
 				}
@@ -495,12 +517,14 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		case 0:
 			return
 		case 1:
-			runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Exprs[0], runInfo.env)
+			runInfo.expr = stmt.Exprs[0]
+			runInfo.invokeExpr()
 			return
 		}
 		rvs := make([]interface{}, len(stmt.Exprs))
-		for i, expr := range stmt.Exprs {
-			runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, expr, runInfo.env)
+		var i int
+		for i, runInfo.expr = range stmt.Exprs {
+			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
@@ -514,12 +538,13 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// ThrowStmt
 	case *ast.ThrowStmt:
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr, runInfo.env)
+		runInfo.expr = stmt.Expr
+		runInfo.invokeExpr()
 		if runInfo.err != nil {
 			return
 		}
-		if !runInfo.rv.IsValid() {
-			runInfo.err = newStringError(stmt.Expr, "can not throw invalid type")
+		if !runInfo.rv.IsValid() || !runInfo.rv.CanInterface() {
+			runInfo.err = newStringError(stmt.Expr, "can not throw type "+runInfo.rv.Kind().String())
 			return
 		}
 		runInfo.err = newStringError(stmt, fmt.Sprint(runInfo.rv.Interface()))
@@ -538,6 +563,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		}
 
 		runInfo.err = env.defineGlobalValue(stmt.Name, reflect.ValueOf(runInfo.env))
+		if runInfo.err != nil {
+			runInfo.err = newError(stmt, runInfo.err)
+		}
 		runInfo.env = env
 
 	// SwitchStmt
@@ -545,7 +573,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		env := runInfo.env
 		runInfo.env = env.NewEnv()
 
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr, runInfo.env)
+		runInfo.expr = stmt.Expr
+		runInfo.invokeExpr()
 		if runInfo.err != nil {
 			runInfo.env = env
 			return
@@ -560,8 +589,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	Loop:
 		for _, switchCaseStmt := range body.Cases {
 			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
-			for _, expr := range caseStmt.Exprs {
-				runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, expr, runInfo.env)
+			for _, runInfo.expr = range caseStmt.Exprs {
+				runInfo.invokeExpr()
 				if runInfo.err != nil {
 					runInfo.env = env
 					return
@@ -576,12 +605,12 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		if runInfo.stmt != nil {
 			runInfo.runSingleStmt()
 		}
-
 		runInfo.env = env
 
 	// GoroutineStmt
 	case *ast.GoroutineStmt:
-		runInfo.rv, runInfo.err = invokeExpr(runInfo.ctx, stmt.Expr, runInfo.env)
+		runInfo.expr = stmt.Expr
+		runInfo.invokeExpr()
 
 	// default
 	default:
