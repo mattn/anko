@@ -85,6 +85,7 @@ func (runInfo *runInfoStruct) funcExpr() {
 		runInfo.err = runInfo.env.defineValue(funcExpr.Name, runInfo.rv)
 		if runInfo.err != nil {
 			runInfo.err = newError(funcExpr, runInfo.err)
+			runInfo.rv = nilValue
 		}
 	}
 }
@@ -104,6 +105,8 @@ func (runInfo *runInfoStruct) anonCallExpr() {
 	}
 	if runInfo.rv.Kind() != reflect.Func {
 		runInfo.err = newStringError(anonCallExpr, "cannot call type "+runInfo.rv.Kind().String())
+		runInfo.rv = nilValue
+		return
 	}
 
 	runInfo.expr = &ast.CallExpr{Func: runInfo.rv, SubExprs: anonCallExpr.SubExprs, VarArg: anonCallExpr.VarArg, Go: anonCallExpr.Go}
@@ -122,6 +125,7 @@ func (runInfo *runInfoStruct) callExpr() {
 		f, runInfo.err = runInfo.env.get(callExpr.Name)
 		if runInfo.err != nil {
 			runInfo.err = newError(callExpr, runInfo.err)
+			runInfo.rv = nilValue
 			return
 		}
 	}
@@ -131,6 +135,7 @@ func (runInfo *runInfoStruct) callExpr() {
 	}
 	if f.Kind() != reflect.Func {
 		runInfo.err = newStringError(callExpr, "cannot call type "+f.Kind().String())
+		runInfo.rv = nilValue
 		return
 	}
 
@@ -151,6 +156,7 @@ func (runInfo *runInfoStruct) callExpr() {
 		if os.Getenv("ANKO_DEBUG") == "" {
 			if recoverResult := recover(); recoverResult != nil {
 				runInfo.err = fmt.Errorf("%v", recoverResult)
+				runInfo.rv = nilValue
 			}
 		}
 	}()
@@ -241,10 +247,12 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 		(rt.IsVariadic() && !callExpr.VarArg && numIn > numExprs+1) ||
 		(!rt.IsVariadic() && callExpr.VarArg && numIn < numExprs) {
 		runInfo.err = newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs))
+		runInfo.rv = nilValue
 		return nil, false
 	}
 	if rt.IsVariadic() && rt.In(numInReal-1).Kind() != reflect.Slice && rt.In(numInReal-1).Kind() != reflect.Array {
 		runInfo.err = newStringError(callExpr, "function is variadic but last parameter is of type "+rt.In(numInReal-1).String())
+		runInfo.rv = nilValue
 		return nil, false
 	}
 
@@ -278,6 +286,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 			if runInfo.err != nil {
 				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+				runInfo.rv = nilValue
 				return nil, false
 			}
 			args = append(args, runInfo.rv)
@@ -305,6 +314,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 			if runInfo.err != nil {
 				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+					runInfo.rv = nilValue
 				return nil, false
 			}
 			args = append(args, runInfo.rv)
@@ -321,10 +331,12 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 		}
 		if runInfo.rv.Kind() != reflect.Slice && runInfo.rv.Kind() != reflect.Array {
 			runInfo.err = newStringError(callExpr, "call is variadic but last parameter is of type "+runInfo.rv.Type().String())
+			runInfo.rv = nilValue
 			return nil, false
 		}
 		if runInfo.rv.Len() < numIn-indexIn {
 			runInfo.err = newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs+runInfo.rv.Len()-1))
+			runInfo.rv = nilValue
 			return nil, false
 		}
 
@@ -337,6 +349,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 				if runInfo.err != nil {
 					runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 						"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+						runInfo.rv = nilValue
 					return nil, false
 				}
 				args = append(args, runInfo.rv)
@@ -370,6 +383,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 			if runInfo.err != nil {
 				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+					runInfo.rv = nilValue
 				return nil, false
 			}
 			args = append(args, runInfo.rv)
@@ -390,6 +404,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 			if runInfo.err != nil {
 				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+					runInfo.rv = nilValue
 				return nil, false
 			}
 			args = append(args, runInfo.rv)
@@ -414,6 +429,7 @@ func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool
 	if runInfo.err != nil {
 		runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
 			"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+			runInfo.rv = nilValue
 		return nil, false
 	}
 	args = append(args, runInfo.rv)

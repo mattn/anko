@@ -27,13 +27,16 @@ func (runInfo *runInfoStruct) invokeOperator() {
 		case "||":
 			if toBool(runInfo.rv) {
 				runInfo.rv = trueValue
+				return
 			}
 		case "&&":
 			if !toBool(runInfo.rv) {
 				runInfo.rv = falseValue
+				return
 			}
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")
+			runInfo.rv = nilValue
 			return
 		}
 
@@ -88,6 +91,7 @@ func (runInfo *runInfoStruct) invokeOperator() {
 			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) >= toFloat64(runInfo.rv))
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")
+			runInfo.rv = nilValue
 		}
 
 	// AddOperator
@@ -126,6 +130,7 @@ func (runInfo *runInfoStruct) invokeOperator() {
 				runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, lhsV.Type().Elem())
 				if runInfo.err != nil {
 					runInfo.err = newStringError(operator, "invalid type conversion")
+					runInfo.rv = nilValue
 					return
 				}
 				runInfo.rv = reflect.Append(lhsV, runInfo.rv)

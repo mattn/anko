@@ -72,6 +72,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		if runInfo.rv.Kind() != reflect.Ptr {
 			runInfo.err = newStringError(expr.Expr, "cannot deference non-pointer")
+			runInfo.rv = nilValue
 			return
 		}
 		runInfo.rv = runInfo.rv.Elem()
@@ -121,6 +122,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			}
 		default:
 			runInfo.err = newStringError(expr, "unknown operator")
+			runInfo.rv = nilValue
 		}
 
 	// ParenExpr
@@ -144,6 +146,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		}
 		if !runInfo.rv.IsValid() {
 			runInfo.err = newStringError(expr, "type invalid does not support member operation")
+			runInfo.rv = nilValue
 		}
 		if runInfo.rv.CanInterface() {
 			if env, ok := runInfo.rv.Interface().(*Env); ok {
@@ -178,6 +181,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				}
 			}
 			runInfo.err = newStringError(expr, "no member named '"+expr.Name+"' for struct")
+			runInfo.rv = nilValue
 		case reflect.Map:
 			runInfo.rv = getMapIndex(reflect.ValueOf(expr.Name), runInfo.rv)
 			// Note if the map is of reflect.Value, it will incorrectly return nil when zero value
@@ -186,6 +190,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			}
 		default:
 			runInfo.err = newStringError(expr, "type "+runInfo.rv.Kind().String()+" does not support member operation")
+			runInfo.rv = nilValue
 		}
 
 	// ItemExpr
@@ -213,10 +218,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			index, runInfo.err = tryToInt(runInfo.rv)
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "index must be a number")
+				runInfo.rv = nilValue
 				return
 			}
 			if index < 0 || index >= item.Len() {
 				runInfo.err = newStringError(expr, "index out of range")
+				runInfo.rv = nilValue
 				return
 			}
 			if item.Kind() != reflect.String {
@@ -233,6 +240,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			}
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support index operation")
+			runInfo.rv = nilValue
 		}
 
 	// SliceExpr
@@ -263,10 +271,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				beginIndex, runInfo.err = tryToInt(runInfo.rv)
 				if runInfo.err != nil {
 					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
 					return
 				}
 				if beginIndex < 0 || beginIndex > item.Len() {
 					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
 					return
 				}
 			}
@@ -281,20 +291,24 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				endIndex, runInfo.err = tryToInt(runInfo.rv)
 				if runInfo.err != nil {
 					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
 					return
 				}
 				if endIndex < 0 || endIndex > item.Len() {
 					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
 					return
 				}
 			}
 			if beginIndex > endIndex {
 				runInfo.err = newStringError(expr, "invalid slice index")
+				runInfo.rv = nilValue
 				return
 			}
 			runInfo.rv = item.Slice(beginIndex, endIndex)
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support slice operation")
+			runInfo.rv = nilValue
 		}
 
 	// LetsExpr
@@ -364,6 +378,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			runInfo.rv = reflect.ValueOf(int64(runInfo.rv.Len()))
 		default:
 			runInfo.err = newStringError(expr, "type "+runInfo.rv.Kind().String()+" does not support len operation")
+			runInfo.rv = nilValue
 		}
 
 	// NewExpr
@@ -371,10 +386,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		var t reflect.Type
 		t, runInfo.err = getTypeFromString(runInfo.env, expr.Type)
 		if runInfo.err != nil {
+			runInfo.rv = nilValue
 			return
 		}
 		if t == nil {
 			runInfo.err = newErrorf(expr, "type cannot be nil for new")
+			runInfo.rv = nilValue
 			return
 		}
 		runInfo.rv = reflect.New(t)
@@ -384,10 +401,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		var t reflect.Type
 		t, runInfo.err = getTypeFromString(runInfo.env, expr.Type)
 		if runInfo.err != nil {
+			runInfo.rv = nilValue
 			return
 		}
 		if t == nil {
 			runInfo.err = newErrorf(expr, "type cannot be nil for make")
+			runInfo.rv = nilValue
 			return
 		}
 
@@ -433,6 +452,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		if !runInfo.rv.IsValid() || runInfo.rv.Type() == nil {
 			runInfo.err = newErrorf(expr, "type cannot be nil for make type")
+			runInfo.rv = nilValue
 		}
 
 		// if expr.Name has a dot in it, it should give a syntax error, so no needs to check err
@@ -445,10 +465,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		var t reflect.Type
 		t, runInfo.err = getTypeFromString(runInfo.env, expr.Type)
 		if runInfo.err != nil {
+			runInfo.rv = nilValue
 			return
 		}
 		if t == nil {
 			runInfo.err = newErrorf(expr, "type cannot be nil for make chan")
+			runInfo.rv = nilValue
 			return
 		}
 
@@ -486,6 +508,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			if rhs.Kind() != reflect.Chan {
 				// rhs is not channel
 				runInfo.err = newStringError(expr, "invalid operation for chan")
+				runInfo.rv = nilValue
 				return
 			}
 			// receive from rhs channel
@@ -501,6 +524,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			chosen, runInfo.rv, ok = reflect.Select(cases)
 			if chosen == 0 {
 				runInfo.err = ErrInterrupt
+				runInfo.rv = nilValue
 				return
 			}
 			if !ok {
@@ -517,6 +541,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		rhs, runInfo.err = convertReflectValueToType(rhs, runInfo.rv.Type().Elem())
 		if runInfo.err != nil {
 			runInfo.err = newStringError(expr, "cannot use type "+rhs.Type().String()+" as type "+runInfo.rv.Type().Elem().String()+" to send to chan")
+			runInfo.rv = nilValue
 			return
 		}
 		cases := []reflect.SelectCase{{
@@ -529,6 +554,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		}}
 		if chosen, _, _ := reflect.Select(cases); chosen == 0 {
 			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
 			return
 		}
 
@@ -574,6 +600,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				runInfo.err = runInfo.env.Delete(whatExpr.String())
 				if runInfo.err != nil {
 					runInfo.err = newError(expr, runInfo.err)
+					runInfo.rv = nilValue
 				}
 				return
 			}
@@ -581,17 +608,20 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				runInfo.err = runInfo.env.DeleteGlobal(whatExpr.String())
 				if runInfo.err != nil {
 					runInfo.err = newError(expr, runInfo.err)
+					runInfo.rv = nilValue
 				}
 				return
 			}
 			runInfo.err = runInfo.env.Delete(whatExpr.String())
 			if runInfo.err != nil {
 				runInfo.err = newError(expr, runInfo.err)
+				runInfo.rv = nilValue
 			}
 
 		case reflect.Map:
 			if expr.KeyExpr == nil {
 				runInfo.err = newStringError(expr, "second argument to delete cannot be nil for map")
+				runInfo.rv = nilValue
 				return
 			}
 			if whatExpr.IsNil() {
@@ -600,11 +630,13 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, whatExpr.Type().Key())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "cannot use type "+whatExpr.Type().Key().String()+" as type "+runInfo.rv.Type().String()+" in delete")
+				runInfo.rv = nilValue
 				return
 			}
 			whatExpr.SetMapIndex(runInfo.rv, reflect.Value{})
 		default:
 			runInfo.err = newStringError(expr, "first argument to delete cannot be type "+whatExpr.Kind().String())
+			runInfo.rv = nilValue
 		}
 
 	// IncludeExpr
@@ -624,6 +656,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		if runInfo.rv.Kind() != reflect.Slice && runInfo.rv.Kind() != reflect.Array {
 			runInfo.err = newStringError(expr, "second argument must be slice or array; but have "+runInfo.rv.Kind().String())
+			runInfo.rv = nilValue
 			return
 		}
 
@@ -637,6 +670,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 	default:
 		runInfo.err = newStringError(expr, "unknown expression")
+		runInfo.rv = nilValue
 	}
 
 }

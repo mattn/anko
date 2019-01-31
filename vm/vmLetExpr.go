@@ -15,6 +15,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			runInfo.err = runInfo.env.defineValue(expr.Lit, runInfo.rv)
 			if runInfo.err != nil {
 				runInfo.err = newError(expr, runInfo.err)
+				runInfo.rv = nilValue
 			}
 		}
 
@@ -33,6 +34,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 		}
 		if !runInfo.rv.IsValid() {
 			runInfo.err = newStringError(expr, "type invalid does not support member operation")
+			runInfo.rv = nilValue
 			return
 		}
 		if runInfo.rv.Kind() == reflect.Ptr {
@@ -46,6 +48,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			field, found := runInfo.rv.Type().FieldByName(expr.Name)
 			if !found {
 				runInfo.err = newStringError(expr, "no member named '"+expr.Name+"' for struct")
+				runInfo.rv = nilValue
 				return
 			}
 			runInfo.rv = runInfo.rv.FieldByIndex(field.Index)
@@ -54,12 +57,14 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			// Often a struct has to be passed as a pointer to be set
 			if !runInfo.rv.CanSet() {
 				runInfo.err = newStringError(expr, "struct member '"+expr.Name+"' cannot be assigned")
+				runInfo.rv = nilValue
 				return
 			}
 
 			value, runInfo.err = convertReflectValueToType(value, runInfo.rv.Type())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+runInfo.rv.Type().String()+" for struct")
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -71,6 +76,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			value, runInfo.err = convertReflectValueToType(value, runInfo.rv.Type().Elem())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+runInfo.rv.Type().Elem().String()+" for map")
+				runInfo.rv = nilValue
 				return
 			}
 			if runInfo.rv.IsNil() {
@@ -80,6 +86,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 		default:
 			runInfo.err = newStringError(expr, "type "+runInfo.rv.Kind().String()+" does not support member operation")
+			runInfo.rv = nilValue
 		}
 
 	// ItemExpr
@@ -111,6 +118,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			index, runInfo.err = tryToInt(runInfo.rv)
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "index must be a number")
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -119,6 +127,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 				value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
 				if runInfo.err != nil {
 					runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for array index")
+					runInfo.rv = nilValue
 					return
 				}
 				item = reflect.Append(item, value)
@@ -131,17 +140,20 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 			if index < 0 || index >= item.Len() {
 				runInfo.err = newStringError(expr, "index out of range")
+				runInfo.rv = nilValue
 				return
 			}
 			item = item.Index(index)
 			if !item.CanSet() {
 				runInfo.err = newStringError(expr, "index cannot be assigned")
+				runInfo.rv = nilValue
 				return
 			}
 
 			value, runInfo.err = convertReflectValueToType(value, item.Type())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String()+" for array index")
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -153,12 +165,14 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, item.Type().Key())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "index type "+runInfo.rv.Type().String()+" cannot be used for map index type "+item.Type().Key().String())
+				runInfo.rv = nilValue
 				return
 			}
 
 			value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for map")
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -180,12 +194,14 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 			index, runInfo.err = tryToInt(runInfo.rv)
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "index must be a number")
+				runInfo.rv = nilValue
 				return
 			}
 
 			value, runInfo.err = convertReflectValueToType(value, item.Type())
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String())
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -204,6 +220,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 			if index < 0 || index >= item.Len() {
 				runInfo.err = newStringError(expr, "index out of range")
+				runInfo.rv = nilValue
 				return
 			}
 
@@ -219,6 +236,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support index operation")
+			runInfo.rv = nilValue
 		}
 
 	// SliceExpr
@@ -253,10 +271,12 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 				beginIndex, runInfo.err = tryToInt(runInfo.rv)
 				if runInfo.err != nil {
 					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
 					return
 				}
 				if beginIndex < 0 || beginIndex > item.Len() {
 					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
 					return
 				}
 			}
@@ -271,21 +291,25 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 				endIndex, runInfo.err = tryToInt(runInfo.rv)
 				if runInfo.err != nil {
 					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
 					return
 				}
 				if endIndex < 0 || endIndex > item.Len() {
 					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
 					return
 				}
 			}
 			if beginIndex > endIndex {
 				runInfo.err = newStringError(expr, "invalid slice index")
+				runInfo.rv = nilValue
 				return
 			}
 			item = item.Slice(beginIndex, endIndex)
 
 			if !item.CanSet() {
 				runInfo.err = newStringError(expr, "slice cannot be assigned")
+				runInfo.rv = nilValue
 				return
 			}
 			item.Set(value)
@@ -293,9 +317,11 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 		// String
 		case reflect.String:
 			runInfo.err = newStringError(expr, "type string does not support slice operation for assignment")
+			runInfo.rv = nilValue
 
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support slice operation")
+			runInfo.rv = nilValue
 		}
 
 	// DerefExpr
@@ -313,6 +339,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 	default:
 		runInfo.err = newStringError(expr, "invalid operation")
+		runInfo.rv = nilValue
 	}
 
 }

@@ -30,6 +30,7 @@ func RunContext(ctx context.Context, stmt ast.Stmt, env *Env) (interface{}, erro
 func (runInfo *runInfoStruct) runSingleStmt() {
 	select {
 	case <-runInfo.ctx.Done():
+		runInfo.rv = nilValue
 		runInfo.err = ErrInterrupt
 		return
 	default:
@@ -97,6 +98,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 					runInfo.err = runInfo.env.defineValue(stmt.Names[i], value.Index(i))
 					if runInfo.err != nil {
 						runInfo.err = newError(stmt, runInfo.err)
+						runInfo.rv = nilValue
 						return
 					}
 				}
@@ -111,6 +113,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			runInfo.err = runInfo.env.defineValue(stmt.Names[i], rvs[i])
 			if runInfo.err != nil {
 				runInfo.err = newError(stmt, runInfo.err)
+				runInfo.rv = nilValue
 				return
 			}
 		}
@@ -273,6 +276,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.err = runInfo.env.defineValue(stmt.Var, reflect.ValueOf(runInfo.err))
 				if runInfo.err != nil {
 					runInfo.err = newError(stmt, runInfo.err)
+					runInfo.rv = nilValue
 					runInfo.env = env
 					return
 				}
@@ -302,6 +306,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			select {
 			case <-runInfo.ctx.Done():
 				runInfo.err = ErrInterrupt
+				runInfo.rv = nilValue
 				runInfo.env = env
 				return
 			default:
@@ -351,6 +356,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				select {
 				case <-runInfo.ctx.Done():
 					runInfo.err = ErrInterrupt
+					runInfo.rv = nilValue
 					runInfo.env = env
 					return
 				default:
@@ -363,6 +369,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], iv)
 				if runInfo.err != nil {
 					runInfo.err = newError(stmt, runInfo.err)
+					runInfo.rv = nilValue
 					break
 				}
 
@@ -383,6 +390,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				select {
 				case <-runInfo.ctx.Done():
 					runInfo.err = ErrInterrupt
+					runInfo.rv = nilValue
 					runInfo.env = env
 					return
 				default:
@@ -391,6 +399,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], keys[i])
 				if runInfo.err != nil {
 					runInfo.err = newError(stmt, runInfo.err)
+					runInfo.rv = nilValue
 					break
 				}
 
@@ -398,6 +407,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 					runInfo.err = runInfo.env.defineValue(stmt.Vars[1], value.MapIndex(keys[i]))
 					if runInfo.err != nil {
 						runInfo.err = newError(stmt, runInfo.err)
+						runInfo.rv = nilValue
 						break
 					}
 				}
@@ -427,6 +437,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				chosen, runInfo.rv, ok = reflect.Select(cases)
 				if chosen == 0 {
 					runInfo.err = ErrInterrupt
+					runInfo.rv = nilValue
 					break
 				}
 				if !ok {
@@ -439,6 +450,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.err = runInfo.env.defineValue(stmt.Vars[0], runInfo.rv)
 				if runInfo.err != nil {
 					runInfo.err = newError(stmt, runInfo.err)
+					runInfo.rv = nilValue
 					break
 				}
 
@@ -454,8 +466,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			runInfo.env = env
 
 		default:
-			runInfo.env = env
 			runInfo.err = newStringError(stmt, "for cannot loop over type "+value.Kind().String())
+			runInfo.rv = nilValue
+			runInfo.env = env
 		}
 
 	// CForStmt
@@ -476,6 +489,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			select {
 			case <-runInfo.ctx.Done():
 				runInfo.err = ErrInterrupt
+				runInfo.rv = nilValue
 				runInfo.env = env
 				return
 			default:
@@ -543,6 +557,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		if runInfo.err != nil {
 			return
 		}
+		runInfo.rv = nilValue
 		if !runInfo.rv.IsValid() || !runInfo.rv.CanInterface() {
 			runInfo.err = newStringError(stmt.Expr, "can not throw type "+runInfo.rv.Kind().String())
 			return
@@ -565,6 +580,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.err = env.defineGlobalValue(stmt.Name, reflect.ValueOf(runInfo.env))
 		if runInfo.err != nil {
 			runInfo.err = newError(stmt, runInfo.err)
+			runInfo.rv = nilValue
 		}
 		runInfo.env = env
 
@@ -615,6 +631,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	// default
 	default:
 		runInfo.err = newStringError(stmt, "unknown statement")
+		runInfo.rv = nilValue
 	}
 
 }
