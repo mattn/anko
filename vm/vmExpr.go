@@ -362,26 +362,6 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			return nilValue, newStringError(e, "type "+v.Kind().String()+" does not support slice operation")
 		}
 
-	// AssocExpr
-	case *ast.AssocExpr:
-		var err error
-		rv := nilValue
-		operator := e.Operator[0:1]
-		switch operator {
-		case "+", "-", "|":
-			rv, err = invokeOperator(ctx, &ast.AddOperator{LHS: e.LHS, Operator: operator, RHS: e.RHS}, env)
-		default:
-			rv, err = invokeOperator(ctx, &ast.MultiplyOperator{LHS: e.LHS, Operator: operator, RHS: e.RHS}, env)
-		}
-		if err != nil {
-			return nilValue, newError(e, err)
-		}
-		if rv.Kind() == reflect.Interface && !rv.IsNil() {
-			rv = rv.Elem()
-		}
-
-		return invokeLetExpr(ctx, e.LHS, rv, env)
-
 	// LetsExpr
 	case *ast.LetsExpr:
 		var err error
@@ -406,16 +386,6 @@ func invokeExpr(ctx context.Context, expr ast.Expr, env *Env) (reflect.Value, er
 			}
 		}
 		return rvs[len(rvs)-1], nil
-
-	// ConstExpr
-	case *ast.ConstExpr:
-		switch e.Value {
-		case "true":
-			return trueValue, nil
-		case "false":
-			return falseValue, nil
-		}
-		return nilValue, nil
 
 	// TernaryOpExpr
 	case *ast.TernaryOpExpr:

@@ -23,6 +23,7 @@ import (
 %type<expr> expr
 %type<map_expr> map_expr
 %type<expr_idents> expr_idents
+%type<expr_literals> expr_literals
 %type<expr_type> expr_type
 %type<array_count> array_count
 %type<expr_slice> expr_slice
@@ -30,6 +31,7 @@ import (
 %type<expr> expr_op
 %type<expr> expr_unary
 %type<expr> expr_binary
+%type<expr> expr_lets
 %type<expr> op_binary
 %type<expr> op_comparison
 %type<expr> op_add
@@ -52,6 +54,7 @@ import (
 	expr                   ast.Expr
 	map_expr               map[ast.Expr]ast.Expr
 	expr_idents            []string
+	expr_literals          ast.Expr
 	expr_type              string
 	tok                    ast.Token
 	array_count            ast.ArrayCount
@@ -60,6 +63,7 @@ import (
 	expr_op                ast.Expr
 	expr_unary             ast.Expr
 	expr_binary            ast.Expr
+	expr_lets            ast.Expr
 	op_binary              ast.Operator
 	op_comparison          ast.Operator
 	op_add                 ast.Operator
@@ -487,34 +491,9 @@ expr :
 	{
 		$$ = $1
 	}
-	| NUMBER
+	| expr_literals
 	{
-		num, err := toNumber($1.Lit)
-		if err != nil {
-			yylex.Error("invalid number: " + $1.Lit)
-		}
-		$$ = &ast.LiteralExpr{Literal: num}
-		$$.SetPosition($1.Position())
-	}
-	| STRING
-	{
-		$$ = &ast.LiteralExpr{Literal: stringToValue($1.Lit)}
-		$$.SetPosition($1.Position())
-	}
-	| TRUE
-	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
-		$$.SetPosition($1.Position())
-	}
-	| FALSE
-	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
-		$$.SetPosition($1.Position())
-	}
-	| NIL
-	{
-		$$ = &ast.ConstExpr{Value: $1.Lit}
-		$$.SetPosition($1.Position())
+		$$ = $1
 	}
 	| expr '?' expr ':' expr
 	{
@@ -675,9 +654,41 @@ expr_ident :
 		$$.SetPosition($1.Position())
 	}
 
+expr_literals :
+	NUMBER
+	{
+		num, err := toNumber($1.Lit)
+		if err != nil {
+			yylex.Error("invalid number: " + $1.Lit)
+		}
+		$$ = &ast.LiteralExpr{Literal: num}
+		$$.SetPosition($1.Position())
+	}
+	| STRING
+	{
+		$$ = &ast.LiteralExpr{Literal: stringToValue($1.Lit)}
+		$$.SetPosition($1.Position())
+	}
+	| TRUE
+	{
+		$$ = &ast.LiteralExpr{Literal: trueValue}
+		$$.SetPosition($1.Position())
+	}
+	| FALSE
+	{
+		$$ = &ast.LiteralExpr{Literal: falseValue}
+		$$.SetPosition($1.Position())
+	}
+	| NIL
+	{
+		$$ = &ast.LiteralExpr{Literal: nilValue}
+		$$.SetPosition($1.Position())
+	}
+
 expr_op :
 	expr_unary
 	| expr_binary
+	| expr_lets
 
 expr_unary :
 	'-' expr %prec UNARY
@@ -717,53 +728,7 @@ expr_unary :
 	}
 
 expr_binary :
-	expr PLUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "+=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "-=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr MULEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "*=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr DIVEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "/=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr ANDEQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "&=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr OREQ expr
-	{
-		$$ = &ast.AssocExpr{LHS: $1, Operator: "|=", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr PLUSPLUS
-	{
-		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "+", RHS: oneLiteral}}
-		rhs.Op.SetPosition($1.Position())
-		rhs.SetPosition($1.Position())
-		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
-		$$.SetPosition($1.Position())
-	}
-	| expr MINUSMINUS
-	{
-		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "-", RHS: oneLiteral}}
-		rhs.Op.SetPosition($1.Position())
-		rhs.SetPosition($1.Position())
-		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
-		$$.SetPosition($1.Position())
-	}
-	| op_multiply
+	op_multiply
 	{
 		$$ = &ast.OpExpr{Op: $1}
 		$$.SetPosition($1.Position())
@@ -781,6 +746,72 @@ expr_binary :
 	| op_binary
 	{
 		$$ = &ast.OpExpr{Op: $1}
+		$$.SetPosition($1.Position())
+	}
+
+expr_lets:
+	expr PLUSPLUS
+	{
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "+", RHS: oneLiteral}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr MINUSMINUS
+	{
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "-", RHS: oneLiteral}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr PLUSEQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "+", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr MINUSEQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "-", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr OREQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: $1, Operator: "|", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr MULEQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: $1, Operator: "*", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr DIVEQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: $1, Operator: "/", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
+		$$.SetPosition($1.Position())
+	}
+	| expr ANDEQ expr
+	{
+		rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: $1, Operator: "&", RHS: $3}}
+		rhs.Op.SetPosition($1.Position())
+		rhs.SetPosition($1.Position())
+		$$ = &ast.LetsExpr{LHSS: []ast.Expr{$1}, RHSS: []ast.Expr{rhs}}
 		$$.SetPosition($1.Position())
 	}
 

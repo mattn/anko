@@ -74,6 +74,8 @@ var opName = map[string]int{
 
 var (
 	nilValue   = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
+	trueValue  = reflect.ValueOf(true)
+	falseValue = reflect.ValueOf(false)
 	oneLiteral = &ast.LiteralExpr{Literal: reflect.ValueOf(int64(1))}
 )
 
