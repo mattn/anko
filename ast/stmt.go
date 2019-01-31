@@ -96,13 +96,7 @@ type ModuleStmt struct {
 // SwitchStmt provide switch statement.
 type SwitchStmt struct {
 	StmtImpl
-	Expr Expr
-	Body Stmt
-}
-
-// SwitchBodyStmt provide switch case statements and default statement.
-type SwitchBodyStmt struct {
-	StmtImpl
+	Expr    Expr
 	Cases   []Stmt
 	Default Stmt
 }

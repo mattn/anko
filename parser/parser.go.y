@@ -334,35 +334,39 @@ stmt_for :
 stmt_switch :
 	SWITCH expr '{' opt_newlines stmt_switch_cases opt_newlines '}'
 	{
-		$$ = &ast.SwitchStmt{Expr: $2, Body: $5}
+		switchStmt := $5.(*ast.SwitchStmt)
+		switchStmt.Expr = $2
+		$$ = switchStmt
 		$$.SetPosition($1.Position())
 	}
 
 stmt_switch_cases :
 	/* nothing */
 	{
-		$$ = &ast.SwitchBodyStmt{}
+		$$ = &ast.SwitchStmt{}
 	}
 	| stmt_switch_default
 	{
-		$$ = &ast.SwitchBodyStmt{Default: $1}
+		$$ = &ast.SwitchStmt{Default: $1}
 	}
 	| stmt_switch_case
 	{
-		$$ = &ast.SwitchBodyStmt{Cases: []ast.Stmt{$1}}
+		$$ = &ast.SwitchStmt{Cases: []ast.Stmt{$1}}
 	}
 	| stmt_switch_cases stmt_switch_case
 	{
-		body := $$.(*ast.SwitchBodyStmt)
-		body.Cases = append(body.Cases, $2)
+		switchStmt := $1.(*ast.SwitchStmt)
+		switchStmt.Cases = append(switchStmt.Cases, $2)
+		$$ = switchStmt
 	}
 	| stmt_switch_cases stmt_switch_default
 	{
-		body := $$.(*ast.SwitchBodyStmt)
-		if body.Default != nil {
+		switchStmt := $1.(*ast.SwitchStmt)
+		if switchStmt.Default != nil {
 			yylex.Error("multiple default statement")
 		}
-		body.Default = $2
+		switchStmt.Default = $2
+		$$ = switchStmt
 	}
 
 stmt_switch_case :

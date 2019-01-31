@@ -133,14 +133,13 @@ func walkStmt(stmt ast.Stmt, f WalkFunc) error {
 		if err := walkExpr(stmt.Expr, f); err != nil {
 			return err
 		}
-		body := stmt.Body.(*ast.SwitchBodyStmt)
-		for _, switchCaseStmt := range body.Cases {
+		for _, switchCaseStmt := range stmt.Cases {
 			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
 			if err := walkStmt(caseStmt.Stmt, f); err != nil {
 				return err
 			}
 		}
-		if err := walkStmt(body.Default, f); err != nil {
+		if err := walkStmt(stmt.Default, f); err != nil {
 			return err
 		}
 	case *ast.GoroutineStmt:
@@ -168,12 +167,12 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 	case *ast.MemberExpr:
 		return walkExpr(expr.Expr, f)
 	case *ast.ItemExpr:
-		if err := walkExpr(expr.Value, f); err != nil {
+		if err := walkExpr(expr.Item, f); err != nil {
 			return err
 		}
 		return walkExpr(expr.Index, f)
 	case *ast.SliceExpr:
-		if err := walkExpr(expr.Value, f); err != nil {
+		if err := walkExpr(expr.Item, f); err != nil {
 			return err
 		}
 		if err := walkExpr(expr.Begin, f); err != nil {

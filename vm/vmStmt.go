@@ -212,6 +212,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 		if toBool(runInfo.rv) {
 			// then
+			runInfo.rv = nilValue
 			runInfo.stmt = stmt.Then
 			runInfo.env = env.NewEnv()
 			runInfo.runSingleStmt()
@@ -236,6 +237,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			}
 
 			// else if - then
+			runInfo.rv = nilValue
 			runInfo.stmt = elseIf.Then
 			runInfo.env = env.NewEnv()
 			runInfo.runSingleStmt()
@@ -245,6 +247,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 		if stmt.Else != nil {
 			// else
+			runInfo.rv = nilValue
 			runInfo.stmt = stmt.Else
 			runInfo.env = env.NewEnv()
 			runInfo.runSingleStmt()
@@ -595,15 +598,9 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			runInfo.env = env
 			return
 		}
+		value := runInfo.rv
 
-		body := stmt.Body.(*ast.SwitchBodyStmt)
-		if body.Default != nil {
-			runInfo.stmt = body.Default
-		}
-
-		// TOFIX: make this so it is not runing the Exprs over and over again. This will cause bug in some cases, like i++.
-	Loop:
-		for _, switchCaseStmt := range body.Cases {
+		for _, switchCaseStmt := range stmt.Cases {
 			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
 			for _, runInfo.expr = range caseStmt.Exprs {
 				runInfo.invokeExpr()
@@ -611,16 +608,22 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 					runInfo.env = env
 					return
 				}
-				if equal(runInfo.rv, runInfo.rv) {
+				if equal(runInfo.rv, value) {
 					runInfo.stmt = caseStmt.Stmt
-					break Loop
+					runInfo.runSingleStmt()
+					runInfo.env = env
+					return
 				}
 			}
 		}
 
-		if runInfo.stmt != nil {
+		if stmt.Default == nil {
+			runInfo.rv = nilValue
+		} else {
+			runInfo.stmt = stmt.Default
 			runInfo.runSingleStmt()
 		}
+
 		runInfo.env = env
 
 	// GoroutineStmt
