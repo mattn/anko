@@ -353,10 +353,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		// otherwise returns right side
 		runInfo.expr = expr.LHS
 		runInfo.invokeExpr()
-		if runInfo.err != nil {
+		if runInfo.err == nil {
 			if !isNil(runInfo.rv) {
 				return
 			}
+		} else {
+			runInfo.err = nil
 		}
 		runInfo.expr = expr.RHS
 		runInfo.invokeExpr()

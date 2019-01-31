@@ -456,39 +456,29 @@ func TestTernaryOperator(t *testing.T) {
 func TestNilCoalescingOperator(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `a = 1 ?? panic(2)`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = c ?? b`, RunError: fmt.Errorf("undefined symbol 'b'")},
-		{Script: `a = -1 ?? 1`, RunOutput: int64(-1), Output: map[string]interface{}{"a": int64(-1)}},
-		{Script: `a = true ?? 1`, RunOutput: true, Output: map[string]interface{}{"a": true}},
-		{Script: `a = false ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "true" ?? 1`, RunOutput: "true", Output: map[string]interface{}{"a": "true"}},
-		{Script: `a = "false" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "-1" ?? 1`, RunOutput: "-1", Output: map[string]interface{}{"a": "-1"}},
-		{Script: `a = "0" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "0.0" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "2" ?? 1`, RunOutput: "2", Output: map[string]interface{}{"a": "2"}},
-		{Script: `a = b ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": int64(0)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": int64(2)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": float64(0.0)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": float64(2.0)}, RunOutput: float64(2.0), Output: map[string]interface{}{"a": float64(2.0)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": float64(0.0)}, RunOutput: float64(1.0), Output: map[string]interface{}{"a": float64(1.0)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": float64(0.1)}, RunOutput: float64(0.1), Output: map[string]interface{}{"a": float64(0.1)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": nil}, RunOutput: float64(1.0), Output: map[string]interface{}{"a": float64(1.0)}},
-		{Script: `a = nil ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b[1] ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b[1][2] ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = [] ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = [2] ?? 1`, RunOutput: []interface{}{int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(2)}}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: map[string]interface{}{"test": int64(2)}, Output: map[string]interface{}{"a": map[string]interface{}{"test": int64(2)}}},
-		{Script: `a = b["test"] ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = b["test"][1] ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": 2}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `b = "test"; a = b ?? "empty"`, RunOutput: "test", Output: map[string]interface{}{"a": "test"}},
-		{Script: `b = "test"; a = b[1:3] ?? "empty"`, RunOutput: "es", Output: map[string]interface{}{"a": "es"}},
-		{Script: `b = "test"; a = b[2:2] ?? "empty"`, RunOutput: "empty", Output: map[string]interface{}{"a": "empty"}},
-		{Script: `b = "0.0"; a = false ?? b ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `nil ?? nil`, RunOutput: nil},
+		{Script: `false ?? nil`, RunOutput: false},
+		{Script: `true ?? nil`, RunOutput: true},
+		{Script: `nil ?? false`, RunOutput: false},
+		{Script: `nil ?? true`, RunOutput: true},
+		{Script: `1 ?? nil`, RunOutput: int64(1)},
+		{Script: `1 ?? 2`, RunOutput: int64(1)},
+		{Script: `nil ?? 1`, RunOutput: int64(1)},
+
+		{Script: `a ?? 1`, RunOutput: int64(1)},
+		{Script: `a ?? b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+
+		{Script: `a ?? 2`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": int64(1), "b": int64(2)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": nil, "b": int64(2)}, RunOutput: int64(2), Output: map[string]interface{}{"a": nil, "b": int64(2)}},
+
+		{Script: `[] ?? 1`, RunOutput: []interface{}{}},
+		{Script: `{} ?? 1`, RunOutput: map[interface{}]interface{}{}},
+
+		// test nil array and map
+		{Script: `a ?? 5`, Input: map[string]interface{}{"a": testArrayEmpty}, RunOutput: int64(5), Output: map[string]interface{}{"a": testArrayEmpty}},
+		{Script: `a ?? 6`, Input: map[string]interface{}{"a": testMapEmpty}, RunOutput: int64(6), Output: map[string]interface{}{"a": testMapEmpty}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -999,9 +989,7 @@ func TestOperatorPrecedence(t *testing.T) {
 func TestTemp(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
-
-		{Script: `a = 1; a++`, RunOutput: int64(2)},
+		{Script: `a ?? 1`, RunOutput: int64(1)},
 	}
 	testlib.Run(t, tests, nil)
 }
