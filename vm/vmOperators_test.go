@@ -1017,3 +1017,37 @@ func TestOperatorPrecedence(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
+func TestTry(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `try { 1++ } catch { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `try { 1++ } catch a { return a }`, RunOutput: fmt.Errorf("invalid operation")},
+		{Script: `try { 1++ } catch a { a = 2 }; return a`, RunError: fmt.Errorf("undefined symbol 'a'")},
+
+		// test finally
+		{Script: `try { 1++ } catch { 1++ } finally { return 1 }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `try { } catch { } finally { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `try { } catch { 1 } finally { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `try { 1++ } catch { } finally { 1++ }`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `try { 1++ } catch a { } finally { return a }`, RunOutput: fmt.Errorf("invalid operation")},
+		{Script: `try { 1++ } catch a { } finally { a = 2 }; return a`, RunError: fmt.Errorf("undefined symbol 'a'")},
+
+		{Script: `try { } catch { }`, RunOutput: nil},
+		{Script: `try { 1++ } catch { }`, RunOutput: nil},
+		{Script: `try { } catch { 1++ }`, RunOutput: nil},
+		{Script: `try { return 1 } catch { }`, RunOutput: int64(1)},
+		{Script: `try { return 1 } catch { return 2 }`, RunOutput: int64(2)},
+		{Script: `try { 1++ } catch { return 1 }`, RunOutput: int64(1)},
+
+		// test finally
+		{Script: `try { } catch { } finally { return 1 }`, RunOutput: int64(1)},
+		{Script: `try { 1++ } catch { } finally { return 1 }`, RunOutput: int64(1)},
+		{Script: `try { 1++ } catch { return 1 } finally { 1++ }`, RunOutput: int64(1)},
+
+		// test variable scope
+		{Script: `try { 1++ } catch a { if a.Error() == "invalid operation" { return 1 } else { return 2 } }`, RunOutput: int64(1)},
+		{Script: `try { 1++ } catch a { } finally { if a.Error() == "invalid operation" { return 1 } else { return 2 } }`, RunOutput: int64(1)},
+	}
+	testlib.Run(t, tests, nil)
+}
+

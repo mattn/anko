@@ -261,10 +261,10 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 			// Catch
 			runInfo.stmt = stmt.Catch
-			runInfo.env = env.NewEnv()
 			if stmt.Var != "" {
 				runInfo.env.defineValue(stmt.Var, reflect.ValueOf(runInfo.err))
 			}
+			runInfo.err = nil
 			runInfo.runSingleStmt()
 			if runInfo.err != nil {
 				runInfo.env = env
@@ -275,7 +275,6 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		if stmt.Finally != nil {
 			// Finally
 			runInfo.stmt = stmt.Finally
-			runInfo.env = env.NewEnv()
 			runInfo.runSingleStmt()
 		}
 

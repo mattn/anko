@@ -40,5 +40,13 @@ func ValueEqual(v1 interface{}, v2 interface{}) bool {
 		}
 		return true
 	}
+	switch value1 := v1.(type) {
+	case error:
+		switch value2 := v2.(type) {
+		case error:
+			return value1.Error() == value2.Error()
+		}
+	}
+
 	return reflect.DeepEqual(v1, v2)
 }

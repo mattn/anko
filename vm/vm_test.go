@@ -518,6 +518,8 @@ func TestChan(t *testing.T) {
 		{Script: `a = make(chan int64, 2); a <- 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1 <- 1`, RunError: fmt.Errorf("invalid operation for chan")},
 		{Script: `a = make(chan bool, 2); a <- 1`, RunError: fmt.Errorf("cannot use type int64 as type bool to send to chan")},
+		{Script: `close(1++)`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `close(1)`, RunError: fmt.Errorf("type cannot be int64 for close")},
 
 		// send to channel
 		{Script: `a <- nil`, Input: map[string]interface{}{"a": make(chan interface{}, 2)}},
@@ -775,7 +777,7 @@ for i in a {
 `,
 		`
 a = []
-for i = 0; i < 10000; i++ {
+for i = 0; i < 20000; i++ {
 	a += 1
 }
 b = 0
@@ -803,7 +805,7 @@ for i = 0; true; nil {
 `,
 		`
 a = {}
-for i = 0; i < 10000; i++ {
+for i = 0; i < 20000; i++ {
 	a[toString(i)] = 1
 }
 b = 0
@@ -811,10 +813,13 @@ close(waitChan)
 for i in a {
 	b = 1
 }
+for i in a {
+	b = 1
+}
 `,
 		`
 a = {}
-for i = 0; i < 10000; i++ {
+for i = 0; i < 20000; i++ {
 	a[toString(i)] = 1
 }
 b = 0
@@ -856,6 +861,12 @@ a = make(chan int64, 1)
 close(waitChan)
 for v in a { }
 `,
+		`
+close(waitChan)
+try {
+	for { }
+} catch { }
+`,
 	}
 	for _, script := range scripts {
 		runCancelTestWithContext(t, script)
@@ -880,6 +891,7 @@ func runCancelTestWithContext(t *testing.T, script string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-waitChan
+		time.Sleep(time.Millisecond)
 		cancel()
 	}()
 
