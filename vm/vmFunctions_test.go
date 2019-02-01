@@ -59,8 +59,10 @@ func TestReturns(t *testing.T) {
 		{Script: `b(a)`, Input: map[string]interface{}{"a": testVarValueString, "b": func(c interface{}) interface{} { return c }}, RunOutput: testVarValueString, Output: map[string]interface{}{"a": testVarValueString}},
 
 		{Script: `func aFunc() {}; aFunc()`, RunOutput: nil},
-		{Script: `func aFunc() {return}; aFunc()`, RunOutput: nil},
-		{Script: `func aFunc() {return}; a = aFunc()`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() { return }; aFunc()`, RunOutput: nil},
+		{Script: `func aFunc() { return }; a = aFunc()`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
+		{Script: `func aFunc() { return 1 }; aFunc()`, RunOutput: int64(1)},
+		{Script: `func aFunc() { return 1 }; a = aFunc()`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 
 		{Script: `func aFunc() {return nil}; aFunc()`, RunOutput: nil},
 		{Script: `func aFunc() {return true}; aFunc()`, RunOutput: true},
@@ -167,13 +169,13 @@ func TestReturns(t *testing.T) {
 func TestFunctions(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `a()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("cannot call type reflect.Value")},
-		{Script: `a = nil; a()`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": nil}},
+		{Script: `a()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("cannot call type struct")},
+		{Script: `a = nil; a()`, RunError: fmt.Errorf("cannot call type interface"), Output: map[string]interface{}{"a": nil}},
 		{Script: `a = true; a()`, RunError: fmt.Errorf("cannot call type bool"), Output: map[string]interface{}{"a": true}},
-		{Script: `a = nil; b = func c(d) { return d == nil }; c = nil; c(a)`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": nil}},
-		{Script: `a = [true]; a()`, RunError: fmt.Errorf("cannot call type []interface {}")},
-		{Script: `a = [true]; func b(c) { return c() }; b(a)`, RunError: fmt.Errorf("cannot call type []interface {}")},
-		{Script: `a = {}; a.missing()`, RunError: fmt.Errorf("cannot call type interface {}"), Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = nil; b = func c(d) { return d == nil }; c = nil; c(a)`, RunError: fmt.Errorf("cannot call type interface"), Output: map[string]interface{}{"a": nil}},
+		{Script: `a = [true]; a()`, RunError: fmt.Errorf("cannot call type slice")},
+		{Script: `a = [true]; func b(c) { return c() }; b(a)`, RunError: fmt.Errorf("cannot call type slice")},
+		{Script: `a = {}; a.missing()`, RunError: fmt.Errorf("cannot call type interface"), Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
 		{Script: `a = 1; b = func(,a){}; a`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: int64(1)},
 
 		{Script: `func a(b) { }; a()`, RunError: fmt.Errorf("function wants 1 arguments but received 0")},

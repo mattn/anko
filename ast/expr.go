@@ -113,14 +113,14 @@ type MemberExpr struct {
 // ItemExpr provide expression to refer Map/Array item.
 type ItemExpr struct {
 	ExprImpl
-	Value Expr
+	Item  Expr
 	Index Expr
 }
 
 // SliceExpr provide expression to refer slice of Array.
 type SliceExpr struct {
 	ExprImpl
-	Value Expr
+	Item  Expr
 	Begin Expr
 	End   Expr
 }
@@ -129,7 +129,7 @@ type SliceExpr struct {
 type FuncExpr struct {
 	ExprImpl
 	Name   string
-	Stmts  []Stmt
+	Stmt   Stmt
 	Params []string
 	VarArg bool
 }

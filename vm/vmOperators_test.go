@@ -284,39 +284,6 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `1 == 2 || 1 == 1`, RunOutput: true},
 		{Script: `1 == 2 || 1 == 2`, RunOutput: false},
 
-		{Script: `true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `false && func(){throw('abcde')}()`, RunOutput: false},
-		{Script: `true || func(){throw('abcde')}()`, RunOutput: true},
-		{Script: `false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `true && true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `true && false && func(){throw('abcde')}()`, RunOutput: false},
-		{Script: `true && func(){throw('abcde')}() && true`, RunError: fmt.Errorf("abcde")},
-		{Script: `false && func(){throw('abcde')}() && func(){throw('abcde')}() `, RunOutput: false},
-
-		{Script: `true && func(){throw('abcde')}() || false`, RunError: fmt.Errorf("abcde")},
-		{Script: `true && false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `true && true || func(){throw('abcde')}()`, RunOutput: true},
-
-		{Script: `true || func(){throw('abcde')}() || func(){throw('abcde')}()`, RunOutput: true},
-		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
-		{Script: `false || true || func(){throw('abcde')}()`, RunOutput: true},
-		{Script: `false || false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-
-		{Script: `false || false && func(){throw('abcde')}()`, RunOutput: false},
-		{Script: `false || true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
-
-		{Script: `1 == 1 && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-		{Script: `1 == 2 && func(){throw('abcde')}()`, RunOutput: false},
-		{Script: `1 == 1 || func(){throw('abcde')}()`, RunOutput: true},
-		{Script: `1 == 2 || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
-
-		{Script: `(true || func(){throw('abcde')}()) && (true || func(){throw('hello')}())`, RunOutput: true},
-		{Script: `(true || func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
-		{Script: `(true || func(){throw('abcde')}()) || (true && func(){throw('hello')}())`, RunOutput: true},
-		{Script: `(true && func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("abcde")},
-		{Script: `(true || func(){throw('abcde')}()) && (false || func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
-
 		{Script: `true == "1"`, RunOutput: true},
 		{Script: `true == "t"`, RunOutput: true},
 		{Script: `true == "T"`, RunOutput: true},
@@ -411,6 +378,48 @@ func TestComparisonOperators(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
+func TestThrows(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `throw(1++)`, RunError: fmt.Errorf("invalid operation")},
+		// {Script: `throw(a)`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `true || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `true && func(){throw('abcde')}() && true`, RunError: fmt.Errorf("abcde")},
+		{Script: `false && func(){throw('abcde')}() && func(){throw('abcde')}() `, RunOutput: false},
+
+		{Script: `true && func(){throw('abcde')}() || false`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `true && true || func(){throw('abcde')}()`, RunOutput: true},
+
+		{Script: `true || func(){throw('abcde')}() || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
+		{Script: `false || true || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `false || false || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `false || false && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `false || true && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `false || func(){throw('abcde')}() || true`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `1 == 1 && func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+		{Script: `1 == 2 && func(){throw('abcde')}()`, RunOutput: false},
+		{Script: `1 == 1 || func(){throw('abcde')}()`, RunOutput: true},
+		{Script: `1 == 2 || func(){throw('abcde')}()`, RunError: fmt.Errorf("abcde")},
+
+		{Script: `(true || func(){throw('abcde')}()) && (true || func(){throw('hello')}())`, RunOutput: true},
+		{Script: `(true || func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
+		{Script: `(true || func(){throw('abcde')}()) || (true && func(){throw('hello')}())`, RunOutput: true},
+		{Script: `(true && func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("abcde")},
+		{Script: `(true || func(){throw('abcde')}()) && (false || func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
+	}
+	testlib.Run(t, tests, nil)
+}
+
 func TestTernaryOperator(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
@@ -456,39 +465,29 @@ func TestTernaryOperator(t *testing.T) {
 func TestNilCoalescingOperator(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `a = 1 ?? panic(2)`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = c ?? b`, RunError: fmt.Errorf("undefined symbol 'b'")},
-		{Script: `a = -1 ?? 1`, RunOutput: int64(-1), Output: map[string]interface{}{"a": int64(-1)}},
-		{Script: `a = true ?? 1`, RunOutput: true, Output: map[string]interface{}{"a": true}},
-		{Script: `a = false ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "true" ?? 1`, RunOutput: "true", Output: map[string]interface{}{"a": "true"}},
-		{Script: `a = "false" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "-1" ?? 1`, RunOutput: "-1", Output: map[string]interface{}{"a": "-1"}},
-		{Script: `a = "0" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "0.0" ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = "2" ?? 1`, RunOutput: "2", Output: map[string]interface{}{"a": "2"}},
-		{Script: `a = b ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": int64(0)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": int64(2)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": float64(0.0)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": float64(2.0)}, RunOutput: float64(2.0), Output: map[string]interface{}{"a": float64(2.0)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": float64(0.0)}, RunOutput: float64(1.0), Output: map[string]interface{}{"a": float64(1.0)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": float64(0.1)}, RunOutput: float64(0.1), Output: map[string]interface{}{"a": float64(0.1)}},
-		{Script: `a = b ?? 1.0`, Input: map[string]interface{}{"b": nil}, RunOutput: float64(1.0), Output: map[string]interface{}{"a": float64(1.0)}},
-		{Script: `a = nil ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b[1] ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b[1][2] ?? 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = [] ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = [2] ?? 1`, RunOutput: []interface{}{int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(2)}}},
-		{Script: `a = b ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: map[string]interface{}{"test": int64(2)}, Output: map[string]interface{}{"a": map[string]interface{}{"test": int64(2)}}},
-		{Script: `a = b["test"] ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = b["test"][1] ?? 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": 2}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `b = "test"; a = b ?? "empty"`, RunOutput: "test", Output: map[string]interface{}{"a": "test"}},
-		{Script: `b = "test"; a = b[1:3] ?? "empty"`, RunOutput: "es", Output: map[string]interface{}{"a": "es"}},
-		{Script: `b = "test"; a = b[2:2] ?? "empty"`, RunOutput: "empty", Output: map[string]interface{}{"a": "empty"}},
-		{Script: `b = "0.0"; a = false ?? b ?? 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `nil ?? nil`, RunOutput: nil},
+		{Script: `false ?? nil`, RunOutput: false},
+		{Script: `true ?? nil`, RunOutput: true},
+		{Script: `nil ?? false`, RunOutput: false},
+		{Script: `nil ?? true`, RunOutput: true},
+		{Script: `1 ?? nil`, RunOutput: int64(1)},
+		{Script: `1 ?? 2`, RunOutput: int64(1)},
+		{Script: `nil ?? 1`, RunOutput: int64(1)},
+
+		{Script: `a ?? 1`, RunOutput: int64(1)},
+		{Script: `a ?? b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+
+		{Script: `a ?? 2`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": int64(1)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": int64(1), "b": int64(2)}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
+		{Script: `a ?? b`, Input: map[string]interface{}{"a": nil, "b": int64(2)}, RunOutput: int64(2), Output: map[string]interface{}{"a": nil, "b": int64(2)}},
+
+		{Script: `[] ?? 1`, RunOutput: []interface{}{}},
+		{Script: `{} ?? 1`, RunOutput: map[interface{}]interface{}{}},
+
+		// test nil array and map
+		{Script: `a ?? 5`, Input: map[string]interface{}{"a": testArrayEmpty}, RunOutput: int64(5), Output: map[string]interface{}{"a": testArrayEmpty}},
+		{Script: `a ?? 6`, Input: map[string]interface{}{"a": testMapEmpty}, RunOutput: int64(6), Output: map[string]interface{}{"a": testMapEmpty}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -559,43 +558,43 @@ func TestSwitch(t *testing.T) {
 		{Script: `a = 1; switch a {case 1++: return 2}`, RunError: fmt.Errorf("invalid operation")},
 
 		// test no or empty cases
-		{Script: `a = 1; switch a {}`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = 1; switch a {case: return 2}`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = 1; switch a {case: return 2; case: return 3}`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; switch a {}`, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; switch a {case: return 2}`, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; switch a {case: return 2; case: return 3}`, Output: map[string]interface{}{"a": int64(1)}},
 
 		// test 1 case
 		{Script: `a = 1; switch a {case 1: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = 2; switch a {case 1: return 5}`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 2; switch a {case 1: return 5}`, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 1; switch a {case 1,2: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1,2: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = 3; switch a {case 1,2: return 5}`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `a = 3; switch a {case 1,2: return 5}`, Output: map[string]interface{}{"a": int64(3)}},
 		{Script: `a = 1; switch a {case 1,2,3: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1,2,3: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 3; switch a {case 1,2,3: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(3)}},
-		{Script: `a = 4; switch a {case 1,2,3: return 5}`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+		{Script: `a = 4; switch a {case 1,2,3: return 5}`, Output: map[string]interface{}{"a": int64(4)}},
 		{Script: `a = func() { return 1 }; switch a() {case 1: return 5}`, RunOutput: int64(5)},
-		{Script: `a = func() { return 2 }; switch a() {case 1: return 5}`, RunOutput: int64(2)},
+		{Script: `a = func() { return 2 }; switch a() {case 1: return 5}`},
 		{Script: `a = func() { return 5 }; b = 1; switch b {case 1: return a() }`, RunOutput: int64(5), Output: map[string]interface{}{"b": int64(1)}},
-		{Script: `a = func() { return 6 }; b = 2; switch b {case 1: return a() }`, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
+		{Script: `a = func() { return 6 }; b = 2; switch b {case 1: return a() }`, Output: map[string]interface{}{"b": int64(2)}},
 
 		// test 2 cases
 		{Script: `a = 1; switch a {case 1: return 5; case 2: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1: return 5; case 2: return 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = 3; switch a {case 1: return 5; case 2: return 6}`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `a = 3; switch a {case 1: return 5; case 2: return 6}`, Output: map[string]interface{}{"a": int64(3)}},
 		{Script: `a = 1; switch a {case 1: return 5; case 2,3: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1: return 5; case 2,3: return 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 3; switch a {case 1: return 5; case 2,3: return 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(3)}},
-		{Script: `a = 4; switch a {case 1: return 5; case 2,3: return 6}`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+		{Script: `a = 4; switch a {case 1: return 5; case 2,3: return 6}`, Output: map[string]interface{}{"a": int64(4)}},
 
 		// test 3 cases
 		{Script: `a = 1; switch a {case 1,2: return 5; case 3: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1,2: return 5; case 3: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 3; switch a {case 1,2: return 5; case 3: return 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(3)}},
-		{Script: `a = 4; switch a {case 1,2: return 5; case 3: return 6}`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+		{Script: `a = 4; switch a {case 1,2: return 5; case 3: return 6}`, Output: map[string]interface{}{"a": int64(4)}},
 		{Script: `a = 1; switch a {case 1,2: return 5; case 2,3: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1,2: return 5; case 2,3: return 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 3; switch a {case 1,2: return 5; case 2,3: return 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(3)}},
-		{Script: `a = 4; switch a {case 1,2: return 5; case 2,3: return 6}`, RunOutput: int64(4), Output: map[string]interface{}{"a": int64(4)}},
+		{Script: `a = 4; switch a {case 1,2: return 5; case 2,3: return 6}`, Output: map[string]interface{}{"a": int64(4)}},
 
 		// test default
 		{Script: `a = 1; switch a {default: return 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
@@ -613,15 +612,15 @@ func TestSwitch(t *testing.T) {
 
 		// test scope
 		{Script: `a = 1; switch a {case 1: a = 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(5)}},
-		{Script: `a = 2; switch a {case 1: a = 5}`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 2; switch a {case 1: a = 5}`, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 1; b = 5; switch a {case 1: b = 6}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(1), "b": int64(6)}},
-		{Script: `a = 2; b = 5; switch a {case 1: b = 6}`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2), "b": int64(5)}},
+		{Script: `a = 2; b = 5; switch a {case 1: b = 6}`, Output: map[string]interface{}{"a": int64(2), "b": int64(5)}},
 		{Script: `a = 1; b = 5; switch a {case 1: b = 6; default: b = 7}`, RunOutput: int64(6), Output: map[string]interface{}{"a": int64(1), "b": int64(6)}},
 		{Script: `a = 2; b = 5; switch a {case 1: b = 6; default: b = 7}`, RunOutput: int64(7), Output: map[string]interface{}{"a": int64(2), "b": int64(7)}},
 
 		// test scope without define b
 		{Script: `a = 1; switch a {case 1: b = 5}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = 2; switch a {case 1: b = 5}`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
+		{Script: `a = 2; switch a {case 1: b = 5}`, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 1; switch a {case 1: b = 5}; b`, RunError: fmt.Errorf("undefined symbol 'b'"), RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 2; switch a {case 1: b = 5}; b`, RunError: fmt.Errorf("undefined symbol 'b'"), RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = 1; switch a {case 1: b = 5; default: b = 6}`, RunOutput: int64(5), Output: map[string]interface{}{"a": int64(1)}},
@@ -643,6 +642,9 @@ switch a {
 func TestForLoop(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
+		{Script: `for in [1] { }`, ParseError: fmt.Errorf("missing identifier")},
+		{Script: `for a, b, c in [1] { }`, ParseError: fmt.Errorf("too many identifiers")},
+
 		{Script: `break`, RunError: fmt.Errorf("unexpected break statement")},
 		{Script: `continue`, RunError: fmt.Errorf("unexpected continue statement")},
 		{Script: `for 1++ { }`, RunError: fmt.Errorf("invalid operation")},
@@ -653,6 +655,14 @@ func TestForLoop(t *testing.T) {
 		{Script: `for {a = 1; if a == 1 { break } }`, RunOutput: nil},
 		{Script: `a = 1; for { if a == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; for { if a == 1 { break }; a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for { if a == 3 { break }; a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = 1; for { if a == 1 { return }; a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for { if a == 3 { return }; a++ }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
+		{Script: `a = 1; for { if a == 1 { return 2 }; a++ }`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1)}},
+		{Script: `a = 1; for { if a == 3 { return 2 }; a++ }`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(3)}},
+
+		{Script: `a = 1; for { if a == 3 { return 3 }; a++ }; return 2`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
 
 		{Script: `a = 1; for { a++; if a == 2 { continue } else { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
 		{Script: `a = 1; for { a++; if a == 2 { continue }; if a == 3 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(3)}},
@@ -660,6 +670,8 @@ func TestForLoop(t *testing.T) {
 		{Script: `for a in [1] { if a == 1 { break } }`, RunOutput: nil},
 		{Script: `for a in [1, 2] { if a == 2 { break } }`, RunOutput: nil},
 		{Script: `for a in [1, 2, 3] { if a == 3 { break } }`, RunOutput: nil},
+
+		{Script: `for a in [1, 2, 3] { if a == 2 { return 2 } }; return 3`, RunOutput: int64(2)},
 
 		{Script: `a = [1]; for b in a { if b == 1 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1)}}},
 		{Script: `a = [1, 2]; for b in a { if b == 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
@@ -689,6 +701,7 @@ func TestForLoop(t *testing.T) {
 		{Script: `func x() { a = 1; for { if a == 1 { return "a" } } }; x()`, RunOutput: "a"},
 
 		{Script: `func x() { for a in [1, 2, 3] { if a == 3 { return } } }; x()`, RunOutput: nil},
+		{Script: `func x() { for a in [1, 2, 3] { if a == 3 { return 3 } }; return 2 }; x()`, RunOutput: int64(3)},
 		{Script: `func x() { for a in [1, 2, 3] { if a == 1 { continue } } }; x()`, RunOutput: nil},
 		{Script: `func x() { for a in [1, 2, 3] { if a == 1 { continue };  if a == 3 { return } } }; x()`, RunOutput: nil},
 
@@ -727,6 +740,8 @@ func TestForLoop(t *testing.T) {
 		{Script: `for a = 1; a == 1; a++ { }`, RunOutput: nil},
 		{Script: `for a = 1; a < 2; a++ { }`, RunOutput: nil},
 		{Script: `for a = 1; a < 3; a++ { }`, RunOutput: nil},
+
+		{Script: `for a = 1; a < 5; a++ { if a == 3 { return 3 } }; return 2`, RunOutput: int64(3)},
 
 		{Script: `a = 1; for b = 1; a < 1; a++ { }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; for b = 1; a < 2; a++ { }`, RunOutput: nil, Output: map[string]interface{}{"a": int64(2)}},
@@ -812,7 +827,9 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = k }; b`, RunOutput: "x", Output: map[string]interface{}{"a": map[interface{}]interface{}{"x": int64(2)}, "b": "x"}},
 		{Script: `a = {"x": 2}; b = 0; for k, v in a { b = v }; b`, RunOutput: int64(2), Output: map[string]interface{}{"a": map[interface{}]interface{}{"x": int64(2)}, "b": int64(2)}},
 
-		{Script: `a = make(chan int64, 1); a <- 1; v = 0; for val in a { v = val; break; }; v`, RunOutput: int64(1), Output: map[string]interface{}{"v": int64(1)}},
+		{Script: `a = make(chan int64, 2); a <- 1; v = 0; for val in a { v = val; break; }; v`, RunOutput: int64(1), Output: map[string]interface{}{"v": int64(1)}},
+		{Script: `a = make(chan int64, 4); a <- 1; a <- 2; a <- 3; for i in a { if i == 2 { return 2 } }; return 4`, RunOutput: int64(2)},
+		{Script: `a = make(chan int64, 2); a <- 1; for i in a { if i < 4 { a <- i + 1; continue }; return 4 }; return 6`, RunOutput: int64(4)},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -878,10 +895,10 @@ func TestItemInList(t *testing.T) {
 		// not slice or array
 		// todo: support `"a" in "aaa"` ?
 		{Script: `"a" in "aaa"`, RunError: fmt.Errorf("second argument must be slice or array; but have string")},
-		{Script: `1 in 12345`, RunError: fmt.Errorf("type int64 does not support slice operation")},
+		{Script: `1 in 12345`, RunError: fmt.Errorf("second argument must be slice or array; but have int64")},
 
 		// a in item in list
-		{Script: `"a" in 5 in [1, 2, 3]`, RunError: fmt.Errorf("type bool does not support slice operation")},
+		{Script: `"a" in 5 in [1, 2, 3]`, RunError: fmt.Errorf("second argument must be slice or array; but have bool")},
 
 		// applying a in b in several part of expresstion/statement
 		{Script: `switch 1 in [1] {case true: return true;default: return false}`, RunOutput: true},
@@ -997,11 +1014,9 @@ func TestOperatorPrecedence(t *testing.T) {
 }
 
 func TestTemp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
+	os.Setenv("ANKO_DEBUG", "")
 	tests := []testlib.Test{
-		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
-
-		{Script: `a = 1; a++`, RunOutput: int64(2)},
+		{Script: `a = 1; for { if a == 3 { return 3 }; a++ }; return 2`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
 	}
 	testlib.Run(t, tests, nil)
 }

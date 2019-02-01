@@ -35,7 +35,7 @@ func Run(t *testing.T, tests []Test, testingOptions *Options) {
 
 func run(t *testing.T, test Test, testingOptions *Options) {
 	// parser.EnableErrorVerbose()
-	stmts, err := parser.ParseSrc(test.Script)
+	stmt, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)
 	} else if err != nil && test.ParseError != nil {
@@ -74,7 +74,7 @@ func run(t *testing.T, test Test, testingOptions *Options) {
 	}
 
 	var value interface{}
-	value, err = env.Run(stmts)
+	value, err = env.Run(stmt)
 	if test.RunErrorFunc != nil {
 		(*test.RunErrorFunc)(t, err)
 	} else if err != nil && test.RunError != nil {

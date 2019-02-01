@@ -10,14 +10,11 @@ import (
 
 // toString converts all reflect.Value-s into string.
 func toString(v reflect.Value) string {
-	if !v.IsValid() {
-		return "nil"
-	}
-	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+	if v.Kind() == reflect.Interface && !v.IsNil() {
 		v = v.Elem()
 	}
-	if !v.IsValid() {
-		return "nil"
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
 	}
 	if v.Kind() == reflect.String {
 		return v.String()

@@ -1,297 +1,347 @@
 package vm
 
 import (
-	"context"
 	"reflect"
-	"strings"
 
 	"github.com/mattn/anko/ast"
 )
 
-func invokeLetExpr(ctx context.Context, expr ast.Expr, rv reflect.Value, env *Env) (reflect.Value, error) {
-	switch lhs := expr.(type) {
+func (runInfo *runInfoStruct) invokeLetExpr() {
+	switch expr := runInfo.expr.(type) {
 
 	// IdentExpr
 	case *ast.IdentExpr:
-		if env.setValue(lhs.Lit, rv) != nil {
-			if strings.Contains(lhs.Lit, ".") {
-				return nilValue, newErrorf(expr, "undefined symbol '%s'", lhs.Lit)
-			}
-			env.defineValue(lhs.Lit, rv)
+		if runInfo.env.setValue(expr.Lit, runInfo.rv) != nil {
+			runInfo.err = nil
+			runInfo.env.defineValue(expr.Lit, runInfo.rv)
 		}
-		return rv, nil
 
 	// MemberExpr
 	case *ast.MemberExpr:
-		v, err := invokeExpr(ctx, lhs.Expr, env)
-		if err != nil {
-			return nilValue, newError(expr, err)
+		value := runInfo.rv
+
+		runInfo.expr = expr.Expr
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
 		}
 
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
 		}
-		if !v.IsValid() {
-			return nilValue, newStringError(expr, "type invalid does not support member operation")
-		}
-		if v.Kind() == reflect.Ptr {
-			v = v.Elem()
-		}
-		if !v.IsValid() {
-			return nilValue, newStringError(expr, "type invalid does not support member operation")
+		if runInfo.rv.Kind() == reflect.Ptr {
+			runInfo.rv = runInfo.rv.Elem()
 		}
 
-		switch v.Kind() {
+		switch runInfo.rv.Kind() {
 
 		// Struct
 		case reflect.Struct:
-			field, found := v.Type().FieldByName(lhs.Name)
+			field, found := runInfo.rv.Type().FieldByName(expr.Name)
 			if !found {
-				return nilValue, newStringError(expr, "no member named '"+lhs.Name+"' for struct")
+				runInfo.err = newStringError(expr, "no member named '"+expr.Name+"' for struct")
+				runInfo.rv = nilValue
+				return
 			}
-			v = v.FieldByIndex(field.Index)
+			runInfo.rv = runInfo.rv.FieldByIndex(field.Index)
 			// From reflect CanSet:
 			// A Value can be changed only if it is addressable and was not obtained by the use of unexported struct fields.
 			// Often a struct has to be passed as a pointer to be set
-			if !v.CanSet() {
-				return nilValue, newStringError(expr, "struct member '"+lhs.Name+"' cannot be assigned")
+			if !runInfo.rv.CanSet() {
+				runInfo.err = newStringError(expr, "struct member '"+expr.Name+"' cannot be assigned")
+				runInfo.rv = nilValue
+				return
 			}
 
-			rv, err = convertReflectValueToType(rv, v.Type())
-			if err != nil {
-				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for struct")
+			value, runInfo.err = convertReflectValueToType(value, runInfo.rv.Type())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+runInfo.rv.Type().String()+" for struct")
+				runInfo.rv = nilValue
+				return
 			}
 
-			v.Set(rv)
-			return v, nil
+			runInfo.rv.Set(value)
+			return
 
 		// Map
 		case reflect.Map:
-			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				rv, err = convertReflectValueToType(rv, v.Type().Elem())
-				if err != nil {
-					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
-				}
+			value, runInfo.err = convertReflectValueToType(value, runInfo.rv.Type().Elem())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+runInfo.rv.Type().Elem().String()+" for map")
+				runInfo.rv = nilValue
+				return
 			}
-			if v.IsNil() {
-				v = reflect.MakeMap(v.Type())
-				v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
-				return invokeLetExpr(ctx, lhs.Expr, v, env)
+			if runInfo.rv.IsNil() {
+				// make new map
+				item := reflect.MakeMap(runInfo.rv.Type())
+				item.SetMapIndex(reflect.ValueOf(expr.Name), value)
+				// assign new map
+				runInfo.rv = item
+				runInfo.expr = expr.Expr
+				runInfo.invokeLetExpr()
+				runInfo.rv = item.MapIndex(reflect.ValueOf(expr.Name))
+				return
 			}
-			v.SetMapIndex(reflect.ValueOf(lhs.Name), rv)
+			runInfo.rv.SetMapIndex(reflect.ValueOf(expr.Name), value)
 
 		default:
-			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support member operation")
+			runInfo.err = newStringError(expr, "type "+runInfo.rv.Kind().String()+" does not support member operation")
+			runInfo.rv = nilValue
 		}
-		return v, nil
 
 	// ItemExpr
 	case *ast.ItemExpr:
-		v, err := invokeExpr(ctx, lhs.Value, env)
-		if err != nil {
-			return nilValue, newError(expr, err)
+		value := runInfo.rv
+
+		runInfo.expr = expr.Item
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
 		}
-		index, err := invokeExpr(ctx, lhs.Index, env)
-		if err != nil {
-			return nilValue, newError(expr, err)
-		}
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
+		item := runInfo.rv
+
+		runInfo.expr = expr.Index
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
 		}
 
-		switch v.Kind() {
+		if item.Kind() == reflect.Interface && !item.IsNil() {
+			item = item.Elem()
+		}
+
+		switch item.Kind() {
 
 		// Slice && Array
 		case reflect.Slice, reflect.Array:
-			indexInt, err := tryToInt(index)
-			if err != nil {
-				return nilValue, newStringError(expr, "index must be a number")
+			var index int
+			index, runInfo.err = tryToInt(runInfo.rv)
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "index must be a number")
+				runInfo.rv = nilValue
+				return
 			}
 
-			if indexInt == v.Len() {
+			if index == item.Len() {
 				// try to do automatic append
-				if v.Type().Elem() == rv.Type() {
-					v = reflect.Append(v, rv)
-					return invokeLetExpr(ctx, lhs.Value, v, env)
+				value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
+				if runInfo.err != nil {
+					runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for array index")
+					runInfo.rv = nilValue
+					return
 				}
-				if rv.Type().ConvertibleTo(v.Type().Elem()) {
-					v = reflect.Append(v, rv.Convert(v.Type().Elem()))
-					return invokeLetExpr(ctx, lhs.Value, v, env)
-				}
-				if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
-					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for array index")
-				}
-
-				newSlice := reflect.MakeSlice(v.Type().Elem(), 0, rv.Len())
-				newSlice, err = appendSlice(expr, newSlice, rv)
-				if err != nil {
-					return nilValue, err
-				}
-				v = reflect.Append(v, newSlice)
-				return invokeLetExpr(ctx, lhs.Value, v, env)
+				item = reflect.Append(item, value)
+				runInfo.rv = item
+				runInfo.expr = expr.Item
+				runInfo.invokeLetExpr()
+				runInfo.rv = item.Index(index)
+				return
 			}
 
-			if indexInt < 0 || indexInt >= v.Len() {
-				return nilValue, newStringError(expr, "index out of range")
+			if index < 0 || index >= item.Len() {
+				runInfo.err = newStringError(expr, "index out of range")
+				runInfo.rv = nilValue
+				return
 			}
-			v = v.Index(indexInt)
-			if !v.CanSet() {
-				return nilValue, newStringError(expr, "index cannot be assigned")
-			}
-
-			if v.Type() == rv.Type() {
-				v.Set(rv)
-				return v, nil
-			}
-			if rv.Type().ConvertibleTo(v.Type()) {
-				v.Set(rv.Convert(v.Type()))
-				return v, nil
+			item = item.Index(index)
+			if !item.CanSet() {
+				runInfo.err = newStringError(expr, "index cannot be assigned")
+				runInfo.rv = nilValue
+				return
 			}
 
-			if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
-				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String()+" for array index")
+			value, runInfo.err = convertReflectValueToType(value, item.Type())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String()+" for array index")
+				runInfo.rv = nilValue
+				return
 			}
 
-			newSlice := reflect.MakeSlice(v.Type(), 0, rv.Len())
-			newSlice, err = appendSlice(expr, newSlice, rv)
-			if err != nil {
-				return nilValue, err
-			}
-			v.Set(newSlice)
+			item.Set(value)
+			runInfo.rv = item
 
 		// Map
 		case reflect.Map:
-			if v.Type().Key() != interfaceType && v.Type().Key() != index.Type() {
-				index, err = convertReflectValueToType(index, v.Type().Key())
-				if err != nil {
-					return nilValue, newStringError(expr, "index type "+index.Type().String()+" cannot be used for map index type "+v.Type().Key().String())
-				}
-			}
-			if v.Type().Elem() != interfaceType && v.Type().Elem() != rv.Type() {
-				rv, err = convertReflectValueToType(rv, v.Type().Elem())
-				if err != nil {
-					return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().Elem().String()+" for map")
-				}
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, item.Type().Key())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "index type "+runInfo.rv.Type().String()+" cannot be used for map index type "+item.Type().Key().String())
+				runInfo.rv = nilValue
+				return
 			}
 
-			if v.IsNil() {
-				v = reflect.MakeMap(v.Type())
-				v.SetMapIndex(index, rv)
-				return invokeLetExpr(ctx, lhs.Value, v, env)
+			value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for map")
+				runInfo.rv = nilValue
+				return
 			}
-			v.SetMapIndex(index, rv)
+
+			if item.IsNil() {
+				// make new map
+				item = reflect.MakeMap(item.Type())
+				item.SetMapIndex(runInfo.rv, value)
+				mapIndex := runInfo.rv
+				// assign new map
+				runInfo.rv = item
+				runInfo.expr = expr.Item
+				runInfo.invokeLetExpr()
+				runInfo.rv = item.MapIndex(mapIndex)
+				return
+			}
+			item.SetMapIndex(runInfo.rv, value)
 
 		// String
 		case reflect.String:
-			rv, err = convertReflectValueToType(rv, v.Type())
-			if err != nil {
-				return nilValue, newStringError(expr, "type "+rv.Type().String()+" cannot be assigned to type "+v.Type().String())
+			var index int
+			index, runInfo.err = tryToInt(runInfo.rv)
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "index must be a number")
+				runInfo.rv = nilValue
+				return
 			}
 
-			indexInt, err := tryToInt(index)
-			if err != nil {
-				return nilValue, newStringError(expr, "index must be a number")
+			value, runInfo.err = convertReflectValueToType(value, item.Type())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String())
+				runInfo.rv = nilValue
+				return
 			}
 
-			if indexInt == v.Len() {
-				// try to do automatic append
-
-				if v.CanSet() {
-					v.SetString(v.String() + rv.String())
-					return v, nil
+			if index == item.Len() {
+				// automatic append
+				if item.CanSet() {
+					item.SetString(item.String() + value.String())
+					return
 				}
 
-				return invokeLetExpr(ctx, lhs.Value, reflect.ValueOf(v.String()+rv.String()), env)
+				runInfo.rv = reflect.ValueOf(item.String() + value.String())
+				runInfo.expr = expr.Item
+				runInfo.invokeLetExpr()
+				return
 			}
 
-			if indexInt < 0 || indexInt >= v.Len() {
-				return nilValue, newStringError(expr, "index out of range")
+			if index < 0 || index >= item.Len() {
+				runInfo.err = newStringError(expr, "index out of range")
+				runInfo.rv = nilValue
+				return
 			}
 
-			if v.CanSet() {
-				v.SetString(v.Slice(0, indexInt).String() + rv.String() + v.Slice(indexInt+1, v.Len()).String())
-				return v, nil
+			if item.CanSet() {
+				item.SetString(item.Slice(0, index).String() + value.String() + item.Slice(index+1, item.Len()).String())
+				runInfo.rv = item
+				return
 			}
 
-			return invokeLetExpr(ctx, lhs.Value, reflect.ValueOf(v.Slice(0, indexInt).String()+rv.String()+v.Slice(indexInt+1, v.Len()).String()), env)
+			runInfo.rv = reflect.ValueOf(item.Slice(0, index).String() + value.String() + item.Slice(index+1, item.Len()).String())
+			runInfo.expr = expr.Item
+			runInfo.invokeLetExpr()
 
 		default:
-			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support index operation")
+			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support index operation")
+			runInfo.rv = nilValue
 		}
-
-		return v, nil
 
 	// SliceExpr
 	case *ast.SliceExpr:
-		v, err := invokeExpr(ctx, lhs.Value, env)
-		if err != nil {
-			return nilValue, newError(expr, err)
+		value := runInfo.rv
+
+		runInfo.expr = expr.Item
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
 		}
-		if v.Kind() == reflect.Interface {
-			v = v.Elem()
+		item := runInfo.rv
+
+		if item.Kind() == reflect.Interface && !item.IsNil() {
+			item = item.Elem()
 		}
-		switch v.Kind() {
+
+		switch item.Kind() {
 
 		// Slice && Array
 		case reflect.Slice, reflect.Array:
-			var rbi, rei int
-			if lhs.Begin != nil {
-				rb, err := invokeExpr(ctx, lhs.Begin, env)
-				if err != nil {
-					return nilValue, newError(expr, err)
-				}
-				rbi, err = tryToInt(rb)
-				if err != nil {
-					return nilValue, newStringError(expr, "index must be a number")
-				}
-				if rbi < 0 || rbi > v.Len() {
-					return nilValue, newStringError(expr, "index out of range")
-				}
+			var beginIndex, endIndex int
+			if expr.Begin == nil {
+				beginIndex = 0
 			} else {
-				rbi = 0
+				runInfo.expr = expr.Begin
+				runInfo.invokeExpr()
+				if runInfo.err != nil {
+					return
+				}
+
+				beginIndex, runInfo.err = tryToInt(runInfo.rv)
+				if runInfo.err != nil {
+					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
+					return
+				}
+				if beginIndex < 0 || beginIndex > item.Len() {
+					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
+					return
+				}
 			}
-			if lhs.End != nil {
-				re, err := invokeExpr(ctx, lhs.End, env)
-				if err != nil {
-					return nilValue, newError(expr, err)
-				}
-				rei, err = tryToInt(re)
-				if err != nil {
-					return nilValue, newStringError(expr, "index must be a number")
-				}
-				if rei < 0 || rei > v.Len() {
-					return nilValue, newStringError(expr, "index out of range")
-				}
+			if expr.End == nil {
+				endIndex = item.Len()
 			} else {
-				rei = v.Len()
+				runInfo.expr = expr.End
+				runInfo.invokeExpr()
+				if runInfo.err != nil {
+					return
+				}
+				endIndex, runInfo.err = tryToInt(runInfo.rv)
+				if runInfo.err != nil {
+					runInfo.err = newStringError(expr, "index must be a number")
+					runInfo.rv = nilValue
+					return
+				}
+				if endIndex < 0 || endIndex > item.Len() {
+					runInfo.err = newStringError(expr, "index out of range")
+					runInfo.rv = nilValue
+					return
+				}
 			}
-			if rbi > rei {
-				return nilValue, newStringError(expr, "invalid slice index")
+			if beginIndex > endIndex {
+				runInfo.err = newStringError(expr, "invalid slice index")
+				runInfo.rv = nilValue
+				return
 			}
-			v = v.Slice(rbi, rei)
-			if !v.CanSet() {
-				return nilValue, newStringError(expr, "slice cannot be assigned")
+			item = item.Slice(beginIndex, endIndex)
+
+			if !item.CanSet() {
+				runInfo.err = newStringError(expr, "slice cannot be assigned")
+				runInfo.rv = nilValue
+				return
 			}
-			v.Set(rv)
+			item.Set(value)
 
 		// String
 		case reflect.String:
-			return nilValue, newStringError(expr, "type string does not support slice operation for assignment")
+			runInfo.err = newStringError(expr, "type string does not support slice operation for assignment")
+			runInfo.rv = nilValue
 
 		default:
-			return nilValue, newStringError(expr, "type "+v.Kind().String()+" does not support slice operation")
+			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support slice operation")
+			runInfo.rv = nilValue
 		}
-		return v, nil
 
 	// DerefExpr
 	case *ast.DerefExpr:
-		v, err := invokeExpr(ctx, lhs.Expr, env)
-		if err != nil {
-			return nilValue, newError(expr, err)
+		value := runInfo.rv
+
+		runInfo.expr = expr.Expr
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
 		}
-		v.Elem().Set(rv)
-		return v, nil
+
+		runInfo.rv.Elem().Set(value)
+		runInfo.rv = value
+
+	default:
+		runInfo.err = newStringError(expr, "invalid operation")
+		runInfo.rv = nilValue
 	}
 
-	return nilValue, newStringError(expr, "invalid operation")
 }

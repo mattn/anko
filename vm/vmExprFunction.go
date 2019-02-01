@@ -11,7 +11,9 @@ import (
 
 // funcExpr creates a function that reflect Call can use.
 // When called, it will run runVMFunction, to run the function statements
-func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Value, error) {
+func (runInfo *runInfoStruct) funcExpr() {
+	funcExpr := runInfo.expr.(*ast.FuncExpr)
+
 	// create the inTypes needed by reflect.FuncOf
 	inTypes := make([]reflect.Type, len(funcExpr.Params)+1)
 	// for runVMFunction first arg is always context
@@ -25,105 +27,99 @@ func funcExpr(ctx context.Context, funcExpr *ast.FuncExpr, env *Env) (reflect.Va
 	// create funcType, output is always slice of reflect.Type with two values
 	funcType := reflect.FuncOf(inTypes, []reflect.Type{reflectValueType, reflectValueType}, funcExpr.VarArg)
 
+	// for adding env into saved function
+	envFunc := runInfo.env
+
 	// create a function that can be used by reflect.MakeFunc
 	// this function is a translator that converts a function call into a vm run
 	// returns slice of reflect.Type with two values:
 	// return value of the function and error value of the run
 	runVMFunction := func(in []reflect.Value) []reflect.Value {
-		var err error
-		var rv reflect.Value
+		runInfo.ctx = in[0].Interface().(context.Context)
+		env := runInfo.env
+		runInfo.env = envFunc.NewEnv()
+		runInfo.stmt = funcExpr.Stmt
 
-		// create newEnv for run
-		newEnv := env.NewEnv()
 		// add Params to newEnv, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
-			rv = in[i+1].Interface().(reflect.Value)
-			err = newEnv.defineValue(funcExpr.Params[i], rv)
-			if err != nil {
-				return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
-			}
+			runInfo.rv = in[i+1].Interface().(reflect.Value)
+			runInfo.env.defineValue(funcExpr.Params[i], runInfo.rv)
 		}
 		// add last Params to newEnv
 		if len(funcExpr.Params) > 0 {
 			if funcExpr.VarArg {
 				// function is variadic, add last Params to newEnv without convert to Interface and then reflect.Value
-				rv = in[len(funcExpr.Params)]
-				err = newEnv.defineValue(funcExpr.Params[len(funcExpr.Params)-1], rv)
-				if err != nil {
-					return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
-				}
+				runInfo.rv = in[len(funcExpr.Params)]
+				runInfo.env.defineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			} else {
 				// function is not variadic, add last Params to newEnv
-				rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
-				err = newEnv.defineValue(funcExpr.Params[len(funcExpr.Params)-1], rv)
-				if err != nil {
-					return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
-				}
+				runInfo.rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
+				runInfo.env.defineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			}
 		}
 
-		ctx := in[0].Interface().(context.Context)
-
 		// run function statements
-		rv, err = run(ctx, funcExpr.Stmts, newEnv)
-		if err != nil && err != ErrReturn {
-			err = newError(funcExpr, err)
+		runInfo.runSingleStmt()
+		if runInfo.err != nil && runInfo.err != ErrReturn {
+			runInfo.err = newError(funcExpr, runInfo.err)
+			runInfo.env = env
 			// return nil value and error
 			// need to do single reflect.ValueOf because nilValue is already reflect.Value of nil
 			// need to do double reflect.ValueOf of newError in order to match
-			return []reflect.Value{reflect.ValueOf(nilValue), reflect.ValueOf(reflect.ValueOf(newError(funcExpr, err)))}
+			return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, runInfo.err)))}
 		}
 
 		// the reflect.ValueOf of rv is needed to work in the reflect.Value slice
 		// reflectValueErrorNilValue is already a double reflect.ValueOf
-		return []reflect.Value{reflect.ValueOf(rv), reflectValueErrorNilValue}
+		runInfo.env = env
+		return []reflect.Value{reflect.ValueOf(runInfo.rv), reflectValueErrorNilValue}
 	}
 
 	// make the reflect.Value function that calls runVMFunction
-	rv := reflect.MakeFunc(funcType, runVMFunction)
+	runInfo.rv = reflect.MakeFunc(funcType, runVMFunction)
 
 	// if function name is not empty, define it in the env
 	if funcExpr.Name != "" {
-		err := env.defineValue(funcExpr.Name, rv)
-		if err != nil {
-			return nilValue, newError(funcExpr, err)
-		}
+		runInfo.env.defineValue(funcExpr.Name, runInfo.rv)
 	}
-
-	// return the reflect.Value created
-	return rv, nil
 }
 
 // anonCallExpr handles ast.AnonCallExpr which calls a function anonymously
-func anonCallExpr(ctx context.Context, e *ast.AnonCallExpr, env *Env) (reflect.Value, error) {
-	f, err := invokeExpr(ctx, e.Expr, env)
-	if err != nil {
-		return nilValue, newError(e, err)
+func (runInfo *runInfoStruct) anonCallExpr() {
+	anonCallExpr := runInfo.expr.(*ast.AnonCallExpr)
+
+	runInfo.expr = anonCallExpr.Expr
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
 	}
-	if f.Kind() == reflect.Interface && !f.IsNil() {
-		f = f.Elem()
+
+	if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+		runInfo.rv = runInfo.rv.Elem()
 	}
-	if f.Kind() == reflect.Func {
-		return invokeExpr(ctx, &ast.CallExpr{Func: f, SubExprs: e.SubExprs, VarArg: e.VarArg, Go: e.Go}, env)
+	if runInfo.rv.Kind() != reflect.Func {
+		runInfo.err = newStringError(anonCallExpr, "cannot call type "+runInfo.rv.Kind().String())
+		runInfo.rv = nilValue
+		return
 	}
-	if !f.IsValid() {
-		return nilValue, newStringError(e, "cannot call type invalid")
-	}
-	return nilValue, newStringError(e, "cannot call type "+f.Type().String())
+
+	runInfo.expr = &ast.CallExpr{Func: runInfo.rv, SubExprs: anonCallExpr.SubExprs, VarArg: anonCallExpr.VarArg, Go: anonCallExpr.Go}
+	runInfo.invokeExpr()
 }
 
 // callExpr handles *ast.CallExpr which calls a function
-func callExpr(ctx context.Context, callExpr *ast.CallExpr, env *Env) (rv reflect.Value, err error) {
+func (runInfo *runInfoStruct) callExpr() {
 	// Note that if the function type looks the same as the VM function type, the returned values will probably be wrong
 
-	rv = nilValue
+	callExpr := runInfo.expr.(*ast.CallExpr)
 
 	f := callExpr.Func
 	if !f.IsValid() {
 		// if function is not valid try to get by function name
-		f, err = env.get(callExpr.Name)
-		if err != nil {
-			err = newError(callExpr, err)
+		f, runInfo.err = runInfo.env.get(callExpr.Name)
+		if runInfo.err != nil {
+			runInfo.err = newError(callExpr, runInfo.err)
+			runInfo.rv = nilValue
 			return
 		}
 	}
@@ -131,12 +127,9 @@ func callExpr(ctx context.Context, callExpr *ast.CallExpr, env *Env) (rv reflect
 	if f.Kind() == reflect.Interface && !f.IsNil() {
 		f = f.Elem()
 	}
-	if !f.IsValid() {
-		err = newStringError(callExpr, "cannot call type invalid")
-		return
-	}
 	if f.Kind() != reflect.Func {
-		err = newStringError(callExpr, "cannot call type "+f.Type().String())
+		runInfo.err = newStringError(callExpr, "cannot call type "+f.Kind().String())
+		runInfo.rv = nilValue
 		return
 	}
 
@@ -147,8 +140,8 @@ func callExpr(ctx context.Context, callExpr *ast.CallExpr, env *Env) (rv reflect
 	// check if this is a runVMFunction type
 	isRunVMFunction := checkIfRunVMFunction(fType)
 	// create/convert the args to the function
-	args, useCallSlice, err = makeCallArgs(ctx, fType, isRunVMFunction, callExpr, env)
-	if err != nil {
+	args, useCallSlice = runInfo.makeCallArgs(fType, isRunVMFunction, callExpr)
+	if runInfo.err != nil {
 		return
 	}
 
@@ -156,7 +149,8 @@ func callExpr(ctx context.Context, callExpr *ast.CallExpr, env *Env) (rv reflect
 	defer func() {
 		if os.Getenv("ANKO_DEBUG") == "" {
 			if recoverResult := recover(); recoverResult != nil {
-				err = fmt.Errorf("%v", recoverResult)
+				runInfo.err = fmt.Errorf("%v", recoverResult)
+				runInfo.rv = nilValue
 			}
 		}
 	}()
@@ -183,16 +177,16 @@ func callExpr(ctx context.Context, callExpr *ast.CallExpr, env *Env) (rv reflect
 		for i, expr := range callExpr.SubExprs {
 			if addrExpr, ok := expr.(*ast.AddrExpr); ok {
 				if identExpr, ok := addrExpr.Expr.(*ast.IdentExpr); ok {
-					invokeLetExpr(ctx, identExpr, args[i].Elem(), env)
+					runInfo.rv = args[i].Elem()
+					runInfo.expr = identExpr
+					runInfo.invokeLetExpr()
 				}
 			}
 		}
 	}
 
 	// processCallReturnValues to get/convert return values to normal rv form
-	rv, err = processCallReturnValues(rvs, isRunVMFunction, true)
-
-	return
+	runInfo.rv, runInfo.err = processCallReturnValues(rvs, isRunVMFunction, true)
 }
 
 // checkIfRunVMFunction checking the number and types of the reflect.Type.
@@ -222,7 +216,7 @@ func checkIfRunVMFunction(rt reflect.Type) bool {
 
 // makeCallArgs creates the arguments reflect.Value slice for the four diffrent kinds of functions.
 // Also returns true if CallSlice should be used on the arguments, or false if Call should be used.
-func makeCallArgs(ctx context.Context, rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr, env *Env) ([]reflect.Value, bool, error) {
+func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr) ([]reflect.Value, bool) {
 	// number of arguments
 	numInReal := rt.NumIn()
 	numIn := numInReal
@@ -234,9 +228,9 @@ func makeCallArgs(ctx context.Context, rt reflect.Type, isRunVMFunction bool, ca
 		// no arguments needed
 		if isRunVMFunction {
 			// for runVMFunction first arg is always context
-			return []reflect.Value{reflect.ValueOf(ctx)}, false, nil
+			return []reflect.Value{reflect.ValueOf(runInfo.ctx)}, false
 		}
-		return []reflect.Value{}, false, nil
+		return []reflect.Value{}, false
 	}
 
 	// number of expressions
@@ -246,14 +240,16 @@ func makeCallArgs(ctx context.Context, rt reflect.Type, isRunVMFunction bool, ca
 		(rt.IsVariadic() && callExpr.VarArg && (numIn < numExprs || numIn > numExprs+1)) ||
 		(rt.IsVariadic() && !callExpr.VarArg && numIn > numExprs+1) ||
 		(!rt.IsVariadic() && callExpr.VarArg && numIn < numExprs) {
-		return []reflect.Value{}, false, newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs))
+		runInfo.err = newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs))
+		runInfo.rv = nilValue
+		return nil, false
 	}
 	if rt.IsVariadic() && rt.In(numInReal-1).Kind() != reflect.Slice && rt.In(numInReal-1).Kind() != reflect.Array {
-		return []reflect.Value{}, false, newStringError(callExpr, "function is variadic but last parameter is of type "+rt.In(numInReal-1).String())
+		runInfo.err = newStringError(callExpr, "function is variadic but last parameter is of type "+rt.In(numInReal-1).String())
+		runInfo.rv = nilValue
+		return nil, false
 	}
 
-	var err error
-	var arg reflect.Value
 	var args []reflect.Value
 	indexIn := 0
 	indexInReal := 0
@@ -266,25 +262,28 @@ func makeCallArgs(ctx context.Context, rt reflect.Type, isRunVMFunction bool, ca
 	}
 	if isRunVMFunction {
 		// for runVMFunction first arg is always context
-		args = append(args, reflect.ValueOf(ctx))
+		args = append(args, reflect.ValueOf(runInfo.ctx))
 		indexInReal++
 	}
 
 	// create arguments except the last one
 	for indexInReal < numInReal-1 && indexExpr < numExprs-1 {
-		arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-		if err != nil {
-			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+		runInfo.expr = callExpr.SubExprs[indexExpr]
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return nil, false
 		}
 		if isRunVMFunction {
-			args = append(args, reflect.ValueOf(arg))
+			args = append(args, reflect.ValueOf(runInfo.rv))
 		} else {
-			arg, err = convertReflectValueToType(arg, rt.In(indexInReal))
-			if err != nil {
-				return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, rt.In(indexInReal))
+			if runInfo.err != nil {
+				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+				runInfo.rv = nilValue
+				return nil, false
 			}
-			args = append(args, arg)
+			args = append(args, runInfo.rv)
 		}
 		indexIn++
 		indexInReal++
@@ -294,120 +293,142 @@ func makeCallArgs(ctx context.Context, rt reflect.Type, isRunVMFunction bool, ca
 	if !rt.IsVariadic() && !callExpr.VarArg {
 		// function is not variadic and call is not variadic
 		// add last arguments and return
-		arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-		if err != nil {
-			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+		runInfo.expr = callExpr.SubExprs[indexExpr]
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return nil, false
+		}
+		if runInfo.err != nil {
+			return nil, false
 		}
 		if isRunVMFunction {
-			args = append(args, reflect.ValueOf(arg))
+			args = append(args, reflect.ValueOf(runInfo.rv))
 		} else {
-			arg, err = convertReflectValueToType(arg, rt.In(indexInReal))
-			if err != nil {
-				return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, rt.In(indexInReal))
+			if runInfo.err != nil {
+				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+				runInfo.rv = nilValue
+				return nil, false
 			}
-			args = append(args, arg)
+			args = append(args, runInfo.rv)
 		}
-		return args, false, nil
+		return args, false
 	}
 
 	if !rt.IsVariadic() && callExpr.VarArg {
 		// function is not variadic and call is variadic
-		arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-		if err != nil {
-			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+		runInfo.expr = callExpr.SubExprs[indexExpr]
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return nil, false
 		}
-		if arg.Kind() != reflect.Slice && arg.Kind() != reflect.Array {
-			return []reflect.Value{}, false, newStringError(callExpr, "call is variadic but last parameter is of type "+arg.Type().String())
+		if runInfo.rv.Kind() != reflect.Slice && runInfo.rv.Kind() != reflect.Array {
+			runInfo.err = newStringError(callExpr, "call is variadic but last parameter is of type "+runInfo.rv.Type().String())
+			runInfo.rv = nilValue
+			return nil, false
 		}
-		if arg.Len() < numIn-indexIn {
-			return []reflect.Value{}, false, newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs+arg.Len()-1))
+		if runInfo.rv.Len() < numIn-indexIn {
+			runInfo.err = newStringError(callExpr, fmt.Sprintf("function wants %v arguments but received %v", numIn, numExprs+runInfo.rv.Len()-1))
+			runInfo.rv = nilValue
+			return nil, false
 		}
 
 		indexSlice := 0
 		for indexInReal < numInReal {
 			if isRunVMFunction {
-				args = append(args, reflect.ValueOf(arg.Index(indexSlice)))
+				args = append(args, reflect.ValueOf(runInfo.rv.Index(indexSlice)))
 			} else {
-				arg, err = convertReflectValueToType(arg.Index(indexSlice), rt.In(indexInReal))
-				if err != nil {
-					return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-						"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+				runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv.Index(indexSlice), rt.In(indexInReal))
+				if runInfo.err != nil {
+					runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+						"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+					runInfo.rv = nilValue
+					return nil, false
 				}
-				args = append(args, arg)
+				args = append(args, runInfo.rv)
 			}
 			indexIn++
 			indexInReal++
 			indexSlice++
 		}
-		return args, false, nil
+		return args, false
 	}
 
 	// function is variadic and call may or may not be variadic
 
 	if indexExpr == numExprs {
 		// no more expressions, return what we have and let reflect Call handle if call is variadic or not
-		return args, false, nil
+		return args, false
 	}
 
 	if numIn > numExprs {
 		// there are more arguments after this one, so does not matter if call is variadic or not
 		// add the last argument then return what we have and let reflect Call handle if call is variadic or not
-		arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-		if err != nil {
-			return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+		runInfo.expr = callExpr.SubExprs[indexExpr]
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return nil, false
 		}
 		if isRunVMFunction {
-			args = append(args, reflect.ValueOf(arg))
+			args = append(args, reflect.ValueOf(runInfo.rv))
 		} else {
-			arg, err = convertReflectValueToType(arg, rt.In(indexInReal))
-			if err != nil {
-				return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, rt.In(indexInReal))
+			if runInfo.err != nil {
+				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+				runInfo.rv = nilValue
+				return nil, false
 			}
-			args = append(args, arg)
+			args = append(args, runInfo.rv)
 		}
-		return args, false, nil
+		return args, false
 	}
 
 	if rt.IsVariadic() && !callExpr.VarArg {
 		// function is variadic and call is not variadic
 		sliceType := rt.In(numInReal - 1).Elem()
 		for indexExpr < numExprs {
-			arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-			if err != nil {
-				return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+			runInfo.expr = callExpr.SubExprs[indexExpr]
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				return nil, false
 			}
-			arg, err = convertReflectValueToType(arg, sliceType)
-			if err != nil {
-				return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, sliceType)
+			if runInfo.err != nil {
+				runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+					"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+				runInfo.rv = nilValue
+				return nil, false
 			}
-			args = append(args, arg)
+			args = append(args, runInfo.rv)
 			indexExpr++
 		}
-		return args, false, nil
+		return args, false
 
 	}
 
 	// function is variadic and call is variadic
 	// the only time we return CallSlice is true
 	sliceType := rt.In(numInReal - 1)
-	if sliceType.Kind() == reflect.Interface && !arg.IsNil() {
+	if sliceType.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
 		sliceType = sliceType.Elem()
 	}
-	arg, err = invokeExpr(ctx, callExpr.SubExprs[indexExpr], env)
-	if err != nil {
-		return []reflect.Value{}, false, newError(callExpr.SubExprs[indexExpr], err)
+	runInfo.expr = callExpr.SubExprs[indexExpr]
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return nil, false
 	}
-	arg, err = convertReflectValueToType(arg, sliceType)
-	if err != nil {
-		return []reflect.Value{}, false, newStringError(callExpr.SubExprs[indexExpr],
-			"function wants argument type "+rt.In(indexInReal).String()+" but received type "+arg.Type().String())
+	runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, sliceType)
+	if runInfo.err != nil {
+		runInfo.err = newStringError(callExpr.SubExprs[indexExpr],
+			"function wants argument type "+rt.In(indexInReal).String()+" but received type "+runInfo.rv.Type().String())
+		runInfo.rv = nilValue
+		return nil, false
 	}
-	args = append(args, arg)
+	args = append(args, runInfo.rv)
 
-	return args, true, nil
+	return args, true
 }
 
 // processCallReturnValues get/converts the values returned from a function call into our normal reflect.Value, error
@@ -438,12 +459,6 @@ func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertT
 	if len(rvs) != 2 {
 		return nilValue, fmt.Errorf("VM function did not return 2 values but returned %v values", len(rvs))
 	}
-	if !rvs[0].IsValid() {
-		return nilValue, fmt.Errorf("VM function value 1 did not return reflect value type but returned invalid type")
-	}
-	if !rvs[1].IsValid() {
-		return nilValue, fmt.Errorf("VM function value 2 did not return reflect value type but returned invalid type")
-	}
 	if rvs[0].Type() != reflectValueType {
 		return nilValue, fmt.Errorf("VM function value 1 did not return reflect value type but returned %v type", rvs[0].Type().String())
 	}
@@ -452,9 +467,6 @@ func processCallReturnValues(rvs []reflect.Value, isRunVMFunction bool, convertT
 	}
 
 	rvError := rvs[1].Interface().(reflect.Value)
-	if !rvError.IsValid() {
-		return nilValue, fmt.Errorf("VM function error type is invalid")
-	}
 	if rvError.Type() != errorType && rvError.Type() != vmErrorType {
 		return nilValue, fmt.Errorf("VM function error type is %v", rvError.Type())
 	}

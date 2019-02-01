@@ -517,11 +517,11 @@ eos:
 
 // Lexer provides interface to parse codes.
 type Lexer struct {
-	s     *Scanner
-	lit   string
-	pos   ast.Position
-	e     error
-	stmts []ast.Stmt
+	s    *Scanner
+	lit  string
+	pos  ast.Position
+	e    error
+	stmt ast.Stmt
 }
 
 // Lex scans the token and literals.
@@ -543,12 +543,12 @@ func (l *Lexer) Error(msg string) {
 }
 
 // Parse provides way to parse the code using Scanner.
-func Parse(s *Scanner) ([]ast.Stmt, error) {
+func Parse(s *Scanner) (ast.Stmt, error) {
 	l := Lexer{s: s}
 	if yyParse(&l) != 0 {
 		return nil, l.e
 	}
-	return l.stmts, l.e
+	return l.stmt, l.e
 }
 
 // EnableErrorVerbose enabled verbose errors from the parser
@@ -557,7 +557,7 @@ func EnableErrorVerbose() {
 }
 
 // ParseSrc provides way to parse the code from source.
-func ParseSrc(src string) ([]ast.Stmt, error) {
+func ParseSrc(src string) (ast.Stmt, error) {
 	scanner := &Scanner{
 		src: []rune(src),
 	}

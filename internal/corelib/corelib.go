@@ -11,7 +11,7 @@ type Env interface {
 	DefineType(string, interface{}) error
 	Define(string, interface{}) error
 	Get(string) (interface{}, error)
-	Run([]ast.Stmt) (interface{}, error)
+	Run(ast.Stmt) (interface{}, error)
 }
 
 // NewEnv is function provided for tests
