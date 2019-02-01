@@ -830,6 +830,10 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = make(chan int64, 2); a <- 1; v = 0; for val in a { v = val; break; }; v`, RunOutput: int64(1), Output: map[string]interface{}{"v": int64(1)}},
 		{Script: `a = make(chan int64, 4); a <- 1; a <- 2; a <- 3; for i in a { if i == 2 { return 2 } }; return 4`, RunOutput: int64(2)},
 		{Script: `a = make(chan int64, 2); a <- 1; for i in a { if i < 4 { a <- i + 1; continue }; return 4 }; return 6`, RunOutput: int64(4)},
+
+		// test non-buffer and go func
+		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3 }(); b = []; for i in a { b += i; if i > 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3; close(a) }(); b = []; for i in a { b += i }`, Input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1009,14 +1013,6 @@ func TestOperatorPrecedence(t *testing.T) {
 		// test ! > ||
 		{Script: `!true || true`, RunOutput: true},
 		{Script: `!(true || true)`, RunOutput: false},
-	}
-	testlib.Run(t, tests, nil)
-}
-
-func TestTemp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "")
-	tests := []testlib.Test{
-		{Script: `a = 1; for { if a == 3 { return 3 }; a++ }; return 2`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
 	}
 	testlib.Run(t, tests, nil)
 }
