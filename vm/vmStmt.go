@@ -631,7 +631,61 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.expr = stmt.Expr
 		runInfo.invokeExpr()
 
-		// CloseStmt
+	// DeleteStmt
+	case *ast.DeleteStmt:
+		runInfo.expr = stmt.Item
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		item := runInfo.rv
+
+		if stmt.Key != nil {
+			runInfo.expr = stmt.Key
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				return
+			}
+		}
+
+		if item.Kind() == reflect.Interface && !item.IsNil() {
+			item = item.Elem()
+		}
+
+		switch item.Kind() {
+		case reflect.String:
+			if stmt.Key != nil && runInfo.rv.Kind() == reflect.Bool && runInfo.rv.Bool() {
+				runInfo.env.DeleteGlobal(item.String())
+				runInfo.rv = nilValue
+				return
+			}
+			runInfo.err = runInfo.env.Delete(item.String())
+			runInfo.rv = nilValue
+
+		case reflect.Map:
+			if stmt.Key == nil {
+				runInfo.err = newStringError(stmt, "second argument to delete cannot be nil for map")
+				runInfo.rv = nilValue
+				return
+			}
+			if item.IsNil() {
+				runInfo.rv = nilValue
+				return
+			}
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, item.Type().Key())
+			if runInfo.err != nil {
+				runInfo.err = newStringError(stmt, "cannot use type "+item.Type().Key().String()+" as type "+runInfo.rv.Type().String()+" in delete")
+				runInfo.rv = nilValue
+				return
+			}
+			item.SetMapIndex(runInfo.rv, reflect.Value{})
+			runInfo.rv = nilValue
+		default:
+			runInfo.err = newStringError(stmt, "first argument to delete cannot be type "+item.Kind().String())
+			runInfo.rv = nilValue
+		}
+
+	// CloseStmt
 	case *ast.CloseStmt:
 		runInfo.expr = stmt.Expr
 		runInfo.invokeExpr()

@@ -188,13 +188,6 @@ type LenExpr struct {
 	Expr Expr
 }
 
-// DeleteExpr provide delete expression
-type DeleteExpr struct {
-	ExprImpl
-	WhatExpr Expr
-	KeyExpr  Expr
-}
-
 // IncludeExpr provide in expression
 type IncludeExpr struct {
 	ExprImpl

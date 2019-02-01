@@ -148,9 +148,12 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `a * 4.0`, Input: map[string]interface{}{"a": "a"}, RunOutput: float64(0), Output: map[string]interface{}{"a": "a"}},
 
 		{Script: `-a`, Input: map[string]interface{}{"a": nil}, RunOutput: float64(-0), Output: map[string]interface{}{"a": nil}},
-		{Script: `-a`, Input: map[string]interface{}{"a": "a"}, RunOutput: float64(-0), Output: map[string]interface{}{"a": "a"}},
+		{Script: `-a`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: int64(-1), Output: map[string]interface{}{"a": int32(1)}},
 		{Script: `-a`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(-2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `-a`, Input: map[string]interface{}{"a": float64(2.1)}, RunOutput: float64(-2.1), Output: map[string]interface{}{"a": float64(2.1)}},
+		{Script: `-a`, Input: map[string]interface{}{"a": float32(3.5)}, RunOutput: float64(-3.5), Output: map[string]interface{}{"a": float32(3.5)}},
+		{Script: `-a`, Input: map[string]interface{}{"a": float64(4.5)}, RunOutput: float64(-4.5), Output: map[string]interface{}{"a": float64(4.5)}},
+		{Script: `-a`, Input: map[string]interface{}{"a": "a"}, RunOutput: float64(-0), Output: map[string]interface{}{"a": "a"}},
+		{Script: `-a`, Input: map[string]interface{}{"a": "1"}, RunOutput: float64(-1), Output: map[string]interface{}{"a": "1"}},
 
 		{Script: `^a`, Input: map[string]interface{}{"a": nil}, RunOutput: int64(-1), Output: map[string]interface{}{"a": nil}},
 		{Script: `^a`, Input: map[string]interface{}{"a": "a"}, RunOutput: int64(-1), Output: map[string]interface{}{"a": "a"}},

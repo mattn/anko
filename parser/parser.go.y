@@ -212,6 +212,16 @@ stmt :
 		$$ = &ast.GoroutineStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}}
 		$$.SetPosition($1.Position())
 	}
+	| DELETE '(' expr ')'
+	{
+		$$ = &ast.DeleteStmt{Item: $3}
+		$$.SetPosition($1.Position())
+	}
+	| DELETE '(' expr ',' expr ')'
+	{
+		$$ = &ast.DeleteStmt{Item: $3, Key: $5}
+		$$.SetPosition($1.Position())
+	}
 	| CLOSE '(' expr ')'
 	{
 		$$ = &ast.CloseStmt{Expr: $3}
@@ -648,16 +658,6 @@ expr :
 	{
 		$$ = &ast.ChanExpr{RHS: $2}
 		$$.SetPosition($2.Position())
-	}
-	| DELETE '(' expr ')'
-	{
-		$$ = &ast.DeleteExpr{WhatExpr: $3}
-		$$.SetPosition($1.Position())
-	}
-	| DELETE '(' expr ',' expr ')'
-	{
-		$$ = &ast.DeleteExpr{WhatExpr: $3, KeyExpr: $5}
-		$$.SetPosition($1.Position())
 	}
 	| expr IN expr
 	{

@@ -135,6 +135,13 @@ type GoroutineStmt struct {
 	Expr Expr
 }
 
+// DeleteStmt provides statement of delete.
+type DeleteStmt struct {
+	ExprImpl
+	Item Expr
+	Key  Expr
+}
+
 // CloseStmt provides statement of close.
 type CloseStmt struct {
 	StmtImpl
