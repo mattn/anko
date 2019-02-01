@@ -794,11 +794,10 @@ for i = 0; i < 20000; i++ {
 }
 b = 0
 close(waitChan)
-for i in a {
-	b = i
-}
-for i in a {
-	b = i
+for {
+	for i in a {
+		b = i
+	}
 }
 `,
 		`
@@ -836,11 +835,10 @@ for i = 0; i < 20000; i++ {
 }
 b = 0
 close(waitChan)
-for i in a {
-	b = 1
-}
-for i in a {
-	b = 1
+for {
+	for i in a {
+		b = 1
+	}
 }
 `,
 		`
@@ -923,7 +921,7 @@ func runCancelTestWithContext(t *testing.T, script string) {
 
 	_, err = env.ExecuteContext(ctx, script)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v - script: %v", err, ErrInterrupt, script)
 	}
 }
 
