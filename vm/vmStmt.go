@@ -632,6 +632,21 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.expr = stmt.Expr
 		runInfo.invokeExpr()
 
+		// CloseStmt
+	case *ast.CloseStmt:
+		runInfo.expr = stmt.Expr
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		if runInfo.rv.Kind() == reflect.Chan {
+			runInfo.rv.Close()
+			runInfo.rv = nilValue
+			return
+		}
+		runInfo.err = newStringError(stmt, "type cannot be "+runInfo.rv.Kind().String()+" for close")
+		runInfo.rv = nilValue
+
 	// default
 	default:
 		runInfo.err = newStringError(stmt, "unknown statement")

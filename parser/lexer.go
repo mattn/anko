@@ -70,6 +70,7 @@ var opName = map[string]int{
 	"type":     TYPE,
 	"len":      LEN,
 	"delete":   DELETE,
+	"close":    CLOSE,
 }
 
 var (

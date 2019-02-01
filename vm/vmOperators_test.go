@@ -833,7 +833,7 @@ func TestForLoop(t *testing.T) {
 
 		// test non-buffer and go func
 		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3 }(); b = []; for i in a { b += i; if i > 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
-		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3; close(a) }(); b = []; for i in a { b += i }`, Input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3; close(a) }(); b = []; for i in a { b += i }`, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1016,3 +1016,4 @@ func TestOperatorPrecedence(t *testing.T) {
 	}
 	testlib.Run(t, tests, nil)
 }
+

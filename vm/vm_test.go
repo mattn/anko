@@ -508,7 +508,7 @@ func TestChan(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "")
 	tests := []testlib.Test{
 		// send on closed channel
-		{Script: `a = make(chan int64, 2); close(a); a <- 1`, Input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, RunError: fmt.Errorf("send on closed channel")},
+		{Script: `a = make(chan int64, 2); close(a); a <- 1`, RunError: fmt.Errorf("send on closed channel")},
 	}
 	testlib.Run(t, tests, nil)
 
@@ -571,8 +571,8 @@ func TestChan(t *testing.T) {
 		{Script: `a = make(chan string, 2); a <- "b"; b <- a`, RunOutput: "b", Output: map[string]interface{}{"b": "b"}},
 
 		// receive from closed channel
-		{Script: `a = make(chan int64, 2); a <- 1; close(a); <- a`, Input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, RunOutput: int64(1)},
-		{Script: `a = make(chan int64, 2); a <- 1; close(a); <- a; <- a`, Input: map[string]interface{}{"close": func(b interface{}) { reflect.ValueOf(b).Close() }}, RunOutput: nil},
+		{Script: `a = make(chan int64, 2); a <- 1; close(a); <- a`, RunOutput: int64(1)},
+		{Script: `a = make(chan int64, 2); a <- 1; close(a); <- a; <- a`, RunOutput: nil},
 
 		// receive & send from same channel
 		{Script: `a = make(chan int64, 2); a <- 1; a <- <- a`, RunOutput: nil},
@@ -600,7 +600,6 @@ func TestChan(t *testing.T) {
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); b <- a <- 1; <- a`, RunOutput: int64(1)},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); b <- a <- 1; <- a; <- b`, RunOutput: int64(0)},
 
-		// TODO: move close from core into vm code
 		// TODO: add receive ok
 	}
 	testlib.Run(t, tests, nil)
@@ -746,14 +745,14 @@ func TestCancelWithContext(t *testing.T) {
 	scripts := []string{
 		`
 b = 0
-closeWaitChan()
+close(waitChan)
 for {
 	b = 1
 }
 `,
 		`
 b = 0
-closeWaitChan()
+close(waitChan)
 for {
 	for {
 		b = 1
@@ -766,7 +765,7 @@ for i = 0; i < 20000; i++ {
 	a += 1
 }
 b = 0
-closeWaitChan()
+close(waitChan)
 for i in a {
 	b = i
 }
@@ -780,7 +779,7 @@ for i = 0; i < 10000; i++ {
 	a += 1
 }
 b = 0
-closeWaitChan()
+close(waitChan)
 for i in a {
 	for j in a {
 		b = j
@@ -788,14 +787,14 @@ for i in a {
 }
 `,
 		`
-closeWaitChan()
+close(waitChan)
 b = 0
 for i = 0; true; nil {
 }
 `,
 		`
 b = 0
-closeWaitChan()
+close(waitChan)
 for i = 0; true; nil {
 	for j = 0; true; nil {
 		b = 1
@@ -808,7 +807,7 @@ for i = 0; i < 10000; i++ {
 	a[toString(i)] = 1
 }
 b = 0
-closeWaitChan()
+close(waitChan)
 for i in a {
 	b = 1
 }
@@ -819,7 +818,7 @@ for i = 0; i < 10000; i++ {
 	a[toString(i)] = 1
 }
 b = 0
-closeWaitChan()
+close(waitChan)
 for i in a {
 	for j in a {
 		b = 1
@@ -827,34 +826,34 @@ for i in a {
 }
 `,
 		`
-closeWaitChan()
+close(waitChan)
 <-make(chan string)
 `,
 		`
 a = ""
-closeWaitChan()
+close(waitChan)
 a <-make(chan string)
 `,
 		`
 for {
 	a = ""
-	closeWaitChan()
+	close(waitChan)
 	a <-make(chan string)
 }
 `,
 		`
 a = make(chan int)
-closeWaitChan()
+close(waitChan)
 a <- 1
 `,
 		`
 a = make(chan interface)
-closeWaitChan()
+close(waitChan)
 a <- nil
 `,
 		`
 a = make(chan int64, 1)
-closeWaitChan()
+close(waitChan)
 for v in a { }
 `,
 	}
@@ -865,14 +864,11 @@ for v in a { }
 
 func runCancelTestWithContext(t *testing.T, script string) {
 	waitChan := make(chan struct{}, 1)
-	closeWaitChan := func() {
-		close(waitChan)
-	}
 	toString := func(value interface{}) string {
 		return fmt.Sprintf("%v", value)
 	}
 	env := NewEnv()
-	err := env.Define("closeWaitChan", closeWaitChan)
+	err := env.Define("waitChan", waitChan)
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}

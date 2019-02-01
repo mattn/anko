@@ -134,3 +134,9 @@ type GoroutineStmt struct {
 	StmtImpl
 	Expr Expr
 }
+
+// CloseStmt provides statement of close.
+type CloseStmt struct {
+	StmtImpl
+	Expr Expr
+}

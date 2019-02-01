@@ -385,7 +385,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			return
 		}
 		if t == nil {
-			runInfo.err = newErrorf(expr, "type cannot be nil for new")
+			runInfo.err = newStringError(expr, "type cannot be nil for new")
 			runInfo.rv = nilValue
 			return
 		}
@@ -400,7 +400,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			return
 		}
 		if t == nil {
-			runInfo.err = newErrorf(expr, "type cannot be nil for make")
+			runInfo.err = newStringError(expr, "type cannot be nil for make")
 			runInfo.rv = nilValue
 			return
 		}
@@ -459,7 +459,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			return
 		}
 		if t == nil {
-			runInfo.err = newErrorf(expr, "type cannot be nil for make chan")
+			runInfo.err = newStringError(expr, "type cannot be nil for make chan")
 			runInfo.rv = nilValue
 			return
 		}
