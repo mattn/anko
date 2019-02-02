@@ -24,14 +24,14 @@ func reflectValueSlicetoInterfaceSlice(valueSlice []reflect.Value) reflect.Value
 }
 
 // convertReflectValueToType trys to covert the reflect.Value to the reflect.Type
-// if it can not, it returns the orginal rv and an error
+// if it can not, it returns the original rv and an error
 func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
 	if rt == interfaceType || rv.Type() == rt {
 		// if reflect.Type is interface or the types match, return the provided reflect.Value
 		return rv, nil
 	}
 	if rv.Type().ConvertibleTo(rt) {
-		// if reflect can covert, do that convertion and return
+		// if reflect can covert, do that conversion and return
 		return rv.Convert(rt), nil
 	}
 	if (rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array) &&
@@ -46,7 +46,7 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 			// convert map
 			return convertMap(rv, rt)
 		case reflect.Func:
-			// for runVMFunction convertions, call convertVMFunctionToType
+			// for runVMFunction conversions, call convertVMFunctionToType
 			return convertVMFunctionToType(rv, rt)
 		case reflect.Ptr:
 			// both rv and rt are pointers, convert what they are pointing to

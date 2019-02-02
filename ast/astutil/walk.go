@@ -16,10 +16,7 @@ type WalkFunc func(interface{}) error
 // each expression and/or statement is passed to the WalkFunc function.
 // If the WalkFunc returns an error the walk is aborted and the error is returned
 func Walk(stmt ast.Stmt, f WalkFunc) error {
-	if err := walkStmt(stmt, f); err != nil {
-		return err
-	}
-	return nil
+	return walkStmt(stmt, f)
 }
 
 func walkStmts(stmts []ast.Stmt, f WalkFunc) error {
