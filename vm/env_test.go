@@ -44,18 +44,6 @@ func TestAddrError(t *testing.T) {
 	}
 }
 
-func TestGetInvalid(t *testing.T) {
-	env := NewEnv()
-	env.env["a"] = reflect.Value{}
-	value, err := env.Get("a")
-	if err != nil {
-		t.Errorf("Get error - received: %v - expected: %v", err, nil)
-	}
-	if value != nil {
-		t.Errorf("Get value - received: %v - expected: %v", value, nil)
-	}
-}
-
 func TestDefineAndGet(t *testing.T) {
 	var err error
 	var value interface{}
@@ -68,9 +56,10 @@ func TestDefineAndGet(t *testing.T) {
 		defineError    error
 		getError       error
 	}{
+		{testInfo: "nil", varName: "a", varDefineValue: reflect.Value{}, varGetValue: reflect.Value{}, varKind: reflect.Invalid},
 		{testInfo: "nil", varName: "a", varDefineValue: nil, varGetValue: nil, varKind: reflect.Interface},
 		{testInfo: "bool", varName: "a", varDefineValue: true, varGetValue: true, varKind: reflect.Bool},
-		{testInfo: " int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16},
+		{testInfo: "int16", varName: "a", varDefineValue: int16(1), varGetValue: int16(1), varKind: reflect.Int16},
 		{testInfo: "int32", varName: "a", varDefineValue: int32(1), varGetValue: int32(1), varKind: reflect.Int32},
 		{testInfo: "int64", varName: "a", varDefineValue: int64(1), varGetValue: int64(1), varKind: reflect.Int64},
 		{testInfo: "uint32", varName: "a", varDefineValue: uint32(1), varGetValue: uint32(1), varKind: reflect.Uint32},
@@ -1494,33 +1483,74 @@ func BenchmarkSet(b *testing.B) {
 
 func TestCopy(t *testing.T) {
 	parent := NewEnv()
-	parent.Define("b", "a")
-	env := parent.NewEnv()
-	env.Define("a", "a")
-	copy := env.Copy()
+	parent.Define("a", "a")
+	parent.DefineType("b", []bool{})
+	child := parent.NewEnv()
+	child.Define("c", "c")
+	child.DefineType("d", []int64{})
+	copy := child.Copy()
+
 	if v, e := copy.Get("a"); e != nil || v != "a" {
-		t.Errorf("copy doesn't retain original values")
+		t.Errorf("copy missing value")
 	}
-	copy.Set("a", "b")
-	if v, e := env.Get("a"); e != nil || v != "a" {
-		t.Errorf("original was modified")
+	if v, e := copy.Type("b"); e != nil || v != reflect.TypeOf([]bool{}) {
+		t.Errorf("copy missing type")
 	}
-	if v, e := copy.Get("a"); e != nil || v != "b" {
-		t.Errorf("copy kept the old value")
+	if v, e := copy.Get("c"); e != nil || v != "c" {
+		t.Errorf("copy missing value")
 	}
-	env.Set("a", "c")
-	if v, e := env.Get("a"); e != nil || v != "c" {
-		t.Errorf("original was not modified")
+	if v, e := copy.Type("d"); e != nil || v != reflect.TypeOf([]int64{}) {
+		t.Errorf("copy missing type")
 	}
-	if v, e := copy.Get("a"); e != nil || v != "b" {
-		t.Errorf("copy was modified")
+
+	// TODO: add more get type tests
+
+	copy.Set("a", "i")
+	if v, e := child.Get("a"); e != nil || v != "i" {
+		t.Errorf("parent was not modified")
 	}
-	if v, e := copy.Get("b"); e != nil || v != "a" {
-		t.Errorf("copy parent doesn't retain original value")
+	if v, e := copy.Get("a"); e != nil || v != "i" {
+		t.Errorf("copy did not get parent value")
 	}
-	parent.Set("b", "b")
-	if v, e := copy.Get("b"); e != nil || v != "b" {
-		t.Errorf("copy parent not modified")
+
+	copy.Set("c", "j")
+	if v, e := child.Get("c"); e != nil || v != "c" {
+		t.Errorf("child was not modified")
+	}
+	if v, e := copy.Get("c"); e != nil || v != "j" {
+		t.Errorf("copy child was not modified")
+	}
+
+	child.Set("a", "x")
+	if v, e := child.Get("a"); e != nil || v != "x" {
+		t.Errorf("parent was not modified")
+	}
+	if v, e := copy.Get("a"); e != nil || v != "x" {
+		t.Errorf("copy did not get parent value")
+	}
+
+	child.Set("c", "z")
+	if v, e := child.Get("c"); e != nil || v != "z" {
+		t.Errorf("child was not modified")
+	}
+	if v, e := copy.Get("c"); e != nil || v != "j" {
+		t.Errorf("copy child was modified")
+	}
+
+	parent.Set("a", "m")
+	if v, e := child.Get("a"); e != nil || v != "m" {
+		t.Errorf("parent was not modified")
+	}
+	if v, e := copy.Get("a"); e != nil || v != "m" {
+		t.Errorf("copy did not get parent value")
+	}
+
+	parent.Define("x", "n")
+	if v, e := child.Get("x"); e != nil || v != "n" {
+		t.Errorf("child did not get parent value")
+	}
+	if v, e := copy.Get("x"); e != nil || v != "n" {
+		t.Errorf("copy did not get parent value")
 	}
 }
 
@@ -1529,6 +1559,8 @@ func TestDeepCopy(t *testing.T) {
 	parent.Define("a", "a")
 	env := parent.NewEnv()
 	copy := env.DeepCopy()
+
+	// TODO: add more/better tests, like above
 	if v, e := copy.Get("a"); e != nil || v != "a" {
 		t.Errorf("copy doesn't retain original values")
 	}

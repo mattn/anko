@@ -19,6 +19,20 @@ type (
 		Message string
 		Pos     ast.Position
 	}
+
+	// runInfo provides run incoming and outgoing information
+	runInfoStruct struct {
+		// incoming
+		ctx      context.Context
+		env      *Env
+		stmt     ast.Stmt
+		expr     ast.Expr
+		operator ast.Operator
+
+		// outgoing
+		rv  reflect.Value
+		err error
+	}
 )
 
 var (
@@ -35,6 +49,7 @@ var (
 	trueValue                 = reflect.ValueOf(true)
 	falseValue                = reflect.ValueOf(false)
 	zeroValue                 = reflect.Value{}
+	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
 	// ErrBreak when there is an unexpected break statement
@@ -84,9 +99,6 @@ func (e *Error) Error() string {
 }
 
 func isNil(v reflect.Value) bool {
-	if !v.IsValid() {
-		return false
-	}
 	switch v.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
 		// from reflect IsNil:
@@ -111,14 +123,6 @@ func isNum(v reflect.Value) bool {
 
 // equal returns true when lhsV and rhsV is same value.
 func equal(lhsV, rhsV reflect.Value) bool {
-	lhsNotValid, rhsVNotValid := !lhsV.IsValid(), !rhsV.IsValid()
-	if lhsNotValid && rhsVNotValid {
-		return true
-	}
-	if (!lhsNotValid && rhsVNotValid) || (lhsNotValid && !rhsVNotValid) {
-		return false
-	}
-
 	lhsIsNil, rhsIsNil := isNil(lhsV), isNil(rhsV)
 	if lhsIsNil && rhsIsNil {
 		return true
@@ -176,32 +180,28 @@ func equal(lhsV, rhsV reflect.Value) bool {
 		return lhsB == rhsB
 	}
 
-	if lhsV.CanInterface() && rhsV.CanInterface() {
-		return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
-	}
-	return reflect.DeepEqual(lhsV, rhsV)
+	return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
 }
 
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
-	if !aMap.IsValid() || aMap.IsNil() {
+	if aMap.IsNil() {
 		return nilValue
 	}
 
-	keyType := key.Type()
-	if keyType == interfaceType && aMap.Type().Key() != interfaceType {
-		if key.Elem().IsValid() && !key.Elem().IsNil() {
-			keyType = key.Elem().Type()
-		}
-	}
-	if keyType != aMap.Type().Key() && aMap.Type().Key() != interfaceType {
+	var err error
+	key, err = convertReflectValueToType(key, aMap.Type().Key())
+	if err != nil {
 		return nilValue
 	}
 
 	// From reflect MapIndex:
 	// It returns the zero Value if key is not found in the map or if v represents a nil map.
 	value := aMap.MapIndex(key)
+	if !value.IsValid() {
+		return nilValue
+	}
 
-	if value.IsValid() && value.CanInterface() && aMap.Type().Elem() == interfaceType && !value.IsNil() {
+	if aMap.Type().Elem() == interfaceType && !value.IsNil() {
 		value = reflect.ValueOf(value.Interface())
 	}
 

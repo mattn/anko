@@ -107,9 +107,6 @@ func Import(env *vm.Env) *vm.Env {
 	env.Define("print", fmt.Print)
 	env.Define("println", fmt.Println)
 	env.Define("printf", fmt.Printf)
-	env.Define("close", func(e interface{}) {
-		reflect.ValueOf(e).Close()
-	})
 
 	ImportToX(env)
 
