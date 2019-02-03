@@ -1625,7 +1625,7 @@ func TestStructs(t *testing.T) {
 			A interface{}
 			B []interface{}
 			C [][]interface{}
-		}{A: "a", B: []interface{}{"b"}, C: [][]interface{}{[]interface{}{"c"}}}},
+		}{A: "a", B: []interface{}{"b"}, C: [][]interface{}{{"c"}}}},
 			RunOutput: nil,
 			Output: map[string]interface{}{"a": &struct {
 				A interface{}

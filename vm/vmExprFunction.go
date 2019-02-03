@@ -214,7 +214,7 @@ func checkIfRunVMFunction(rt reflect.Type) bool {
 	return true
 }
 
-// makeCallArgs creates the arguments reflect.Value slice for the four diffrent kinds of functions.
+// makeCallArgs creates the arguments reflect.Value slice for the four different kinds of functions.
 // Also returns true if CallSlice should be used on the arguments, or false if Call should be used.
 func (runInfo *runInfoStruct) makeCallArgs(rt reflect.Type, isRunVMFunction bool, callExpr *ast.CallExpr) ([]reflect.Value, bool) {
 	// number of arguments

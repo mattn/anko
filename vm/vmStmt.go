@@ -244,7 +244,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// TryStmt
 	case *ast.TryStmt:
-		// only the try statment will ignore any error except ErrInterrupt
+		// only the try statement will ignore any error except ErrInterrupt
 		// all other parts will return the error
 
 		env := runInfo.env

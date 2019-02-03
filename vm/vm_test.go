@@ -13,6 +13,7 @@ import (
 	// "net/http"
 	// _ "net/http/pprof"
 
+	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/internal/corelib"
 	"github.com/mattn/anko/internal/testlib"
 )
@@ -1050,6 +1051,43 @@ func TestValueEqual(t *testing.T) {
 	result = ValueEqual(false, true)
 	if result != false {
 		t.Fatal("ValueEqual")
+	}
+}
+
+// TestUnknownCases tests switch cases that are the unknown cases
+func TestUnknownCases(t *testing.T) {
+	oneLiteral := &ast.LiteralExpr{Literal: reflect.ValueOf(int64(1))}
+	type (
+		BadStmt struct {
+			ast.StmtImpl
+		}
+		BadExpr struct {
+			ast.ExprImpl
+		}
+		BadOperator struct {
+			ast.OperatorImpl
+		}
+	)
+
+	stmts := []ast.Stmt{
+		&BadStmt{},
+		&ast.ExprStmt{Expr: &BadExpr{}},
+		&ast.ExprStmt{Expr: &ast.OpExpr{Op: &BadOperator{}}},
+		&ast.ExprStmt{Expr: &ast.UnaryExpr{Expr: oneLiteral}},
+		&ast.ExprStmt{Expr: &ast.OpExpr{Op: &ast.BinaryOperator{LHS: oneLiteral}}},
+		&ast.ExprStmt{Expr: &ast.OpExpr{Op: &ast.ComparisonOperator{LHS: oneLiteral, RHS: oneLiteral}}},
+		&ast.ExprStmt{Expr: &ast.OpExpr{Op: &ast.AddOperator{LHS: oneLiteral, RHS: oneLiteral}}},
+		&ast.ExprStmt{Expr: &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: oneLiteral, RHS: oneLiteral}}},
+	}
+
+	for _, stmt := range stmts {
+		env := NewEnv()
+		_, err := env.Run(stmt)
+		if err == nil {
+			t.Errorf("no error - stmt: %#v", stmt)
+		} else if len(err.Error()) < 9 || err.Error()[:8] != "unknown " {
+			t.Errorf("err: %v - stmt: %#v", err, stmt)
+		}
 	}
 }
 
