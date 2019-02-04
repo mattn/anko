@@ -79,8 +79,7 @@ func TestNumbers(t *testing.T) {
 		{Script: `-1e-1`, RunOutput: float64(-0.1)},
 		{Script: `0x1`, RunOutput: int64(1)},
 		{Script: `0xc`, RunOutput: int64(12)},
-		// TOFIX: this should work but does not
-		{Script: `0xe`, ParseError: fmt.Errorf("invalid number: 0xe")},
+		{Script: `0xe`, RunOutput: int64(14)},
 		{Script: `0xf`, RunOutput: int64(15)},
 		{Script: `-0x1`, RunOutput: int64(-1)},
 		{Script: `-0xc`, RunOutput: int64(-12)},

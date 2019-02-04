@@ -429,7 +429,7 @@ func (s *Scanner) scanNumber() (string, error) {
 	ch := s.peek()
 	ret = append(ret, ch)
 	s.next()
-	if ch == '0' && s.peek() == 'x' {
+	if ch == '0' && (s.peek() == 'x' || s.peek() == 'X') {
 		ret = append(ret, s.peek())
 		s.next()
 		for isHex(s.peek()) {
@@ -565,20 +565,26 @@ func ParseSrc(src string) (ast.Stmt, error) {
 }
 
 func toNumber(numString string) (reflect.Value, error) {
-	if strings.Contains(numString, ".") || strings.Contains(numString, "e") {
-		v, err := strconv.ParseFloat(numString, 64)
+	// hex
+	if len(numString) > 2 && (numString[0:2] == "0x" || numString[0:2] == "0X") {
+		i, err := strconv.ParseInt(numString[2:], 16, 64)
 		if err != nil {
 			return nilValue, err
 		}
-		return reflect.ValueOf(float64(v)), nil
+		return reflect.ValueOf(i), nil
 	}
-	var i int64
-	var err error
-	if strings.HasPrefix(numString, "0x") {
-		i, err = strconv.ParseInt(numString[2:], 16, 64)
-	} else {
-		i, err = strconv.ParseInt(numString, 10, 64)
+
+	// float
+	if strings.Contains(numString, ".") || strings.Contains(numString, "e") {
+		f, err := strconv.ParseFloat(numString, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return reflect.ValueOf(f), nil
 	}
+
+	// int
+	i, err := strconv.ParseInt(numString, 10, 64)
 	if err != nil {
 		return nilValue, err
 	}
