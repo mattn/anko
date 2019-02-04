@@ -19,8 +19,7 @@ const (
 	EOL = '\n'
 )
 
-// Error provides a convenient interface for handling runtime error.
-// It can be Error interface with type cast which can call Pos().
+// Error is a parse error.
 type Error struct {
 	Message  string
 	Pos      ast.Position
@@ -28,7 +27,7 @@ type Error struct {
 	Fatal    bool
 }
 
-// Error returns the error message.
+// Error returns the parse error message.
 func (e *Error) Error() string {
 	return e.Message
 }
