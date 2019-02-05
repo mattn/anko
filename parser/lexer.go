@@ -190,9 +190,19 @@ retry:
 				tok = MINUSEQ
 				lit = "-="
 			default:
-				s.back()
-				tok = int(ch)
-				lit = string(ch)
+				if isDigit(s.peek()) {
+					tok = NUMBER
+					lit, err = s.scanNumber()
+					if err != nil {
+						return
+					}
+					lit = "-" + lit
+					s.back()
+				} else {
+					s.back()
+					tok = int(ch)
+					lit = "-"
+				}
 			}
 		case '*':
 			s.next()
@@ -351,14 +361,6 @@ func isBlank(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\r'
 }
 
-func appendNumberAndPoint(s *Scanner, ret []rune) []rune {
-	for isDigit(s.peek()) || s.peek() == '.' {
-		ret = append(ret, s.peek())
-		s.next()
-	}
-	return ret
-}
-
 // peek returns current rune in the code.
 func (s *Scanner) peek() rune {
 	if s.reachEOF() {
@@ -425,34 +427,66 @@ func (s *Scanner) scanIdentifier() (string, error) {
 
 // scanNumber returns number beginning at current position.
 func (s *Scanner) scanNumber() (string, error) {
-	var ret []rune
-	ch := s.peek()
-	ret = append(ret, ch)
+	result := []rune{s.peek()}
 	s.next()
-	if ch == '0' && (s.peek() == 'x' || s.peek() == 'X') {
-		ret = append(ret, s.peek())
+
+	if result[0] == '0' && (s.peek() == 'x' || s.peek() == 'X') {
+		// hex
+		result = append(result, 'x')
 		s.next()
 		for isHex(s.peek()) {
-			ret = append(ret, s.peek())
+			result = append(result, s.peek())
 			s.next()
 		}
 	} else {
-		ret = appendNumberAndPoint(s, ret)
-		if s.peek() == 'e' {
-			ret = append(ret, s.peek())
-			s.next()
-			if isDigit(s.peek()) || s.peek() == '+' || s.peek() == '-' {
-				ret = append(ret, s.peek())
+		// non-hex
+		found := false
+		for {
+			if isDigit(s.peek()) {
+				// is digit
+				result = append(result, s.peek())
 				s.next()
-				ret = appendNumberAndPoint(s, ret)
+				continue
 			}
-			ret = appendNumberAndPoint(s, ret)
-		}
-		if isLetter(s.peek()) {
-			return "", errors.New("identifier starts immediately after numeric literal")
+
+			if s.peek() == '.' {
+				// is .
+				result = append(result, '.')
+				s.next()
+				continue
+			}
+
+			if s.peek() == 'e' || s.peek() == 'E' {
+				// is e
+				if found {
+					return "", errors.New("unexpected " + string(s.peek()))
+				}
+				found = true
+				s.next()
+
+				// check if + or -
+				if s.peek() == '+' || s.peek() == '-' {
+					// add e with + or -
+					result = append(result, 'e')
+					result = append(result, s.peek())
+					s.next()
+				} else {
+					// add e, but next char not + or -
+					result = append(result, 'e')
+				}
+				continue
+			}
+
+			// not digit, e, nor .
+			break
 		}
 	}
-	return string(ret), nil
+
+	if isLetter(s.peek()) {
+		return "", errors.New("identifier starts immediately after numeric literal")
+	}
+
+	return string(result), nil
 }
 
 // scanRawString returns raw-string starting at current position.
@@ -566,8 +600,17 @@ func ParseSrc(src string) (ast.Stmt, error) {
 
 func toNumber(numString string) (reflect.Value, error) {
 	// hex
-	if len(numString) > 2 && (numString[0:2] == "0x" || numString[0:2] == "0X") {
+	if len(numString) > 2 && numString[0:2] == "0x" {
 		i, err := strconv.ParseInt(numString[2:], 16, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return reflect.ValueOf(i), nil
+	}
+
+	// hex
+	if len(numString) > 3 && numString[0:3] == "-0x" {
+		i, err := strconv.ParseInt("-"+numString[3:], 16, 64)
 		if err != nil {
 			return nilValue, err
 		}
