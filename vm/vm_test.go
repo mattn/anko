@@ -64,27 +64,43 @@ func TestNumbers(t *testing.T) {
 `, RunOutput: int64(1)},
 
 		{Script: `1..1`, ParseError: fmt.Errorf("invalid number: 1..1")},
+		{Script: `1e.1`, ParseError: fmt.Errorf("invalid number: 1e.1")},
+		{Script: `1ee1`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `1e+e1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, ParseError: fmt.Errorf("invalid number: 9223372036854775808")},
 
 		{Script: `1`, RunOutput: int64(1)},
 		{Script: `-1`, RunOutput: int64(-1)},
 		{Script: `9223372036854775807`, RunOutput: int64(9223372036854775807)},
-		{Script: `-9223372036854775807`, RunOutput: int64(-9223372036854775807)},
+		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
 		{Script: `1.1`, RunOutput: float64(1.1)},
 		{Script: `-1.1`, RunOutput: float64(-1.1)},
+
 		{Script: `1e1`, RunOutput: float64(10)},
-		{Script: `-1e1`, RunOutput: float64(-10)},
+		{Script: `1.5e1`, RunOutput: float64(15)},
 		{Script: `1e-1`, RunOutput: float64(0.1)},
+
+		{Script: `-1e1`, RunOutput: float64(-10)},
+		{Script: `-1.5e1`, RunOutput: float64(-15)},
 		{Script: `-1e-1`, RunOutput: float64(-0.1)},
+
 		{Script: `0x1`, RunOutput: int64(1)},
+		{Script: `0xa`, RunOutput: int64(10)},
+		{Script: `0xb`, RunOutput: int64(11)},
 		{Script: `0xc`, RunOutput: int64(12)},
-		// TOFIX: this should work but does not
-		{Script: `0xe`, ParseError: fmt.Errorf("invalid number: 0xe")},
+		{Script: `0xe`, RunOutput: int64(14)},
 		{Script: `0xf`, RunOutput: int64(15)},
+		{Script: `0Xf`, RunOutput: int64(15)},
+		{Script: `0XF`, RunOutput: int64(15)},
+		{Script: `0x7FFFFFFFFFFFFFFF`, RunOutput: int64(9223372036854775807)},
+
 		{Script: `-0x1`, RunOutput: int64(-1)},
 		{Script: `-0xc`, RunOutput: int64(-12)},
+		{Script: `-0xe`, RunOutput: int64(-14)},
 		{Script: `-0xf`, RunOutput: int64(-15)},
+		{Script: `-0Xf`, RunOutput: int64(-15)},
+		{Script: `-0x7FFFFFFFFFFFFFFF`, RunOutput: int64(-9223372036854775807)},
 	}
 	testlib.Run(t, tests, nil)
 }

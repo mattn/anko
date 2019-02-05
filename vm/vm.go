@@ -9,12 +9,10 @@ import (
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/internal/corelib"
-	"github.com/mattn/anko/parser"
 )
 
 type (
-	// Error provides a convenient interface for handling runtime error.
-	// It can be Error interface with type cast which can call Pos().
+	// Error is a VM run error.
 	Error struct {
 		Message string
 		Pos     ast.Position
@@ -62,40 +60,31 @@ var (
 	ErrInterrupt = errors.New("execution interrupted")
 )
 
-// newStringError makes error interface with message.
-func newStringError(pos ast.Pos, err string) error {
-	if pos == nil {
-		return &Error{Message: err, Pos: ast.Position{Line: 1, Column: 1}}
-	}
-	return &Error{Message: err, Pos: pos.Position()}
+// Error returns the VM error message.
+func (e *Error) Error() string {
+	return e.Message
 }
 
-// newErrorf makes error interface with message.
-func newErrorf(pos ast.Pos, format string, args ...interface{}) error {
-	return &Error{Message: fmt.Sprintf(format, args...), Pos: pos.Position()}
-}
-
-// newError makes error interface with message.
-// This doesn't overwrite last error.
+// newError makes VM error from error
 func newError(pos ast.Pos, err error) error {
 	if err == nil {
 		return nil
 	}
-	if err == ErrBreak || err == ErrContinue || err == ErrReturn {
-		return err
-	}
-	if pe, ok := err.(*parser.Error); ok {
-		return pe
-	}
-	if ee, ok := err.(*Error); ok {
-		return ee
+	if pos == nil {
+		return &Error{Message: err.Error(), Pos: ast.Position{Line: 1, Column: 1}}
 	}
 	return &Error{Message: err.Error(), Pos: pos.Position()}
 }
 
-// Error returns the error message.
-func (e *Error) Error() string {
-	return e.Message
+// newStringError makes VM error from string
+func newStringError(pos ast.Pos, err string) error {
+	if err == "" {
+		return nil
+	}
+	if pos == nil {
+		return &Error{Message: err, Pos: ast.Position{Line: 1, Column: 1}}
+	}
+	return &Error{Message: err, Pos: pos.Position()}
 }
 
 func isNil(v reflect.Value) bool {
