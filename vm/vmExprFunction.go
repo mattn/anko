@@ -35,10 +35,7 @@ func (runInfo *runInfoStruct) funcExpr() {
 	// returns slice of reflect.Type with two values:
 	// return value of the function and error value of the run
 	runVMFunction := func(in []reflect.Value) []reflect.Value {
-		runInfo.ctx = in[0].Interface().(context.Context)
-		env := runInfo.env
-		runInfo.env = envFunc.NewEnv()
-		runInfo.stmt = funcExpr.Stmt
+		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
 
 		// add Params to newEnv, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
@@ -62,7 +59,6 @@ func (runInfo *runInfoStruct) funcExpr() {
 		runInfo.runSingleStmt()
 		if runInfo.err != nil && runInfo.err != ErrReturn {
 			runInfo.err = newError(funcExpr, runInfo.err)
-			runInfo.env = env
 			// return nil value and error
 			// need to do single reflect.ValueOf because nilValue is already reflect.Value of nil
 			// need to do double reflect.ValueOf of newError in order to match
@@ -71,7 +67,6 @@ func (runInfo *runInfoStruct) funcExpr() {
 
 		// the reflect.ValueOf of rv is needed to work in the reflect.Value slice
 		// reflectValueErrorNilValue is already a double reflect.ValueOf
-		runInfo.env = env
 		return []reflect.Value{reflect.ValueOf(runInfo.rv), reflectValueErrorNilValue}
 	}
 
