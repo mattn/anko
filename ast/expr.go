@@ -35,7 +35,8 @@ type ArrayExpr struct {
 // MapExpr provide Map expression.
 type MapExpr struct {
 	ExprImpl
-	MapExpr map[Expr]Expr
+	Keys   []Expr
+	Values []Expr
 }
 
 // IdentExpr provide identity expression.

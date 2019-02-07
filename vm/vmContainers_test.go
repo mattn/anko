@@ -794,6 +794,12 @@ func TestArrayAppendArrays(t *testing.T) {
 func TestMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
+		// TOFIX: this should have a ParseError
+		{Script: `{ , }`, RunOutput: map[interface{}]interface{}{}},
+		{Script: `{"a": }`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `{ :"a"}`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `{ , "b":"b"}`, ParseError: fmt.Errorf("syntax error: unexpected ','"), RunOutput: map[interface{}]interface{}{"b": "b"}},
+		{Script: `{"a":"a", , "c":"c"}`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `{"b": 1++}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `{1++: 1}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = {}; a.b.c`, RunError: fmt.Errorf("type interface does not support member operation")},
@@ -1039,18 +1045,27 @@ func TestMaps(t *testing.T) {
 		{Script: `a = {"b":"b"}; if a["c"] == nil { return 1 }`, RunOutput: int64(1), Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": "b"}}},
 
 		// test map create with spacing and comma
-		{Script: `a = {"b": "b"
+		{Script: `{"b": "b",}`, RunOutput: map[interface{}]interface{}{"b": "b"}},
+		{Script: `{"b": "b"
 }`, RunOutput: map[interface{}]interface{}{"b": "b"}},
-		{Script: `a = {"b": "b",}`, RunOutput: map[interface{}]interface{}{"b": "b"}},
-		{Script: `a = {"b": "b", "c": "c"}; a.c`, RunOutput: "c"},
-		{Script: `a = {"b": "b", 
-"c": "c"}; a.c`, RunOutput: "c"},
-		{Script: `a = {"b": "b", "c": "c",}; a.c`, RunOutput: "c"},
-		{Script: `a = {"b": "b", 
-"c": "c",}; a.c`, RunOutput: "c"},
-		{Script: `a = {"b": "b", 
+		{Script: `{"b": "b",
+}`, RunOutput: map[interface{}]interface{}{"b": "b"}},
+		{Script: `{"b": "b", "c": "c"}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b", "c": "c",}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b", "c": "c"
+}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b", "c": "c",
+}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b",
+"c": "c"}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b",
+"c": "c",}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b",
+"c": "c"
+}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
+		{Script: `{"b": "b",
 "c": "c",
-}; a.c`, RunOutput: "c"},
+}`, RunOutput: map[interface{}]interface{}{"b": "b", "c": "c"}},
 	}
 	testlib.Run(t, tests, nil)
 }
