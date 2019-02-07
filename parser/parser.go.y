@@ -61,7 +61,7 @@ import (
 	array_count            ast.ArrayCount
 	expr_ident             ast.Expr
 	expr_literals          ast.Expr
-	expr_map               map[ast.Expr]ast.Expr
+	expr_map               *ast.MapExpr
 	expr_slice             ast.Expr
 	expr_unary             ast.Expr
 	expr_binary            ast.Expr
@@ -390,7 +390,6 @@ stmt_switch_cases :
 			yylex.Error("multiple default statement")
 		}
 		switchStmt.Default = $2
-		$$ = switchStmt
 	}
 
 stmt_switch_case :
@@ -577,8 +576,8 @@ expr :
 	}
 	| '{' opt_newlines expr_map opt_comma_newlines '}'
 	{
-		$$ = &ast.MapExpr{MapExpr: $3}
-		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+		$$ = $3
+		$$.SetPosition($3.Position())
 	}
 	| expr_slice
 	{
@@ -667,21 +666,21 @@ expr_literals :
 	}
 
 expr_map :
+	/* nothing */
 	{
-		$$ = make(map[ast.Expr]ast.Expr)
+		$$ = &ast.MapExpr{}
 	}
 	| expr ':' expr
 	{
-		mapExpr := make(map[ast.Expr]ast.Expr)
-		mapExpr[$1] = $3
-		$$ = mapExpr
+		$$ = &ast.MapExpr{Keys: []ast.Expr{$1}, Values: []ast.Expr{$3}}
 	}
 	| expr_map ',' opt_newlines expr ':' expr
 	{
-		if len($1) == 0 {
+		if $1.Keys == nil {
 			yylex.Error("syntax error: unexpected ','")
 		}
-		$1[$4] = $6
+		$$.Keys = append($$.Keys, $4)
+		$$.Values = append($$.Values, $6)
 	}
 
 expr_slice :
@@ -936,7 +935,7 @@ op_binary :
 
 
 opt_term :
-	/* nothing */
+
 	| term
 	
 term :

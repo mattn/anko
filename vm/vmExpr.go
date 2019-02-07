@@ -43,18 +43,17 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 	// MapExpr
 	case *ast.MapExpr:
-		var valueExpr ast.Expr
+		var i int
 		var key reflect.Value
-		m := make(map[interface{}]interface{}, len(expr.MapExpr))
-		// TODO: overhead of map is not needed for MapExpr, can turn into two slices
-		for runInfo.expr, valueExpr = range expr.MapExpr {
+		m := make(map[interface{}]interface{}, len(expr.Keys))
+		for i, runInfo.expr = range expr.Keys {
 			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
 			key = runInfo.rv
 
-			runInfo.expr = valueExpr
+			runInfo.expr = expr.Values[i]
 			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return

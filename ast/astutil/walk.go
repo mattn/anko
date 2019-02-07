@@ -179,8 +179,11 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 	case *ast.ArrayExpr:
 		return walkExprs(expr.Exprs, f)
 	case *ast.MapExpr:
-		for _, expr := range expr.MapExpr {
-			if err := walkExpr(expr, f); err != nil {
+		for i := range expr.Keys {
+			if err := walkExpr(expr.Keys[i], f); err != nil {
+				return err
+			}
+			if err := walkExpr(expr.Values[i], f); err != nil {
 				return err
 			}
 		}
