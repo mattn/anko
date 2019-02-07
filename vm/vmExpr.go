@@ -155,9 +155,9 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			return
 		}
 
-		method, found := runInfo.rv.Type().MethodByName(expr.Name)
-		if found {
-			runInfo.rv = runInfo.rv.Method(method.Index)
+		value := runInfo.rv.MethodByName(expr.Name)
+		if value.IsValid() {
+			runInfo.rv = value
 			return
 		}
 
