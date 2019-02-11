@@ -275,9 +275,9 @@ func TestMakeArrays(t *testing.T) {
 	tests := []testlib.Test{
 		{Script: `make([]foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 
-		{Script: `make([]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
-		{Script: `make([][]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
-		{Script: `make([][][]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
+		{Script: `make([]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make([][]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make([][][]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 
 		{Script: `make([]bool, 1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `make([]bool, 0, 1++)`, RunError: fmt.Errorf("invalid operation")},
@@ -1258,8 +1258,8 @@ func TestArraysAndMaps(t *testing.T) {
 func TestMakeArraysAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
-		{Script: `make([]map)`, Types: map[string]interface{}{"map": map[string]interface{}{}}, RunOutput: []map[string]interface{}{}},
-		{Script: `make([][]map)`, Types: map[string]interface{}{"map": map[string]interface{}{}}, RunOutput: [][]map[string]interface{}{}},
+		{Script: `make([]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: []map[string]interface{}{}},
+		{Script: `make([][]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: [][]map[string]interface{}{}},
 
 		{Script: `make(mapArray2x)`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}},
 		{Script: `a = make(mapArray2x)`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
@@ -1334,14 +1334,14 @@ func TestMakeArraysData(t *testing.T) {
 }
 
 func TestMakeMapsData(t *testing.T) {
-	stmts, err := parser.ParseSrc("make(map)")
+	stmts, err := parser.ParseSrc("make(aMap)")
 	if err != nil {
 		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
 	}
 
 	// test normal map
 	env := NewEnv()
-	err = env.DefineType("map", map[string]string{})
+	err = env.DefineType("aMap", map[string]string{})
 	if err != nil {
 		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
 	}
@@ -1362,7 +1362,7 @@ func TestMakeMapsData(t *testing.T) {
 
 	// test url Values map
 	env = NewEnv()
-	err = env.DefineType("map", url.Values{})
+	err = env.DefineType("aMap", url.Values{})
 	if err != nil {
 		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
 	}

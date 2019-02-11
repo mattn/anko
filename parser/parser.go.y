@@ -23,8 +23,8 @@ import (
 %type<exprs> exprs
 %type<expr> expr
 %type<expr_idents> expr_idents
-%type<expr_type> expr_type
-%type<array_count> array_count
+%type<type_data> type_data
+%type<slice_count> slice_count
 %type<expr_ident> expr_ident
 %type<expr_literals> expr_literals
 %type<expr_map> expr_map
@@ -57,8 +57,8 @@ import (
 	exprs                  []ast.Expr
 	expr                   ast.Expr
 	expr_idents            []string
-	expr_type              string
-	array_count            ast.ArrayCount
+	type_data              *ast.TypeStruct
+	slice_count            int
 	expr_ident             ast.Expr
 	expr_literals          ast.Expr
 	expr_map               *ast.MapExpr
@@ -73,7 +73,7 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP
 
 /* lowest precedence */
 %left ,
@@ -524,34 +524,29 @@ expr :
 		$$ = &ast.LenExpr{Expr: $3}
 		$$.SetPosition($1.Position())
 	}
-	| NEW '(' expr_type ')'
+	| NEW '(' type_data ')'
 	{
-		$$ = &ast.NewExpr{Type: $3}
+		if $3.Kind == ast.TypeDefault {
+			$3.Kind = ast.TypePtr
+			$$ = &ast.MakeExpr{TypeData: $3}
+		} else {
+			$$ = &ast.MakeExpr{TypeData: &ast.TypeStruct{Kind: ast.TypePtr, SubType: $3}}
+		}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN expr_type ')'
+	| MAKE '(' type_data ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: nil}
+		$$ = &ast.MakeExpr{TypeData: $3}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' CHAN expr_type ',' expr ')'
+	| MAKE '(' type_data ',' expr ')'
 	{
-		$$ = &ast.MakeChanExpr{Type: $4, SizeExpr: $6}
+		$$ = &ast.MakeExpr{TypeData: $3, LenExpr: $5}
 		$$.SetPosition($1.Position())
 	}
-	| MAKE '(' array_count expr_type ')'
+	| MAKE '(' type_data ',' expr ',' expr ')'
 	{
-		$$ = &ast.MakeExpr{Dimensions: $3.Count, Type: $4}
-		$$.SetPosition($1.Position())
-	}
-	| MAKE '(' array_count expr_type ',' expr ')'
-	{
-		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
-		$$.SetPosition($1.Position())
-	}
-	| MAKE '(' array_count expr_type ',' expr ',' expr ')'
-	{
-		$$ = &ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
+		$$ = &ast.MakeExpr{TypeData: $3, LenExpr: $5, CapExpr: $7}
 		$$.SetPosition($1.Position())
 	}
 	| MAKE '(' TYPE IDENT ',' expr ')'
@@ -604,27 +599,62 @@ expr_idents :
 		$$ = append($1, $4.Lit)
 	}
 
-expr_type :
+type_data :
 	IDENT
 	{
-		$$ = $1.Lit
+		$$ = &ast.TypeStruct{Name: $1.Lit}
 	}
-	| expr_type '.' IDENT
+	| type_data '.' IDENT
 	{
-		$$ = $$ + "." + $3.Lit
+		if $1.Kind != ast.TypeDefault {
+			yylex.Error("blah1")
+		} else {
+			$1.Env = append($1.Env, $1.Name)
+			$1.Name = $3.Lit
+		}
+	}
+	| '*' type_data
+	{
+		if $2.Kind == ast.TypeDefault {
+			$2.Kind = ast.TypePtr
+			$$ = $2
+		} else {
+			$$ = &ast.TypeStruct{Kind: ast.TypePtr, SubType: $2}
+		}
+	}
+	| slice_count type_data
+	{
+		if $2.Kind == ast.TypeDefault {
+			$2.Kind = ast.TypeSlice
+			$2.Dimensions = $1
+			$$ = $2
+		} else {
+			$$ = &ast.TypeStruct{Kind: ast.TypeSlice, SubType: $2, Dimensions: $1}
+		}
+	}
+	| MAP '[' type_data ']' type_data
+	{
+		$$ = &ast.TypeStruct{Kind: ast.TypeMap, Key: $3, SubType: $5}
+	}
+	| CHAN type_data
+	{
+		if $2.Kind == ast.TypeDefault {
+			$2.Kind = ast.TypeChan
+			$$ = $2
+		} else {
+			$$ = &ast.TypeStruct{Kind: ast.TypeChan, SubType: $2}
+		}
 	}
 
-array_count :
+
+slice_count :
+	'[' ']'
 	{
-		$$ = ast.ArrayCount{Count: 0}
+		$$ = 1
 	}
-	| '[' ']'
+	| '[' ']' slice_count
 	{
-		$$ = ast.ArrayCount{Count: 1}
-	}
-	| array_count '[' ']'
-	{
-		$$.Count = $$.Count + 1
+		$$ = $3 + 1
 	}
 
 expr_ident :
