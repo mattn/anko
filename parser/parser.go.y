@@ -25,6 +25,8 @@ import (
 %type<expr_idents> expr_idents
 %type<type_data> type_data
 %type<slice_count> slice_count
+%type<expr_member_or_ident> expr_member_or_ident
+%type<expr_member> expr_member
 %type<expr_ident> expr_ident
 %type<expr_literals> expr_literals
 %type<expr_map> expr_map
@@ -59,7 +61,9 @@ import (
 	expr_idents            []string
 	type_data              *ast.TypeStruct
 	slice_count            int
-	expr_ident             ast.Expr
+	expr_member_or_ident   ast.Expr
+	expr_member            *ast.MemberExpr
+	expr_ident             *ast.IdentExpr
 	expr_literals          ast.Expr
 	expr_map               *ast.MapExpr
 	expr_slice             ast.Expr
@@ -73,18 +77,19 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP
 
 /* lowest precedence */
 %left ,
 %right '=' PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ
 %right ':'
+%right OPCHAN
 %right '?' NILCOALESCE
 %left OROR
 %left ANDAND
 %left EQEQ NEQ '<' LE '>' GE
 %left '+' '-' '|' '^'
-%left '*' '/' '%' SHIFTLEFT SHIFTRIGHT '&' POW
+%left '*' '/' '%' SHIFTLEFT SHIFTRIGHT '&'
 %right IN
 %right PLUSPLUS MINUSMINUS
 %right UNARY
@@ -436,7 +441,7 @@ exprs :
 	}
 
 expr :
-	expr_ident
+	expr_member_or_ident
 	{
 		$$ = $1
 	}
@@ -452,11 +457,6 @@ expr :
 	| expr NILCOALESCE expr
 	{
 		$$ = &ast.NilCoalescingOpExpr{LHS: $1, RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr '.' IDENT
-	{
-		$$ = &ast.MemberExpr{Expr: $1, Name: $3.Lit}
 		$$.SetPosition($1.Position())
 	}
 	| FUNC '(' expr_idents ')' '{' compstmt '}'
@@ -657,6 +657,23 @@ slice_count :
 		$$ = $3 + 1
 	}
 
+expr_member_or_ident :
+	expr_member
+	{
+		$$ = $1
+	}
+	| expr_ident
+	{
+		$$ = $1
+	}
+
+expr_member :
+	expr '.' IDENT
+	{
+		$$ = &ast.MemberExpr{Expr: $1, Name: $3.Lit}
+		$$.SetPosition($1.Position())
+	}
+
 expr_ident :
 	IDENT
 	{
@@ -764,24 +781,14 @@ expr_unary :
 		$$ = &ast.UnaryExpr{Operator: "^", Expr: $2}
 		$$.SetPosition($2.Position())
 	}
-	| '&' expr_ident %prec UNARY
+	| '&' expr %prec UNARY
 	{
 		$$ = &ast.AddrExpr{Expr: $2}
 		$$.SetPosition($2.Position())
 	}
-	| '&' expr '.' IDENT %prec UNARY
-	{
-		$$ = &ast.AddrExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
-		$$.SetPosition($2.Position())
-	}
-	| '*' expr_ident %prec UNARY
+	| '*' expr %prec UNARY
 	{
 		$$ = &ast.DerefExpr{Expr: $2}
-		$$.SetPosition($2.Position())
-	}
-	| '*' expr '.' IDENT %prec UNARY
-	{
-		$$ = &ast.DerefExpr{Expr: &ast.MemberExpr{Expr: $2, Name: $4.Lit}}
 		$$.SetPosition($2.Position())
 	}
 
@@ -903,11 +910,6 @@ op_multiply :
 	| expr '&' expr
 	{
 		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "&", RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| expr POW expr
-	{
-		$$ = &ast.MultiplyOperator{LHS: $1, Operator: "**", RHS: $3}
 		$$.SetPosition($1.Position())
 	}
 

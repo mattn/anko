@@ -54,8 +54,6 @@ println(a)
 
 println("")
 
-a = 2 ** 3
-println(a)
 a = 1 & 3
 println(a)
 a = 1 | 2
@@ -105,7 +103,6 @@ println(a)
 	// 4
 	// 2
 	//
-	// 8
 	// 1
 	// 3
 	//

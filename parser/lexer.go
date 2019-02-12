@@ -198,9 +198,6 @@ retry:
 		case '*':
 			s.next()
 			switch s.peek() {
-			case '*':
-				tok = POW
-				lit = "**"
 			case '=':
 				tok = MULEQ
 				lit = "*="
