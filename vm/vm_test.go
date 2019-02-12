@@ -69,11 +69,15 @@ func TestNumbers(t *testing.T) {
 		{Script: `1e+e1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, ParseError: fmt.Errorf("invalid number: 9223372036854775808")},
+		{Script: `-9223372036854775809`, ParseError: fmt.Errorf("invalid number: -9223372036854775809")},
 
 		{Script: `1`, RunOutput: int64(1)},
 		{Script: `-1`, RunOutput: int64(-1)},
 		{Script: `9223372036854775807`, RunOutput: int64(9223372036854775807)},
 		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807-1`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807 -1`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807 - 1`, RunOutput: int64(-9223372036854775808)},
 		{Script: `1.1`, RunOutput: float64(1.1)},
 		{Script: `-1.1`, RunOutput: float64(-1.1)},
 
@@ -455,33 +459,101 @@ func TestNew(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
 		{Script: `new(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
-		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for new")},
+		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 
+		// default
 		{Script: `a = new(bool); *a`, RunOutput: false},
 		{Script: `a = new(int32); *a`, RunOutput: int32(0)},
 		{Script: `a = new(int64); *a`, RunOutput: int64(0)},
 		{Script: `a = new(float32); *a`, RunOutput: float32(0)},
 		{Script: `a = new(float64); *a`, RunOutput: float64(0)},
 		{Script: `a = new(string); *a`, RunOutput: ""},
+
+		// ptr
+		{Script: `a = new(*string); b = *a; *b`, RunOutput: ""},
+		// TOFIX: * > 1 - remove **/pow?
+		// {Script: `a = new(*string); **a`, RunOutput: ""},
+
+		// slice
+		{Script: `a = new([]int64); *a`, RunOutput: []int64{}},
+
+		// map
+		{Script: `a = new(map [string]int64); *a`, RunOutput: map[string]int64{}},
+
+		// chan
+		{Script: `a = new(chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
+		// TOFIX: syntax error: *a seems like it should work
+		// {Script: `a = new(chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
+
 	}
 	testlib.Run(t, tests, nil)
 }
 
 func TestMake(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
+	os.Setenv("ANKO_DEBUG", "")
 	tests := []testlib.Test{
+		{Script: `make(map [[]string]int64)`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
+	}
+	testlib.Run(t, tests, nil)
+
+	os.Setenv("ANKO_DEBUG", "1")
+	tests = []testlib.Test{
 		{Script: `make(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"a": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"b": true}, RunError: fmt.Errorf("no namespace called: a")},
+		{Script: `make([]int64, 1++)`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `make([]int64, 1, 1++)`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `make([]int64, 2, 1)`, RunError: fmt.Errorf("make slice len > cap")},
+		{Script: `make(chan int64, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
-		{Script: `make(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make")},
+		// nill type
+		{Script: `make(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make(*nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make([]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make(map[nilT]string)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make(map[string]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make(chan nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 
+		// default
 		{Script: `make(bool)`, RunOutput: false},
 		{Script: `make(int32)`, RunOutput: int32(0)},
 		{Script: `make(int64)`, RunOutput: int64(0)},
 		{Script: `make(float32)`, RunOutput: float32(0)},
 		{Script: `make(float64)`, RunOutput: float64(0)},
 		{Script: `make(string)`, RunOutput: ""},
+
+		// ptr
+		{Script: `a = make(*int64); *a`, RunOutput: int64(0)},
+		// TOFIX: * > 1 - remove **/pow?
+		// {Script: `a = make(**int64); **a`, RunOutput: int64(0)},
+		// {Script: `a = make(***int64); **a`, RunOutput: int64(0)},
+		{Script: `a = make(*[]int64); *a`, RunOutput: []int64{}},
+		{Script: `a = make(*map [string]int64); *a`, RunOutput: map[string]int64{}},
+		{Script: `a = make(*chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
+
+		// slice
+		{Script: `make([]int64)`, RunOutput: []int64{}},
+		{Script: `a = make([]int64, 1); a[0]`, RunOutput: int64(0)},
+		{Script: `a = make([]int64, 1, 2); a[0]`, RunOutput: int64(0)},
+		{Script: `make([]*int64)`, RunOutput: []*int64{}},
+		{Script: `make([][]int64)`, RunOutput: [][]int64{}},
+		{Script: `make([]map [string]int64)`, RunOutput: []map[string]int64{}},
+
+		// map
+		{Script: `make(map [string]int64)`, RunOutput: map[string]int64{}},
+		{Script: `make(map [string]*int64)`, RunOutput: map[string]*int64{}},
+		{Script: `make(map [*string]int64)`, RunOutput: map[*string]int64{}},
+		{Script: `make(map [*string]*int64)`, RunOutput: map[*string]*int64{}},
+		{Script: `make(map [string][]int64)`, RunOutput: map[string][]int64{}},
+		{Script: `make(map [string]chan int64)`, RunOutput: map[string]chan int64{}},
+		{Script: `make(map [chan string]int64)`, RunOutput: map[chan string]int64{}},
+
+		// chan
+		{Script: `a = make(chan int64); go func(){ a <- 1 }(); <- a`, RunOutput: int64(1)},
+		{Script: `a = make(chan int64, 1); a <- 1; <- a`, RunOutput: int64(1)},
+		{Script: `a = make(chan *int64, 1); b = 1; a <- &b; c <- a; *c`, RunOutput: int64(1)},
+		{Script: `a = make(chan []int64, 1); a <- [1]; <- a`, RunOutput: []int64{1}},
+		{Script: `a = make(chan map [string]int64, 1); b = make(map [string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -505,18 +577,6 @@ func TestReferencingAndDereference(t *testing.T) {
 	tests := []testlib.Test{
 		// TOFIX:
 		// {Script: `a = 1; b = &a; *b = 2; *b`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-	}
-	testlib.Run(t, tests, nil)
-}
-
-func TestMakeChan(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
-		{Script: `make(chan foobar, 2)`, RunError: fmt.Errorf("undefined type 'foobar'")},
-		{Script: `make(chan nilT, 2)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("type cannot be nil for make chan")},
-		{Script: `make(chan bool, 1++)`, RunError: fmt.Errorf("invalid operation")},
-
-		{Script: `a = make(chan bool); b = func (c) { c <- true }; go b(a); <- a`, RunOutput: true},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1148,4 +1208,12 @@ fib = func(x) {
 			b.Fatal("Execute error:", err)
 		}
 	}
+}
+
+func TestTemp(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
+	}
+	testlib.Run(t, tests, nil)
 }

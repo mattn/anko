@@ -149,31 +149,12 @@ type ChanExpr struct {
 	RHS Expr
 }
 
-// NewExpr provide expression to make new instance.
-type NewExpr struct {
-	ExprImpl
-	Type string
-}
-
-// MakeChanExpr provide expression to make chan instance.
-type MakeChanExpr struct {
-	ExprImpl
-	Type     string
-	SizeExpr Expr
-}
-
-// ArrayCount is used in MakeExpr to provide Dimensions
-type ArrayCount struct {
-	Count int
-}
-
 // MakeExpr provide expression to make instance.
 type MakeExpr struct {
 	ExprImpl
-	Dimensions int
-	Type       string
-	LenExpr    Expr
-	CapExpr    Expr
+	TypeData *TypeStruct
+	LenExpr  Expr
+	CapExpr  Expr
 }
 
 // MakeTypeExpr provide expression to make type.

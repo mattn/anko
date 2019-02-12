@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
-	"strings"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/internal/corelib"
@@ -259,29 +259,100 @@ func appendSlice(expr ast.Expr, lhsV reflect.Value, rhsV reflect.Value) (reflect
 	return nilValue, newStringError(expr, "invalid type conversion")
 }
 
-func getTypeFromString(env *Env, name string) (reflect.Type, error) {
-	env, typeString, err := getEnvFromString(env, name)
-	if err != nil {
-		return nilType, err
+func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
+	switch typeStruct.Kind {
+	case ast.TypeDefault:
+		return getTypeFromEnv(runInfo, typeStruct)
+	case ast.TypePtr:
+		var t reflect.Type
+		if typeStruct.SubType != nil {
+			t = makeType(runInfo, typeStruct.SubType)
+		} else {
+			t = getTypeFromEnv(runInfo, typeStruct)
+		}
+		if runInfo.err != nil {
+			return nil
+		}
+		if t == nil {
+			return nil
+		}
+		return reflect.PtrTo(t)
+	case ast.TypeSlice:
+		var t reflect.Type
+		if typeStruct.SubType != nil {
+			t = makeType(runInfo, typeStruct.SubType)
+		} else {
+			t = getTypeFromEnv(runInfo, typeStruct)
+		}
+		if runInfo.err != nil {
+			return nil
+		}
+		if t == nil {
+			return nil
+		}
+		for i := 1; i < typeStruct.Dimensions; i++ {
+			t = reflect.SliceOf(t)
+		}
+		return reflect.SliceOf(t)
+	case ast.TypeMap:
+		key := makeType(runInfo, typeStruct.Key)
+		if runInfo.err != nil {
+			return nil
+		}
+		if key == nil {
+			return nil
+		}
+		t := makeType(runInfo, typeStruct.SubType)
+		if runInfo.err != nil {
+			return nil
+		}
+		if t == nil {
+			return nil
+		}
+		// capture panics if not in debug mode
+		defer func() {
+			if os.Getenv("ANKO_DEBUG") == "" {
+				if recoverResult := recover(); recoverResult != nil {
+					runInfo.err = fmt.Errorf("%v", recoverResult)
+					t = nil
+				}
+			}
+		}()
+		t = reflect.MapOf(key, t)
+		return t
+	case ast.TypeChan:
+		var t reflect.Type
+		if typeStruct.SubType != nil {
+			t = makeType(runInfo, typeStruct.SubType)
+		} else {
+			t = getTypeFromEnv(runInfo, typeStruct)
+		}
+		if runInfo.err != nil {
+			return nil
+		}
+		if t == nil {
+			return nil
+		}
+		return reflect.ChanOf(reflect.BothDir, t)
+	default:
+		runInfo.err = fmt.Errorf("unknown kind")
+		return nil
 	}
-	t, err := env.Type(typeString)
-	if err != nil {
-		return nilType, err
-	}
-	return t, nil
 }
 
-func getEnvFromString(env *Env, name string) (*Env, string, error) {
-	nameSplit := strings.SplitN(name, ".", 2)
-	for len(nameSplit) > 1 {
-		e, found := env.env[nameSplit[0]]
+func getTypeFromEnv(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
+	env := runInfo.env
+	for _, envString := range typeStruct.Env {
+		e, found := env.env[envString]
 		if !found {
-			return nil, "", fmt.Errorf("no namespace called: %v", nameSplit[0])
+			runInfo.err = fmt.Errorf("no namespace called: %v", envString)
+			return nil
 		}
 		env = e.Interface().(*Env)
-		nameSplit = strings.SplitN(nameSplit[1], ".", 2)
 	}
-	return env, nameSplit[0], nil
+	var t reflect.Type
+	t, runInfo.err = env.Type(typeStruct.Name)
+	return t
 }
 
 func makeValue(t reflect.Type) (reflect.Value, error) {
@@ -302,9 +373,7 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 		if err != nil {
 			return nilValue, err
 		}
-		if !ptrV.Elem().CanSet() {
-			return nilValue, fmt.Errorf("type " + t.String() + " cannot be assigned")
-		}
+
 		ptrV.Elem().Set(v)
 		return ptrV, nil
 	case reflect.Slice:
