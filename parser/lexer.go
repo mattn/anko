@@ -191,19 +191,9 @@ retry:
 				tok = MINUSEQ
 				lit = "-="
 			default:
-				if isDigit(s.peek()) {
-					tok = NUMBER
-					lit, err = s.scanNumber()
-					if err != nil {
-						return
-					}
-					lit = "-" + lit
-					s.back()
-				} else {
-					s.back()
-					tok = int(ch)
-					lit = "-"
-				}
+				s.back()
+				tok = int(ch)
+				lit = "-"
 			}
 		case '*':
 			s.next()

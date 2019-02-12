@@ -69,11 +69,15 @@ func TestNumbers(t *testing.T) {
 		{Script: `1e+e1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, ParseError: fmt.Errorf("invalid number: 9223372036854775808")},
+		{Script: `-9223372036854775809`, ParseError: fmt.Errorf("invalid number: -9223372036854775809")},
 
 		{Script: `1`, RunOutput: int64(1)},
 		{Script: `-1`, RunOutput: int64(-1)},
 		{Script: `9223372036854775807`, RunOutput: int64(9223372036854775807)},
 		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807-1`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807 -1`, RunOutput: int64(-9223372036854775808)},
+		{Script: `-9223372036854775807 - 1`, RunOutput: int64(-9223372036854775808)},
 		{Script: `1.1`, RunOutput: float64(1.1)},
 		{Script: `-1.1`, RunOutput: float64(-1.1)},
 
@@ -1204,4 +1208,12 @@ fib = func(x) {
 			b.Fatal("Execute error:", err)
 		}
 	}
+}
+
+func TestTemp(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
+	}
+	testlib.Run(t, tests, nil)
 }

@@ -27,6 +27,14 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `2.1 * 2.0`, RunOutput: float64(4.2)},
 		{Script: `6.5 / 2.0`, RunOutput: float64(3.25)},
 
+		{Script: `2-1`, RunOutput: int64(1)},
+		{Script: `2 -1`, RunOutput: int64(1)},
+		{Script: `2- 1`, RunOutput: int64(1)},
+		{Script: `2 - -1`, RunOutput: int64(3)},
+		{Script: `2- -1`, RunOutput: int64(3)},
+		{Script: `2 - - 1`, RunOutput: int64(3)},
+		{Script: `2- - 1`, RunOutput: int64(3)},
+
 		{Script: `a + b`, Input: map[string]interface{}{"a": int64(2), "b": int64(1)}, RunOutput: int64(3)},
 		{Script: `a - b`, Input: map[string]interface{}{"a": int64(2), "b": int64(1)}, RunOutput: int64(1)},
 		{Script: `a * b`, Input: map[string]interface{}{"a": int64(2), "b": int64(1)}, RunOutput: int64(2)},

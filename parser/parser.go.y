@@ -665,7 +665,16 @@ expr_ident :
 	}
 
 expr_literals :
-	NUMBER
+	'-' NUMBER
+	{
+		num, err := toNumber("-" + $2.Lit)
+		if err != nil {
+			yylex.Error("invalid number: -" + $2.Lit)
+		}
+		$$ = &ast.LiteralExpr{Literal: num}
+		$$.SetPosition($2.Position())
+	}
+	| NUMBER
 	{
 		num, err := toNumber($1.Lit)
 		if err != nil {
