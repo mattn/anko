@@ -91,19 +91,17 @@ func Example_vmMaps() {
 	}
 
 	script := `
-a = {}
+a = map[interface]interface{}
 println(a)
 
 a.b = 1
 println(a)
 println(a.b)
 
-println("")
-
-a = {}
-a["b"] = 1
-println(a)
+a["b"] = 2
 println(a["b"])
+
+println(len(a))
 
 println("")
 
@@ -112,13 +110,21 @@ println(b)
 println(ok)
 
 delete(a, "b")
+
 _, ok = a["b"]
 println(ok)
 
 println("")
 
-a = {"a": 1}
-println(len(a))
+a = {}
+println(a)
+
+a.b = 1
+println(a)
+println(a.b)
+
+a["b"] = 2
+println(a["b"])
 
 `
 
@@ -131,15 +137,17 @@ println(len(a))
 	// map[]
 	// map[b:1]
 	// 1
-	//
-	// map[b:1]
+	// 2
 	// 1
 	//
-	// 1
+	// 2
 	// true
 	// false
 	//
+	// map[]
+	// map[b:1]
 	// 1
+	// 2
 }
 
 func Example_vmModules() {
