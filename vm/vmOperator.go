@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"math"
 	"reflect"
 	"strings"
 
@@ -215,12 +214,6 @@ func (runInfo *runInfoStruct) invokeOperator() {
 			runInfo.rv = reflect.ValueOf(toInt64(lhsV) << uint64(toInt64(runInfo.rv)))
 		case "&":
 			runInfo.rv = reflect.ValueOf(toInt64(lhsV) & toInt64(runInfo.rv))
-		case "**":
-			if lhsV.Kind() == reflect.Float64 {
-				runInfo.rv = reflect.ValueOf(math.Pow(lhsV.Float(), toFloat64(runInfo.rv)))
-				return
-			}
-			runInfo.rv = reflect.ValueOf(int64(math.Pow(toFloat64(lhsV), toFloat64(runInfo.rv))))
 
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")

@@ -471,8 +471,7 @@ func TestNew(t *testing.T) {
 
 		// ptr
 		{Script: `a = new(*string); b = *a; *b`, RunOutput: ""},
-		// TOFIX: * > 1 - remove **/pow?
-		// {Script: `a = new(*string); **a`, RunOutput: ""},
+		{Script: `a = new(*string); **a`, RunOutput: ""},
 
 		// slice
 		{Script: `a = new([]int64); *a`, RunOutput: []int64{}},
@@ -482,9 +481,7 @@ func TestNew(t *testing.T) {
 
 		// chan
 		{Script: `a = new(chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
-		// TOFIX: syntax error: *a seems like it should work
-		// {Script: `a = new(chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
-
+		{Script: `a = new(chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -524,12 +521,12 @@ func TestMake(t *testing.T) {
 
 		// ptr
 		{Script: `a = make(*int64); *a`, RunOutput: int64(0)},
-		// TOFIX: * > 1 - remove **/pow?
-		// {Script: `a = make(**int64); **a`, RunOutput: int64(0)},
-		// {Script: `a = make(***int64); **a`, RunOutput: int64(0)},
+		{Script: `a = make(**int64); **a`, RunOutput: int64(0)},
+		{Script: `a = make(***int64); ***a`, RunOutput: int64(0)},
 		{Script: `a = make(*[]int64); *a`, RunOutput: []int64{}},
 		{Script: `a = make(*map [string]int64); *a`, RunOutput: map[string]int64{}},
 		{Script: `a = make(*chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
+		{Script: `a = make(*chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
 
 		// slice
 		{Script: `make([]int64)`, RunOutput: []int64{}},
@@ -554,6 +551,7 @@ func TestMake(t *testing.T) {
 		{Script: `a = make(chan *int64, 1); b = 1; a <- &b; c <- a; *c`, RunOutput: int64(1)},
 		{Script: `a = make(chan []int64, 1); a <- [1]; <- a`, RunOutput: []int64{1}},
 		{Script: `a = make(chan map [string]int64, 1); b = make(map [string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
+		{Script: `a = make(chan int64, 1); b = &a; *b <- 1; <- *b`, RunOutput: int64(1)},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1208,12 +1206,4 @@ fib = func(x) {
 			b.Fatal("Execute error:", err)
 		}
 	}
-}
-
-func TestTemp(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
-		{Script: `-9223372036854775808`, RunOutput: int64(-9223372036854775808)},
-	}
-	testlib.Run(t, tests, nil)
 }

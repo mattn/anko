@@ -451,6 +451,9 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		if runInfo.err != nil {
 			return
 		}
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
+		}
 		rhs := runInfo.rv
 
 		if expr.LHS != nil {
@@ -462,6 +465,10 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				}
 				runInfo.err = nil
 			}
+		}
+
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
 		}
 
 		if expr.LHS == nil || runInfo.rv.Kind() != reflect.Chan {
