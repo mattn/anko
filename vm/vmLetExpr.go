@@ -126,7 +126,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 				// try to do automatic append
 				value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
 				if runInfo.err != nil {
-					runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for array index")
+					runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().Elem().String()+" for slice index")
 					runInfo.rv = nilValue
 					return
 				}
@@ -152,7 +152,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 			value, runInfo.err = convertReflectValueToType(value, item.Type())
 			if runInfo.err != nil {
-				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String()+" for array index")
+				runInfo.err = newStringError(expr, "type "+value.Type().String()+" cannot be assigned to type "+item.Type().String()+" for slice index")
 				runInfo.rv = nilValue
 				return
 			}

@@ -494,7 +494,7 @@ func TestNilCoalescingOperator(t *testing.T) {
 		{Script: `{} ?? 1`, RunOutput: map[interface{}]interface{}{}},
 
 		// test nil array and map
-		{Script: `a ?? 5`, Input: map[string]interface{}{"a": testArrayEmpty}, RunOutput: int64(5), Output: map[string]interface{}{"a": testArrayEmpty}},
+		{Script: `a ?? 5`, Input: map[string]interface{}{"a": testSliceEmpty}, RunOutput: int64(5), Output: map[string]interface{}{"a": testSliceEmpty}},
 		{Script: `a ?? 6`, Input: map[string]interface{}{"a": testMapEmpty}, RunOutput: int64(6), Output: map[string]interface{}{"a": testMapEmpty}},
 	}
 	testlib.Run(t, tests, nil)
