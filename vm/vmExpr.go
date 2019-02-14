@@ -43,25 +43,78 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 	// MapExpr
 	case *ast.MapExpr:
+		if expr.TypeData == nil {
+			var i int
+			var key reflect.Value
+			m := make(map[interface{}]interface{}, len(expr.Keys))
+			for i, runInfo.expr = range expr.Keys {
+				runInfo.invokeExpr()
+				if runInfo.err != nil {
+					return
+				}
+				key = runInfo.rv
+
+				runInfo.expr = expr.Values[i]
+				runInfo.invokeExpr()
+				if runInfo.err != nil {
+					return
+				}
+
+				m[key.Interface()] = runInfo.rv.Interface()
+			}
+			runInfo.rv = reflect.ValueOf(m)
+			return
+		}
+
+		t := makeType(runInfo, expr.TypeData)
+		if runInfo.err != nil {
+			runInfo.rv = nilValue
+			return
+		}
+		if t == nil {
+			runInfo.err = newStringError(expr, "cannot make type nil")
+			runInfo.rv = nilValue
+			return
+		}
+
+		runInfo.rv, runInfo.err = makeValue(t)
+		if runInfo.err != nil {
+			runInfo.rv = nilValue
+			return
+		}
+
 		var i int
 		var key reflect.Value
-		m := make(map[interface{}]interface{}, len(expr.Keys))
+		m := runInfo.rv
+		keyType := t.Key()
+		valueType := t.Elem()
 		for i, runInfo.expr = range expr.Keys {
 			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
-			key = runInfo.rv
+			key, runInfo.err = convertReflectValueToType(runInfo.rv, keyType)
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "cannot use type "+key.Type().String()+" as type "+keyType.String()+" as map key")
+				runInfo.rv = nilValue
+				return
+			}
 
 			runInfo.expr = expr.Values[i]
 			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
 			}
+			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, valueType)
+			if runInfo.err != nil {
+				runInfo.err = newStringError(expr, "cannot use type "+runInfo.rv.Type().String()+" as type "+valueType.String()+" as map value")
+				runInfo.rv = nilValue
+				return
+			}
 
-			m[key.Interface()] = runInfo.rv.Interface()
+			m.SetMapIndex(key, runInfo.rv)
 		}
-		runInfo.rv = reflect.ValueOf(m)
+		runInfo.rv = m
 
 	// DerefExpr
 	case *ast.DerefExpr:
@@ -523,6 +576,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			Chan: runInfo.rv,
 			Send: rhs,
 		}}
+		// capture panics if not in debug mode
 		defer func() {
 			if os.Getenv("ANKO_DEBUG") == "" {
 				if recoverResult := recover(); recoverResult != nil {

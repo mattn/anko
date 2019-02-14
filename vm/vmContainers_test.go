@@ -1132,8 +1132,14 @@ func TestDeleteMaps(t *testing.T) {
 }
 
 func TestMakeMaps(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
+	os.Setenv("ANKO_DEBUG", "")
 	tests := []testlib.Test{
+		{Script: `map[[]string]string {"a":"a"}`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
+	}
+	testlib.Run(t, tests, nil)
+
+	os.Setenv("ANKO_DEBUG", "1")
+	tests = []testlib.Test{
 		{Script: `make(mapStringBool)`, Types: map[string]interface{}{"mapStringBool": map[string]bool{}}, RunOutput: map[string]bool{}},
 		{Script: `make(mapStringInt32)`, Types: map[string]interface{}{"mapStringInt32": map[string]int32{}}, RunOutput: map[string]int32{}},
 		{Script: `make(mapStringInt64)`, Types: map[string]interface{}{"mapStringInt64": map[string]int64{}}, RunOutput: map[string]int64{}},
@@ -1170,6 +1176,23 @@ func TestMakeMaps(t *testing.T) {
 		{Script: `a = make(mapInterfaceFloat32); a.b = 1.1; a.b`, Types: map[string]interface{}{"mapInterfaceFloat32": map[interface{}]float32{}}, RunOutput: float32(1.1), Output: map[string]interface{}{"a": map[interface{}]float32{"b": float32(1.1)}}},
 		{Script: `a = make(mapInterfaceFloat64); a.b = 1.1; a.b`, Types: map[string]interface{}{"mapInterfaceFloat64": map[interface{}]float64{}}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": map[interface{}]float64{"b": float64(1.1)}}},
 		{Script: `a = make(mapInterfaceString); a.b = "b"; a.b`, Types: map[string]interface{}{"mapInterfaceString": map[interface{}]string{}}, RunOutput: "b", Output: map[string]interface{}{"a": map[interface{}]string{"b": "b"}}},
+
+		// map type errors
+		{Script: `map[int64]string {"a":"a"}`, RunError: fmt.Errorf("cannot use type string as type int64 as map key")},
+		{Script: `map[string]int64 {"a":"a"}`, RunError: fmt.Errorf("cannot use type string as type int64 as map value")},
+		{Script: `map[nilT]interface {"a":"a"}`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `map[interface]nilT {"a":"a"}`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `map[int64]int64 {1++:1}`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `map[int64]int64 {1:1++}`, RunError: fmt.Errorf("invalid operation")},
+
+		// map type
+		{Script: `map[string]interface {"a":nil}`, RunOutput: map[string]interface{}{"a": nil}},
+		{Script: `map[string]bool {"a":true}`, RunOutput: map[string]bool{"a": true}},
+		{Script: `map[string]int32 {"a":1}`, RunOutput: map[string]int32{"a": 1}},
+		{Script: `map[string]int64 {"a":2}`, RunOutput: map[string]int64{"a": 2}},
+		{Script: `map[string]float32 {"a":3.5}`, RunOutput: map[string]float32{"a": 3.5}},
+		{Script: `map[string]float64 {"a":4.5}`, RunOutput: map[string]float64{"a": 4.5}},
+		{Script: `map[string]string {"a":"a"}`, RunOutput: map[string]string{"a": "a"}},
 	}
 	testlib.Run(t, tests, nil)
 }
