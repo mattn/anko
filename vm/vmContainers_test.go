@@ -262,6 +262,7 @@ func TestSlicesAutoAppend(t *testing.T) {
 		{Script: `a = [1,2,3,4,5,6]; b = a[1:3:3]; c = b + [0]`, RunOutput: []interface{}{int64(2), int64(3), int64(0)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4), int64(5), int64(6)}}},
 		{Script: `a = [1,2,3,4,5,6]; a[1:3:9]`, RunError: fmt.Errorf("slice bounds out of range")},
 		{Script: `a = [1,2,3,4,5,6]; a[1:3:2]`, RunError: fmt.Errorf("invalid slice index")},
+		{Script: `a = "123456"; a[1:3:3]`, RunError: fmt.Errorf("type string does not support cap index")},
 
 		{Script: `a = make([]bool); a[0] = 1`, RunError: fmt.Errorf("type int64 cannot be assigned to type bool for slice index"), Output: map[string]interface{}{"a": []bool{}}},
 		{Script: `a = make([]bool); a[0] = true; a[1] = false`, RunOutput: false, Output: map[string]interface{}{"a": []bool{true, false}}},
