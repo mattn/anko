@@ -379,32 +379,46 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					return
 				}
 			}
-			if expr.Cap == nil {
-				sliceCap = item.Cap()
+			if item.Kind() == reflect.String {
+				if expr.Cap != nil {
+					runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support cap index")
+					runInfo.rv = nilValue
+					return
+				}
+				if beginIndex > endIndex {
+					runInfo.err = newStringError(expr, "invalid slice index")
+					runInfo.rv = nilValue
+					return
+				}
+				runInfo.rv = item.Slice(beginIndex, endIndex)
 			} else {
-				runInfo.expr = expr.Cap
-				runInfo.invokeExpr()
-				if runInfo.err != nil {
-					return
+				if expr.Cap == nil {
+					sliceCap = item.Cap()
+				} else {
+					runInfo.expr = expr.Cap
+					runInfo.invokeExpr()
+					if runInfo.err != nil {
+						return
+					}
+					sliceCap, runInfo.err = tryToInt(runInfo.rv)
+					if runInfo.err != nil {
+						runInfo.err = newStringError(expr, "cap must be a number")
+						runInfo.rv = nilValue
+						return
+					}
+					if sliceCap < 0 || sliceCap > item.Len() {
+						runInfo.err = newStringError(expr, "cap out of range")
+						runInfo.rv = nilValue
+						return
+					}
 				}
-				sliceCap, runInfo.err = tryToInt(runInfo.rv)
-				if runInfo.err != nil {
-					runInfo.err = newStringError(expr, "cap must be a number")
+				if beginIndex > endIndex {
+					runInfo.err = newStringError(expr, "invalid slice index")
 					runInfo.rv = nilValue
 					return
 				}
-				if sliceCap < 0 || sliceCap > item.Len() {
-					runInfo.err = newStringError(expr, "cap out of range")
-					runInfo.rv = nilValue
-					return
-				}
+				runInfo.rv = item.Slice3(beginIndex, endIndex, sliceCap)
 			}
-			if beginIndex > endIndex {
-				runInfo.err = newStringError(expr, "invalid slice index")
-				runInfo.rv = nilValue
-				return
-			}
-			runInfo.rv = item.Slice3(beginIndex, endIndex, sliceCap)
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support slice operation")
 			runInfo.rv = nilValue
