@@ -337,7 +337,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		switch item.Kind() {
 		case reflect.String, reflect.Slice, reflect.Array:
-			var beginIndex, endIndex int
+			var beginIndex, endIndex, sliceCap int
 			if expr.Begin == nil {
 				beginIndex = 0
 			} else {
@@ -379,12 +379,46 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					return
 				}
 			}
-			if beginIndex > endIndex {
-				runInfo.err = newStringError(expr, "invalid slice index")
-				runInfo.rv = nilValue
-				return
+			if item.Kind() == reflect.String {
+				if expr.Cap != nil {
+					runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support cap index")
+					runInfo.rv = nilValue
+					return
+				}
+				if beginIndex > endIndex {
+					runInfo.err = newStringError(expr, "invalid slice index")
+					runInfo.rv = nilValue
+					return
+				}
+				runInfo.rv = item.Slice(beginIndex, endIndex)
+			} else {
+				if expr.Cap == nil {
+					sliceCap = item.Cap()
+				} else {
+					runInfo.expr = expr.Cap
+					runInfo.invokeExpr()
+					if runInfo.err != nil {
+						return
+					}
+					sliceCap, runInfo.err = tryToInt(runInfo.rv)
+					if runInfo.err != nil {
+						runInfo.err = newStringError(expr, "cap must be a number")
+						runInfo.rv = nilValue
+						return
+					}
+					if sliceCap < 0 || sliceCap > item.Len() {
+						runInfo.err = newStringError(expr, "slice bounds out of range")
+						runInfo.rv = nilValue
+						return
+					}
+				}
+				if beginIndex > endIndex || sliceCap < endIndex {
+					runInfo.err = newStringError(expr, "invalid slice index")
+					runInfo.rv = nilValue
+					return
+				}
+				runInfo.rv = item.Slice3(beginIndex, endIndex, sliceCap)
 			}
-			runInfo.rv = item.Slice(beginIndex, endIndex)
 		default:
 			runInfo.err = newStringError(expr, "type "+item.Kind().String()+" does not support slice operation")
 			runInfo.rv = nilValue

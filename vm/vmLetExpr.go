@@ -260,7 +260,7 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 		// Slice && Array
 		case reflect.Slice, reflect.Array:
-			var beginIndex, endIndex int
+			var beginIndex, endIndex, sliceCap int
 			if expr.Begin == nil {
 				beginIndex = 0
 			} else {
@@ -302,12 +302,32 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 					return
 				}
 			}
-			if beginIndex > endIndex {
+			if expr.Cap == nil {
+				sliceCap = item.Cap()
+			} else {
+				runInfo.expr = expr.Cap
+				runInfo.invokeExpr()
+				if runInfo.err != nil {
+					return
+				}
+				sliceCap, runInfo.err = tryToInt(runInfo.rv)
+				if runInfo.err != nil {
+					runInfo.err = newStringError(expr, "cap must be a number")
+					runInfo.rv = nilValue
+					return
+				}
+				if sliceCap < 0 || sliceCap > item.Len() {
+					runInfo.err = newStringError(expr, "slice bounds out of range")
+					runInfo.rv = nilValue
+					return
+				}
+			}
+			if beginIndex > endIndex || sliceCap < endIndex {
 				runInfo.err = newStringError(expr, "invalid slice index")
 				runInfo.rv = nilValue
 				return
 			}
-			item = item.Slice(beginIndex, endIndex)
+			item = item.Slice3(beginIndex, endIndex, sliceCap)
 
 			if !item.CanSet() {
 				runInfo.err = newStringError(expr, "slice cannot be assigned")
