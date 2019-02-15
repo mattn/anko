@@ -16,49 +16,52 @@ func Example_vmArrays() {
 	}
 
 	script := `
-a = [1, 2]
+a = []interface{1, 2}
 println(a)
 
 a += 3
 println(a)
 
-a = []
+a = []interface{}
 // this automatically appends to array
 a[0] = 1
 println(a)
 
 println("")
 
-a = []
+a = []interface{}
 // this would give an index out of range error
 // a[1] = 1
 
-a = [1, 2]
-b = [3, 4]
+a = []interface{1, 2}
+b = []interface{3, 4}
 c = a + b
 println(c)
 
-c = [1, 2] + [3, 4]
+c = []interface{1, 2} + []interface{3, 4}
 println(c)
 
 println("")
 
-c = [a] + b
+c = []interface{a} + b
 println(c)
 
-c = [a] + [b]
+c = []interface{a} + []interface{b}
 println(c)
 
-c = [[1, 2]] + [[3, 4]]
+c = []interface{[]interface{1, 2}} + []interface{[]interface{3, 4}}
 println(c)
 
 println("")
 
-a = [1, 2]
+a = []interface{1, 2}
 
 println(len(a))
 
 println(a[1])
+
+a = [1, 2]
+println(a)
 `
 
 	_, err = env.Execute(script)
@@ -80,6 +83,7 @@ println(a[1])
 	//
 	// 2
 	// 2
+	// [1 2]
 }
 
 func Example_vmMaps() {

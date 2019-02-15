@@ -176,8 +176,8 @@ if x < 1 || y < 1 {
 	println(x + y)
 }
 
-// array
-a = [1, 2, 3]
+// slice
+a = []interface{1, 2, 3}
 println(a) // [1 2 3]
 println(a[0]) // 1
 

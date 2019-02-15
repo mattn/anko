@@ -479,9 +479,19 @@ expr :
 		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmt: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
+	| '[' ']'
+	{
+		$$ = &ast.ArrayExpr{}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
 	| '[' opt_newlines exprs opt_comma_newlines ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+	| slice_count type_data '{' opt_newlines exprs opt_comma_newlines '}'
+	{
+		$$ = &ast.ArrayExpr{Exprs: $5, TypeData: &ast.TypeStruct{Kind: ast.TypeSlice, SubType: $2, Dimensions: $1}}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
 	| '(' expr ')'
