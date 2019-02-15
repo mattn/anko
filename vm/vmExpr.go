@@ -407,12 +407,12 @@ func (runInfo *runInfoStruct) invokeExpr() {
 						return
 					}
 					if sliceCap < 0 || sliceCap > item.Len() {
-						runInfo.err = newStringError(expr, "cap out of range")
+						runInfo.err = newStringError(expr, "slice bounds out of range")
 						runInfo.rv = nilValue
 						return
 					}
 				}
-				if beginIndex > endIndex {
+				if beginIndex > endIndex || sliceCap < endIndex {
 					runInfo.err = newStringError(expr, "invalid slice index")
 					runInfo.rv = nilValue
 					return
