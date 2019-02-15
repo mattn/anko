@@ -258,6 +258,9 @@ func TestSlicesAutoAppend(t *testing.T) {
 		{Script: `a[0] = [1.1]; a[0][0]`, Input: map[string]interface{}{"a": [][]interface{}{}}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
 		{Script: `a[0] = ["b"]; a[0][0]`, Input: map[string]interface{}{"a": [][]interface{}{}}, RunOutput: "b", Output: map[string]interface{}{"a": [][]interface{}{{"b"}}}},
 
+		{Script: `a = [1,2,3,4,5,6]; b = a[1:3]; c = b + [0]`, RunOutput: []interface{}{int64(2), int64(3), int64(0)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(0), int64(5), int64(6)}}},
+		{Script: `a = [1,2,3,4,5,6]; b = a[1:3:3]; c = b + [0]`, RunOutput: []interface{}{int64(2), int64(3), int64(0)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4), int64(5), int64(6)}}},
+
 		{Script: `a = make([]bool); a[0] = 1`, RunError: fmt.Errorf("type int64 cannot be assigned to type bool for slice index"), Output: map[string]interface{}{"a": []bool{}}},
 		{Script: `a = make([]bool); a[0] = true; a[1] = false`, RunOutput: false, Output: map[string]interface{}{"a": []bool{true, false}}},
 

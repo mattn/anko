@@ -126,6 +126,7 @@ type SliceExpr struct {
 	Item  Expr
 	Begin Expr
 	End   Expr
+	Cap   Expr
 }
 
 // FuncExpr provide function expression.
