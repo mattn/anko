@@ -18,7 +18,7 @@ var (
 	testMap        = map[interface{}]interface{}{"a": nil, "b": true, "c": int64(1), "d": float64(1.1), "e": "e"}
 )
 
-func TestArrays(t *testing.T) {
+func TestSlices(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
 		{Script: `[1++]`, RunError: fmt.Errorf("invalid operation")},
@@ -258,14 +258,6 @@ func TestSlicesAutoAppend(t *testing.T) {
 		{Script: `a[0] = [1.1]; a[0][0]`, Input: map[string]interface{}{"a": [][]interface{}{}}, RunOutput: float64(1.1), Output: map[string]interface{}{"a": [][]interface{}{{float64(1.1)}}}},
 		{Script: `a[0] = ["b"]; a[0][0]`, Input: map[string]interface{}{"a": [][]interface{}{}}, RunOutput: "b", Output: map[string]interface{}{"a": [][]interface{}{{"b"}}}},
 
-		{Script: `a = [1,2,3,4,5,6]; b = a[1:3]; c = b + [0]`, RunOutput: []interface{}{int64(2), int64(3), int64(0)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(0), int64(5), int64(6)}}},
-		{Script: `a = [1,2,3,4,5,6]; b = a[1:3:3]; c = b + [0]`, RunOutput: []interface{}{int64(2), int64(3), int64(0)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4), int64(5), int64(6)}}},
-		{Script: `a = [1,2,3,4,5,6]; a[1:3:9]`, RunError: fmt.Errorf("slice bounds out of range")},
-		{Script: `a = [1,2,3,4,5,6]; a[1:3:2]`, RunError: fmt.Errorf("invalid slice index")},
-		{Script: `a = "123456"; a[1:3:3]`, RunError: fmt.Errorf("type string does not support cap index")},
-		{Script: `a = [1,2,3,4,5,6]; a[1:3:"foo"]`, RunError: fmt.Errorf("cap must be a number")},
-		{Script: `a = [1,2,3,4,5,6]; a[1:3:(1/0)]`, RunError: fmt.Errorf("slice bounds out of range")},
-
 		{Script: `a = make([]bool); a[0] = 1`, RunError: fmt.Errorf("type int64 cannot be assigned to type bool for slice index"), Output: map[string]interface{}{"a": []bool{}}},
 		{Script: `a = make([]bool); a[0] = true; a[1] = false`, RunOutput: false, Output: map[string]interface{}{"a": []bool{true, false}}},
 
@@ -417,18 +409,18 @@ func TestSliceOfSlices(t *testing.T) {
 		{Script: `a = [1, 2, 3]; a[0:3]`, RunOutput: []interface{}{int64(1), int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[0:4]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{Script: `a = [1, 2, 3]; a[1:0]`, RunError: fmt.Errorf("invalid slice index"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = [1, 2, 3]; a[1:0]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:1]`, RunOutput: []interface{}{}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:2]`, RunOutput: []interface{}{int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:3]`, RunOutput: []interface{}{int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:4]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{Script: `a = [1, 2, 3]; a[2:1]`, RunError: fmt.Errorf("invalid slice index"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = [1, 2, 3]; a[2:1]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[2:2]`, RunOutput: []interface{}{}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[2:3]`, RunOutput: []interface{}{int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[2:4]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
-		{Script: `a = [1, 2, 3]; a[3:2]`, RunError: fmt.Errorf("invalid slice index"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = [1, 2, 3]; a[3:2]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[3:3]`, RunOutput: []interface{}{}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[3:4]`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
@@ -457,7 +449,7 @@ func TestSliceOfSlices(t *testing.T) {
 		{Script: `a = [1, 2, 3]; a[0:0] = 4`, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[0:1] = 4`, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[0:4] = 4`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
-		{Script: `a = [1, 2, 3]; a[1:0] = 4`, RunError: fmt.Errorf("invalid slice index"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+		{Script: `a = [1, 2, 3]; a[1:0] = 4`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[1:4] = 4`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 
 		{Script: `a = [1, 2, 3]; a[-1:] = 4`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
@@ -469,6 +461,9 @@ func TestSliceOfSlices(t *testing.T) {
 		{Script: `a = [1, 2, 3]; a[:0] = 4`, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[:1] = 4`, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = [1, 2, 3]; a[:4] = 4`, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3)}}},
+
+		// slice assigned elem
+		{Script: `a[0][0:0] = 4`, Input: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1), int64(2), int64(3)}}}, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{[]interface{}{int64(1), int64(2), int64(3)}}}},
 
 		{Script: `a = [{"b": "b"}, {"c": "c"}, {"d": "d"}]; a[0:2].a`, RunError: fmt.Errorf("type slice does not support member operation"), Output: map[string]interface{}{"a": []interface{}{map[interface{}]interface{}{"b": "b"}, map[interface{}]interface{}{"c": "c"}, map[interface{}]interface{}{"d": "d"}}}},
 
@@ -554,6 +549,46 @@ func TestSliceOfSlices(t *testing.T) {
 		{Script: `a = [["123"], ["456"]]; a[1][0][:1]`, RunOutput: "4", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 		{Script: `a = [["123"], ["456"]]; a[1][0][:2]`, RunOutput: "45", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
 		{Script: `a = [["123"], ["456"]]; a[1][0][:3]`, RunOutput: "456", Output: map[string]interface{}{"a": []interface{}{[]interface{}{"123"}, []interface{}{"456"}}}},
+
+		// cap errors
+		{Script: `a = "a"; a[0:1:1]`, RunError: fmt.Errorf("type string does not support cap")},
+		{Script: `a = [1,2,3,4]; a[1:3:-1]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:3:0]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:3:2]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:3:5]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[:2:-1]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[:2:0]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[:2:1]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[:2:5]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:3:"a"]`, RunError: fmt.Errorf("cap must be a number")},
+		{Script: `a = [1,2,3,4]; a[1:3:1++]`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a = "a"; b = a[0:1:1]`, RunError: fmt.Errorf("type string does not support cap")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:-1]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:0]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:2]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:5]`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:"a"]`, RunError: fmt.Errorf("cap must be a number")},
+		{Script: `a = [1,2,3,4]; b = a[1:3:1++]`, RunError: fmt.Errorf("invalid operation")},
+
+		// cap assigned errors
+		{Script: `a = [1,2,3,4]; a[1:1:-1] = 3`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:1:0] = 3`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:1:5] = 3`, RunError: fmt.Errorf("cap out of range")},
+		{Script: `a = [1,2,3,4]; a[1:1:"a"] = 3`, RunError: fmt.Errorf("cap must be a number")},
+		{Script: `a = [1,2,3,4]; a[1:3:1++] = 3`, RunError: fmt.Errorf("invalid operation")},
+
+		// cap
+		{Script: `a = [1,2,3,4]; a[1:3:3]`, RunOutput: []interface{}{int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}}},
+		{Script: `a = [1,2,3,4]; a[1:3:4]`, RunOutput: []interface{}{int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}}},
+		{Script: `a = [1,2,3,4]; a[:2:3]`, RunOutput: []interface{}{int64(1), int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}}},
+		{Script: `a = [1,2,3,4]; a[:2:4]`, RunOutput: []interface{}{int64(1), int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}}},
+		{Script: `a = [1,2,3,4]; b = a[1:3:3]`, RunOutput: []interface{}{int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}, "b": []interface{}{int64(2), int64(3)}}},
+		{Script: `a = [1,2,3,4]; b = a[1:3:4]`, RunOutput: []interface{}{int64(2), int64(3)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}, "b": []interface{}{int64(2), int64(3)}}},
+		{Script: `a = [1,2,3,4]; b = a[:2:3]`, RunOutput: []interface{}{int64(1), int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}, "b": []interface{}{int64(1), int64(2)}}},
+		{Script: `a = [1,2,3,4]; b = a[:2:4]`, RunOutput: []interface{}{int64(1), int64(2)}, Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}, "b": []interface{}{int64(1), int64(2)}}},
+
+		// cap assigned
+		{Script: `a = [1,2,3,4]; a[1:1:1] = 3`, RunError: fmt.Errorf("slice cannot be assigned"), Output: map[string]interface{}{"a": []interface{}{int64(1), int64(2), int64(3), int64(4)}}},
 	}
 	testlib.Run(t, tests, nil)
 }
@@ -1227,7 +1262,7 @@ func TestMakeMaps(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
-func TestArraysAndMaps(t *testing.T) {
+func TestSlicesAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
 		{Script: `a = [{"b": nil}]`, RunOutput: []interface{}{map[interface{}]interface{}{"b": interface{}(nil)}}, Output: map[string]interface{}{"a": []interface{}{map[interface{}]interface{}{"b": interface{}(nil)}}}},
@@ -1308,28 +1343,28 @@ func TestArraysAndMaps(t *testing.T) {
 	testlib.Run(t, tests, nil)
 }
 
-func TestMakeArraysAndMaps(t *testing.T) {
+func TestMakeSlicesAndMaps(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
 		{Script: `make([]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: []map[string]interface{}{}},
 		{Script: `make([][]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: [][]map[string]interface{}{}},
 
-		{Script: `make(mapArray2x)`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}},
-		{Script: `a = make(mapArray2x)`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
-		{Script: `a = make(mapArray2x); a`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
-		{Script: `a = make(mapArray2x); a.b = b`, Types: map[string]interface{}{"mapArray2x": map[string][][]interface{}{}}, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: [][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{"b": {}}, "b": [][]interface{}{}}},
+		{Script: `make(mapSlice2x)`, Types: map[string]interface{}{"mapSlice2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}},
+		{Script: `a = make(mapSlice2x)`, Types: map[string]interface{}{"mapSlice2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{Script: `a = make(mapSlice2x); a`, Types: map[string]interface{}{"mapSlice2x": map[string][][]interface{}{}}, RunOutput: map[string][][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{}}},
+		{Script: `a = make(mapSlice2x); a.b = b`, Types: map[string]interface{}{"mapSlice2x": map[string][][]interface{}{}}, Input: map[string]interface{}{"b": [][]interface{}{}}, RunOutput: [][]interface{}{}, Output: map[string]interface{}{"a": map[string][][]interface{}{"b": {}}, "b": [][]interface{}{}}},
 	}
 	testlib.Run(t, tests, nil)
 }
 
-func TestMakeArraysData(t *testing.T) {
-	stmts, err := parser.ParseSrc("make(array)")
+func TestMakeSlicesData(t *testing.T) {
+	stmts, err := parser.ParseSrc("make(slice)")
 	if err != nil {
 		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
 	}
 
 	env := NewEnv()
-	err = env.DefineType("array", []string{})
+	err = env.DefineType("slice", []string{})
 	if err != nil {
 		t.Errorf("DefineType error - received %v - expected: %v", err, nil)
 	}
