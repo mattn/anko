@@ -768,6 +768,14 @@ expr_slice :
 	{
 		$$ = &ast.SliceExpr{Item: $1, Begin: nil, End: $4}
 	}
+	| expr_ident '[' ':' expr ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Item: $1, End: $4, Cap: $6}
+	}
+	| expr_ident '[' expr ':' expr ':' expr ']'
+	{
+		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5, Cap: $7}
+	}
 	| expr '[' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5}
@@ -780,9 +788,9 @@ expr_slice :
 	{
 		$$ = &ast.SliceExpr{Item: $1, Begin: nil, End: $4}
 	}
-	| expr_ident '[' expr ':' expr ':' expr ']'
+	| expr '[' ':' expr ':' expr ']'
 	{
-		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5, Cap: $7}
+		$$ = &ast.SliceExpr{Item: $1, End: $4, Cap: $6}
 	}
 	| expr '[' expr ':' expr ':' expr ']'
 	{
