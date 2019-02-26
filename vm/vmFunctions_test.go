@@ -850,3 +850,30 @@ waitGroup.Wait()`,
 
 	testlib.Run(t, tests, nil)
 }
+
+func TestDeferFunction(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []testlib.Test{
+		{Script: `
+a = []
+func add(n) { a += n }
+func aFunc() {
+  var i = 0
+  defer add(i)
+  i++
+  defer add(i)
+  i++
+  defer add(i)
+  i++
+  defer add(i)
+  i++
+  defer add(i)
+}
+aFunc()`,
+			Output: map[string]interface{}{
+				"a": []interface{}{int64(4), int64(3), int64(2), int64(1), int64(0)},
+			}},
+	}
+
+	testlib.Run(t, tests, nil)
+}
