@@ -35,7 +35,8 @@ func (runInfo *runInfoStruct) funcExpr() {
 	// returns slice of reflect.Type with two values:
 	// return value of the function and error value of the run
 	runVMFunction := func(in []reflect.Value) []reflect.Value {
-		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
+		newEnv := envFunc.NewEnv()
+		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), env: newEnv, stmt: funcExpr.Stmt, rv: nilValue}
 
 		// add Params to newEnv, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
@@ -57,6 +58,17 @@ func (runInfo *runInfoStruct) funcExpr() {
 
 		// run function statements
 		runInfo.runSingleStmt()
+
+		for i := len(newEnv.defers) - 1; i >= 0; i-- {
+			cf := newEnv.defers[i]
+			if cf.CallSlice {
+				cf.Func.CallSlice(cf.Args)
+			} else {
+				cf.Func.Call(cf.Args)
+			}
+		}
+		envFunc.defers = nil
+
 		if runInfo.err != nil && runInfo.err != ErrReturn {
 			runInfo.err = newError(funcExpr, runInfo.err)
 			// return nil value and error

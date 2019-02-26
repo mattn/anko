@@ -631,6 +631,52 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.expr = stmt.Expr
 		runInfo.invokeExpr()
 
+	case *ast.DeferStmt:
+		env := runInfo.env
+		switch t := stmt.Expr.(type) {
+		case *ast.AnonCallExpr:
+			runInfo.expr = t.Expr
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				return
+			}
+			f := runInfo.rv
+			fType := f.Type()
+			callExpr := &ast.CallExpr{Func: f, SubExprs: t.SubExprs, VarArg: t.VarArg}
+			args, useCallSlice := runInfo.makeCallArgs(fType, true, callExpr)
+			if runInfo.err != nil {
+				return
+			}
+			env.defers = append(env.defers, capturedFunc{
+				Func:      f,
+				Args:      args,
+				CallSlice: useCallSlice,
+			})
+		case *ast.CallExpr:
+			f := t.Func
+			if !f.IsValid() {
+				var err error
+				f, err = env.get(t.Name)
+				if err != nil {
+					return
+				}
+			}
+			fType := f.Type()
+			isRunVmFunction := checkIfRunVMFunction(fType)
+			args, useCallSlice := runInfo.makeCallArgs(fType, isRunVmFunction, t)
+			if runInfo.err != nil {
+				return
+			}
+			env.defers = append(env.defers, capturedFunc{
+				Func:      f,
+				Args:      args,
+				CallSlice: useCallSlice,
+			})
+		default:
+			runInfo.expr = stmt.Expr
+			runInfo.invokeExpr()
+		}
+
 	// DeleteStmt
 	case *ast.DeleteStmt:
 		runInfo.expr = stmt.Item

@@ -18,6 +18,13 @@ type (
 		Pos     ast.Position
 	}
 
+	// capturedFunc is stacked in the scope
+	capturedFunc struct {
+		Func      reflect.Value
+		Args      []reflect.Value
+		CallSlice bool
+	}
+
 	// runInfo provides run incoming and outgoing information
 	runInfoStruct struct {
 		// incoming

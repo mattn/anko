@@ -20,9 +20,11 @@ type EnvResolver interface {
 // Env provides interface to run VM. This mean function scope and blocked-scope.
 // If stack goes to blocked-scope, it will make new Env.
 type Env struct {
-	name     string
-	env      map[string]reflect.Value
-	typ      map[string]reflect.Type
+	name   string
+	env    map[string]reflect.Value
+	typ    map[string]reflect.Type
+	defers []capturedFunc
+
 	parent   *Env
 	external EnvResolver
 	sync.RWMutex
