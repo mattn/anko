@@ -573,17 +573,13 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	// ModuleStmt
 	case *ast.ModuleStmt:
 		env := runInfo.env
-		runInfo.env = env.NewEnv()
-		runInfo.env.SetName(stmt.Name)
-
+		runInfo.env = env.NewModule(stmt.Name)
 		runInfo.stmt = stmt.Stmt
 		runInfo.runSingleStmt()
 		if runInfo.err != nil {
 			runInfo.env = env
 			return
 		}
-
-		env.defineGlobalValue(stmt.Name, reflect.ValueOf(runInfo.env))
 		runInfo.rv = nilValue
 		runInfo.env = env
 

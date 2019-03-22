@@ -114,10 +114,11 @@ func (e *Env) SetExternal(res EnvResolver) {
 	e.external = res
 }
 
-// NewModule creates new module scope as global.
+// NewModule creates new module.
 func (e *Env) NewModule(n string) *Env {
 	m := &Env{
 		env:    make(map[string]reflect.Value),
+		typ:    make(map[string]reflect.Type),
 		parent: e,
 		name:   n,
 	}

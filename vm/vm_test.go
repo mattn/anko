@@ -451,6 +451,13 @@ func TestModule(t *testing.T) {
 
 		{Script: `module a { _b = "b"; func c() { return _b} }`, RunOutput: nil},
 		{Script: `module a { _b = "b"; func c() { return _b} }; a.c()`, RunOutput: "b"},
+
+		// test type scope
+		{Script: `module b { make(type Duration, a) }; func c() { d = new(time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: time")},
+		{Script: `module time { make(type Duration, a) }; func c() { d = new(time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunOutput: time.Duration(0)},
+		{Script: `module x { module time { make(type Duration, a) } }; func c() { d = new(x.time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunOutput: time.Duration(0)},
+		{Script: `module x { module time { make(type Duration, a) } }; func c() { d = new(y.time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: y")},
+		{Script: `module x { module time { make(type Duration, a) } }; func c() { d = new(x.y.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: y")},
 	}
 	testlib.Run(t, tests, nil)
 }
