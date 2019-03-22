@@ -204,14 +204,7 @@ func TestFunctions(t *testing.T) {
 		{Script: `module a { func b() { return 1.1} }; a.b()`, RunOutput: float64(1.1)},
 		{Script: `module a { func b() { return "a"} }; a.b()`, RunOutput: "a"},
 
-		{Script: `if true { module a { func b() { return } } }; a.b()`, RunOutput: nil},
-		{Script: `if true { module a { func b() { return nil} } }; a.b()`, RunOutput: nil},
-		{Script: `if true { module a { func b() { return true} } }; a.b()`, RunOutput: true},
-		{Script: `if true { module a { func b() { return 1} } }; a.b()`, RunOutput: int64(1)},
-		{Script: `if true { module a { func b() { return 1.1} } }; a.b()`, RunOutput: float64(1.1)},
-		{Script: `if true { module a { func b() { return "a"} } }; a.b()`, RunOutput: "a"},
-
-		{Script: `if true { module a { func b() { return 1} } }; a.b()`, RunOutput: int64(1)},
+		{Script: `if true { module a { func b() { return } } }; a.b()`, RunError: fmt.Errorf("undefined symbol 'a'")},
 
 		{Script: `a = 1; func b() { a = 2 }; b()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `b(a); a`, Input: map[string]interface{}{"a": int64(1), "b": func(c interface{}) { c = int64(2); _ = c }}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
@@ -780,7 +773,7 @@ func TestCallFunctionWithVararg(t *testing.T) {
 	}
 	got, err := env.Execute(`X(a...)`)
 	if err != nil {
-		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
+		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("execute error - received %#v - expected: %#v", got, want)

@@ -7,7 +7,7 @@ type Token struct {
 	Lit string
 }
 
-// TypeKind blah
+// TypeKind is the kinds of types
 type TypeKind int
 
 const (
@@ -23,7 +23,7 @@ const (
 	TypeChan
 )
 
-// TypeStruct blah
+// TypeStruct is the type and sub-types
 type TypeStruct struct {
 	Kind       TypeKind
 	Env        []string

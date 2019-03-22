@@ -342,14 +342,35 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 
 func getTypeFromEnv(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 	env := runInfo.env
-	for _, envString := range typeStruct.Env {
-		e, found := env.env[envString]
-		if !found {
-			runInfo.err = fmt.Errorf("no namespace called: %v", envString)
-			return nil
+
+	if len(typeStruct.Env) > 0 {
+		var e reflect.Value
+		var found bool
+		for {
+			// find starting env
+			e, found = env.env[typeStruct.Env[0]]
+			if found {
+				env = e.Interface().(*Env)
+				break
+			}
+			if env.parent == nil {
+				runInfo.err = fmt.Errorf("no namespace called: %v", typeStruct.Env[0])
+				return nil
+			}
+			env = env.parent
 		}
-		env = e.Interface().(*Env)
+
+		for i := 1; i < len(typeStruct.Env); i++ {
+			// find child env
+			e, found = env.env[typeStruct.Env[i]]
+			if !found {
+				runInfo.err = fmt.Errorf("no namespace called: %v", typeStruct.Env[i])
+				return nil
+			}
+			env = e.Interface().(*Env)
+		}
 	}
+
 	var t reflect.Type
 	t, runInfo.err = env.Type(typeStruct.Name)
 	return t
