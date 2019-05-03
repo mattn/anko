@@ -116,6 +116,7 @@ func init() {
 		for _, k := range keys {
 			fmt.Printf(`	"%s": %s.%s,`+"\n", k, pn, k)
 		}
-		fmt.Println("}")
+		fmt.Println(`	}
+}`)
 	}
 }
