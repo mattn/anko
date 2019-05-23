@@ -3,6 +3,7 @@ package vm
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -381,11 +382,17 @@ func (e *Env) Execute(src string) (interface{}, error) {
 
 // ExecuteContext parses and runs source in current scope.
 func (e *Env) ExecuteContext(ctx context.Context, src string) (interface{}, error) {
+	return e.ExecuteContextUnsafe(context.Background(), src, os.Getenv("ANKO_DEBUG") == "")
+}
+
+// ExecuteContextUnsafe parses and runs source in current scope, with panics captured
+// or passed-through as specified.
+func (e *Env) ExecuteContextUnsafe(ctx context.Context, src string, capturePanic bool) (interface{}, error) {
 	stmt, err := parser.ParseSrc(src)
 	if err != nil {
 		return nilValue, err
 	}
-	return RunContext(ctx, stmt, e)
+	return RunContextUnsafe(ctx, stmt, e, capturePanic)
 }
 
 // Run runs statement in current scope.

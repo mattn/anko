@@ -3,7 +3,6 @@ package vm
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -140,9 +139,9 @@ func (runInfo *runInfoStruct) callExpr() {
 		return
 	}
 
-	// capture panics if not in debug mode
+	// capture panics if opted to
 	defer func() {
-		if os.Getenv("ANKO_DEBUG") == "" {
+		if runInfo.capturePanic {
 			if recoverResult := recover(); recoverResult != nil {
 				runInfo.err = fmt.Errorf("%v", recoverResult)
 				runInfo.rv = nilValue

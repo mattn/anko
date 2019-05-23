@@ -3,6 +3,7 @@ package vm
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -15,7 +16,13 @@ func Run(stmt ast.Stmt, env *Env) (interface{}, error) {
 
 // RunContext executes statement in the specified environment with context.
 func RunContext(ctx context.Context, stmt ast.Stmt, env *Env) (interface{}, error) {
-	runInfo := runInfoStruct{ctx: ctx, env: env, stmt: stmt, rv: nilValue}
+	return RunContextUnsafe(ctx, stmt, env, os.Getenv("ANKO_DEBUG") == "")
+}
+
+// RunContextUnsafe executes statement in the specified environment with context, with panics captured
+// or passed-through as specified.
+func RunContextUnsafe(ctx context.Context, stmt ast.Stmt, env *Env, capturePanic bool) (interface{}, error) {
+	runInfo := runInfoStruct{ctx: ctx, env: env, stmt: stmt, rv: nilValue, capturePanic: capturePanic}
 	runInfo.runSingleStmt()
 	if runInfo.err == ErrReturn {
 		runInfo.err = nil

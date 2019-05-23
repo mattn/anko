@@ -2,7 +2,6 @@ package vm
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -645,9 +644,9 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			Chan: runInfo.rv,
 			Send: rhs,
 		}}
-		// capture panics if not in debug mode
+		// capture panics if opted to
 		defer func() {
-			if os.Getenv("ANKO_DEBUG") == "" {
+			if runInfo.capturePanic {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 				}

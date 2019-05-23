@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -26,6 +25,9 @@ type (
 		stmt     ast.Stmt
 		expr     ast.Expr
 		operator ast.Operator
+
+		// options
+		capturePanic bool
 
 		// outgoing
 		rv  reflect.Value
@@ -309,9 +311,9 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 		if t == nil {
 			return nil
 		}
-		// capture panics if not in debug mode
+		// capture panics if opted to
 		defer func() {
-			if os.Getenv("ANKO_DEBUG") == "" {
+			if runInfo.capturePanic {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 					t = nil
