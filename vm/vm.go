@@ -36,6 +36,8 @@ type (
 var (
 	nilType            = reflect.TypeOf(nil)
 	stringType         = reflect.TypeOf("a")
+	byteType           = reflect.TypeOf(byte('a'))
+	runeType           = reflect.TypeOf('a')
 	interfaceType      = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
 	interfaceSliceType = reflect.TypeOf([]interface{}{})
 	reflectValueType   = reflect.TypeOf(reflect.Value{})

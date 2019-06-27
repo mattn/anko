@@ -73,6 +73,23 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		return convertReflectValueToType(rv.Elem(), rt)
 	}
 
+	if rv.Type() == stringType {
+		if rt == byteType {
+			aString := rv.String()
+			if len(aString) < 1 {
+				return reflect.Zero(rt), nil
+			}
+			return reflect.ValueOf(aString[0]), nil
+		}
+		if rt == runeType {
+			aString := rv.String()
+			if len(aString) < 1 {
+				return reflect.Zero(rt), nil
+			}
+			return reflect.ValueOf(rune(aString[0])), nil
+		}
+	}
+
 	// TODO: need to handle the case where either rv or rt are a pointer but not both
 
 	return rv, fmt.Errorf("invalid type conversion")

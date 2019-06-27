@@ -236,7 +236,7 @@ func TestSlicesAutoAppend(t *testing.T) {
 		{Script: `a[2] = nil`, Input: map[string]interface{}{"a": []float64{1.5, 2.5}}, Output: map[string]interface{}{"a": []float64{1.5, 2.5, 0}}},
 		{Script: `a[2] = nil`, Input: map[string]interface{}{"a": []string{"a", "b"}}, Output: map[string]interface{}{"a": []string{"a", "b", ""}}},
 
-		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int32{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int32 for slice index"), Output: map[string]interface{}{"a": []int32{1, 2}}},
+		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int16{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int16 for slice index"), Output: map[string]interface{}{"a": []int16{1, 2}}},
 		{Script: `a[2] = true`, Input: map[string]interface{}{"a": []int64{1, 2}}, RunError: fmt.Errorf("type bool cannot be assigned to type int64 for slice index"), Output: map[string]interface{}{"a": []int64{1, 2}}},
 		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int64{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int64 for slice index"), Output: map[string]interface{}{"a": []int64{1, 2}}},
 		{Script: `a[2] = true`, Input: map[string]interface{}{"a": []float32{1.1, 2.2}}, RunError: fmt.Errorf("type bool cannot be assigned to type float32 for slice index"), Output: map[string]interface{}{"a": []float32{1.1, 2.2}}},

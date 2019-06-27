@@ -533,6 +533,15 @@ func TestFunctionConversions(t *testing.T) {
 			return b()
 		}}, RunOutput: true, Output: map[string]interface{}{"c": true, "d": int32(1), "e": int64(2), "f": float32(3.3), "g": float64(4.4), "h": "5"}},
 
+		// string to byte
+		{Script: `b = a("x"); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "x"},
+		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "y"},
+		{Script: `b = a(""); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "\x00"},
+		// string to rune
+		{Script: `b = a("x"); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "x"},
+		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "y"},
+		{Script: `b = a(""); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "\x00"},
+
 		// slice inteface unable to convert to int
 		{Script: `b = [1, 2.2, "3"]; a(b)`, Input: map[string]interface{}{"a": func(b []int) int { return len(b) }}, RunError: fmt.Errorf("function wants argument type []int but received type []interface {}"), Output: map[string]interface{}{"b": []interface{}{int64(1), float64(2.2), "3"}}},
 		// slice no sub convertible conversion
