@@ -52,6 +52,8 @@ var (
 	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
+	errInvalidTypeConversion = fmt.Errorf("invalid type conversion")
+
 	// ErrBreak when there is an unexpected break statement
 	ErrBreak = errors.New("unexpected break statement")
 	// ErrContinue when there is an unexpected continue statement

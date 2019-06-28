@@ -79,6 +79,9 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 			if len(aString) < 1 {
 				return reflect.Zero(rt), nil
 			}
+			if len(aString) > 1 {
+				return rv, errInvalidTypeConversion
+			}
 			return reflect.ValueOf(aString[0]), nil
 		}
 		if rt == runeType {
@@ -86,13 +89,16 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 			if len(aString) < 1 {
 				return reflect.Zero(rt), nil
 			}
+			if len(aString) > 1 {
+				return rv, errInvalidTypeConversion
+			}
 			return reflect.ValueOf(rune(aString[0])), nil
 		}
 	}
 
 	// TODO: need to handle the case where either rv or rt are a pointer but not both
 
-	return rv, fmt.Errorf("invalid type conversion")
+	return rv, errInvalidTypeConversion
 }
 
 // convertSliceOrArray trys to covert the reflect.Value slice or array to the slice or array reflect.Type
@@ -162,7 +168,7 @@ func convertMap(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
 func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
 	// only translates runVMFunction type
 	if !checkIfRunVMFunction(rv.Type()) {
-		return rv, fmt.Errorf("invalid type conversion")
+		return rv, errInvalidTypeConversion
 	}
 
 	// create runVMConvertFunction to match reflect.Type

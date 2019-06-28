@@ -534,12 +534,12 @@ func TestFunctionConversions(t *testing.T) {
 		}}, RunOutput: true, Output: map[string]interface{}{"c": true, "d": int32(1), "e": int64(2), "f": float32(3.3), "g": float64(4.4), "h": "5"}},
 
 		// string to byte
+		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunError: fmt.Errorf("function wants argument type uint8 but received type string")},
 		{Script: `b = a("x"); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "x"},
-		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "y"},
 		{Script: `b = a(""); b`, Input: map[string]interface{}{"a": func(b byte) string { return string(b) }}, RunOutput: "\x00"},
 		// string to rune
+		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunError: fmt.Errorf("function wants argument type int32 but received type string")},
 		{Script: `b = a("x"); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "x"},
-		{Script: `b = a("yz"); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "y"},
 		{Script: `b = a(""); b`, Input: map[string]interface{}{"a": func(b rune) string { return string(b) }}, RunOutput: "\x00"},
 
 		// slice inteface unable to convert to int
