@@ -50,4 +50,5 @@ func init() {
 		"TrimSpace":      strings.TrimSpace,
 		"TrimSuffix":     strings.TrimSuffix,
 	}
+	stringsGo110()
 }

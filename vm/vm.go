@@ -404,6 +404,9 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 	case reflect.Struct:
 		structV := reflect.New(t).Elem()
 		for i := 0; i < structV.NumField(); i++ {
+			if structV.Field(i).Kind() == reflect.Ptr {
+				continue
+			}
 			v, err := makeValue(structV.Field(i).Type())
 			if err != nil {
 				return nilValue, err
