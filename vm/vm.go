@@ -36,6 +36,8 @@ type (
 var (
 	nilType            = reflect.TypeOf(nil)
 	stringType         = reflect.TypeOf("a")
+	byteType           = reflect.TypeOf(byte('a'))
+	runeType           = reflect.TypeOf('a')
 	interfaceType      = reflect.ValueOf([]interface{}{int64(1)}).Index(0).Type()
 	interfaceSliceType = reflect.TypeOf([]interface{}{})
 	reflectValueType   = reflect.TypeOf(reflect.Value{})
@@ -49,6 +51,8 @@ var (
 	zeroValue                 = reflect.Value{}
 	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
+
+	errInvalidTypeConversion = fmt.Errorf("invalid type conversion")
 
 	// ErrBreak when there is an unexpected break statement
 	ErrBreak = errors.New("unexpected break statement")
@@ -402,6 +406,9 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 	case reflect.Struct:
 		structV := reflect.New(t).Elem()
 		for i := 0; i < structV.NumField(); i++ {
+			if structV.Field(i).Kind() == reflect.Ptr {
+				continue
+			}
 			v, err := makeValue(structV.Field(i).Type())
 			if err != nil {
 				return nilValue, err

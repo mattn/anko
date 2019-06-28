@@ -11,6 +11,84 @@ import (
 	"github.com/mattn/anko/parser"
 )
 
+type (
+	testStruct1 struct {
+		aInterface interface{}
+		aBool      bool
+		aInt32     int32
+		aInt64     int64
+		aFloat32   float32
+		aFloat64   float32
+		aString    string
+		aFunc      func()
+
+		aPtrInterface      *interface{}
+		aPtrBool           *bool
+		aPtrInt32          *int32
+		aPtrInt64          *int64
+		aPtrFloat32        *float32
+		aPtrFloat64        *float32
+		aPtrString         *string
+		aPtrSliceInterface *[]interface{}
+		aPtrSliceBool      *[]bool
+		aPtrSliceInt32     *[]int32
+		aPtrSliceInt64     *[]int64
+		aPtrSliceFloat32   *[]float32
+		aPtrSliceFloat64   *[]float32
+		aPtrSliceString    *[]string
+
+		aSliceInterface    []interface{}
+		aSliceBool         []bool
+		aSliceInt32        []int32
+		aSliceInt64        []int64
+		aSliceFloat32      []float32
+		aSliceFloat64      []float32
+		aSliceString       []string
+		aSlicePtrInterface []*interface{}
+		aSlicePtrBool      []*bool
+		aSlicePtrInt32     []*int32
+		aSlicePtrInt64     []*int64
+		aSlicePtrFloat32   []*float32
+		aSlicePtrFloat64   []*float32
+		aSlicePtrString    []*string
+
+		aMapInterface    map[string]interface{}
+		aMapBool         map[string]bool
+		aMapInt32        map[string]int32
+		aMapInt64        map[string]int64
+		aMapFloat32      map[string]float32
+		aMapFloat64      map[string]float32
+		aMapString       map[string]string
+		aMapPtrInterface map[string]*interface{}
+		aMapPtrBool      map[string]*bool
+		aMapPtrInt32     map[string]*int32
+		aMapPtrInt64     map[string]*int64
+		aMapPtrFloat32   map[string]*float32
+		aMapPtrFloat64   map[string]*float32
+		aMapPtrString    map[string]*string
+
+		aChanInterface    chan interface{}
+		aChanBool         chan bool
+		aChanInt32        chan int32
+		aChanInt64        chan int64
+		aChanFloat32      chan float32
+		aChanFloat64      chan float32
+		aChanString       chan string
+		aChanPtrInterface chan *interface{}
+		aChanPtrBool      chan *bool
+		aChanPtrInt32     chan *int32
+		aChanPtrInt64     chan *int64
+		aChanPtrFloat32   chan *float32
+		aChanPtrFloat64   chan *float32
+		aChanPtrString    chan *string
+
+		aPtrStruct *testStruct1
+	}
+	testStruct2 struct {
+		aStruct testStruct1
+	}
+)
+
 var (
 	testSliceEmpty []interface{}
 	testSlice      = []interface{}{nil, true, int64(1), float64(1.1), "a"}
@@ -236,7 +314,7 @@ func TestSlicesAutoAppend(t *testing.T) {
 		{Script: `a[2] = nil`, Input: map[string]interface{}{"a": []float64{1.5, 2.5}}, Output: map[string]interface{}{"a": []float64{1.5, 2.5, 0}}},
 		{Script: `a[2] = nil`, Input: map[string]interface{}{"a": []string{"a", "b"}}, Output: map[string]interface{}{"a": []string{"a", "b", ""}}},
 
-		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int32{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int32 for slice index"), Output: map[string]interface{}{"a": []int32{1, 2}}},
+		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int16{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int16 for slice index"), Output: map[string]interface{}{"a": []int16{1, 2}}},
 		{Script: `a[2] = true`, Input: map[string]interface{}{"a": []int64{1, 2}}, RunError: fmt.Errorf("type bool cannot be assigned to type int64 for slice index"), Output: map[string]interface{}{"a": []int64{1, 2}}},
 		{Script: `a[2] = "a"`, Input: map[string]interface{}{"a": []int64{1, 2}}, RunError: fmt.Errorf("type string cannot be assigned to type int64 for slice index"), Output: map[string]interface{}{"a": []int64{1, 2}}},
 		{Script: `a[2] = true`, Input: map[string]interface{}{"a": []float32{1.1, 2.2}}, RunError: fmt.Errorf("type bool cannot be assigned to type float32 for slice index"), Output: map[string]interface{}{"a": []float32{1.1, 2.2}}},
@@ -1769,6 +1847,8 @@ func TestStructs(t *testing.T) {
 func TestMakeStructs(t *testing.T) {
 	os.Setenv("ANKO_DEBUG", "1")
 	tests := []testlib.Test{
+		{Script: `a = make(struct1)`, Types: map[string]interface{}{"struct1": &testStruct1{}}, RunOutput: &testStruct1{}, Output: map[string]interface{}{"a": &testStruct1{}}},
+		{Script: `a = make(struct2)`, Types: map[string]interface{}{"struct2": &testStruct2{}}, RunOutput: &testStruct2{}, Output: map[string]interface{}{"a": &testStruct2{}}},
 		{Script: `make(struct)`, Types: map[string]interface{}{"struct": &struct {
 			A interface{}
 			B interface{}
