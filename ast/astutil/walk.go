@@ -227,6 +227,11 @@ func walkExpr(expr ast.Expr, f WalkFunc) error {
 			return err
 		}
 		return walkExpr(expr.LHS, f)
+	case *ast.IncludeExpr:
+		if err := walkExpr(expr.ItemExpr, f); err != nil {
+			return err
+		}
+		return walkExpr(expr.ListExpr, f)
 	default:
 		return fmt.Errorf("unknown expression %v", reflect.TypeOf(expr))
 	}
