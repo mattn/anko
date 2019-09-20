@@ -4,12 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
-	"github.com/mattn/anko/internal/corelib"
+	"github.com/mattn/anko/env"
 )
+
+// Options provides options to run VM with
+type Options struct {
+	Debug bool // run in Debug mode
+}
 
 type (
 	// Error is a VM run error.
@@ -22,7 +26,8 @@ type (
 	runInfoStruct struct {
 		// incoming
 		ctx      context.Context
-		env      *Env
+		env      *env.Env
+		options  *Options
 		stmt     ast.Stmt
 		expr     ast.Expr
 		operator ast.Operator
@@ -315,7 +320,7 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 		}
 		// capture panics if not in debug mode
 		defer func() {
-			if os.Getenv("ANKO_DEBUG") == "" {
+			if !runInfo.options.Debug {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 					t = nil
@@ -345,38 +350,14 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 }
 
 func getTypeFromEnv(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
-	env := runInfo.env
-
-	if len(typeStruct.Env) > 0 {
-		var e reflect.Value
-		var found bool
-		for {
-			// find starting env
-			e, found = env.env[typeStruct.Env[0]]
-			if found {
-				env = e.Interface().(*Env)
-				break
-			}
-			if env.parent == nil {
-				runInfo.err = fmt.Errorf("no namespace called: %v", typeStruct.Env[0])
-				return nil
-			}
-			env = env.parent
-		}
-
-		for i := 1; i < len(typeStruct.Env); i++ {
-			// find child env
-			e, found = env.env[typeStruct.Env[i]]
-			if !found {
-				runInfo.err = fmt.Errorf("no namespace called: %v", typeStruct.Env[i])
-				return nil
-			}
-			env = e.Interface().(*Env)
-		}
+	var e *env.Env
+	e, runInfo.err = runInfo.env.GetEnvFromPath(typeStruct.Env)
+	if runInfo.err != nil {
+		return nil
 	}
 
 	var t reflect.Type
-	t, runInfo.err = env.Type(typeStruct.Name)
+	t, runInfo.err = e.Type(typeStruct.Name)
 	return t
 }
 
@@ -420,12 +401,6 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 		return structV, nil
 	}
 	return reflect.New(t).Elem(), nil
-}
-
-// ValueEqual checks the values and returns true if equal
-// If passed function, does extra checks otherwise just doing reflect.DeepEqual
-func ValueEqual(v1 interface{}, v2 interface{}) bool {
-	return corelib.ValueEqual(v1, v2)
 }
 
 // precedenceOfKinds returns the greater of two kinds

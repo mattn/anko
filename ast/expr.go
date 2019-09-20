@@ -152,6 +152,12 @@ type ChanExpr struct {
 	RHS Expr
 }
 
+// ImportExpr provide expression to import packages.
+type ImportExpr struct {
+	ExprImpl
+	Name Expr
+}
+
 // MakeExpr provide expression to make instance.
 type MakeExpr struct {
 	ExprImpl

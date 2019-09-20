@@ -4,8 +4,11 @@ package packages
 
 import (
 	"os"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func osNotAppEngine() {
-	Packages["os"]["Getppid"] = os.Getppid
+	env.Packages["os"]["Getppid"] = reflect.ValueOf(os.Getppid)
 }

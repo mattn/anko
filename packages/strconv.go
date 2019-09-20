@@ -1,18 +1,21 @@
 package packages
 
 import (
+	"reflect"
 	"strconv"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["strconv"] = map[string]interface{}{
-		"FormatBool":  strconv.FormatBool,
-		"FormatFloat": strconv.FormatFloat,
-		"FormatInt":   strconv.FormatInt,
-		"FormatUint":  strconv.FormatUint,
-		"ParseBool":   strconv.ParseBool,
-		"ParseFloat":  strconv.ParseFloat,
-		"ParseInt":    strconv.ParseInt,
-		"ParseUint":   strconv.ParseUint,
+	env.Packages["strconv"] = map[string]reflect.Value{
+		"FormatBool":  reflect.ValueOf(strconv.FormatBool),
+		"FormatFloat": reflect.ValueOf(strconv.FormatFloat),
+		"FormatInt":   reflect.ValueOf(strconv.FormatInt),
+		"FormatUint":  reflect.ValueOf(strconv.FormatUint),
+		"ParseBool":   reflect.ValueOf(strconv.ParseBool),
+		"ParseFloat":  reflect.ValueOf(strconv.ParseFloat),
+		"ParseInt":    reflect.ValueOf(strconv.ParseInt),
+		"ParseUint":   reflect.ValueOf(strconv.ParseUint),
 	}
 }

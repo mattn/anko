@@ -2,10 +2,10 @@ package vm
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/env"
 )
 
 // invokeExpr evaluates one expression.
@@ -19,7 +19,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 	// IdentExpr
 	case *ast.IdentExpr:
-		runInfo.rv, runInfo.err = runInfo.env.get(expr.Lit)
+		runInfo.rv, runInfo.err = runInfo.env.GetValue(expr.Lit)
 		if runInfo.err != nil {
 			runInfo.err = newError(expr, runInfo.err)
 		}
@@ -233,8 +233,8 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			runInfo.rv = runInfo.rv.Elem()
 		}
 
-		if env, ok := runInfo.rv.Interface().(*Env); ok {
-			runInfo.rv, runInfo.err = env.get(expr.Name)
+		if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+			runInfo.rv, runInfo.err = env.GetValue(expr.Name)
 			if runInfo.err != nil {
 				runInfo.err = newError(expr, runInfo.err)
 				runInfo.rv = nilValue
@@ -497,6 +497,49 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			runInfo.rv = nilValue
 		}
 
+	// ImportExpr
+	case *ast.ImportExpr:
+		runInfo.expr = expr.Name
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, stringType)
+		if runInfo.err != nil {
+			runInfo.rv = nilValue
+			return
+		}
+		name := runInfo.rv.String()
+		runInfo.rv = nilValue
+
+		methods, ok := env.Packages[name]
+		if !ok {
+			runInfo.err = newStringError(expr, "package not found: " + name)
+			return
+		}
+		var err error
+		pack := runInfo.env.NewEnv()
+		for methodName, methodValue := range methods {
+			err = pack.DefineValue(methodName, methodValue)
+			if err != nil {
+				runInfo.err = newStringError(expr, "import DefineValue error: "+err.Error())
+				return
+			}
+		}
+
+		types, ok := env.PackageTypes[name]
+		if ok {
+			for typeName, typeValue := range types {
+				err = pack.DefineReflectType(typeName, typeValue)
+				if err != nil {
+					runInfo.err = newStringError(expr, "import DefineReflectType error: "+err.Error())
+					return
+				}
+			}
+		}
+
+		runInfo.rv = reflect.ValueOf(pack)
+
 	// MakeExpr
 	case *ast.MakeExpr:
 		t := makeType(runInfo, expr.TypeData)
@@ -647,7 +690,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		}}
 		// capture panics if not in debug mode
 		defer func() {
-			if os.Getenv("ANKO_DEBUG") == "" {
+			if !runInfo.options.Debug {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 				}

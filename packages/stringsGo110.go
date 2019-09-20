@@ -3,11 +3,14 @@
 package packages
 
 import (
+	"reflect"
 	"strings"
+
+	"github.com/mattn/anko/env"
 )
 
 func stringsGo110() {
-	PackageTypes["strings"] = map[string]interface{}{
-		"Builder": strings.Builder{},
+	env.PackageTypes["strings"] = map[string]reflect.Type{
+		"Builder": reflect.TypeOf(strings.Builder{}),
 	}
 }

@@ -6,6 +6,7 @@ go:
   - 1.9.x
   - 1.10.x
   - 1.11.x
+  - 1.12.x
 
 env:
   secure: "ELC4rD8nn2l5T48WYbTfcbwGGBmNxl7LAu05hgx5AB9/KA+oD3oBKIJkZqD512gJ31Gtyla/hG9QOgU7LikfWdpGuJjVILy01ZqtgP5SSKsrTdlln1D5pK1ZyHJNrEPevb3W5PYn9ahHnjKGtpobXj4/E0sCXfRPH67jv9hffYs="
@@ -14,7 +15,7 @@ before_install:
   - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.(1[0-9]|[8-9])\.[0-9]$ ]]; then go get -u github.com/haya14busa/goverage; fi
 
 script:
-  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.(1[0-9]|[8-9])\.[0-9]$ ]]; then goverage -v -coverprofile=coverage.txt -covermode=count ./vm ./core ./packages . ./ast/astutil; else go test -v github.com/mattn/anko/vm github.com/mattn/anko/core github.com/mattn/anko/packages github.com/mattn/anko/ast/astutil github.com/mattn/anko; go test -v -coverprofile=coverage.txt -covermode=count github.com/mattn/anko/vm; fi
+  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.(1[0-9]|[8-9])\.[0-9]$ ]]; then goverage -v -coverprofile=coverage.txt -covermode=count ./vm ./env . ./ast/astutil; else go test -v github.com/mattn/anko/vm github.com/mattn/anko/env github.com/mattn/anko github.com/mattn/anko/ast/astutil; go test -v -coverprofile=coverage.txt -covermode=count github.com/mattn/anko/vm; fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/mattn/anko/env"
 	"github.com/mattn/anko/vm"
 )
 
 func Example_vmBasicOperators() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -81,7 +82,7 @@ println(a)
 
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -118,9 +119,9 @@ println(a)
 }
 
 func Example_vmComparisonOperators() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -153,7 +154,7 @@ a = 1 == 2 || 1 == 1
 println(a)
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -175,9 +176,9 @@ println(a)
 }
 
 func Example_vmIfOperators() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -215,7 +216,7 @@ if a == 1 && b == 2 {
 }
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -231,9 +232,9 @@ if a == 1 && b == 2 {
 }
 
 func Example_vmForLoops() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -287,7 +288,7 @@ for i = 0; i < 10; i++ {
 
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -313,9 +314,9 @@ for i = 0; i < 10; i++ {
 }
 
 func Example_vmSlices() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -334,7 +335,7 @@ println(a[:2])
 println(a[1:2])
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -351,9 +352,9 @@ println(a[1:2])
 }
 
 func Example_vmChannels() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -372,7 +373,7 @@ println(<- a)
 
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}

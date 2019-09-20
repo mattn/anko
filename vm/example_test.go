@@ -7,22 +7,23 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mattn/anko/env"
 	"github.com/mattn/anko/vm"
 )
 
-func ExampleEnv_ExecuteContext() {
+func Example_vmExecuteContext() {
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(1)
 	waitChan := make(chan struct{}, 1)
 
-	env := vm.NewEnv()
+	e := env.NewEnv()
 	sleepMillisecond := func() { time.Sleep(time.Millisecond) }
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("sleep", sleepMillisecond)
+	err = e.Define("sleep", sleepMillisecond)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -39,7 +40,7 @@ println("this line should not be printed")
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		close(waitChan)
-		v, err := env.ExecuteContext(ctx, script)
+		v, err := vm.ExecuteContext(ctx, e, nil, script)
 		fmt.Println(v, err)
 		waitGroup.Done()
 	}()
@@ -52,36 +53,35 @@ println("this line should not be printed")
 	// output: <nil> execution interrupted
 }
 
-func ExampleEnv_Define() {
-	env := vm.NewEnv()
-	env.SetName("myName")
+func Example_vmEnvDefine() {
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
 
-	err = env.Define("a", true)
+	err = e.Define("a", true)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("b", int64(1))
+	err = e.Define("b", int64(1))
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("c", float64(1.1))
+	err = e.Define("c", float64(1.1))
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("d", "d")
+	err = e.Define("d", "d")
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("e", []interface{}{true, int64(1), float64(1.1), "d"})
+	err = e.Define("e", []interface{}{true, int64(1), float64(1.1), "d"})
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("f", map[string]interface{}{"a": true})
+	err = e.Define("f", map[string]interface{}{"a": true})
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -95,7 +95,7 @@ println(e)
 println(f)
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -109,32 +109,30 @@ println(f)
 	// map[a:true]
 }
 
-func ExampleEnv_Dump() {
-	env := vm.NewEnv()
-	env.SetName("myName")
+func Example_vmEnv() {
+	e := env.NewEnv()
 
-	err := env.Define("a", "a")
+	err := e.Define("a", "a")
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
 
-	_, err = env.Get("a")
+	_, err = e.Get("a")
 	if err != nil {
 		log.Fatalf("get error: %v\n", err)
 	}
 
-	env.Dump()
+	fmt.Println(e)
 
 	// output:
-	// Name: myName
-	// Has parent: false
+	// No parent
 	// a = "a"
 }
 
 func Example_vmHelloWorld() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -143,7 +141,7 @@ func Example_vmHelloWorld() {
 println("Hello World :)")
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -152,9 +150,9 @@ println("Hello World :)")
 }
 
 func Example_vmQuickStart() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -196,7 +194,7 @@ func a (x) {
 a(3) // 4
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}

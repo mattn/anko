@@ -3,7 +3,6 @@ package vm
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -35,23 +34,23 @@ func (runInfo *runInfoStruct) funcExpr() {
 	// returns slice of reflect.Type with two values:
 	// return value of the function and error value of the run
 	runVMFunction := func(in []reflect.Value) []reflect.Value {
-		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
+		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), options: runInfo.options, env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
 
 		// add Params to newEnv, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
 			runInfo.rv = in[i+1].Interface().(reflect.Value)
-			runInfo.env.defineValue(funcExpr.Params[i], runInfo.rv)
+			runInfo.env.DefineValue(funcExpr.Params[i], runInfo.rv)
 		}
 		// add last Params to newEnv
 		if len(funcExpr.Params) > 0 {
 			if funcExpr.VarArg {
 				// function is variadic, add last Params to newEnv without convert to Interface and then reflect.Value
 				runInfo.rv = in[len(funcExpr.Params)]
-				runInfo.env.defineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			} else {
 				// function is not variadic, add last Params to newEnv
 				runInfo.rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
-				runInfo.env.defineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			}
 		}
 
@@ -75,7 +74,7 @@ func (runInfo *runInfoStruct) funcExpr() {
 
 	// if function name is not empty, define it in the env
 	if funcExpr.Name != "" {
-		runInfo.env.defineValue(funcExpr.Name, runInfo.rv)
+		runInfo.env.DefineValue(funcExpr.Name, runInfo.rv)
 	}
 }
 
@@ -111,7 +110,7 @@ func (runInfo *runInfoStruct) callExpr() {
 	f := callExpr.Func
 	if !f.IsValid() {
 		// if function is not valid try to get by function name
-		f, runInfo.err = runInfo.env.get(callExpr.Name)
+		f, runInfo.err = runInfo.env.GetValue(callExpr.Name)
 		if runInfo.err != nil {
 			runInfo.err = newError(callExpr, runInfo.err)
 			runInfo.rv = nilValue
@@ -142,7 +141,7 @@ func (runInfo *runInfoStruct) callExpr() {
 
 	// capture panics if not in debug mode
 	defer func() {
-		if os.Getenv("ANKO_DEBUG") == "" {
+		if !runInfo.options.Debug {
 			if recoverResult := recover(); recoverResult != nil {
 				runInfo.err = fmt.Errorf("%v", recoverResult)
 				runInfo.rv = nilValue

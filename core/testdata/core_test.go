@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mattn/anko/internal/corelib"
-	"github.com/mattn/anko/internal/testlib"
 	"github.com/mattn/anko/packages"
 	"github.com/mattn/anko/vm"
 )

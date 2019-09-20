@@ -10,51 +10,12 @@ import (
 	"testing"
 	"time"
 
-	// "net/http"
-	// _ "net/http/pprof"
-
 	"github.com/mattn/anko/ast"
-	"github.com/mattn/anko/internal/corelib"
-	"github.com/mattn/anko/internal/testlib"
+	"github.com/mattn/anko/env"
 )
-
-var (
-	testVarValue    = reflect.Value{}
-	testVarValueP   = &reflect.Value{}
-	testVarBool     = true
-	testVarBoolP    = &testVarBool
-	testVarInt32    = int32(1)
-	testVarInt32P   = &testVarInt32
-	testVarInt64    = int64(1)
-	testVarInt64P   = &testVarInt64
-	testVarFloat32  = float32(1)
-	testVarFloat32P = &testVarFloat32
-	testVarFloat64  = float64(1)
-	testVarFloat64P = &testVarFloat64
-	testVarString   = "a"
-	testVarStringP  = &testVarString
-	testVarFunc     = func() int64 { return 1 }
-	testVarFuncP    = &testVarFunc
-
-	testVarValueBool    = reflect.ValueOf(true)
-	testVarValueInt32   = reflect.ValueOf(int32(1))
-	testVarValueInt64   = reflect.ValueOf(int64(1))
-	testVarValueFloat32 = reflect.ValueOf(float32(1.1))
-	testVarValueFloat64 = reflect.ValueOf(float64(1.1))
-	testVarValueString  = reflect.ValueOf("a")
-)
-
-func init() {
-	corelib.NewEnv = func() corelib.Env {
-		return NewEnv()
-	}
-
-	// go http.ListenAndServe(":6060", nil)
-}
 
 func TestNumbers(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: ``},
 		{Script: `;`},
 		{Script: `
@@ -106,12 +67,11 @@ func TestNumbers(t *testing.T) {
 		{Script: `-0Xf`, RunOutput: int64(-15)},
 		{Script: `-0x7FFFFFFFFFFFFFFF`, RunOutput: int64(-9223372036854775807)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestStrings(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `a`, Input: map[string]interface{}{"a": 'a'}, RunOutput: 'a', Output: map[string]interface{}{"a": 'a'}},
 		{Script: `a.b`, Input: map[string]interface{}{"a": 'a'}, RunError: fmt.Errorf("type int32 does not support member operation"), Output: map[string]interface{}{"a": 'a'}},
 		{Script: `a[0]`, Input: map[string]interface{}{"a": 'a'}, RunError: fmt.Errorf("type int32 does not support index operation"), RunOutput: nil, Output: map[string]interface{}{"a": 'a'}},
@@ -245,13 +205,12 @@ func TestStrings(t *testing.T) {
 		{Script: `a = "abc"; a[1] = b`, Input: map[string]interface{}{"b": 'x'}, RunOutput: 'x', Output: map[string]interface{}{"a": "axc"}},
 		{Script: `a = "abc"; a[1] = b`, Input: map[string]interface{}{"b": struct{}{}}, RunError: fmt.Errorf("type struct {} cannot be assigned to type string"), Output: map[string]interface{}{"a": "abc"}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestVar(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
 	testInput1 := map[string]interface{}{"b": func() {}}
-	tests := []testlib.Test{
+	tests := []Test{
 		// simple one variable
 		{Script: `1 = 2`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `var 1 = 2`, ParseError: fmt.Errorf("syntax error")},
@@ -430,12 +389,11 @@ a  =  1;
 		{Script: `a, b = func(){ return 1, 2 }()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 		{Script: `var a, b = func(){ return 1, 2 }()`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(1), "b": int64(2)}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestModule(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `module a.b { }`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `module a { 1++ }`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `module a { }; a.b`, RunError: fmt.Errorf("undefined symbol 'b'")},
@@ -459,12 +417,11 @@ func TestModule(t *testing.T) {
 		{Script: `module x { module time { make(type Duration, a) } }; func c() { d = new(y.time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: y")},
 		{Script: `module x { module time { make(type Duration, a) } }; func c() { d = new(x.y.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: y")},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestNew(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `new(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 
@@ -490,18 +447,16 @@ func TestNew(t *testing.T) {
 		{Script: `a = new(chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
 		{Script: `a = new(chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestMake(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `make(map [[]string]int64)`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: false})
 
-	os.Setenv("ANKO_DEBUG", "1")
-	tests = []testlib.Test{
+	tests = []Test{
 		{Script: `make(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"a": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"b": true}, RunError: fmt.Errorf("no namespace called: a")},
@@ -560,12 +515,11 @@ func TestMake(t *testing.T) {
 		{Script: `a = make(chan map [string]int64, 1); b = make(map [string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
 		{Script: `a = make(chan int64, 1); b = &a; *b <- 1; <- *b`, RunOutput: int64(1)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestMakeType(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `make(type a, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
 		{Script: `make(type a, true)`, RunOutput: reflect.TypeOf(true)},
@@ -574,28 +528,25 @@ func TestMakeType(t *testing.T) {
 		{Script: `make(type a, make([]bool))`, RunOutput: reflect.TypeOf([]bool{})},
 		{Script: `make(type a, make([]bool)); a = make(a)`, RunOutput: []bool{}, Output: map[string]interface{}{"a": []bool{}}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestReferencingAndDereference(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		// TOFIX:
 		// {Script: `a = 1; b = &a; *b = 2; *b`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestChan(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "")
-	tests := []testlib.Test{
+	tests := []Test{
 		// send on closed channel
 		{Script: `a = make(chan int64, 2); close(a); a <- 1`, RunError: fmt.Errorf("send on closed channel")},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: false})
 
-	os.Setenv("ANKO_DEBUG", "1")
-	tests = []testlib.Test{
+	tests = []Test{
 		{Script: `1++ <- 1`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = make(chan int64, 2); a <- 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1 <- 1`, RunError: fmt.Errorf("invalid operation for chan")},
@@ -686,12 +637,11 @@ func TestChan(t *testing.T) {
 
 		// TODO: add receive ok
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestVMDelete(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `delete(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete(1)`, RunError: fmt.Errorf("first argument to delete cannot be type int64")},
 		{Script: `a = 1; delete("a"); a`, RunError: fmt.Errorf("undefined symbol 'a'")},
@@ -732,12 +682,11 @@ func TestVMDelete(t *testing.T) {
 		{Script: `delete(a, 2)`, Input: map[string]interface{}{"a": map[int32]interface{}{2: int32(2), 3: int32(3)}}, Output: map[string]interface{}{"a": map[int32]interface{}{3: int32(3)}}},
 		{Script: `delete(a, 2); a[2]`, Input: map[string]interface{}{"a": map[int32]interface{}{2: int32(2), 3: int32(3)}}, Output: map[string]interface{}{"a": map[int32]interface{}{3: int32(3)}}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestComment(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `# 1`},
 		{Script: `# 1;`},
 		{Script: `# 1 // 2`},
@@ -848,7 +797,7 @@ func TestComment(t *testing.T) {
 		{Script: `1
 /**** 1 ****/`, RunOutput: int64(1)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestCancelWithContext(t *testing.T) {
@@ -984,12 +933,12 @@ func runCancelTestWithContext(t *testing.T, script string) {
 	toString := func(value interface{}) string {
 		return fmt.Sprintf("%v", value)
 	}
-	env := NewEnv()
-	err := env.Define("waitChan", waitChan)
+	e := env.NewEnv()
+	err := e.Define("waitChan", waitChan)
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}
-	err = env.Define("toString", toString)
+	err = e.Define("toString", toString)
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}
@@ -1001,7 +950,7 @@ func runCancelTestWithContext(t *testing.T, script string) {
 		cancel()
 	}()
 
-	_, err = env.ExecuteContext(ctx, script)
+	_, err = ExecuteContext(ctx, e, nil, script)
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v - script: %v", err, ErrInterrupt, script)
 	}
@@ -1009,13 +958,13 @@ func runCancelTestWithContext(t *testing.T, script string) {
 
 func TestContextConcurrency(t *testing.T) {
 	var waitGroup sync.WaitGroup
-	env := NewEnv()
+	e := env.NewEnv()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.ExecuteContext(ctx, "for { }")
+			_, err := ExecuteContext(ctx, e, nil, "for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
@@ -1026,20 +975,20 @@ func TestContextConcurrency(t *testing.T) {
 	waitGroup.Wait()
 	cancel()
 
-	_, err := env.ExecuteContext(ctx, "for { }")
+	_, err := ExecuteContext(ctx, e, nil, "for { }")
 	if err == nil || err.Error() != ErrInterrupt.Error() {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
 
 	ctx, cancel = context.WithCancel(context.Background())
-	_, err = env.ExecuteContext(ctx, "for i = 0; i < 1000; i++ {}")
+	_, err = ExecuteContext(ctx, e, nil, "for i = 0; i < 1000; i++ {}")
 	if err != nil {
 		t.Errorf("execute error - received: %v - expected: %v", err, nil)
 	}
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.ExecuteContext(ctx, "for i = 0; i < 1000; i++ { }")
+			_, err := ExecuteContext(ctx, e, nil, "for i = 0; i < 1000; i++ { }")
 			if err != nil {
 				t.Errorf("execute error - received: %v - expected: %v", err, nil)
 			}
@@ -1051,7 +1000,7 @@ func TestContextConcurrency(t *testing.T) {
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.ExecuteContext(ctx, "for { }")
+			_, err := ExecuteContext(ctx, e, nil, "for { }")
 			if err == nil || err.Error() != ErrInterrupt.Error() {
 				t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 			}
@@ -1065,7 +1014,7 @@ func TestContextConcurrency(t *testing.T) {
 	waitGroup.Add(100)
 	for i := 0; i < 100; i++ {
 		go func() {
-			_, err := env.Execute("for i = 0; i < 1000; i++ { }")
+			_, err := Execute(e, nil, "for i = 0; i < 1000; i++ { }")
 			if err != nil {
 				t.Errorf("execute error - received: %v - expected: %v", err, nil)
 			}
@@ -1076,15 +1025,18 @@ func TestContextConcurrency(t *testing.T) {
 }
 
 func TestContextFunction(t *testing.T) {
-	env := NewEnv()
+	e := env.NewEnv()
 	script := `
-func myFunc(myVar) {
-	myVar = 3
-}`
-	envModule := env.NewModule("a")
+		func myFunc(myVar) {
+			myVar = 3
+		}`
+	envModule, err := e.NewModule("a")
+	if err != nil {
+		t.Fatal("NewModule error:", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	_, err := envModule.ExecuteContext(ctx, script)
+	_, err = ExecuteContext(ctx, envModule, nil, script)
 	if err != nil {
 		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
 	}
@@ -1093,7 +1045,7 @@ func myFunc(myVar) {
 	script = "a.myFunc(2)"
 
 	ctx, cancel = context.WithCancel(context.Background())
-	_, err = env.ExecuteContext(ctx, script)
+	_, err = ExecuteContext(ctx, e, nil, script)
 	if err != nil {
 		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
 	}
@@ -1101,19 +1053,19 @@ func myFunc(myVar) {
 }
 
 func TestAssignToInterface(t *testing.T) {
-	env := NewEnv()
+	e := env.NewEnv()
 	X := new(struct {
 		Stdout io.Writer
 	})
-	err := env.Define("X", X)
+	err := e.Define("X", X)
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}
-	err = env.Define("a", new(os.File))
+	err = e.Define("a", new(os.File))
 	if err != nil {
 		t.Errorf("Define error: %v", err)
 	}
-	_, err = env.Execute(`X.Stdout = a`)
+	_, err = Execute(e, nil, "X.Stdout = a")
 	if err != nil {
 		t.Errorf("execute error - received %#v - expected: %#v", err, ErrInterrupt)
 	}
@@ -1121,15 +1073,15 @@ func TestAssignToInterface(t *testing.T) {
 
 // TestValueEqual do some basic ValueEqual tests for coverage
 func TestValueEqual(t *testing.T) {
-	result := ValueEqual(true, true)
+	result := valueEqual(true, true)
 	if result != true {
 		t.Fatal("ValueEqual")
 	}
-	result = ValueEqual(true, false)
+	result = valueEqual(true, false)
 	if result != false {
 		t.Fatal("ValueEqual")
 	}
-	result = ValueEqual(false, true)
+	result = valueEqual(false, true)
 	if result != false {
 		t.Fatal("ValueEqual")
 	}
@@ -1162,8 +1114,8 @@ func TestUnknownCases(t *testing.T) {
 	}
 
 	for _, stmt := range stmts {
-		env := NewEnv()
-		_, err := env.Run(stmt)
+		e := env.NewEnv()
+		_, err := Run(e, nil, stmt)
 		if err == nil {
 			t.Errorf("no error - stmt: %#v", stmt)
 		} else if len(err.Error()) < 9 || err.Error()[:8] != "unknown " {
@@ -1188,8 +1140,11 @@ func BenchmarkFibGo(b *testing.B) {
 func BenchmarkFibVM(b *testing.B) {
 	b.StopTimer()
 
-	env := NewEnv()
-	envA := env.NewModule("a")
+	e := env.NewEnv()
+	a, err := e.NewModule("a")
+	if err != nil {
+		b.Fatal("NewModule error:", err)
+	}
 
 	script := `
 fib = func(x) {
@@ -1199,7 +1154,7 @@ fib = func(x) {
 	return fib(x-1) + fib(x-2)
 }`
 
-	_, err := envA.Execute(script)
+	_, err = Execute(a, nil, script)
 	if err != nil {
 		b.Fatal("Execute error:", err)
 	}
@@ -1208,7 +1163,7 @@ fib = func(x) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err = env.Execute("a.fib(29)")
+		_, err = Execute(e, nil, "a.fib(29)")
 		if err != nil {
 			b.Fatal("Execute error:", err)
 		}

@@ -2,22 +2,25 @@ package packages
 
 import (
 	"math/rand"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["math/rand"] = map[string]interface{}{
-		"ExpFloat64":  rand.ExpFloat64,
-		"Float32":     rand.Float32,
-		"Float64":     rand.Float64,
-		"Int":         rand.Int,
-		"Int31":       rand.Int31,
-		"Int31n":      rand.Int31n,
-		"Int63":       rand.Int63,
-		"Int63n":      rand.Int63n,
-		"Intn":        rand.Intn,
-		"NormFloat64": rand.NormFloat64,
-		"Perm":        rand.Perm,
-		"Seed":        rand.Seed,
-		"Uint32":      rand.Uint32,
+	env.Packages["math/rand"] = map[string]reflect.Value{
+		"ExpFloat64":  reflect.ValueOf(rand.ExpFloat64),
+		"Float32":     reflect.ValueOf(rand.Float32),
+		"Float64":     reflect.ValueOf(rand.Float64),
+		"Int":         reflect.ValueOf(rand.Int),
+		"Int31":       reflect.ValueOf(rand.Int31),
+		"Int31n":      reflect.ValueOf(rand.Int31n),
+		"Int63":       reflect.ValueOf(rand.Int63),
+		"Int63n":      reflect.ValueOf(rand.Int63n),
+		"Intn":        reflect.ValueOf(rand.Intn),
+		"NormFloat64": reflect.ValueOf(rand.NormFloat64),
+		"Perm":        reflect.ValueOf(rand.Perm),
+		"Seed":        reflect.ValueOf(rand.Seed),
+		"Uint32":      reflect.ValueOf(rand.Uint32),
 	}
 }

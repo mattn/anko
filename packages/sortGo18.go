@@ -3,11 +3,14 @@
 package packages
 
 import (
+	"reflect"
 	"sort"
+
+	"github.com/mattn/anko/env"
 )
 
 func sortGo18() {
-	Packages["sort"]["Slice"] = sort.Slice
-	Packages["sort"]["SliceIsSorted"] = sort.SliceIsSorted
-	Packages["sort"]["SliceStable"] = sort.SliceStable
+	env.Packages["sort"]["Slice"] = reflect.ValueOf(sort.Slice)
+	env.Packages["sort"]["SliceIsSorted"] = reflect.ValueOf(sort.SliceIsSorted)
+	env.Packages["sort"]["SliceStable"] = reflect.ValueOf(sort.SliceStable)
 }

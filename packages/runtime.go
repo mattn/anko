@@ -1,16 +1,19 @@
 package packages
 
 import (
+	"reflect"
 	"runtime"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["runtime"] = map[string]interface{}{
-		"GC":         runtime.GC,
-		"GOARCH":     runtime.GOARCH,
-		"GOMAXPROCS": runtime.GOMAXPROCS,
-		"GOOS":       runtime.GOOS,
-		"GOROOT":     runtime.GOROOT,
-		"Version":    runtime.Version,
+	env.Packages["runtime"] = map[string]reflect.Value{
+		"GC":         reflect.ValueOf(runtime.GC),
+		"GOARCH":     reflect.ValueOf(runtime.GOARCH),
+		"GOMAXPROCS": reflect.ValueOf(runtime.GOMAXPROCS),
+		"GOOS":       reflect.ValueOf(runtime.GOOS),
+		"GOROOT":     reflect.ValueOf(runtime.GOROOT),
+		"Version":    reflect.ValueOf(runtime.Version),
 	}
 }

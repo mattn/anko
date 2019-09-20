@@ -3,9 +3,12 @@
 package packages
 
 import (
+	"reflect"
 	"time"
+
+	"github.com/mattn/anko/env"
 )
 
 func timeGo18() {
-	Packages["time"]["Until"] = time.Until
+	env.Packages["time"]["Until"] = reflect.ValueOf(time.Until)
 }

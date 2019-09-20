@@ -3,9 +3,12 @@
 package packages
 
 import (
+	"reflect"
 	"sync"
+
+	"github.com/mattn/anko/env"
 )
 
 func syncGo19() {
-	PackageTypes["sync"]["Map"] = sync.Map{}
+	env.PackageTypes["sync"]["Map"] = reflect.TypeOf(sync.Map{})
 }

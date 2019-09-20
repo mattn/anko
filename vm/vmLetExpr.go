@@ -11,9 +11,9 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 
 	// IdentExpr
 	case *ast.IdentExpr:
-		if runInfo.env.setValue(expr.Lit, runInfo.rv) != nil {
+		if runInfo.env.SetValue(expr.Lit, runInfo.rv) != nil {
 			runInfo.err = nil
-			runInfo.env.defineValue(expr.Lit, runInfo.rv)
+			runInfo.env.DefineValue(expr.Lit, runInfo.rv)
 		}
 
 	// MemberExpr

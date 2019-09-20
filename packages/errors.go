@@ -2,10 +2,13 @@ package packages
 
 import (
 	"errors"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["errors"] = map[string]interface{}{
-		"New": errors.New,
+	env.Packages["errors"] = map[string]reflect.Value{
+		"New": reflect.ValueOf(errors.New),
 	}
 }

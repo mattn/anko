@@ -2,18 +2,21 @@ package packages
 
 import (
 	"path"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["path"] = map[string]interface{}{
-		"Base":          path.Base,
-		"Clean":         path.Clean,
-		"Dir":           path.Dir,
-		"ErrBadPattern": path.ErrBadPattern,
-		"Ext":           path.Ext,
-		"IsAbs":         path.IsAbs,
-		"Join":          path.Join,
-		"Match":         path.Match,
-		"Split":         path.Split,
+	env.Packages["path"] = map[string]reflect.Value{
+		"Base":          reflect.ValueOf(path.Base),
+		"Clean":         reflect.ValueOf(path.Clean),
+		"Dir":           reflect.ValueOf(path.Dir),
+		"ErrBadPattern": reflect.ValueOf(path.ErrBadPattern),
+		"Ext":           reflect.ValueOf(path.Ext),
+		"IsAbs":         reflect.ValueOf(path.IsAbs),
+		"Join":          reflect.ValueOf(path.Join),
+		"Match":         reflect.ValueOf(path.Match),
+		"Split":         reflect.ValueOf(path.Split),
 	}
 }

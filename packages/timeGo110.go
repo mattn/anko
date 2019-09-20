@@ -3,9 +3,12 @@
 package packages
 
 import (
+	"reflect"
 	"time"
+
+	"github.com/mattn/anko/env"
 )
 
 func timeGo110() {
-	Packages["time"]["LoadLocationFromTZData"] = time.LoadLocationFromTZData
+	env.Packages["time"]["LoadLocationFromTZData"] = reflect.ValueOf(time.LoadLocationFromTZData)
 }

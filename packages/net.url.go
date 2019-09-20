@@ -4,21 +4,24 @@ package packages
 
 import (
 	"net/url"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["net/url"] = map[string]interface{}{
-		"QueryEscape":     url.QueryEscape,
-		"QueryUnescape":   url.QueryUnescape,
-		"Parse":           url.Parse,
-		"ParseRequestURI": url.ParseRequestURI,
-		"User":            url.User,
-		"UserPassword":    url.UserPassword,
-		"ParseQuery":      url.ParseQuery,
+	env.Packages["net/url"] = map[string]reflect.Value{
+		"QueryEscape":     reflect.ValueOf(url.QueryEscape),
+		"QueryUnescape":   reflect.ValueOf(url.QueryUnescape),
+		"Parse":           reflect.ValueOf(url.Parse),
+		"ParseRequestURI": reflect.ValueOf(url.ParseRequestURI),
+		"User":            reflect.ValueOf(url.User),
+		"UserPassword":    reflect.ValueOf(url.UserPassword),
+		"ParseQuery":      reflect.ValueOf(url.ParseQuery),
 	}
-	PackageTypes["net/url"] = map[string]interface{}{
-		"Error":  url.Error{},
-		"URL":    url.URL{},
-		"Values": url.Values{},
+	env.PackageTypes["net/url"] = map[string]reflect.Type{
+		"Error":  reflect.TypeOf(url.Error{}),
+		"URL":    reflect.TypeOf(url.URL{}),
+		"Values": reflect.TypeOf(url.Values{}),
 	}
 }

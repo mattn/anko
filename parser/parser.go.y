@@ -77,7 +77,7 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
 
 /* lowest precedence */
 %left ,
@@ -534,6 +534,11 @@ expr :
 		$$ = &ast.LenExpr{Expr: $3}
 		$$.SetPosition($1.Position())
 	}
+	| IMPORT '(' expr ')'
+	{
+		$$ = &ast.ImportExpr{Name: $3}
+		$$.SetPosition($1.Position())
+	}
 	| NEW '(' type_data ')'
 	{
 		if $3.Kind == ast.TypeDefault {
@@ -623,7 +628,7 @@ type_data :
 	| type_data '.' IDENT
 	{
 		if $1.Kind != ast.TypeDefault {
-			yylex.Error("blah1")
+			yylex.Error("not type default")
 		} else {
 			$1.Env = append($1.Env, $1.Name)
 			$1.Name = $3.Lit

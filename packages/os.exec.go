@@ -2,12 +2,15 @@ package packages
 
 import (
 	"os/exec"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["os/exec"] = map[string]interface{}{
-		"ErrNotFound": exec.ErrNotFound,
-		"LookPath":    exec.LookPath,
-		"Command":     exec.Command,
+	env.Packages["os/exec"] = map[string]reflect.Value{
+		"ErrNotFound": reflect.ValueOf(exec.ErrNotFound),
+		"LookPath":    reflect.ValueOf(exec.LookPath),
+		"Command":     reflect.ValueOf(exec.Command),
 	}
 }
