@@ -2,25 +2,28 @@ package packages
 
 import (
 	"log"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["log"] = map[string]interface{}{
-		"Fatal":     log.Fatal,
-		"Fatalf":    log.Fatalf,
-		"Fatalln":   log.Fatalln,
-		"Flags":     log.Flags,
-		"New":       log.New,
-		"Output":    log.Output,
-		"Panic":     log.Panic,
-		"Panicf":    log.Panicf,
-		"Panicln":   log.Panicln,
-		"Prefix":    log.Prefix,
-		"Print":     log.Print,
-		"Printf":    log.Printf,
-		"Println":   log.Println,
-		"SetFlags":  log.SetFlags,
-		"SetOutput": log.SetOutput,
-		"SetPrefix": log.SetPrefix,
+	env.Packages["log"] = map[string]reflect.Value{
+		"Fatal":     reflect.ValueOf(log.Fatal),
+		"Fatalf":    reflect.ValueOf(log.Fatalf),
+		"Fatalln":   reflect.ValueOf(log.Fatalln),
+		"Flags":     reflect.ValueOf(log.Flags),
+		"New":       reflect.ValueOf(log.New),
+		"Output":    reflect.ValueOf(log.Output),
+		"Panic":     reflect.ValueOf(log.Panic),
+		"Panicf":    reflect.ValueOf(log.Panicf),
+		"Panicln":   reflect.ValueOf(log.Panicln),
+		"Prefix":    reflect.ValueOf(log.Prefix),
+		"Print":     reflect.ValueOf(log.Print),
+		"Printf":    reflect.ValueOf(log.Printf),
+		"Println":   reflect.ValueOf(log.Println),
+		"SetFlags":  reflect.ValueOf(log.SetFlags),
+		"SetOutput": reflect.ValueOf(log.SetOutput),
+		"SetPrefix": reflect.ValueOf(log.SetPrefix),
 	}
 }

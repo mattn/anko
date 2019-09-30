@@ -1,16 +1,16 @@
-package packages
+// +build go1.10
+
+package vm
 
 import (
-	"os"
 	"testing"
 
-	"github.com/mattn/anko/internal/testlib"
+	_ "github.com/mattn/anko/packages"
 )
 
-func TestStringsGo110(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+func TestPackagesStringsGo110(t *testing.T) {
+	tests := []Test{
 		{Script: `strings = import("strings"); a = make(strings.Builder); _, err = a.WriteString("a"); if err != nil { return err.Error() }; _, err = a.WriteString("b"); if err != nil { return err.Error() }; _, err = a.WriteString("c"); if err != nil { return err.Error() }; a.String()`, RunOutput: "abc"},
 	}
-	testlib.Run(t, tests, &testlib.Options{EnvSetupFunc: &testPackagesEnvSetupFunc})
+	runTests(t, tests, nil, &Options{Debug: true})
 }

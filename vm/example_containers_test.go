@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/mattn/anko/env"
 	"github.com/mattn/anko/vm"
 )
 
 func Example_vmArrays() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -64,7 +65,7 @@ a = [1, 2]
 println(a)
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -87,9 +88,9 @@ println(a)
 }
 
 func Example_vmMaps() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -132,7 +133,7 @@ println(a["b"])
 
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -155,9 +156,10 @@ println(a["b"])
 }
 
 func Example_vmModules() {
-	env := vm.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	e := env.NewEnv()
+
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -166,25 +168,25 @@ func Example_vmModules() {
 module rectangle {
 	_length = 1
 	_width = 1
-	
+
 	func setLength (length) {
 		if length <= 0 {
 			return
 		}
 		_length = length
 	}
-	
+
 	func setWidth (width) {
 		if width <= 0 {
 			return
 		}
 		_width = width
 	}
-	
+
 	func area () {
 		return _length * _width
 	}
-	
+
 	func perimeter () {
 		return 2 * (_length + _width)
 	}
@@ -207,7 +209,7 @@ println(rectangle2.area())
 println(rectangle2.perimeter())
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}

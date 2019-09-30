@@ -1,7 +1,10 @@
 package packages
 
 import (
+	"reflect"
 	"sort"
+
+	"github.com/mattn/anko/env"
 )
 
 // SortFuncsStruct provides functions to be used with Sort
@@ -16,26 +19,26 @@ func (s SortFuncsStruct) Less(i, j int) bool { return s.LessFunc(i, j) }
 func (s SortFuncsStruct) Swap(i, j int)      { s.SwapFunc(i, j) }
 
 func init() {
-	Packages["sort"] = map[string]interface{}{
-		"Float64s":          sort.Float64s,
-		"Float64sAreSorted": sort.Float64sAreSorted,
-		"Ints":              sort.Ints,
-		"IntsAreSorted":     sort.IntsAreSorted,
-		"IsSorted":          sort.IsSorted,
-		"Search":            sort.Search,
-		"SearchFloat64s":    sort.SearchFloat64s,
-		"SearchInts":        sort.SearchInts,
-		"SearchStrings":     sort.SearchStrings,
-		"Sort":              sort.Sort,
-		"Stable":            sort.Stable,
-		"Strings":           sort.Strings,
-		"StringsAreSorted":  sort.StringsAreSorted,
+	env.Packages["sort"] = map[string]reflect.Value{
+		"Float64s":          reflect.ValueOf(sort.Float64s),
+		"Float64sAreSorted": reflect.ValueOf(sort.Float64sAreSorted),
+		"Ints":              reflect.ValueOf(sort.Ints),
+		"IntsAreSorted":     reflect.ValueOf(sort.IntsAreSorted),
+		"IsSorted":          reflect.ValueOf(sort.IsSorted),
+		"Search":            reflect.ValueOf(sort.Search),
+		"SearchFloat64s":    reflect.ValueOf(sort.SearchFloat64s),
+		"SearchInts":        reflect.ValueOf(sort.SearchInts),
+		"SearchStrings":     reflect.ValueOf(sort.SearchStrings),
+		"Sort":              reflect.ValueOf(sort.Sort),
+		"Stable":            reflect.ValueOf(sort.Stable),
+		"Strings":           reflect.ValueOf(sort.Strings),
+		"StringsAreSorted":  reflect.ValueOf(sort.StringsAreSorted),
 	}
-	PackageTypes["sort"] = map[string]interface{}{
-		"Float64Slice":    sort.Float64Slice{},
-		"IntSlice":        sort.IntSlice{},
-		"StringSlice":     sort.StringSlice{},
-		"SortFuncsStruct": &SortFuncsStruct{},
+	env.PackageTypes["sort"] = map[string]reflect.Type{
+		"Float64Slice":    reflect.TypeOf(sort.Float64Slice{}),
+		"IntSlice":        reflect.TypeOf(sort.IntSlice{}),
+		"StringSlice":     reflect.TypeOf(sort.StringSlice{}),
+		"SortFuncsStruct": reflect.TypeOf(&SortFuncsStruct{}),
 	}
 	sortGo18()
 }

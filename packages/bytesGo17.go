@@ -4,8 +4,11 @@ package packages
 
 import (
 	"bytes"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func bytesGo17() {
-	Packages["bytes"]["ContainsRune"] = bytes.ContainsRune
+	env.Packages["bytes"]["ContainsRune"] = reflect.ValueOf(bytes.ContainsRune)
 }

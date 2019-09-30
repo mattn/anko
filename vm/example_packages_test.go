@@ -3,13 +3,15 @@ package vm_test
 import (
 	"log"
 
-	"github.com/mattn/anko/packages"
+	"github.com/mattn/anko/env"
+	_ "github.com/mattn/anko/packages"
 	"github.com/mattn/anko/vm"
 )
 
 func Example_vmSort() {
-	env := vm.NewEnv()
-	packages.DefineImport(env)
+	// _ "github.com/mattn/anko/packages"
+
+	e := env.NewEnv()
 
 	script := `
 fmt = import("fmt")
@@ -23,7 +25,7 @@ sort.Sort(sortFuncs)
 fmt.Println(a)
 `
 
-	_, err := env.Execute(script)
+	_, err := vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -33,8 +35,9 @@ fmt.Println(a)
 }
 
 func Example_vmRegexp() {
-	env := vm.NewEnv()
-	packages.DefineImport(env)
+	// _ "github.com/mattn/anko/packages"
+
+	e := env.NewEnv()
 
 	script := `
 fmt = import("fmt")
@@ -60,7 +63,7 @@ result = re.ReplaceAllString("foo", "bar")
 fmt.Println(result)
 `
 
-	_, err := env.Execute(script)
+	_, err := vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -76,8 +79,9 @@ fmt.Println(result)
 }
 
 func Example_vmHttp() {
-	env := vm.NewEnv()
-	packages.DefineImport(env)
+	// _ "github.com/mattn/anko/packages"
+
+	e := env.NewEnv()
 
 	script := `
 fmt = import("fmt")
@@ -117,7 +121,7 @@ response.Body.Close()
 fmt.Printf("%s\n", body)
 `
 
-	_, err := env.Execute(script)
+	_, err := vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}

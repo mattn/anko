@@ -2,11 +2,14 @@ package packages
 
 import (
 	"os/signal"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["os/signal"] = map[string]interface{}{
-		"Notify": signal.Notify,
-		"Stop":   signal.Stop,
+	env.Packages["os/signal"] = map[string]reflect.Value{
+		"Notify": reflect.ValueOf(signal.Notify),
+		"Stop":   reflect.ValueOf(signal.Stop),
 	}
 }

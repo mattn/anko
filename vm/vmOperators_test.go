@@ -2,16 +2,12 @@ package vm
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
-
-	"github.com/mattn/anko/internal/testlib"
 )
 
 func TestBasicOperators(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
 
 		{Script: `2 + 1`, RunOutput: int64(3)},
@@ -169,12 +165,11 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `!false`, RunOutput: true},
 		{Script: `!1`, RunOutput: false},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestComparisonOperators(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `1++ == 2`, RunError: fmt.Errorf("invalid operation"), RunOutput: nil},
 		{Script: `2 == 1++`, RunError: fmt.Errorf("invalid operation"), RunOutput: nil},
 		{Script: `1++ || true`, RunError: fmt.Errorf("invalid operation"), RunOutput: nil},
@@ -383,12 +378,11 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `a = "test"; a[1] != 'e'`, RunOutput: false},
 		{Script: `a = "test"; a[3] != 't'`, RunOutput: false},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestThrows(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `throw(1++)`, RunError: fmt.Errorf("invalid operation")},
 		// {Script: `throw(a)`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("invalid operation")},
 
@@ -425,12 +419,11 @@ func TestThrows(t *testing.T) {
 		{Script: `(true && func(){throw('abcde')}()) && (true && func(){throw('hello')}())`, RunError: fmt.Errorf("abcde")},
 		{Script: `(true || func(){throw('abcde')}()) && (false || func(){throw('hello')}())`, RunError: fmt.Errorf("hello")},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestTernaryOperator(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `a = 1 ? 2 : panic(2)`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = c ? a : b`, RunError: fmt.Errorf("undefined symbol 'c'")},
 		{Script: `a = a ? a : b`, RunError: fmt.Errorf("undefined symbol 'a'")},
@@ -467,12 +460,11 @@ func TestTernaryOperator(t *testing.T) {
 		{Script: `b = "0.0"; a = false ? 2 : b ? 3 : 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `b = "true"; a = false ? 2 : b ? 3 : 1`, RunOutput: int64(3), Output: map[string]interface{}{"a": int64(3)}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestNilCoalescingOperator(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `nil ?? nil`, RunOutput: nil},
 		{Script: `false ?? nil`, RunOutput: false},
 		{Script: `true ?? nil`, RunOutput: true},
@@ -497,12 +489,11 @@ func TestNilCoalescingOperator(t *testing.T) {
 		{Script: `a ?? 5`, Input: map[string]interface{}{"a": testSliceEmpty}, RunOutput: int64(5), Output: map[string]interface{}{"a": testSliceEmpty}},
 		{Script: `a ?? 6`, Input: map[string]interface{}{"a": testMapEmpty}, RunOutput: int64(6), Output: map[string]interface{}{"a": testMapEmpty}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestIf(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `if false {} else if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `if false {} else if true { 1++ }`, RunError: fmt.Errorf("invalid operation")},
@@ -548,12 +539,11 @@ func TestIf(t *testing.T) {
 		{Script: `a = 1; if a == 2 { b = 4 } else if a == 5 { b = 6 } else if a == 1 { c = b }`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = 1; if a == 2 { b = 4 } else if a == 5 { b = 6 } else if a == 1 { b = 7 }; b`, RunError: fmt.Errorf("undefined symbol 'b'"), Output: map[string]interface{}{"a": int64(1)}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestSwitch(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		// test parse errors
 		{Script: `switch {}`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `a = 1; switch a; {}`, ParseError: fmt.Errorf("syntax error")},
@@ -644,12 +634,11 @@ switch a {
 		return 1
 }`, RunOutput: int64(1)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestForLoop(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `for in [1] { }`, ParseError: fmt.Errorf("missing identifier")},
 		{Script: `for a, b, c in [1] { }`, ParseError: fmt.Errorf("too many identifiers")},
 
@@ -843,12 +832,11 @@ func TestForLoop(t *testing.T) {
 		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3 }(); b = []; for i in a { b += i; if i > 2 { break } }`, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
 		{Script: `a = make(chan int64); go func() { a <- 1; a <- 2; a <- 3; close(a) }(); b = []; for i in a { b += i }`, RunOutput: nil, Output: map[string]interface{}{"b": []interface{}{int64(1), int64(2), int64(3)}}},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestItemInList(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `"a" in ["a"]`, RunOutput: true},
 		{Script: `"a" in ["b"]`, RunOutput: false},
 		{Script: `"a" in ["c", "b", "a"]`, RunOutput: true},
@@ -979,12 +967,11 @@ func TestItemInList(t *testing.T) {
 		{Script: `[[1]] in [[1]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{1}}}, RunOutput: false},
 		{Script: `[[1]] in [[[1]]]`, Input: map[string]interface{}{"l": []interface{}{[]interface{}{[]interface{}{1}}}}, RunOutput: true},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestOperatorPrecedence(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		// test && > ||
 		{Script: `true || true && false`, RunOutput: true},
 		{Script: `(true || true) && false`, RunOutput: false},
@@ -1022,12 +1009,11 @@ func TestOperatorPrecedence(t *testing.T) {
 		{Script: `!true || true`, RunOutput: true},
 		{Script: `!(true || true)`, RunOutput: false},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestTry(t *testing.T) {
-	os.Setenv("ANKO_DEBUG", "1")
-	tests := []testlib.Test{
+	tests := []Test{
 		{Script: `try { 1++ } catch { 1++ }`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `try { 1++ } catch a { return a }`, RunOutput: fmt.Errorf("invalid operation")},
 		{Script: `try { 1++ } catch a { a = 2 }; return a`, RunError: fmt.Errorf("undefined symbol 'a'")},
@@ -1056,5 +1042,5 @@ func TestTry(t *testing.T) {
 		{Script: `try { 1++ } catch a { if a.Error() == "invalid operation" { return 1 } else { return 2 } }`, RunOutput: int64(1)},
 		{Script: `try { 1++ } catch a { } finally { if a.Error() == "invalid operation" { return 1 } else { return 2 } }`, RunOutput: int64(1)},
 	}
-	testlib.Run(t, tests, nil)
+	runTests(t, tests, nil, &Options{Debug: true})
 }

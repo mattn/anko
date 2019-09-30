@@ -71,6 +71,7 @@ var opName = map[string]int{
 	"delete":   DELETE,
 	"close":    CLOSE,
 	"map":      MAP,
+	"import":   IMPORT,
 }
 
 var (

@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattn/anko/vm"
+	"github.com/mattn/anko/env"
 )
 
 // ImportToX adds all the toX to the env given
-func ImportToX(env *vm.Env) {
+func ImportToX(e *env.Env) {
 
-	env.Define("toBool", func(v interface{}) bool {
+	e.Define("toBool", func(v interface{}) bool {
 		rv := reflect.ValueOf(v)
 		if !rv.IsValid() {
 			return false
@@ -38,14 +38,14 @@ func ImportToX(env *vm.Env) {
 		return false
 	})
 
-	env.Define("toString", func(v interface{}) string {
+	e.Define("toString", func(v interface{}) string {
 		if b, ok := v.([]byte); ok {
 			return string(b)
 		}
 		return fmt.Sprint(v)
 	})
 
-	env.Define("toInt", func(v interface{}) int64 {
+	e.Define("toInt", func(v interface{}) int64 {
 		rv := reflect.ValueOf(v)
 		if !rv.IsValid() {
 			return 0
@@ -72,7 +72,7 @@ func ImportToX(env *vm.Env) {
 		return 0
 	})
 
-	env.Define("toFloat", func(v interface{}) float64 {
+	e.Define("toFloat", func(v interface{}) float64 {
 		rv := reflect.ValueOf(v)
 		if !rv.IsValid() {
 			return 0
@@ -95,50 +95,50 @@ func ImportToX(env *vm.Env) {
 		return 0.0
 	})
 
-	env.Define("toChar", func(s rune) string {
+	e.Define("toChar", func(s rune) string {
 		return string(s)
 	})
 
-	env.Define("toRune", func(s string) rune {
+	e.Define("toRune", func(s string) rune {
 		if len(s) == 0 {
 			return 0
 		}
 		return []rune(s)[0]
 	})
 
-	env.Define("toBoolSlice", func(v []interface{}) []bool {
+	e.Define("toBoolSlice", func(v []interface{}) []bool {
 		var result []bool
 		toSlice(v, &result)
 		return result
 	})
 
-	env.Define("toStringSlice", func(v []interface{}) []string {
+	e.Define("toStringSlice", func(v []interface{}) []string {
 		var result []string
 		toSlice(v, &result)
 		return result
 	})
 
-	env.Define("toIntSlice", func(v []interface{}) []int64 {
+	e.Define("toIntSlice", func(v []interface{}) []int64 {
 		var result []int64
 		toSlice(v, &result)
 		return result
 	})
 
-	env.Define("toFloatSlice", func(v []interface{}) []float64 {
+	e.Define("toFloatSlice", func(v []interface{}) []float64 {
 		var result []float64
 		toSlice(v, &result)
 		return result
 	})
 
-	env.Define("toByteSlice", func(s string) []byte {
+	e.Define("toByteSlice", func(s string) []byte {
 		return []byte(s)
 	})
 
-	env.Define("toRuneSlice", func(s string) []rune {
+	e.Define("toRuneSlice", func(s string) []rune {
 		return []rune(s)
 	})
 
-	env.Define("toDuration", func(v int64) time.Duration {
+	e.Define("toDuration", func(v int64) time.Duration {
 		return time.Duration(v)
 	})
 

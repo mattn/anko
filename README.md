@@ -21,13 +21,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/mattn/anko/env"
 	"github.com/mattn/anko/vm"
 )
 
 func main() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("Define error: %v\n", err)
 	}
@@ -36,7 +37,7 @@ func main() {
 println("Hello World :)")
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("Execute error: %v\n", err)
 	}

@@ -6,16 +6,41 @@ import (
 	"reflect"
 
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/env"
+	"github.com/mattn/anko/parser"
 )
 
+// Execute parses script and executes in the specified environment.
+func Execute(env *env.Env, options *Options, script string) (interface{}, error) {
+	stmt, err := parser.ParseSrc(script)
+	if err != nil {
+		return nilValue, err
+	}
+
+	return RunContext(context.Background(), env, options, stmt)
+}
+
+// ExecuteContext parses script and executes in the specified environment with context.
+func ExecuteContext(ctx context.Context, env *env.Env, options *Options, script string) (interface{}, error) {
+	stmt, err := parser.ParseSrc(script)
+	if err != nil {
+		return nilValue, err
+	}
+
+	return RunContext(ctx, env, options, stmt)
+}
+
 // Run executes statement in the specified environment.
-func Run(stmt ast.Stmt, env *Env) (interface{}, error) {
-	return RunContext(context.Background(), stmt, env)
+func Run(env *env.Env, options *Options, stmt ast.Stmt) (interface{}, error) {
+	return RunContext(context.Background(), env, options, stmt)
 }
 
 // RunContext executes statement in the specified environment with context.
-func RunContext(ctx context.Context, stmt ast.Stmt, env *Env) (interface{}, error) {
-	runInfo := runInfoStruct{ctx: ctx, env: env, stmt: stmt, rv: nilValue}
+func RunContext(ctx context.Context, env *env.Env, options *Options, stmt ast.Stmt) (interface{}, error) {
+	runInfo := runInfoStruct{ctx: ctx, env: env, options: options, stmt: stmt, rv: nilValue}
+	if runInfo.options == nil {
+		runInfo.options = &Options{}
+	}
 	runInfo.runSingleStmt()
 	if runInfo.err == ErrReturn {
 		runInfo.err = nil
@@ -92,7 +117,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
 				// value is slice/array, add each value to left side names
 				for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
-					runInfo.env.defineValue(stmt.Names[i], value.Index(i))
+					runInfo.env.DefineValue(stmt.Names[i], value.Index(i))
 				}
 				// return last value of slice/array
 				runInfo.rv = value.Index(value.Len() - 1)
@@ -101,8 +126,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		}
 
 		// define all names with right side values
-		for i := 0; i < len(rvs) && i < len(stmt.Names); i++ {
-			runInfo.env.defineValue(stmt.Names[i], rvs[i])
+		for i = 0; i < len(rvs) && i < len(stmt.Names); i++ {
+			runInfo.env.DefineValue(stmt.Names[i], rvs[i])
 		}
 
 		// return last right side value
@@ -112,8 +137,8 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	case *ast.LetsStmt:
 		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.RHSS))
-		for i, rhs := range stmt.RHSS {
-			runInfo.expr = rhs
+		var i int
+		for i, runInfo.expr = range stmt.RHSS {
 			runInfo.invokeExpr()
 			if runInfo.err != nil {
 				return
@@ -144,7 +169,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		}
 
 		// invoke all left side expressions with right side values
-		for i := 0; i < len(rvs) && i < len(stmt.LHSS); i++ {
+		for i = 0; i < len(rvs) && i < len(stmt.LHSS); i++ {
 			value := rvs[i]
 			if value.Kind() == reflect.Interface && !value.IsNil() {
 				value = value.Elem()
@@ -262,7 +287,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			// Catch
 			runInfo.stmt = stmt.Catch
 			if stmt.Var != "" {
-				runInfo.env.defineValue(stmt.Var, reflect.ValueOf(runInfo.err))
+				runInfo.env.DefineValue(stmt.Var, reflect.ValueOf(runInfo.err))
 			}
 			runInfo.err = nil
 			runInfo.runSingleStmt()
@@ -361,7 +386,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				if iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
 				}
-				runInfo.env.defineValue(stmt.Vars[0], iv)
+				runInfo.env.DefineValue(stmt.Vars[0], iv)
 
 				runInfo.stmt = stmt.Stmt
 				runInfo.runSingleStmt()
@@ -395,10 +420,10 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				default:
 				}
 
-				runInfo.env.defineValue(stmt.Vars[0], keys[i])
+				runInfo.env.DefineValue(stmt.Vars[0], keys[i])
 
 				if len(stmt.Vars) > 1 {
-					runInfo.env.defineValue(stmt.Vars[1], value.MapIndex(keys[i]))
+					runInfo.env.DefineValue(stmt.Vars[1], value.MapIndex(keys[i]))
 				}
 
 				runInfo.stmt = stmt.Stmt
@@ -449,7 +474,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 					runInfo.rv = runInfo.rv.Elem()
 				}
 
-				runInfo.env.defineValue(stmt.Vars[0], runInfo.rv)
+				runInfo.env.DefineValue(stmt.Vars[0], runInfo.rv)
 
 				runInfo.stmt = stmt.Stmt
 				runInfo.runSingleStmt()
@@ -572,16 +597,18 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// ModuleStmt
 	case *ast.ModuleStmt:
-		env := runInfo.env
-		runInfo.env = env.NewModule(stmt.Name)
+		e := runInfo.env
+		runInfo.env, runInfo.err = e.NewModule(stmt.Name)
+		if runInfo.err != nil {
+			return
+		}
 		runInfo.stmt = stmt.Stmt
 		runInfo.runSingleStmt()
+		runInfo.env = e
 		if runInfo.err != nil {
-			runInfo.env = env
 			return
 		}
 		runInfo.rv = nilValue
-		runInfo.env = env
 
 	// SwitchStmt
 	case *ast.SwitchStmt:
@@ -655,7 +682,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.rv = nilValue
 				return
 			}
-			runInfo.err = runInfo.env.Delete(item.String())
+			runInfo.env.Delete(item.String())
 			runInfo.rv = nilValue
 
 		case reflect.Map:

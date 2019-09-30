@@ -5,12 +5,13 @@ import (
 	"log"
 
 	"github.com/mattn/anko/vm"
+	"github.com/mattn/anko/env"
 )
 
 func Example_vmFunctions() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -62,7 +63,7 @@ func add(a, b) {
 println(add([1, 2]...))
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -80,9 +81,9 @@ println(add([1, 2]...))
 }
 
 func Example_vmFunctionsScope() {
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -113,7 +114,7 @@ func () {
 println(a)
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}
@@ -147,18 +148,18 @@ func Example_vmFunctionsOutside() {
 	   }
 	*/
 
-	env := vm.NewEnv()
+	e := env.NewEnv()
 
-	err := env.Define("println", fmt.Println)
+	err := e.Define("println", fmt.Println)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
-	err = env.Define("addString", func(a string, b string) string { return a + b })
+	err = e.Define("addString", func(a string, b string) string { return a + b })
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
 	// uses the function that would be declared above
-	err = env.Define("aFunc", testFunc1)
+	err = e.Define("aFunc", testFunc1)
 	if err != nil {
 		log.Fatalf("define error: %v\n", err)
 	}
@@ -171,7 +172,7 @@ a = aFunc([1, 2, 3])
 println(a) 
 `
 
-	_, err = env.Execute(script)
+	_, err = vm.Execute(e, nil, script)
 	if err != nil {
 		log.Fatalf("execute error: %v\n", err)
 	}

@@ -12,18 +12,19 @@ import (
 	"strings"
 
 	"github.com/mattn/anko/core"
-	"github.com/mattn/anko/packages"
+	"github.com/mattn/anko/env"
+	_ "github.com/mattn/anko/packages"
 	"github.com/mattn/anko/parser"
 	"github.com/mattn/anko/vm"
 )
 
-const version = "0.1.2"
+const version = "0.1.3"
 
 var (
 	flagExecute string
 	file        string
 	args        []string
-	env         *vm.Env
+	e           *env.Env
 )
 
 func main() {
@@ -60,10 +61,9 @@ func parseFlags() {
 }
 
 func setupEnv() {
-	env = vm.NewEnv()
-	env.Define("args", args)
-	core.Import(env)
-	packages.DefineImport(env)
+	e = env.NewEnv()
+	e.Define("args", args)
+	core.Import(e)
 }
 
 func runNonInteractive() int {
@@ -79,7 +79,7 @@ func runNonInteractive() int {
 		source = string(sourceBytes)
 	}
 
-	_, err := env.Execute(source)
+	_, err := vm.Execute(e, nil, source)
 	if err != nil {
 		fmt.Println("Execute error:", err)
 		return 4
@@ -141,7 +141,7 @@ func runInteractive() int {
 		var v interface{}
 
 		if err == nil {
-			v, err = vm.Run(stmts, env)
+			v, err = vm.Run(e, nil, stmts)
 		}
 		if err != nil {
 			if e, ok := err.(*vm.Error); ok {

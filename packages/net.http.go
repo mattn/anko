@@ -4,26 +4,29 @@ package packages
 
 import (
 	"net/http"
+	"reflect"
+
+	"github.com/mattn/anko/env"
 )
 
 func init() {
-	Packages["net/http"] = map[string]interface{}{
-		"DefaultClient":     http.DefaultClient,
-		"DefaultServeMux":   http.DefaultServeMux,
-		"DefaultTransport":  http.DefaultTransport,
-		"Handle":            http.Handle,
-		"HandleFunc":        http.HandleFunc,
-		"ListenAndServe":    http.ListenAndServe,
-		"ListenAndServeTLS": http.ListenAndServeTLS,
-		"NewRequest":        http.NewRequest,
-		"NewServeMux":       http.NewServeMux,
-		"Serve":             http.Serve,
-		"SetCookie":         http.SetCookie,
+	env.Packages["net/http"] = map[string]reflect.Value{
+		"DefaultClient":     reflect.ValueOf(http.DefaultClient),
+		"DefaultServeMux":   reflect.ValueOf(http.DefaultServeMux),
+		"DefaultTransport":  reflect.ValueOf(http.DefaultTransport),
+		"Handle":            reflect.ValueOf(http.Handle),
+		"HandleFunc":        reflect.ValueOf(http.HandleFunc),
+		"ListenAndServe":    reflect.ValueOf(http.ListenAndServe),
+		"ListenAndServeTLS": reflect.ValueOf(http.ListenAndServeTLS),
+		"NewRequest":        reflect.ValueOf(http.NewRequest),
+		"NewServeMux":       reflect.ValueOf(http.NewServeMux),
+		"Serve":             reflect.ValueOf(http.Serve),
+		"SetCookie":         reflect.ValueOf(http.SetCookie),
 	}
-	PackageTypes["net/http"] = map[string]interface{}{
-		"Client":   http.Client{},
-		"Cookie":   http.Cookie{},
-		"Request":  http.Request{},
-		"Response": http.Response{},
+	env.PackageTypes["net/http"] = map[string]reflect.Type{
+		"Client":   reflect.TypeOf(http.Client{}),
+		"Cookie":   reflect.TypeOf(http.Cookie{}),
+		"Request":  reflect.TypeOf(http.Request{}),
+		"Response": reflect.TypeOf(http.Response{}),
 	}
 }
