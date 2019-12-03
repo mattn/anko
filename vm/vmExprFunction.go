@@ -140,14 +140,14 @@ func (runInfo *runInfoStruct) callExpr() {
 	}
 
 	// capture panics if not in debug mode
-	defer func() {
-		if !runInfo.options.Debug {
+	if !runInfo.options.Debug {
+		defer func() {
 			if recoverResult := recover(); recoverResult != nil {
 				runInfo.err = fmt.Errorf("%v", recoverResult)
 				runInfo.rv = nilValue
 			}
-		}
-	}()
+		}()
+	}
 
 	// useCallSlice lets us know to use CallSlice instead of Call because of the format of the args
 	if useCallSlice {

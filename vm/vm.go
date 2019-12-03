@@ -319,14 +319,14 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 			return nil
 		}
 		// capture panics if not in debug mode
-		defer func() {
-			if !runInfo.options.Debug {
+		if !runInfo.options.Debug {
+			defer func() {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 					t = nil
 				}
-			}
-		}()
+			}()
+		}
 		t = reflect.MapOf(key, t)
 		return t
 	case ast.TypeChan:

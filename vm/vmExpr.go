@@ -514,7 +514,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		methods, ok := env.Packages[name]
 		if !ok {
-			runInfo.err = newStringError(expr, "package not found: " + name)
+			runInfo.err = newStringError(expr, "package not found: "+name)
 			return
 		}
 		var err error
@@ -689,13 +689,13 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			Send: rhs,
 		}}
 		// capture panics if not in debug mode
-		defer func() {
-			if !runInfo.options.Debug {
+		if !runInfo.options.Debug {
+			defer func() {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)
 				}
-			}
-		}()
+			}()
+		}
 		runInfo.rv = nilValue
 		if chosen, _, _ := reflect.Select(cases); chosen == 0 {
 			runInfo.err = ErrInterrupt
