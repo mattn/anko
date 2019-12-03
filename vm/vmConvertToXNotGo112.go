@@ -3,8 +3,6 @@
 package vm
 
 import (
-	"context"
-	"fmt"
 	"reflect"
 )
 
