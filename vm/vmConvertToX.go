@@ -129,39 +129,6 @@ func convertSliceOrArray(rv reflect.Value, rt reflect.Type) (reflect.Value, erro
 	return value, nil
 }
 
-// convertMap trys to covert the reflect.Value map to the map reflect.Type
-func convertMap(rv reflect.Value, rt reflect.Type) (reflect.Value, error) {
-	rtKey := rt.Key()
-	rtElem := rt.Elem()
-
-	// create new map
-	// note creating slice as work around to create map
-	// just doing MakeMap can give incorrect type for defined types
-	newMap := reflect.MakeSlice(reflect.SliceOf(rt), 0, 1)
-	newMap = reflect.Append(newMap, reflect.MakeMap(reflect.MapOf(rtKey, rtElem))).Index(0)
-
-	// copy keys to new map
-	// The only way to do this right now is to get all the keys.
-	// At some point there will be a MapRange that could be used.
-	// https://github.com/golang/go/issues/11104
-	// In the mean time using MapKeys, which will costly for large maps.
-	mapKeys := rv.MapKeys()
-	for i := 0; i < len(mapKeys); i++ {
-		newKey, err := convertReflectValueToType(mapKeys[i], rtKey)
-		if err != nil {
-			return rv, err
-		}
-		value := rv.MapIndex(mapKeys[i])
-		value, err = convertReflectValueToType(value, rtElem)
-		if err != nil {
-			return rv, err
-		}
-		newMap.SetMapIndex(newKey, value)
-	}
-
-	return newMap, nil
-}
-
 // convertVMFunctionToType is for translating a runVMFunction into the correct type
 // so it can be passed to a Go function argument with the correct static types
 // it creates a translate function runVMConvertFunction
