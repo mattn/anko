@@ -410,6 +410,29 @@ func TestModule(t *testing.T) {
 		{Script: `module a { _b = "b"; func c() { return _b} }`, RunOutput: nil},
 		{Script: `module a { _b = "b"; func c() { return _b} }; a.c()`, RunOutput: "b"},
 
+		{Script: `module a { b = 1 }; var c = a; c.b = 2; c.b`, RunOutput: int64(2)},
+
+		// test module copy
+		{Script: `module a { b = 1 }; c = a; d = a; a.b = 2; a.b`, RunOutput: int64(2)},
+		{Script: `module a { b = 1 }; c = a; d = a; a.b = 2; c.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; a.b = 2; d.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; c.b = 2; a.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; c.b = 2; c.b`, RunOutput: int64(2)},
+		{Script: `module a { b = 1 }; c = a; d = a; c.b = 2; d.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; d.b = 2; a.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; d.b = 2; c.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; c = a; d = a; d.b = 2; d.b`, RunOutput: int64(2)},
+
+		{Script: `module a { b = 1 }; var c = a; var d = a; a.b = 2; a.b`, RunOutput: int64(2)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; a.b = 2; c.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; a.b = 2; d.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; c.b = 2; a.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; c.b = 2; c.b`, RunOutput: int64(2)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; c.b = 2; d.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; d.b = 2; a.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; d.b = 2; c.b`, RunOutput: int64(1)},
+		{Script: `module a { b = 1 }; var c = a; var d = a; d.b = 2; d.b`, RunOutput: int64(2)},
+
 		// test type scope
 		{Script: `module b { make(type Duration, a) }; func c() { d = new(time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunError: fmt.Errorf("no namespace called: time")},
 		{Script: `module time { make(type Duration, a) }; func c() { d = new(time.Duration); return *d }; c()`, Input: map[string]interface{}{"a": time.Duration(0)}, RunOutput: time.Duration(0)},
