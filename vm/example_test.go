@@ -54,6 +54,8 @@ println("this line should not be printed")
 }
 
 func Example_vmEnvDefine() {
+	// "github.com/mattn/anko/env"
+
 	e := env.NewEnv()
 
 	err := e.Define("println", fmt.Println)
@@ -110,6 +112,8 @@ println(f)
 }
 
 func Example_vmEnv() {
+	// "github.com/mattn/anko/env"
+
 	e := env.NewEnv()
 
 	err := e.Define("a", "a")
@@ -130,6 +134,8 @@ func Example_vmEnv() {
 }
 
 func Example_vmHelloWorld() {
+	// "github.com/mattn/anko/env"
+
 	e := env.NewEnv()
 
 	err := e.Define("println", fmt.Println)
@@ -150,6 +156,8 @@ println("Hello World :)")
 }
 
 func Example_vmQuickStart() {
+	// "github.com/mattn/anko/env"
+	
 	e := env.NewEnv()
 
 	err := e.Define("println", fmt.Println)

@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/env"
 )
 
 func (runInfo *runInfoStruct) invokeLetExpr() {
@@ -29,6 +30,16 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
 			runInfo.rv = runInfo.rv.Elem()
 		}
+
+		if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+			runInfo.err = env.SetValue(expr.Name, value)
+			if runInfo.err != nil {
+				runInfo.err = newError(expr, runInfo.err)
+				runInfo.rv = nilValue
+			}
+			return
+		}
+
 		if runInfo.rv.Kind() == reflect.Ptr {
 			runInfo.rv = runInfo.rv.Elem()
 		}

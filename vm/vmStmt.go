@@ -105,7 +105,11 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if runInfo.err != nil {
 				return
 			}
-			rvs[i] = runInfo.rv
+			if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+				rvs[i] = reflect.ValueOf(env.DeepCopy())
+			} else {
+				rvs[i] = runInfo.rv
+			}
 		}
 
 		if len(rvs) == 1 && len(stmt.Names) > 1 {
@@ -143,7 +147,11 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if runInfo.err != nil {
 				return
 			}
-			rvs[i] = runInfo.rv
+			if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+				rvs[i] = reflect.ValueOf(env.DeepCopy())
+			} else {
+				rvs[i] = runInfo.rv
+			}
 		}
 
 		if len(rvs) == 1 && len(stmt.LHSS) > 1 {
