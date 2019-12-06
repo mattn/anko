@@ -318,8 +318,8 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 		if t == nil {
 			return nil
 		}
-		// capture panics if not in debug mode
 		if !runInfo.options.Debug {
+			// captures panic
 			defer func() {
 				if recoverResult := recover(); recoverResult != nil {
 					runInfo.err = fmt.Errorf("%v", recoverResult)

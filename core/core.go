@@ -4,7 +4,6 @@ package core
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"reflect"
 
 	"github.com/mattn/anko/env"
@@ -69,10 +68,6 @@ func Import(e *env.Env) *env.Env {
 		return typeOf.Kind().String()
 	})
 
-	e.Define("chanOf", func(t reflect.Type) reflect.Value {
-		return reflect.MakeChan(t, 1)
-	})
-
 	e.Define("defined", func(s string) bool {
 		_, err := e.Get(s)
 		return err == nil
@@ -98,11 +93,6 @@ func Import(e *env.Env) *env.Env {
 			panic(err)
 		}
 		return rv
-	})
-
-	e.Define("panic", func(e interface{}) {
-		os.Setenv("ANKO_DEBUG", "1")
-		panic(e)
 	})
 
 	e.Define("print", fmt.Print)

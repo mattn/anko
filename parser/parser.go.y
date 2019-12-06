@@ -31,6 +31,7 @@ import (
 %type<expr_literals> expr_literals
 %type<expr_map> expr_map
 %type<expr_slice> expr_slice
+%type<expr_chan> expr_chan
 %type<expr> expr_unary
 %type<expr> expr_binary
 %type<expr> expr_lets
@@ -67,6 +68,7 @@ import (
 	expr_literals          ast.Expr
 	expr_map               *ast.MapExpr
 	expr_slice             ast.Expr
+	expr_chan              ast.Expr
 	expr_unary             ast.Expr
 	expr_binary            ast.Expr
 	expr_lets              ast.Expr
@@ -77,11 +79,11 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN EQOPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
 
 /* lowest precedence */
 %left ,
-%right '=' PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ
+%right '=' PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ EQOPCHAN
 %right ':'
 %right OPCHAN
 %right '?' NILCOALESCE
@@ -274,6 +276,23 @@ stmt_lets :
 			}
 		} else {
 			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
+		}
+	}
+	| expr EQOPCHAN expr
+	{
+		$$ = &ast.ChanStmt{LHS: $1, RHS: $3}
+		$$.SetPosition($1.Position())
+	}
+	| exprs EQOPCHAN expr
+	{
+		if len($1) == 2 {
+			chanStmt := &ast.ChanStmt{LHS: $1[0].(ast.Expr), OkExpr: $1[1].(ast.Expr), RHS: $3}
+			$$ = chanStmt
+			$$.SetPosition(chanStmt.LHS.Position())
+		} else if len($1) < 2 {
+			yylex.Error("missing expressions on left side of channel operator")
+			$$ = &ast.ChanStmt{RHS: $3}
+			$$.SetPosition($2.Position())
 		}
 	}
 
@@ -569,16 +588,6 @@ expr :
 		$$ = &ast.MakeTypeExpr{Name: $4.Lit, Type: $6}
 		$$.SetPosition($1.Position())
 	}
-	| expr OPCHAN expr
-	{
-		$$ = &ast.ChanExpr{LHS: $1, RHS: $3}
-		$$.SetPosition($1.Position())
-	}
-	| OPCHAN expr
-	{
-		$$ = &ast.ChanExpr{RHS: $2}
-		$$.SetPosition($2.Position())
-	}
 	| expr IN expr
 	{
 		$$ = &ast.IncludeExpr{ItemExpr: $1, ListExpr: $3}
@@ -596,6 +605,11 @@ expr :
 		$$.SetPosition($3.Position())
 	}
 	| expr_slice
+	{
+		$$ = $1
+		$$.SetPosition($1.Position())
+	}
+	| expr_chan
 	{
 		$$ = $1
 		$$.SetPosition($1.Position())
@@ -800,6 +814,16 @@ expr_slice :
 	| expr '[' expr ':' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Item: $1, Begin: $3, End: $5, Cap: $7}
+	}
+
+expr_chan :
+	expr OPCHAN expr
+	{
+		$$ = &ast.ChanExpr{LHS: $1, RHS: $3}
+	}
+	| OPCHAN expr
+	{
+		$$ = &ast.ChanExpr{RHS: $2}
 	}
 
 expr_unary :
@@ -1013,7 +1037,7 @@ op_binary :
 
 
 opt_term :
-
+	/* nothing */
 	| term
 	
 term :
