@@ -139,8 +139,8 @@ func (runInfo *runInfoStruct) callExpr() {
 		return
 	}
 
-	// capture panics if not in debug mode
 	if !runInfo.options.Debug {
+		// captures panic
 		defer func() {
 			if recoverResult := recover(); recoverResult != nil {
 				runInfo.err = fmt.Errorf("%v", recoverResult)

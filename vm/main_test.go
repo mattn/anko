@@ -151,6 +151,8 @@ func runTest(t *testing.T, test Test, testOptions *TestOptions, options *Options
 	timeout := 60 * time.Second
 
 	// parser.EnableErrorVerbose()
+	// parser.EnableDebug(8)
+
 	stmt, err := parser.ParseSrc(test.Script)
 	if test.ParseErrorFunc != nil {
 		(*test.ParseErrorFunc)(t, err)

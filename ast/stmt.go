@@ -147,3 +147,11 @@ type CloseStmt struct {
 	StmtImpl
 	Expr Expr
 }
+
+// ChanStmt provide chan lets statement.
+type ChanStmt struct {
+	ExprImpl
+	LHS    Expr
+	OkExpr Expr
+	RHS    Expr
+}

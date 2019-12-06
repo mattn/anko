@@ -533,7 +533,7 @@ func TestMake(t *testing.T) {
 		// chan
 		{Script: `a = make(chan int64); go func(){ a <- 1 }(); <- a`, RunOutput: int64(1)},
 		{Script: `a = make(chan int64, 1); a <- 1; <- a`, RunOutput: int64(1)},
-		{Script: `a = make(chan *int64, 1); b = 1; a <- &b; c <- a; *c`, RunOutput: int64(1)},
+		{Script: `a = make(chan *int64, 1); b = 1; a <- &b; c = <- a; *c`, RunOutput: int64(1)},
 		{Script: `a = make(chan []int64, 1); a <- [1]; <- a`, RunOutput: []int64{1}},
 		{Script: `a = make(chan map [string]int64, 1); b = make(map [string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
 		{Script: `a = make(chan int64, 1); b = &a; *b <- 1; <- *b`, RunOutput: int64(1)},
@@ -570,12 +570,28 @@ func TestChan(t *testing.T) {
 	runTests(t, tests, nil, &Options{Debug: false})
 
 	tests = []Test{
+		{Script: `a = make(chan int64, 2); a <- 1; = <- a`, ParseError: fmt.Errorf("missing expressions on left side of channel operator"), RunError: fmt.Errorf("invalid operation")},
+
+		{Script: `<- 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1++ <- 1`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `1 <- 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = make(chan int64, 2); a <- 1++`, RunError: fmt.Errorf("invalid operation")},
-		{Script: `1 <- 1`, RunError: fmt.Errorf("invalid operation for chan")},
+		{Script: `<- 1`, RunError: fmt.Errorf("receive from non-chan type int64")},
+		{Script: `1 <- 1`, RunError: fmt.Errorf("send to non-chan type int64")},
+		{Script: `a = make(chan int64, 2); 1 <- a`, RunError: fmt.Errorf("send to non-chan type int64")},
 		{Script: `a = make(chan bool, 2); a <- 1`, RunError: fmt.Errorf("cannot use type int64 as type bool to send to chan")},
 		{Script: `close(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `close(1)`, RunError: fmt.Errorf("type cannot be int64 for close")},
+
+		// let channel errors
+		{Script: `a = <- c`, RunError: fmt.Errorf("undefined symbol 'c'")},
+		{Script: `a, b = <- c`, RunError: fmt.Errorf("undefined symbol 'c'")},
+		{Script: `a = <- 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a, b = <- 1++`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `c = 1; a = <- c`, RunError: fmt.Errorf("receive from non-chan type int64")},
+		{Script: `c = 1; a, b = <- c`, RunError: fmt.Errorf("receive from non-chan type int64")},
+		{Script: `a = make(chan int64, 2); a <- 1; 1++ = <- a`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a = make(chan int64, 2); a <- 1; 1++, b = <- a`, RunError: fmt.Errorf("invalid operation")},
 
 		// send to channel
 		{Script: `a <- nil`, Input: map[string]interface{}{"a": make(chan interface{}, 2)}},
@@ -612,21 +628,21 @@ func TestChan(t *testing.T) {
 		{Script: `a = make(chan string, 2); a <- "b"; <- a`, RunOutput: "b"},
 
 		// send to channel, receive from channel, then assign to variable
-		{Script: `a <- nil; b <- a`, Input: map[string]interface{}{"a": make(chan interface{}, 2)}, RunOutput: nil, Output: map[string]interface{}{"b": nil}},
-		{Script: `a <- true; b <- a`, Input: map[string]interface{}{"a": make(chan bool, 2)}, RunOutput: true, Output: map[string]interface{}{"b": true}},
-		{Script: `a <- 1; b <- a`, Input: map[string]interface{}{"a": make(chan int32, 2)}, RunOutput: int32(1), Output: map[string]interface{}{"b": int32(1)}},
-		{Script: `a <- 2; b <- a`, Input: map[string]interface{}{"a": make(chan int64, 2)}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
-		{Script: `a <- 1.5; b <- a`, Input: map[string]interface{}{"a": make(chan float32, 2)}, RunOutput: float32(1.5), Output: map[string]interface{}{"b": float32(1.5)}},
-		{Script: `a <- 2.5; b <- a`, Input: map[string]interface{}{"a": make(chan float64, 2)}, RunOutput: float64(2.5), Output: map[string]interface{}{"b": float64(2.5)}},
-		{Script: `a <- "b"; b <- a`, Input: map[string]interface{}{"a": make(chan string, 2)}, RunOutput: "b", Output: map[string]interface{}{"b": "b"}},
+		{Script: `a <- nil; b = <- a`, Input: map[string]interface{}{"a": make(chan interface{}, 2)}, RunOutput: nil, Output: map[string]interface{}{"b": nil}},
+		{Script: `a <- true; b = <- a`, Input: map[string]interface{}{"a": make(chan bool, 2)}, RunOutput: true, Output: map[string]interface{}{"b": true}},
+		{Script: `a <- 1; b = <- a`, Input: map[string]interface{}{"a": make(chan int32, 2)}, RunOutput: int32(1), Output: map[string]interface{}{"b": int32(1)}},
+		{Script: `a <- 2; b = <- a`, Input: map[string]interface{}{"a": make(chan int64, 2)}, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
+		{Script: `a <- 1.5; b = <- a`, Input: map[string]interface{}{"a": make(chan float32, 2)}, RunOutput: float32(1.5), Output: map[string]interface{}{"b": float32(1.5)}},
+		{Script: `a <- 2.5; b = <- a`, Input: map[string]interface{}{"a": make(chan float64, 2)}, RunOutput: float64(2.5), Output: map[string]interface{}{"b": float64(2.5)}},
+		{Script: `a <- "b"; b = <- a`, Input: map[string]interface{}{"a": make(chan string, 2)}, RunOutput: "b", Output: map[string]interface{}{"b": "b"}},
 
-		{Script: `a = make(chan interface, 2); a <- nil; b <- a`, RunOutput: nil, Output: map[string]interface{}{"b": nil}},
-		{Script: `a = make(chan bool, 2); a <- true; b <- a`, RunOutput: true, Output: map[string]interface{}{"b": true}},
-		{Script: `a = make(chan int32, 2); a <- 1; b <- a`, RunOutput: int32(1), Output: map[string]interface{}{"b": int32(1)}},
-		{Script: `a = make(chan int64, 2); a <- 2; b <- a`, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
-		{Script: `a = make(chan float32, 2); a <- 1.5; b <- a`, RunOutput: float32(1.5), Output: map[string]interface{}{"b": float32(1.5)}},
-		{Script: `a = make(chan float64, 2); a <- 2.5; b <- a`, RunOutput: float64(2.5), Output: map[string]interface{}{"b": float64(2.5)}},
-		{Script: `a = make(chan string, 2); a <- "b"; b <- a`, RunOutput: "b", Output: map[string]interface{}{"b": "b"}},
+		{Script: `a = make(chan interface, 2); a <- nil; b = <- a`, RunOutput: nil, Output: map[string]interface{}{"b": nil}},
+		{Script: `a = make(chan bool, 2); a <- true; b = <- a`, RunOutput: true, Output: map[string]interface{}{"b": true}},
+		{Script: `a = make(chan int32, 2); a <- 1; b = <- a`, RunOutput: int32(1), Output: map[string]interface{}{"b": int32(1)}},
+		{Script: `a = make(chan int64, 2); a <- 2; b = <- a`, RunOutput: int64(2), Output: map[string]interface{}{"b": int64(2)}},
+		{Script: `a = make(chan float32, 2); a <- 1.5; b = <- a`, RunOutput: float32(1.5), Output: map[string]interface{}{"b": float32(1.5)}},
+		{Script: `a = make(chan float64, 2); a <- 2.5; b = <- a`, RunOutput: float64(2.5), Output: map[string]interface{}{"b": float64(2.5)}},
+		{Script: `a = make(chan string, 2); a <- "b"; b = <- a`, RunOutput: "b", Output: map[string]interface{}{"b": "b"}},
 
 		// receive from closed channel
 		{Script: `a = make(chan int64, 2); a <- 1; close(a); <- a`, RunOutput: int64(1)},
@@ -635,10 +651,10 @@ func TestChan(t *testing.T) {
 		// receive & send from same channel
 		{Script: `a = make(chan int64, 2); a <- 1; a <- <- a`, RunOutput: nil},
 		{Script: `a = make(chan int64, 2); a <- 1; a <- <- a; <- a`, RunOutput: int64(1)},
-		{Script: `a = make(chan int64, 2); a <- 1; a <- <- a; b <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1)}},
+		{Script: `a = make(chan int64, 2); a <- 1; a <- <- a; b = <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1)}},
 		{Script: `a = make(chan int64, 2); a <- 1; a <- (<- a)`, RunOutput: nil},
 		{Script: `a = make(chan int64, 2); a <- 1; a <- (<- a); <- a`, RunOutput: int64(1)},
-		{Script: `a = make(chan int64, 2); a <- 1; a <- (<- a); b <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1)}},
+		{Script: `a = make(chan int64, 2); a <- 1; a <- (<- a); b = <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1)}},
 
 		// 1 then null into a
 		{Script: `a = make(chan int64, 2); a <- a <- 1`, RunOutput: nil},
@@ -648,17 +664,24 @@ func TestChan(t *testing.T) {
 		// receive & send different channel
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- <- a`, RunOutput: nil},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- <- a; <- b`, RunOutput: int64(1)},
-		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- <- a; c <- b`, RunOutput: int64(1), Output: map[string]interface{}{"c": int64(1)}},
+		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- <- a; c = <- b`, RunOutput: int64(1), Output: map[string]interface{}{"c": int64(1)}},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- (<- a)`, RunOutput: nil},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- (<- a); <- b`, RunOutput: int64(1)},
-		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- (<- a); c <- b`, RunOutput: int64(1), Output: map[string]interface{}{"c": int64(1)}},
+		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); a <- 1; b <- (<- a); c = <- b`, RunOutput: int64(1), Output: map[string]interface{}{"c": int64(1)}},
 
 		// 1 into a then null into b
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); b <- a <- 1`, RunOutput: nil},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); b <- a <- 1; <- a`, RunOutput: int64(1)},
 		{Script: `a = make(chan int64, 2); b = make(chan int64, 2); b <- a <- 1; <- a; <- b`, RunOutput: int64(0)},
 
-		// TODO: add receive ok
+		// test ok
+		{Script: `a = make(chan int64, 2); a <- 1; b, ok = <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1), "ok": true}},
+		{Script: `a = make(chan int64, 2); a <- 1; b, 1++ = <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1)}},
+		{Script: `a = make(chan int64, 2); a <- 1; close(a); b, ok = <- a`, RunOutput: int64(1), Output: map[string]interface{}{"b": int64(1), "ok": true}},
+		{Script: `a = make(chan int64, 2); a <- 1; close(a); b = <- a; b, ok = <- a`, RunOutput: nil, Output: map[string]interface{}{"b": int64(1), "ok": false}},
+
+		// test let ++
+		{Script: `a = make(chan int64, 2); b = [1, 2, 3, 4]; c = 0; a <- 11; b[c++] = <- a; b[1]`, RunOutput: int64(11)},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
@@ -910,18 +933,18 @@ for i in a {
 `,
 		`
 close(waitChan)
-<-make(chan string)
+<- make(chan string)
 `,
 		`
 a = ""
 close(waitChan)
-a <-make(chan string)
+a = <- make(chan string)
 `,
 		`
 for {
 	a = ""
 	close(waitChan)
-	a <-make(chan string)
+	a = <- make(chan string)
 }
 `,
 		`

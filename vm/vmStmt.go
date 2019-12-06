@@ -731,6 +731,69 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.err = newStringError(stmt, "type cannot be "+runInfo.rv.Kind().String()+" for close")
 		runInfo.rv = nilValue
 
+	// ChanStmt
+	case *ast.ChanStmt:
+		runInfo.expr = stmt.RHS
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
+		}
+
+		if runInfo.rv.Kind() != reflect.Chan {
+			// rhs is not channel
+			runInfo.err = newStringError(stmt, "receive from non-chan type "+runInfo.rv.Kind().String())
+			runInfo.rv = nilValue
+			return
+		}
+
+		// rhs is channel
+		// receive from rhs channel
+		rhs := runInfo.rv
+		cases := []reflect.SelectCase{{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(runInfo.ctx.Done()),
+		}, {
+			Dir:  reflect.SelectRecv,
+			Chan: rhs,
+		}}
+		var chosen int
+		var ok bool
+		chosen, runInfo.rv, ok = reflect.Select(cases)
+		if chosen == 0 {
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			return
+		}
+
+		rhs = runInfo.rv // store rv in rhs temporarily
+
+		if stmt.OkExpr != nil {
+			// set ok to OkExpr
+			if ok {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
+			runInfo.expr = stmt.OkExpr
+			runInfo.invokeLetExpr()
+			// TODO: ok to ignore error?
+		}
+
+		if ok {
+			// set rv to lhs
+			runInfo.rv = rhs
+			runInfo.expr = stmt.LHS
+			runInfo.invokeLetExpr()
+			if runInfo.err != nil {
+				return
+			}
+		} else {
+			runInfo.rv = nilValue
+		}
+
 	// default
 	default:
 		runInfo.err = newStringError(stmt, "unknown statement")
