@@ -19,6 +19,10 @@ import (
 %type<stmt_switch_cases> stmt_switch_cases
 %type<stmt_switch_case> stmt_switch_case
 %type<stmt_switch_default> stmt_switch_default
+%type<stmt_select> stmt_select
+%type<stmt_select_cases> stmt_select_cases
+%type<stmt_select_case> stmt_select_case
+%type<stmt_select_default> stmt_select_default
 
 %type<exprs> exprs
 %type<expr> expr
@@ -56,6 +60,10 @@ import (
 	stmt_switch_cases      ast.Stmt
 	stmt_switch_case       ast.Stmt
 	stmt_switch_default    ast.Stmt
+	stmt_select            ast.Stmt
+	stmt_select_cases      ast.Stmt
+	stmt_select_case       ast.Stmt
+	stmt_select_default    ast.Stmt
 
 	exprs                  []ast.Expr
 	expr                   ast.Expr
@@ -79,7 +87,7 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN EQOPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH SELECT CASE DEFAULT GO CHAN MAKE OPCHAN EQOPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
 
 /* lowest precedence */
 %left ,
@@ -237,6 +245,10 @@ stmt :
 	{
 		$$ = $1
 	}
+	| stmt_select
+	{
+		$$ = $1
+	}
 	| expr
 	{
 		$$ = &ast.ExprStmt{Expr: $1}
@@ -377,6 +389,62 @@ stmt_for :
 	{
 		$$ = &ast.CForStmt{Stmt1: $2, Expr2: $4, Expr3: $6, Stmt: $8}
 		$$.SetPosition($1.Position())
+	}
+
+stmt_select :
+	SELECT '{' opt_newlines stmt_select_cases opt_newlines '}'
+	{
+		$$ = &ast.SelectStmt{Body: $4}
+		$$.SetPosition($1.Position())
+	}
+
+stmt_select_cases :
+	/* nothing */
+	{
+		$$ = &ast.SelectBodyStmt{}
+	}
+	| stmt_select_default
+	{
+		$$ = &ast.SelectBodyStmt{Default: $1}
+	}
+	| stmt_select_case
+	{
+		$$ = &ast.SelectBodyStmt{Cases: []ast.Stmt{$1}}
+	}
+	| stmt_select_cases stmt_select_case
+	{
+		selectStmt := $1.(*ast.SelectBodyStmt)
+		selectStmt.Cases = append(selectStmt.Cases, $2)
+		$$ = selectStmt
+	}
+	| stmt_select_cases stmt_select_default
+	{
+		selectStmt := $$.(*ast.SelectBodyStmt)
+		if selectStmt.Default != nil {
+			yylex.Error("multiple default statement")
+		}
+		selectStmt.Default = $2
+		$$ = selectStmt
+	}
+
+stmt_select_case :
+	CASE stmt ':' compstmt
+	{
+		if $2 == nil {
+			yylex.Error("syntax error: unexpected ':'")
+		}
+		$$ = &ast.SelectCaseStmt{Expr: $2, Stmt: $4}
+		$$.SetPosition($1.Position())
+	}
+
+stmt_select_default :
+	DEFAULT ':' compstmt
+	{
+		$$ = $3
+	}
+	| DEFAULT ':'
+	{
+		$$ = &ast.SelectCaseStmt{}
 	}
 
 stmt_switch :
