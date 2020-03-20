@@ -7,6 +7,8 @@ import (
 )
 
 func TestBasicOperators(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `]`, ParseError: fmt.Errorf("syntax error")},
 
@@ -169,6 +171,8 @@ func TestBasicOperators(t *testing.T) {
 }
 
 func TestComparisonOperators(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `1++ == 2`, RunError: fmt.Errorf("invalid operation"), RunOutput: nil},
 		{Script: `2 == 1++`, RunError: fmt.Errorf("invalid operation"), RunOutput: nil},
@@ -382,6 +386,8 @@ func TestComparisonOperators(t *testing.T) {
 }
 
 func TestThrows(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `throw(1++)`, RunError: fmt.Errorf("invalid operation")},
 		// {Script: `throw(a)`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("invalid operation")},
@@ -423,6 +429,8 @@ func TestThrows(t *testing.T) {
 }
 
 func TestTernaryOperator(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = 1 ? 2 : panic(2)`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = c ? a : b`, RunError: fmt.Errorf("undefined symbol 'c'")},
@@ -464,6 +472,8 @@ func TestTernaryOperator(t *testing.T) {
 }
 
 func TestNilCoalescingOperator(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `nil ?? nil`, RunOutput: nil},
 		{Script: `false ?? nil`, RunOutput: false},
@@ -493,6 +503,8 @@ func TestNilCoalescingOperator(t *testing.T) {
 }
 
 func TestIf(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `if false {} else if 1++ {}`, RunError: fmt.Errorf("invalid operation")},
@@ -543,6 +555,8 @@ func TestIf(t *testing.T) {
 }
 
 func TestSwitch(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// test parse errors
 		{Script: `switch {}`, ParseError: fmt.Errorf("syntax error")},
@@ -638,6 +652,8 @@ switch a {
 }
 
 func TestForLoop(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `for in [1] { }`, ParseError: fmt.Errorf("missing identifier")},
 		{Script: `for a, b, c in [1] { }`, ParseError: fmt.Errorf("too many identifiers")},
@@ -836,6 +852,8 @@ func TestForLoop(t *testing.T) {
 }
 
 func TestItemInList(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `"a" in ["a"]`, RunOutput: true},
 		{Script: `"a" in ["b"]`, RunOutput: false},
@@ -971,6 +989,8 @@ func TestItemInList(t *testing.T) {
 }
 
 func TestOperatorPrecedence(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// test && > ||
 		{Script: `true || true && false`, RunOutput: true},
@@ -1013,6 +1033,8 @@ func TestOperatorPrecedence(t *testing.T) {
 }
 
 func TestTry(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `try { 1++ } catch { 1++ }`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `try { 1++ } catch a { return a }`, RunOutput: fmt.Errorf("invalid operation")},

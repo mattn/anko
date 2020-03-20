@@ -157,7 +157,7 @@ println("Hello World :)")
 
 func Example_vmQuickStart() {
 	// "github.com/mattn/anko/env"
-	
+
 	e := env.NewEnv()
 
 	err := e.Define("println", fmt.Println)
@@ -195,11 +195,21 @@ a["c"] = 3
 println(a["b"]) // 2
 println(a.c) // 3
 
+// struct
+a = make(struct {
+	A int64,
+	B float64
+})
+a.A = 4
+a.B = 5.5
+println(a.A) // 4
+println(a.B) // 5.5
+
 // function
 func a (x) {
 	println(x + 1)
 }
-a(3) // 4
+a(5) // 6
 `
 
 	_, err = vm.Execute(e, nil, script)
@@ -216,4 +226,6 @@ a(3) // 4
 	// 2
 	// 3
 	// 4
+	// 5.5
+	// 6
 }

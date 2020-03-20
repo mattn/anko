@@ -21,14 +21,18 @@ const (
 	TypeMap
 	// TypeChan chan type
 	TypeChan
+	// TypeStructType struct type
+	TypeStructType
 )
 
 // TypeStruct is the type and sub-types
 type TypeStruct struct {
-	Kind       TypeKind
-	Env        []string
-	Name       string
-	Dimensions int
-	SubType    *TypeStruct
-	Key        *TypeStruct
+	Kind        TypeKind
+	Env         []string
+	Name        string
+	Dimensions  int
+	SubType     *TypeStruct
+	Key         *TypeStruct
+	StructNames []string
+	StructTypes []*TypeStruct
 }

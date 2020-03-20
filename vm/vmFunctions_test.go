@@ -12,6 +12,8 @@ import (
 )
 
 func TestReturns(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `return 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `return 1, 1++`, RunError: fmt.Errorf("invalid operation")},
@@ -166,6 +168,8 @@ func TestReturns(t *testing.T) {
 }
 
 func TestFunctions(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a()`, Input: map[string]interface{}{"a": reflect.Value{}}, RunError: fmt.Errorf("cannot call type struct")},
 		{Script: `a = nil; a()`, RunError: fmt.Errorf("cannot call type interface"), Output: map[string]interface{}{"a": nil}},
@@ -379,6 +383,8 @@ func TestFunctions(t *testing.T) {
 }
 
 func TestPointerFunctions(t *testing.T) {
+	t.Parallel()
+
 	testFunctionPointer := func(b interface{}) string {
 		rv := reflect.ValueOf(b)
 		if !rv.IsValid() {
@@ -413,6 +419,8 @@ func TestPointerFunctions(t *testing.T) {
 }
 
 func TestVariadicFunctions(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// params Variadic arg !Variadic
 		{Script: `func a(b...) { return b }; a()`, RunOutput: []interface{}{}},
@@ -474,6 +482,8 @@ func TestVariadicFunctions(t *testing.T) {
 }
 
 func TestFunctionsInArraysAndMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = [func () { return nil }]; a[0]()`, RunOutput: nil},
 		{Script: `a = [func () { return true }]; a[0]()`, RunOutput: true},
@@ -515,9 +525,11 @@ func TestFunctionsInArraysAndMaps(t *testing.T) {
 }
 
 func TestFunctionConversions(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `b = func(c){ return c }; a("x", b)`, Input: map[string]interface{}{"a": func(b string, c func(string) string) string { return c(b) }}, RunOutput: "x"},
-		{Script: `b = make(struct); b.A = func (c, d) { return c == d }; b.A(2, 2)`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `b = make(struct1); b.A = func (c, d) { return c == d }; b.A(2, 2)`, Types: map[string]interface{}{"struct1": &struct {
 			A func(int, int) bool
 		}{}},
 			RunOutput: true},
@@ -668,6 +680,8 @@ func TestFunctionConversions(t *testing.T) {
 }
 
 func TestVariadicFunctionConversions(t *testing.T) {
+	t.Parallel()
+
 	testSumFunc := func(nums ...int64) int64 {
 		var total int64
 		for _, num := range nums {
@@ -690,6 +704,8 @@ func TestVariadicFunctionConversions(t *testing.T) {
 }
 
 func TestLen(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `len(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `len(true)`, RunError: fmt.Errorf("type bool does not support len operation")},
@@ -758,6 +774,8 @@ func TestLen(t *testing.T) {
 }
 
 func TestCallFunctionWithVararg(t *testing.T) {
+	t.Parallel()
+
 	e := env.NewEnv()
 	err := e.Define("X", func(args ...string) []string {
 		return args
@@ -780,6 +798,8 @@ func TestCallFunctionWithVararg(t *testing.T) {
 }
 
 func TestGoFunctionConcurrency(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `
 waitGroup.Add(5);

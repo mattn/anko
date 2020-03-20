@@ -343,6 +343,30 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 			return nil
 		}
 		return reflect.ChanOf(reflect.BothDir, t)
+	case ast.TypeStructType:
+		var t reflect.Type
+		fields := make([]reflect.StructField, 0, len(typeStruct.StructNames))
+		for i := 0; i < len(typeStruct.StructNames); i++ {
+			t = makeType(runInfo, typeStruct.StructTypes[i])
+			if runInfo.err != nil {
+				return nil
+			}
+			if t == nil {
+				return nil
+			}
+			fields = append(fields, reflect.StructField{Name: typeStruct.StructNames[i], Type: t})
+		}
+		if !runInfo.options.Debug {
+			// captures panic
+			defer func() {
+				if recoverResult := recover(); recoverResult != nil {
+					runInfo.err = fmt.Errorf("%v", recoverResult)
+					t = nil
+				}
+			}()
+		}
+		t = reflect.StructOf(fields)
+		return t
 	default:
 		runInfo.err = fmt.Errorf("unknown kind")
 		return nil
