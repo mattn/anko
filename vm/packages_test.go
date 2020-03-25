@@ -2,13 +2,44 @@ package vm
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/mattn/anko/env"
 	_ "github.com/mattn/anko/packages"
 )
 
+func TestImport(t *testing.T) {
+	tests := []Test{
+		{Script: `a = import(1++)`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `a = import(true)`, RunError: fmt.Errorf("invalid type conversion")},
+		{Script: `a = import("foo")`, RunError: fmt.Errorf("package not found: foo")},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+
+	envPackages := env.Packages
+	envPackageTypes := env.PackageTypes
+
+	env.Packages = map[string]map[string]reflect.Value{"testPackage": map[string]reflect.Value{"a.b": reflect.ValueOf(1)}}
+	tests = []Test{
+		{Script: `a = import("testPackage")`, RunError: fmt.Errorf("import DefineValue error: symbol contains '.'")},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+
+	env.Packages = map[string]map[string]reflect.Value{"testPackage": map[string]reflect.Value{"a": reflect.ValueOf(1)}}
+	env.PackageTypes = map[string]map[string]reflect.Type{"testPackage": map[string]reflect.Type{"a.b": reflect.TypeOf(1)}}
+	tests = []Test{
+		{Script: `a = import("testPackage")`, RunError: fmt.Errorf("import DefineReflectType error: symbol contains '.'")},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+
+	env.PackageTypes = envPackageTypes
+	env.Packages = envPackages
+}
+
 func TestPackagesBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("a"); if err != nil { return err }; n`, RunOutput: 1},
 		{Script: `bytes = import("bytes"); a = make(bytes.Buffer); n, err = a.WriteString("a"); if err != nil { return err }; a.String()`, RunOutput: "a"},
@@ -17,6 +48,8 @@ func TestPackagesBytes(t *testing.T) {
 }
 
 func TestPackagesJson(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `json = import("encoding/json"); a = make(map[string]interface); a["b"] = "b"; c, err = json.Marshal(a); err`, Output: map[string]interface{}{"a": map[string]interface{}{"b": "b"}, "c": []byte(`{"b":"b"}`)}},
 		{Script: `json = import("encoding/json"); b = 1; err = json.Unmarshal(a, &b); err`, Input: map[string]interface{}{"a": []byte(`{"b": "b"}`)}, Output: map[string]interface{}{"a": []byte(`{"b": "b"}`), "b": map[string]interface{}{"b": "b"}}},
@@ -27,6 +60,8 @@ func TestPackagesJson(t *testing.T) {
 }
 
 func TestPackagesRegexp(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("simple")`, RunOutput: true},
 		{Script: `regexp = import("regexp"); re = regexp.MustCompile("^simple$"); re.MatchString("no match")`, RunOutput: false},
@@ -52,6 +87,8 @@ func TestPackagesRegexp(t *testing.T) {
 }
 
 func TestPackagesSort(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `sort = import("sort"); a = make([]int); a += [5, 3, 1, 4, 2]; sort.Ints(a); a`, RunOutput: []int{1, 2, 3, 4, 5}, Output: map[string]interface{}{"a": []int{1, 2, 3, 4, 5}}},
 		{Script: `sort = import("sort"); a = make([]float64); a += [5.5, 3.3, 1.1, 4.4, 2.2]; sort.Float64s(a); a`, RunOutput: []float64{1.1, 2.2, 3.3, 4.4, 5.5}, Output: map[string]interface{}{"a": []float64{1.1, 2.2, 3.3, 4.4, 5.5}}},
@@ -72,6 +109,8 @@ a
 }
 
 func TestPackagesStrconv(t *testing.T) {
+	t.Parallel()
+
 	var toRune = func(s string) rune {
 		if len(s) == 0 {
 			return 0
@@ -114,6 +153,8 @@ func TestPackagesStrconv(t *testing.T) {
 }
 
 func TestPackagesStrings(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `strings = import("strings"); a = " one two "; b = strings.TrimSpace(a)`, RunOutput: "one two", Output: map[string]interface{}{"a": " one two ", "b": "one two"}},
 		{Script: `strings = import("strings"); a = "a b c d"; b = strings.Split(a, " ")`, RunOutput: []string{"a", "b", "c", "d"}, Output: map[string]interface{}{"a": "a b c d", "b": []string{"a", "b", "c", "d"}}},
@@ -123,6 +164,8 @@ func TestPackagesStrings(t *testing.T) {
 }
 
 func TestPackagesSync(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `sync = import("sync"); once = make(sync.Once); a = []; func add() { a += "a" }; once.Do(add); once.Do(add); a`, RunOutput: []interface{}{"a"}, Output: map[string]interface{}{"a": []interface{}{"a"}}},
 		{Script: `sync = import("sync"); waitGroup = make(sync.WaitGroup); waitGroup.Add(2);  func done() { waitGroup.Done() }; go done(); go done(); waitGroup.Wait(); "a"`, RunOutput: "a"},
@@ -131,6 +174,8 @@ func TestPackagesSync(t *testing.T) {
 }
 
 func TestPackagesTime(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `time = import("time"); a = make(time.Time); a.IsZero()`, RunOutput: true},
 	}
@@ -138,6 +183,8 @@ func TestPackagesTime(t *testing.T) {
 }
 
 func TestPackagesURL(t *testing.T) {
+	t.Parallel()
+
 	e := env.NewEnv()
 	value, err := Execute(e, nil, `
 url = import("net/url")

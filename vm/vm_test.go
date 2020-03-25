@@ -15,6 +15,8 @@ import (
 )
 
 func TestNumbers(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: ``},
 		{Script: `;`},
@@ -71,6 +73,8 @@ func TestNumbers(t *testing.T) {
 }
 
 func TestStrings(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a`, Input: map[string]interface{}{"a": 'a'}, RunOutput: 'a', Output: map[string]interface{}{"a": 'a'}},
 		{Script: `a.b`, Input: map[string]interface{}{"a": 'a'}, RunError: fmt.Errorf("type int32 does not support member operation"), Output: map[string]interface{}{"a": 'a'}},
@@ -209,6 +213,8 @@ func TestStrings(t *testing.T) {
 }
 
 func TestVar(t *testing.T) {
+	t.Parallel()
+
 	testInput1 := map[string]interface{}{"b": func() {}}
 	tests := []Test{
 		// simple one variable
@@ -393,6 +399,8 @@ a  =  1;
 }
 
 func TestModule(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `module a.b { }`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `module a { 1++ }`, RunError: fmt.Errorf("invalid operation")},
@@ -444,6 +452,8 @@ func TestModule(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `new(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `new(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
@@ -464,29 +474,44 @@ func TestNew(t *testing.T) {
 		{Script: `a = new([]int64); *a`, RunOutput: []int64{}},
 
 		// map
-		{Script: `a = new(map [string]int64); *a`, RunOutput: map[string]int64{}},
+		{Script: `a = new(map[string]int64); *a`, RunOutput: map[string]int64{}},
 
 		// chan
 		{Script: `a = new(chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
 		{Script: `a = new(chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
+
+		// struct
+		{Script: `a = new(struct{ A int64 }); *a`, RunOutput: struct{ A int64 }{}},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestMake(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
-		{Script: `make(map [[]string]int64)`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
+		{Script: `make(map[[]string]int64)`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
 	}
 	runTests(t, tests, nil, &Options{Debug: false})
 
 	tests = []Test{
+		{Script: `make(struct {})`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `make(struct { , })`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `make(struct { A map })`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `make(struct { , A int64})`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `make(struct { A int64, })`, ParseError: fmt.Errorf("syntax error")},
+
 		{Script: `make(foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"a": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make(a.b)`, Types: map[string]interface{}{"b": true}, RunError: fmt.Errorf("no namespace called: a")},
 		{Script: `make([]int64, 1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `make([]int64, 1, 1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `make([]int64, 2, 1)`, RunError: fmt.Errorf("make slice len > cap")},
+		{Script: `make(map[foo]int64)`, RunError: fmt.Errorf("undefined type 'foo'")},
+		{Script: `make(map[int64]foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
+		{Script: `make(chan foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 		{Script: `make(chan int64, 1++)`, RunError: fmt.Errorf("invalid operation")},
+		{Script: `make(struct { A foo })`, RunError: fmt.Errorf("undefined type 'foo'")},
 
 		// nill type
 		{Script: `make(nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
@@ -495,6 +520,7 @@ func TestMake(t *testing.T) {
 		{Script: `make(map[nilT]string)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 		{Script: `make(map[string]nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 		{Script: `make(chan nilT)`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
+		{Script: `make(struct { A nilT })`, Types: map[string]interface{}{"nilT": nil}, RunError: fmt.Errorf("cannot make type nil")},
 
 		// default
 		{Script: `make(bool)`, RunOutput: false},
@@ -509,7 +535,7 @@ func TestMake(t *testing.T) {
 		{Script: `a = make(**int64); **a`, RunOutput: int64(0)},
 		{Script: `a = make(***int64); ***a`, RunOutput: int64(0)},
 		{Script: `a = make(*[]int64); *a`, RunOutput: []int64{}},
-		{Script: `a = make(*map [string]int64); *a`, RunOutput: map[string]int64{}},
+		{Script: `a = make(*map[string]int64); *a`, RunOutput: map[string]int64{}},
 		{Script: `a = make(*chan int64); go func(){ (*a) <- 1 }(); <- *a`, RunOutput: int64(1)},
 		{Script: `a = make(*chan int64); go func(){ *a <- 1 }(); <- *a`, RunOutput: int64(1)},
 
@@ -519,29 +545,38 @@ func TestMake(t *testing.T) {
 		{Script: `a = make([]int64, 1, 2); a[0]`, RunOutput: int64(0)},
 		{Script: `make([]*int64)`, RunOutput: []*int64{}},
 		{Script: `make([][]int64)`, RunOutput: [][]int64{}},
-		{Script: `make([]map [string]int64)`, RunOutput: []map[string]int64{}},
+		{Script: `make([]map[string]int64)`, RunOutput: []map[string]int64{}},
 
 		// map
-		{Script: `make(map [string]int64)`, RunOutput: map[string]int64{}},
-		{Script: `make(map [string]*int64)`, RunOutput: map[string]*int64{}},
-		{Script: `make(map [*string]int64)`, RunOutput: map[*string]int64{}},
-		{Script: `make(map [*string]*int64)`, RunOutput: map[*string]*int64{}},
-		{Script: `make(map [string][]int64)`, RunOutput: map[string][]int64{}},
-		{Script: `make(map [string]chan int64)`, RunOutput: map[string]chan int64{}},
-		{Script: `make(map [chan string]int64)`, RunOutput: map[chan string]int64{}},
+		{Script: `make(map[string]int64)`, RunOutput: map[string]int64{}},
+		{Script: `make(map[string]*int64)`, RunOutput: map[string]*int64{}},
+		{Script: `make(map[*string]int64)`, RunOutput: map[*string]int64{}},
+		{Script: `make(map[*string]*int64)`, RunOutput: map[*string]*int64{}},
+		{Script: `make(map[string][]int64)`, RunOutput: map[string][]int64{}},
+		{Script: `make(map[string]chan int64)`, RunOutput: map[string]chan int64{}},
+		{Script: `make(map[chan string]int64)`, RunOutput: map[chan string]int64{}},
 
 		// chan
 		{Script: `a = make(chan int64); go func(){ a <- 1 }(); <- a`, RunOutput: int64(1)},
 		{Script: `a = make(chan int64, 1); a <- 1; <- a`, RunOutput: int64(1)},
 		{Script: `a = make(chan *int64, 1); b = 1; a <- &b; c = <- a; *c`, RunOutput: int64(1)},
 		{Script: `a = make(chan []int64, 1); a <- [1]; <- a`, RunOutput: []int64{1}},
-		{Script: `a = make(chan map [string]int64, 1); b = make(map [string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
+		{Script: `a = make(chan map[string]int64, 1); b = make(map[string]int64); a <- b; <- a`, RunOutput: map[string]int64{}},
 		{Script: `a = make(chan int64, 1); b = &a; *b <- 1; <- *b`, RunOutput: int64(1)},
+
+		// struct
+		{Script: `make(struct { A int64 })`, RunOutput: struct{ A int64 }{}},
+		{Script: `make(struct { A *int64 })`, RunOutput: struct{ A *int64 }{}},
+		{Script: `make(struct { A []int64 })`, RunOutput: struct{ A []int64 }{A: []int64{}}},
+		{Script: `make(struct { A map[string]int64 })`, RunOutput: struct{ A map[string]int64 }{A: map[string]int64{}}},
+		{Script: `a = make(struct { A chan int64 }); go func(){ a.A <- 1 }(); <- a.A`, RunOutput: int64(1)},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
 
 func TestMakeType(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `make(type a, 1++)`, RunError: fmt.Errorf("invalid operation")},
 
@@ -555,6 +590,8 @@ func TestMakeType(t *testing.T) {
 }
 
 func TestReferencingAndDereference(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// TOFIX:
 		// {Script: `a = 1; b = &a; *b = 2; *b`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
@@ -563,6 +600,8 @@ func TestReferencingAndDereference(t *testing.T) {
 }
 
 func TestChan(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// send on closed channel
 		{Script: `a = make(chan int64, 2); close(a); a <- 1`, RunError: fmt.Errorf("send on closed channel")},
@@ -687,6 +726,8 @@ func TestChan(t *testing.T) {
 }
 
 func TestVMDelete(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `delete(1++)`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete(1)`, RunError: fmt.Errorf("first argument to delete cannot be type int64")},
@@ -732,6 +773,8 @@ func TestVMDelete(t *testing.T) {
 }
 
 func TestComment(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `# 1`},
 		{Script: `# 1;`},
@@ -1071,6 +1114,8 @@ func TestContextConcurrency(t *testing.T) {
 }
 
 func TestContextFunction(t *testing.T) {
+	t.Parallel()
+
 	e := env.NewEnv()
 	script := `
 		func myFunc(myVar) {
@@ -1099,6 +1144,8 @@ func TestContextFunction(t *testing.T) {
 }
 
 func TestAssignToInterface(t *testing.T) {
+	t.Parallel()
+
 	e := env.NewEnv()
 	X := new(struct {
 		Stdout io.Writer
@@ -1119,6 +1166,8 @@ func TestAssignToInterface(t *testing.T) {
 
 // TestValueEqual do some basic ValueEqual tests for coverage
 func TestValueEqual(t *testing.T) {
+	t.Parallel()
+
 	result := valueEqual(true, true)
 	if result != true {
 		t.Fatal("ValueEqual")
@@ -1135,6 +1184,8 @@ func TestValueEqual(t *testing.T) {
 
 // TestUnknownCases tests switch cases that are the unknown cases
 func TestUnknownCases(t *testing.T) {
+	t.Parallel()
+
 	oneLiteral := &ast.LiteralExpr{Literal: reflect.ValueOf(int64(1))}
 	type (
 		BadStmt struct {

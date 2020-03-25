@@ -95,11 +95,21 @@ a["c"] = 3
 println(a["b"]) // 2
 println(a.c) // 3
 
+// struct
+a = make(struct {
+	A int64,
+	B float64
+})
+a.A = 4
+a.B = 5.5
+println(a.A) // 4
+println(a.B) // 5.5
+
 // function
 func a (x) {
 	println(x + 1)
 }
-a(3) // 4
+a(5) // 6
 ```
 
 

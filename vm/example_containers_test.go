@@ -155,6 +155,43 @@ println(a["b"])
 	// 2
 }
 
+func Example_vmStructs() {
+	e := env.NewEnv()
+
+	err := e.Define("println", fmt.Println)
+	if err != nil {
+		log.Fatalf("define error: %v\n", err)
+	}
+
+	script := `
+a = make(struct {
+	A int64,
+	B float64
+})
+println(a)
+
+a.A = 1
+println(a)
+println(a.A)
+
+a.B = 2.5
+println(a)
+println(a.B)
+`
+
+	_, err = vm.Execute(e, nil, script)
+	if err != nil {
+		log.Fatalf("execute error: %v\n", err)
+	}
+
+	// output:
+	// {0 0}
+	// {1 0}
+	// 1
+	// {1 2.5}
+	// 2.5
+}
+
 func Example_vmModules() {
 
 	e := env.NewEnv()

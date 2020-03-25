@@ -6,6 +6,8 @@ import (
 )
 
 func TestString(t *testing.T) {
+	t.Parallel()
+
 	env := NewEnv()
 	env.Define("a", "a")
 	output := env.String()
@@ -40,6 +42,8 @@ string = string
 }
 
 func TestGetEnvFromPath(t *testing.T) {
+	t.Parallel()
+
 	env := NewEnv()
 	a, err := env.NewModule("a")
 	if err != nil {
@@ -283,6 +287,8 @@ func TestGetEnvFromPath(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
+	t.Parallel()
+
 	parent := NewEnv()
 	parent.Define("a", "a")
 	parent.DefineType("b", []bool{})
@@ -356,6 +362,8 @@ func TestCopy(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
+	t.Parallel()
+
 	parent := NewEnv()
 	parent.Define("a", "a")
 	env := parent.NewEnv()

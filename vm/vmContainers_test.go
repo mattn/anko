@@ -11,6 +11,8 @@ import (
 )
 
 func TestSlices(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `[1++]`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1++[0]`, RunError: fmt.Errorf("invalid operation")},
@@ -194,6 +196,8 @@ func TestSlices(t *testing.T) {
 }
 
 func TestSlicesAutoAppend(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a[2]`, Input: map[string]interface{}{"a": []bool{true, false}}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []bool{true, false}}},
 		{Script: `a[2]`, Input: map[string]interface{}{"a": []int32{1, 2}}, RunError: fmt.Errorf("index out of range"), Output: map[string]interface{}{"a": []int32{1, 2}}},
@@ -261,6 +265,8 @@ func TestSlicesAutoAppend(t *testing.T) {
 }
 
 func TestMakeSlices(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `make([]foo)`, RunError: fmt.Errorf("undefined type 'foo'")},
 
@@ -379,6 +385,8 @@ func TestMakeSlices(t *testing.T) {
 }
 
 func TestSliceOfSlices(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = [1, 2]; a[:]`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `(1++)[0:0]`, RunError: fmt.Errorf("invalid operation")},
@@ -582,6 +590,8 @@ func TestSliceOfSlices(t *testing.T) {
 }
 
 func TestSliceAppendSlices(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a += 1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
 		{Script: `a += 1.1`, Input: map[string]interface{}{"a": []bool{true}}, RunError: fmt.Errorf("invalid type conversion")},
@@ -844,6 +854,8 @@ func TestSliceAppendSlices(t *testing.T) {
 }
 
 func TestMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		// TOFIX: this should have a ParseError
 		{Script: `{ , }`, RunOutput: map[interface{}]interface{}{}},
@@ -875,6 +887,8 @@ func TestMaps(t *testing.T) {
 		{Script: `{1: "b"}`, RunOutput: map[interface{}]interface{}{int64(1): "b"}},
 
 		{Script: `a = {}`, RunOutput: map[interface{}]interface{}{}, Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = map{}`, RunOutput: map[interface{}]interface{}{}, Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = map {}`, RunOutput: map[interface{}]interface{}{}, Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
 		{Script: `a = {"b": nil}`, RunOutput: map[interface{}]interface{}{"b": nil}, Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": nil}}},
 		{Script: `a = {"b": true}`, RunOutput: map[interface{}]interface{}{"b": true}, Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": true}}},
 		{Script: `a = {"b": 1}`, RunOutput: map[interface{}]interface{}{"b": int64(1)}, Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": int64(1)}}},
@@ -1122,6 +1136,8 @@ func TestMaps(t *testing.T) {
 }
 
 func TestExistenceOfKeyInMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = {"b":"b"}; v, ok = a[1++]`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `a = {"b":"b"}; b.c, ok = a["b"]`, RunError: fmt.Errorf("undefined symbol 'b'")},
@@ -1136,6 +1152,8 @@ func TestExistenceOfKeyInMaps(t *testing.T) {
 }
 
 func TestDeleteMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `delete(1++, "b")`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `delete({}, 1++)`, RunError: fmt.Errorf("invalid operation")},
@@ -1181,6 +1199,8 @@ func TestDeleteMaps(t *testing.T) {
 }
 
 func TestMakeMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `map[[]string]string {"a":"a"}`, RunError: fmt.Errorf("reflect.MapOf: invalid key type []string")},
 	}
@@ -1245,6 +1265,8 @@ func TestMakeMaps(t *testing.T) {
 }
 
 func TestSlicesAndMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = [{"b": nil}]`, RunOutput: []interface{}{map[interface{}]interface{}{"b": interface{}(nil)}}, Output: map[string]interface{}{"a": []interface{}{map[interface{}]interface{}{"b": interface{}(nil)}}}},
 		{Script: `a = [{"b": true}]`, RunOutput: []interface{}{map[interface{}]interface{}{"b": interface{}(true)}}, Output: map[string]interface{}{"a": []interface{}{map[interface{}]interface{}{"b": interface{}(true)}}}},
@@ -1325,6 +1347,8 @@ func TestSlicesAndMaps(t *testing.T) {
 }
 
 func TestMakeSlicesAndMaps(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `make([]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: []map[string]interface{}{}},
 		{Script: `make([][]aMap)`, Types: map[string]interface{}{"aMap": map[string]interface{}{}}, RunOutput: [][]map[string]interface{}{}},
@@ -1338,6 +1362,8 @@ func TestMakeSlicesAndMaps(t *testing.T) {
 }
 
 func TestMakeSlicesData(t *testing.T) {
+	t.Parallel()
+
 	stmts, err := parser.ParseSrc("make(slice)")
 	if err != nil {
 		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
@@ -1402,6 +1428,8 @@ func TestMakeSlicesData(t *testing.T) {
 }
 
 func TestMakeMapsData(t *testing.T) {
+	t.Parallel()
+
 	stmts, err := parser.ParseSrc("make(aMap)")
 	if err != nil {
 		t.Errorf("ParseSrc error - received %v - expected: %v", err, nil)
@@ -1451,6 +1479,8 @@ func TestMakeMapsData(t *testing.T) {
 }
 
 func TestStructs(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a["B"]`, Input: map[string]interface{}{"a": struct {
 			A interface{}
@@ -1746,10 +1776,12 @@ func TestStructs(t *testing.T) {
 }
 
 func TestMakeStructs(t *testing.T) {
+	t.Parallel()
+
 	tests := []Test{
 		{Script: `a = make(struct1)`, Types: map[string]interface{}{"struct1": &testStruct1{}}, RunOutput: &testStruct1{}, Output: map[string]interface{}{"a": &testStruct1{}}},
 		{Script: `a = make(struct2)`, Types: map[string]interface{}{"struct2": &testStruct2{}}, RunOutput: &testStruct2{}, Output: map[string]interface{}{"a": &testStruct2{}}},
-		{Script: `make(struct)`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `make(struct1)`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -1758,7 +1790,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}},
 
-		{Script: `a = make(struct)`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `a = make(struct1)`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -1771,7 +1803,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{}}},
 
-		{Script: `a = make(struct); a.A = 3; a.B = 4`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `a = make(struct1); a.A = 3; a.B = 4`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -1781,7 +1813,7 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{Script: `a = make(struct); a = *a; a.A = 3; a.B = 4`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `a = make(struct1); a = *a; a.A = 3; a.B = 4`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
@@ -1791,16 +1823,103 @@ func TestMakeStructs(t *testing.T) {
 				B interface{}
 			}{A: interface{}(int64(3)), B: interface{}(int64(4))}}},
 
-		{Script: `a = make(struct); a.A = func () { return 1 }; a.A()`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `a = make(struct1); a.A = func () { return 1 }; a.A()`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
 			RunOutput: int64(1)},
-		{Script: `a = make(struct); a.A = func () { return 1 }; a = *a; a.A()`, Types: map[string]interface{}{"struct": &struct {
+		{Script: `a = make(struct1); a.A = func () { return 1 }; a = *a; a.A()`, Types: map[string]interface{}{"struct1": &struct {
 			A interface{}
 			B interface{}
 		}{}},
 			RunOutput: int64(1)},
+
+		// make struct - new lines
+		{Script: `make(struct { A int64, B float64 })`, RunOutput: struct {
+			A int64
+			B float64
+		}{}},
+		{Script: `make(struct {
+A int64, B float64 })`, RunOutput: struct {
+			A int64
+			B float64
+		}{}},
+		{Script: `make(struct { A int64, 
+B float64 })`, RunOutput: struct {
+			A int64
+			B float64
+		}{}},
+		{Script: `make(struct { A int64, B float64
+})`, RunOutput: struct {
+			A int64
+			B float64
+		}{}},
+		{Script: `
+make(struct {
+	A int64,
+	B float64
+})`, RunOutput: struct {
+			A int64
+			B float64
+		}{}},
+
+		// make struct - with basic types
+		{Script: `
+make(struct {
+	A bool,
+	B int32,
+	C int64,
+	D float32,
+	E float64,
+	F string
+})`, RunOutput: struct {
+			A bool
+			B int32
+			C int64
+			D float32
+			E float64
+			F string
+		}{}},
+
+		// make struct - with other types
+		{Script: `
+make(struct {
+	A *int64,
+	B []int64,
+	C map[string]int64
+})`, RunOutput: struct {
+			A *int64
+			B []int64
+			C map[string]int64
+		}{A: (*int64)(nil), B: []int64{}, C: map[string]int64{}}},
+
+		// make struct within structs
+		{Script: `
+make(struct {
+	A struct {
+		AA int64,
+		AB float64
+	},
+	B struct {
+		BA []int64,
+		BB map[string]int64
+	}
+})`, RunOutput: struct {
+			A struct {
+				AA int64
+				AB float64
+			}
+			B struct {
+				BA []int64
+				BB map[string]int64
+			}
+		}{A: struct {
+			AA int64
+			AB float64
+		}{AA: 0, AB: 0}, B: struct {
+			BA []int64
+			BB map[string]int64
+		}{BA: []int64{}, BB: map[string]int64{}}}},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
