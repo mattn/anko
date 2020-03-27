@@ -96,6 +96,22 @@ func newStringError(pos ast.Pos, err string) error {
 	return &Error{Message: err, Pos: pos.Position()}
 }
 
+// recoverFunc generic recover function
+func recoverFunc(runInfo *runInfoStruct) {
+	recoverInterface := recover()
+	if recoverInterface == nil {
+		return
+	}
+	switch value := recoverInterface.(type) {
+	case *Error:
+		runInfo.err = value
+	case error:
+		runInfo.err = value
+	default:
+		runInfo.err = fmt.Errorf("%v", recoverInterface)
+	}
+}
+
 func isNil(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
@@ -320,12 +336,7 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 		}
 		if !runInfo.options.Debug {
 			// captures panic
-			defer func() {
-				if recoverResult := recover(); recoverResult != nil {
-					runInfo.err = fmt.Errorf("%v", recoverResult)
-					t = nil
-				}
-			}()
+			defer recoverFunc(runInfo)
 		}
 		t = reflect.MapOf(key, t)
 		return t
@@ -358,12 +369,7 @@ func makeType(runInfo *runInfoStruct, typeStruct *ast.TypeStruct) reflect.Type {
 		}
 		if !runInfo.options.Debug {
 			// captures panic
-			defer func() {
-				if recoverResult := recover(); recoverResult != nil {
-					runInfo.err = fmt.Errorf("%v", recoverResult)
-					t = nil
-				}
-			}()
+			defer recoverFunc(runInfo)
 		}
 		t = reflect.StructOf(fields)
 		return t

@@ -20,14 +20,14 @@ func TestImport(t *testing.T) {
 	envPackages := env.Packages
 	envPackageTypes := env.PackageTypes
 
-	env.Packages = map[string]map[string]reflect.Value{"testPackage": map[string]reflect.Value{"a.b": reflect.ValueOf(1)}}
+	env.Packages = map[string]map[string]reflect.Value{"testPackage": {"a.b": reflect.ValueOf(1)}}
 	tests = []Test{
 		{Script: `a = import("testPackage")`, RunError: fmt.Errorf("import DefineValue error: symbol contains '.'")},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 
-	env.Packages = map[string]map[string]reflect.Value{"testPackage": map[string]reflect.Value{"a": reflect.ValueOf(1)}}
-	env.PackageTypes = map[string]map[string]reflect.Type{"testPackage": map[string]reflect.Type{"a.b": reflect.TypeOf(1)}}
+	env.Packages = map[string]map[string]reflect.Value{"testPackage": {"a": reflect.ValueOf(1)}}
+	env.PackageTypes = map[string]map[string]reflect.Type{"testPackage": {"a.b": reflect.TypeOf(1)}}
 	tests = []Test{
 		{Script: `a = import("testPackage")`, RunError: fmt.Errorf("import DefineReflectType error: symbol contains '.'")},
 	}

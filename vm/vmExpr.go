@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/mattn/anko/ast"
@@ -703,11 +702,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		}}
 		if !runInfo.options.Debug {
 			// captures panic
-			defer func() {
-				if recoverResult := recover(); recoverResult != nil {
-					runInfo.err = fmt.Errorf("%v", recoverResult)
-				}
-			}()
+			defer recoverFunc(runInfo)
 		}
 		chosen, _, _ = reflect.Select(cases)
 		if chosen == 0 {

@@ -161,7 +161,7 @@ func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 		// returns normal VM reflect.Value form
 		rv, err := processCallReturnValues(rvs, true, false)
 		if err != nil {
-			panic("function run error: " + err.Error())
+			panic(err)
 		}
 
 		if rt.NumOut() < 1 {
