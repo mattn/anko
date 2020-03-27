@@ -1164,6 +1164,53 @@ func TestAssignToInterface(t *testing.T) {
 	}
 }
 
+func TestReflectPanicOnUndefinedSymbol(t *testing.T) {
+	t.Parallel()
+
+	type Dog struct {
+		Bark func() string
+	}
+	expectedErr := Error{
+		Message:"undefined symbol 'x'",
+		Pos:ast.Position{
+			Line:2,
+			Column:1,
+		},
+	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			if err, ok := err.(*Error); !ok || *err != expectedErr {
+				t.Errorf("execute error - received %#v - expected: %#v", err, expectedErr)
+			}
+		}
+	}()
+
+	baseEnv := env.NewEnv()
+	script := "# panic test\nfunc hi(){x}\ncreate(hi)"
+	err := baseEnv.Define("create", func(bark func() string) *Dog {
+		return &Dog{
+			Bark: bark,
+		}
+	})
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	err = baseEnv.Define("println", fmt.Println)
+	if err != nil {
+		t.Errorf("Define error: %v", err)
+	}
+	dogOut, err := Execute(baseEnv, nil, script)
+	if err == nil {
+		if dog, ok := dogOut.(*Dog); ok {
+			dog.Bark()
+		}
+	}
+	if err != nil {
+		t.Errorf("execute error - received %#v - expected: %#v", err, nil)
+	}
+}
+
 // TestValueEqual do some basic ValueEqual tests for coverage
 func TestValueEqual(t *testing.T) {
 	t.Parallel()
