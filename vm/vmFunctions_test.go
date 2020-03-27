@@ -658,7 +658,7 @@ func TestFunctionConversions(t *testing.T) {
 		{Script: `b = func(){ return 1++ }; c = a(b)`,
 			Input: map[string]interface{}{"a": func(b func() bool) bool {
 				return b()
-			}}, RunError: fmt.Errorf("function run error: invalid operation")},
+			}}, RunError: fmt.Errorf("function run error: invalid operation - at line 1, column 5")},
 		{Script: `b = func(){ return true }; c = a(b)`,
 			Input: map[string]interface{}{"a": func(b func() string) string {
 				return b()

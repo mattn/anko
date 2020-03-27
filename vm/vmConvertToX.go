@@ -162,7 +162,8 @@ func convertVMFunctionToType(rv reflect.Value, rt reflect.Type) (reflect.Value, 
 		rv, err := processCallReturnValues(rvs, true, false)
 		if err != nil {
 			if vmErr, ok := err.(*Error); ok {
-				panic(vmErr)
+				panic(fmt.Sprintf("function run error: %v - at line %d, column %d",
+					vmErr.Error(), vmErr.Pos.Line, vmErr.Pos.Column))
 			} else {
 				panic("function run error: " + err.Error())
 			}

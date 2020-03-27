@@ -1170,18 +1170,12 @@ func TestReflectPanicOnUndefinedSymbol(t *testing.T) {
 	type Dog struct {
 		Bark func() string
 	}
-	expectedErr := Error{
-		Message:"undefined symbol 'x'",
-		Pos:ast.Position{
-			Line:2,
-			Column:1,
-		},
-	}
+	expectedRecoverResult := "function run error: undefined symbol 'x' - at line 2, column 1"
 
 	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(*Error); !ok || *err != expectedErr {
-				t.Errorf("execute error - received %#v - expected: %#v", err, expectedErr)
+		if recoverResult := recover(); recoverResult != nil {
+			if recoverResult != expectedRecoverResult {
+				t.Errorf("execute error - received %#v - expected: %#v", recoverResult, expectedRecoverResult)
 			}
 		}
 	}()
