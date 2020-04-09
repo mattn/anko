@@ -45,6 +45,9 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `a + b`, Input: map[string]interface{}{"a": "a", "b": "b"}, RunOutput: "ab"},
 		{Script: `a + b`, Input: map[string]interface{}{"a": "a", "b": int64(1)}, RunOutput: "a1"},
 		{Script: `a + b`, Input: map[string]interface{}{"a": "a", "b": float64(1.1)}, RunOutput: "a1.1"},
+		{Script: `a + b`, Input: map[string]interface{}{"a": int64(2), "b": "b"}, RunOutput: "2b"},
+		{Script: `a + b`, Input: map[string]interface{}{"a": float64(2.5), "b": "b"}, RunOutput: "2.5b"},
+
 		{Script: `a + z`, Input: map[string]interface{}{"a": "a"}, RunError: fmt.Errorf("undefined symbol 'z'"), RunOutput: nil},
 		{Script: `z + b`, Input: map[string]interface{}{"a": "a"}, RunError: fmt.Errorf("undefined symbol 'z'"), RunOutput: nil},
 
@@ -432,10 +435,15 @@ func TestTernaryOperator(t *testing.T) {
 	t.Parallel()
 
 	tests := []Test{
-		{Script: `a = 1 ? 2 : panic(2)`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = c ? a : b`, RunError: fmt.Errorf("undefined symbol 'c'")},
-		{Script: `a = a ? a : b`, RunError: fmt.Errorf("undefined symbol 'a'")},
-		{Script: `a = 0; a = a ? a : b`, RunError: fmt.Errorf("undefined symbol 'b'")},
+		{Script: `a = a ? 1 : 2`, RunError: fmt.Errorf("undefined symbol 'a'")},
+		{Script: `a = z ? 1 : 2`, RunError: fmt.Errorf("undefined symbol 'z'")},
+		{Script: `a = 0; a = a ? 1 : z`, RunError: fmt.Errorf("undefined symbol 'z'")},
+		{Script: `a = 1; a = a ? z : 1`, RunError: fmt.Errorf("undefined symbol 'z'")},
+		{Script: `a = b[1] ? 2 : 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunError: fmt.Errorf("index out of range")},
+		{Script: `a = b[1][2] ? 2 : 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunError: fmt.Errorf("index out of range")},
+		{Script: `a = b["test"][1] ? 2 : 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": 2}}, RunError: fmt.Errorf("type int does not support index operation")},
+
+		{Script: `a = 1 ? 2 : z`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = -1 ? 2 : 1`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = true ? 2 : 1`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = false ? 2 : 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
@@ -455,13 +463,10 @@ func TestTernaryOperator(t *testing.T) {
 		{Script: `a = nil ? 2 : 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = b ? 2 : 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = b ? 2 : 1`, Input: map[string]interface{}{"b": map[string]interface{}{}}, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
-		{Script: `a = b[1] ? 2 : 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunError: fmt.Errorf("index out of range")},
-		{Script: `a = b[1][2] ? 2 : 1`, Input: map[string]interface{}{"b": []interface{}{}}, RunError: fmt.Errorf("index out of range")},
 		{Script: `a = [] ? 2 : 1`, RunOutput: int64(1), Output: map[string]interface{}{"a": int64(1)}},
 		{Script: `a = [2] ? 2 : 1`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = b ? 2 : 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a = b["test"] ? 2 : 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": int64(2)}}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
-		{Script: `a = b["test"][1] ? 2 : 1`, Input: map[string]interface{}{"b": map[string]interface{}{"test": 2}}, RunError: fmt.Errorf("type int does not support index operation")},
 		{Script: `b = "test"; a = b ? 2 : "empty"`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `b = "test"; a = b[1:3] ? 2 : "empty"`, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `b = "test"; a = b[2:2] ? 2 : "empty"`, RunOutput: "empty", Output: map[string]interface{}{"a": "empty"}},
