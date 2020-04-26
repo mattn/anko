@@ -824,7 +824,7 @@ func TestSliceAppendSlices(t *testing.T) {
 
 		{Script: `a = make([][]bool); a += [true, false];`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][]bool{}}},
 		{Script: `a = make([][]bool); a += [[true, false]]; b = make([]bool); b += [true, false]; a += b`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][]bool{{true, false}}, "b": []bool{true, false}}},
-		{Script: `a = make([][]bool); a += [[true, false]]; b = [[1.1]]; a += b`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][]bool{[]bool{true, false}}, "b": []interface{}{[]interface{}{1.1}}}},
+		{Script: `a = make([][]bool); a += [[true, false]]; b = [[1.1]]; a += b`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": [][]bool{{true, false}}, "b": []interface{}{[]interface{}{1.1}}}},
 		{Script: `a = make([]bool); a += [true, false]; b = make([][]bool); b += [[true, false]]; a += b`, RunError: fmt.Errorf("invalid type conversion"), Output: map[string]interface{}{"a": []bool{true, false}, "b": [][]bool{{true, false}}}},
 
 		{Script: `a = make([][]interface); a += [[1, 2]]`, RunOutput: [][]interface{}{{int64(1), int64(2)}}, Output: map[string]interface{}{"a": [][]interface{}{{int64(1), int64(2)}}}},

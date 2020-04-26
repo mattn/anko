@@ -62,7 +62,7 @@ import (
 	expr                   ast.Expr
 	expr_idents            []string
 	type_data              *ast.TypeStruct
-	type_data_struct       map[string]*ast.TypeStruct
+	type_data_struct       *ast.TypeStruct
 	slice_count            int
 	expr_member_or_ident   ast.Expr
 	expr_member            *ast.MemberExpr
@@ -688,22 +688,23 @@ type_data :
 			$$ = &ast.TypeStruct{Kind: ast.TypeChan, SubType: $2}
 		}
 	}
-	| STRUCT '{' type_data_struct '}'
+	| STRUCT '{' opt_newlines type_data_struct opt_newlines '}'
 	{
-		$$ = &ast.TypeStruct{Kind: ast.TypeStructType, Structs: $3 }
+		$$ = $4
 	}
 
 type_data_struct :
 	IDENT type_data
 	{
-		$$ = map[string]*ast.TypeStruct{$1.Lit: $2}
+		$$ = &ast.TypeStruct{Kind: ast.TypeStructType, StructNames: []string{$1.Lit}, StructTypes: []*ast.TypeStruct{$2}}
 	}
 	| type_data_struct ',' opt_newlines IDENT type_data
 	{
-		if len($1) == 0 {
+		if $1 == nil {
 			yylex.Error("syntax error: unexpected ','")
 		}
-		$$[$4.Lit] = $5
+		$$.StructNames = append($$.StructNames, $4.Lit)
+		$$.StructTypes = append($$.StructTypes, $5)
 	}
 
 slice_count :
