@@ -4,7 +4,7 @@ var math = import("math")
 
 for i in range(2,100) {
 	isPrime=true
-	for j in range(2, i) {
+	for j in range(2, math.Floor(math.Sqrt(i))+1) {
 		if i % j == 0 {
 			isPrime = false
 		}
