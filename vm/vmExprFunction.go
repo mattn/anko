@@ -98,6 +98,7 @@ func (runInfo *runInfoStruct) anonCallExpr() {
 	}
 
 	runInfo.expr = &ast.CallExpr{Func: runInfo.rv, SubExprs: anonCallExpr.SubExprs, VarArg: anonCallExpr.VarArg, Go: anonCallExpr.Go}
+	runInfo.expr.SetPosition(anonCallExpr.Expr.Position())
 	runInfo.invokeExpr()
 }
 
