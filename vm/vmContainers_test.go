@@ -1892,7 +1892,7 @@ make(struct {
 			A *int64
 			B []int64
 			C map[string]int64
-		}{A: (*int64)(nil), B: []int64{}, C: map[string]int64{}}},
+		}{A: (*int64)(nil), B: nil, C: nil}},
 
 		// make struct within structs
 		{Script: `
@@ -1920,7 +1920,7 @@ make(struct {
 		}{AA: 0, AB: 0}, B: struct {
 			BA []int64
 			BB map[string]int64
-		}{BA: []int64{}, BB: map[string]int64{}}}},
+		}{BA: nil, BB: nil}}},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
