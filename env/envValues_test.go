@@ -173,6 +173,33 @@ func TestDefineAndGet(t *testing.T) {
 
 }
 
+func TestGetSymbols(t *testing.T) {
+	var symbols []string
+	values := map[string]interface{}{
+		"a": int64(1),
+		"b": float64(1),
+		"c": true,
+		"d": "a",
+	}
+
+	env := NewEnv()
+	for s, v := range values {
+		env.Define(s, v)
+	}
+
+	symbols = env.GetValueSymbols()
+	if len(symbols) != len(values) {
+		t.Errorf("Expected %d symbols, received %d", len(values), len(symbols))
+	}
+
+	for _, symbol := range symbols {
+		_, ok := values[symbol]
+		if !ok {
+			t.Errorf("Missing %s symbol", symbol)
+		}
+	}
+}
+
 func TestDefineModify(t *testing.T) {
 	var err error
 	var value interface{}
