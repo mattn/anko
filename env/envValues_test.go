@@ -173,7 +173,7 @@ func TestDefineAndGet(t *testing.T) {
 
 }
 
-func TestGetSymbols(t *testing.T) {
+func TestGetValueSymbols(t *testing.T) {
 	var symbols []string
 	values := map[string]interface{}{
 		"a": int64(1),
