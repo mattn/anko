@@ -115,17 +115,6 @@ func (e *Env) GetValueSymbols() []string {
 	return symbols
 }
 
-// GetTypeSymbols returns all type symbols in the current scope.
-func (e *Env) GetTypeSymbols() []string {
-	symbols := make([]string, 0, len(e.values))
-	e.rwMutex.RLock()
-	for symbol := range e.types {
-		symbols = append(symbols, symbol)
-	}
-	e.rwMutex.RUnlock()
-	return symbols
-}
-
 // delete
 
 // Delete deletes symbol in current scope.
