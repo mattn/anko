@@ -17,5 +17,7 @@ func init() {
 		"ParseFloat":  reflect.ValueOf(strconv.ParseFloat),
 		"ParseInt":    reflect.ValueOf(strconv.ParseInt),
 		"ParseUint":   reflect.ValueOf(strconv.ParseUint),
+		"Atoi":        reflect.ValueOf(strconv.Atoi),
+		"Itoa":        reflect.ValueOf(strconv.Itoa),
 	}
 }
