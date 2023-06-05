@@ -265,6 +265,17 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					runInfo.rv = runInfo.rv.Method(method.Index)
 					return
 				}
+			} else {
+				// Create pointer value to given struct type which were passed by value
+				// Check wether method with pointer receiver is defined,
+				// if yes, invoke it in the copied instance
+				cv := reflect.New(runInfo.rv.Type())
+				method := cv.MethodByName(expr.Name)
+				if method.IsValid() {
+					cv.Elem().Set(runInfo.rv)
+					runInfo.rv = method
+					return
+				}
 			}
 			runInfo.err = newStringError(expr, "no member named '"+expr.Name+"' for struct")
 			runInfo.rv = nilValue
