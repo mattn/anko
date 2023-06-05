@@ -266,14 +266,14 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					return
 				}
 			} else {
-				// Create pointer value to given struct type which were passed by value
 				// Check wether method with pointer receiver is defined,
 				// if yes, invoke it in the copied instance
-				cv := reflect.New(runInfo.rv.Type())
-				method := cv.MethodByName(expr.Name)
-				if method.IsValid() {
+				method, found := reflect.PtrTo(runInfo.rv.Type()).MethodByName(expr.Name)
+				if found {
+					// Create pointer value to given struct type which were passed by value
+					cv := reflect.New(runInfo.rv.Type())
 					cv.Elem().Set(runInfo.rv)
-					runInfo.rv = method
+					runInfo.rv = cv.Method(method.Index)
 					return
 				}
 			}
