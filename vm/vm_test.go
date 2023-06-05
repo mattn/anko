@@ -1221,6 +1221,81 @@ func TestUnknownCases(t *testing.T) {
 	}
 }
 
+type Foo struct {
+	Value int
+}
+type Bar struct {
+	Foo
+	Ref *int
+}
+
+func (f Foo) ValueReceiver() int {
+	return f.Value
+}
+func (b *Bar) PointerReceiver() (int, int) {
+	b.Value = 0
+	*b.Ref = 0
+	return b.Value, *b.Ref
+}
+
+func TestCallStructMethod(t *testing.T) {
+	t.Parallel()
+
+	ref := 10
+	ptr := &Bar{
+		Foo: Foo{
+			Value: 100,
+		},
+		Ref: &ref,
+	}
+	val := Bar{
+		Foo: Foo{
+			Value: 200,
+		},
+		Ref: &ref,
+	}
+
+	// execution in native go
+	v := ptr.ValueReceiver()
+	if v != 100 {
+		t.Fatal("ptr: call value receiver failed, v should equal to 100")
+	}
+	v, r := ptr.PointerReceiver()
+	if v != 0 || r != 0 {
+		t.Fatal("ptr: call pointer receiver failed, both should be 0")
+	}
+
+	ref = 10
+	v = val.ValueReceiver()
+	if v != 200 {
+		t.Fatal("val: call value receiver failed, v should equal to 200")
+	}
+	v, r = val.PointerReceiver()
+	if v != 0 || r != 0 {
+		t.Fatal("val: call pointer receiver failed, both should be 0")
+	}
+
+	// reinitialize values before executing script in VM
+	ptr.Value = 100
+	val.Value = 200
+
+	// Define pointer 'ptr' to struct Bar in VM
+	ref = 10
+	tests := []Test{
+		{Script: "ptr.ValueReceiver()", Input: map[string]interface{}{"ptr": ptr}, RunOutput: 100},
+		{Script: "ptr.PointerReceiver()", Input: map[string]interface{}{"ptr": ptr}, RunOutput: []interface{}{0, 0}},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+
+	// Define value 'val' to struct Bar in VM
+	ref = 10
+	tests = []Test{
+		{Script: "val.ValueReceiver()", Input: map[string]interface{}{"val": val}, RunOutput: 200},
+		{Script: "val.PointerReceiver()", Input: map[string]interface{}{"val": val}, RunOutput: []interface{}{0, 0}},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+}
+
 func fib(x int) int {
 	if x < 2 {
 		return x
