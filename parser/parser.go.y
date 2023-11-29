@@ -279,6 +279,7 @@ stmt_lets :
 		} else {
 			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
 		}
+        $$.SetPosition($1[0].Position())
 	}
 	| expr EQOPCHAN expr
 	{

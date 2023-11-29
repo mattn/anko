@@ -83,6 +83,7 @@ func (runInfo *runInfoStruct) anonCallExpr() {
 	anonCallExpr := runInfo.expr.(*ast.AnonCallExpr)
 
 	runInfo.expr = anonCallExpr.Expr
+	runInfo.expr.SetPosition(anonCallExpr.Expr.Position())
 	runInfo.invokeExpr()
 	if runInfo.err != nil {
 		return
