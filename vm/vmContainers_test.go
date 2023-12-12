@@ -3,6 +3,7 @@ package vm
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"reflect"
 	"testing"
 
@@ -1923,4 +1924,375 @@ make(struct {
 		}{BA: []int64{}, BB: map[string]int64{}}}},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
+}
+
+func TestFuncWithStructs(t *testing.T) {
+	os.Setenv("ANKO_DEBUG", "1")
+	tests := []Test{
+		{
+			Script: `v = {"A":1, "B":2, "C":3, "D":4, "E":5}; rv = FuncWithIntStruct(v); A = rv.A`,
+			Input: map[string]interface{}{
+				"FuncWithIntStruct": func(v struct {
+					A int8
+					B int16
+					C int32
+					D int64
+					E int
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: int8(1),
+			Output: map[string]interface{}{
+				"rv": struct {
+					A int8
+					B int16
+					C int32
+					D int64
+					E int
+				}{
+					1, 2, 3, 4, 5,
+				},
+			},
+		},
+		{
+			Script: `v = {"A":3.14, "B":3.1415926}; rv = FuncWithFloatStruct(v); A = rv.A`,
+			Input: map[string]interface{}{
+				"FuncWithFloatStruct": func(v struct {
+					A float32
+					B float64
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: float32(3.14),
+			Output: map[string]interface{}{
+				"rv": struct {
+					A float32
+					B float64
+				}{
+					3.14, 3.1415926,
+				},
+			},
+		},
+		{
+			Script: `v = {"A":true}; rv = FuncWithBoolStruct(v); A = rv.A`,
+			Input: map[string]interface{}{
+				"FuncWithBoolStruct": func(v struct {
+					A bool
+					B bool
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: bool(true),
+			Output: map[string]interface{}{
+				"rv": struct {
+					A bool
+					B bool
+				}{
+					true, false,
+				},
+			},
+		},
+		{
+			Script: `v = {"A":"A"}; rv = FuncWithStringStruct(v); A = rv.A`,
+			Input: map[string]interface{}{
+				"FuncWithStringStruct": func(v struct {
+					A string
+					B string
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: string("A"),
+			Output: map[string]interface{}{
+				"rv": struct {
+					A string
+					B string
+				}{
+					"A", "",
+				},
+			},
+		},
+		{
+			Script: `A = ["1","2","3"]; B = [1,2,3]; C = [true, false]; v = {"A":A, "B":B, "C":C}; rv = FuncWithSliceStruct(v); A = rv.A`,
+			Input: map[string]interface{}{
+				"FuncWithSliceStruct": func(v struct {
+					A []string
+					B []int
+					C []bool
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: []string{"1", "2", "3"},
+			Output: map[string]interface{}{
+				"rv": struct {
+					A []string
+					B []int
+					C []bool
+				}{
+					A: []string{"1", "2", "3"},
+					B: []int{1, 2, 3},
+					C: []bool{true, false},
+				},
+			},
+		},
+		{
+			// map only suport key is interface or string, value can any type
+			Script: `A = {"M":"am", "N":1}; B = {"M":"bm", "N":2}; C = {"M":"cm", "N":"cn"}; D = {"M":1, "N":2}; v = {"A": A,"B": B,"C": C,"D": D}; rv = FuncWithMapStruct(v);AM = rv.A["M"]; AN = rv.A["N"]; BM = rv.B["M"]; BN = rv.B["N"]; CM = rv.C["M"]; CN = rv.C["N"]; DM = rv.D["M"]; DN = rv.D["N"];`,
+			Input: map[string]interface{}{
+				"FuncWithMapStruct": func(v struct {
+					A map[interface{}]interface{}
+					B map[string]interface{}
+					C map[string]string
+					D map[string]int
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: 2,
+			Output: map[string]interface{}{
+				"AM": "am",
+				"AN": int64(1),
+				"BM": "bm",
+				"BN": int64(2),
+				"CM": "cm",
+				"CN": "cn",
+				"DM": 1,
+				"DN": 2,
+			},
+		},
+		{
+			Script: `d = ["1","2","3"]; e = {"M":"m", "N":1}; v = {"A": 1, "B": true, "C": "c", "D": d, "E":e}; rv = FuncWithCustomStruct(v); A=rv.A; B=rv.B; C=rv.C; D=rv.D; EM=rv.E["M"]; EN=rv.E["N"];`,
+			Input: map[string]interface{}{
+				"FuncWithCustomStruct": func(v struct {
+					A int
+					B bool
+					C string
+					D []string
+					E map[interface{}]interface{}
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: int64(1),
+			Output: map[string]interface{}{
+				"A":  int(1),
+				"B":  true,
+				"C":  "c",
+				"D":  []string{"1", "2", "3"},
+				"EM": "m",
+				"EN": int64(1),
+			},
+		},
+		{
+			Script: `d = ["1","2","3"]; e = {"M":1,"N":2}; v = {"A": {"AA":1}, "B": {"BB":true}, "C": {"CC":"c"}, "D": {"DD":d}, "E":{"EE":e}}; rv = FuncWithNestedCustomStruct(v); A=rv.A.AA; B=rv.B.BB; C=rv.C.CC; D=rv.D.DD; EM=rv.E.EE["M"]; EN=rv.E.EE["N"];`,
+			Input: map[string]interface{}{
+				"FuncWithNestedCustomStruct": func(v struct {
+					A struct {
+						AA int
+					}
+					B struct {
+						BB bool
+					}
+					C struct {
+						CC string
+					}
+					D struct {
+						DD []string
+					}
+					E struct {
+						EE map[string]int
+					}
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: int(2),
+			Output: map[string]interface{}{
+				"A":  1,
+				"B":  true,
+				"C":  "c",
+				"D":  []string{"1", "2", "3"},
+				"EM": 1,
+				"EN": 2,
+			},
+		},
+		{
+			Script: `d = ["1","2","3"]; e = {"M":true, "N":false}; v = {"A": {"AA":1}, "B": {"BB":true}, "C": {"CC":"c"}, "D": {"DD":d}, "E":{"EE":e}}; rv = FuncWithPointerCustomStruct(v); A=rv.A.AA; B=rv.B.BB; C=rv.C.CC; D=rv.D.DD; EM=rv.E.EE["M"]; EN=rv.E.EE["N"];`,
+			Input: map[string]interface{}{
+				"FuncWithPointerCustomStruct": func(v *struct {
+					A *struct {
+						AA int
+					}
+					B *struct {
+						BB bool
+					}
+					C *struct {
+						CC string
+					}
+					D *struct {
+						DD []string
+					}
+					E *struct {
+						EE map[string]bool
+					}
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: false,
+			Output: map[string]interface{}{
+				"A":  1,
+				"B":  true,
+				"C":  "c",
+				"D":  []string{"1", "2", "3"},
+				"EM": true,
+				"EN": false,
+			},
+		},
+		{
+			Script: `a = [{"AA":"1"},{"AA":"2"}]; b = [{"BB":1},{"BB":2}]; v = {"A":a, "B":b}; rv = FuncWithSliceCustomStruct(v); A0 = rv.A[0].AA; A1 = rv.A[1].AA; B0 = rv.B[0].BB; B1 = rv.B[1].BB;`,
+			Input: map[string]interface{}{
+				"FuncWithSliceCustomStruct": func(v struct {
+					A []struct {
+						AA string
+					}
+					B []*struct {
+						BB int
+					}
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: 2,
+			Output: map[string]interface{}{
+				"A0": "1",
+				"A1": "2",
+				"B0": 1,
+				"B1": 2,
+			},
+		},
+		{
+			Script: `a = {"M":{"AA":"1"}, 123:{"AA":"2"}}; b = {"M":{"BB":1},"N":{"BB":2}}; v = {"A":a, "B":b}; rv = FuncWithMapCustomStruct(v); AM = rv.A["M"].AA; AN = rv.A[123].AA; BM = rv.B["M"].BB; BN = rv.B["N"].BB;`,
+			Input: map[string]interface{}{
+				"FuncWithMapCustomStruct": func(v struct {
+					A map[interface{}]struct {
+						AA string
+					}
+					B map[string]*struct {
+						BB int
+					}
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: 2,
+			Output: map[string]interface{}{
+				"AM": "1",
+				"AN": "2",
+				"BM": 1,
+				"BN": 2,
+			},
+		},
+		{
+			Script: `v = [{"A":"A", "B":1, "C":false}, {"A":"A1", "B":2, "C":true}]; rv = FuncWithStructSlice(v); A0 = rv[0].A; B0 = rv[0].B; C0 = rv[0].C; A1 = rv[1].A; B1 = rv[1].B; C1 = rv[1].C;`,
+			Input: map[string]interface{}{
+				"FuncWithStructSlice": func(v []struct {
+					A string
+					B int
+					C bool
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: true,
+			Output: map[string]interface{}{
+				"A0": "A",
+				"B0": 1,
+				"C0": false,
+				"A1": "A1",
+				"B1": 2,
+				"C1": true,
+			},
+		},
+		{
+			Script: `v = {"M":{"A":"A", "B":1, "C":false}, "N":{"A":"A1", "B":2, "C":true}}; rv = FuncWithStructMap(v); MA = rv["M"].A; MB = rv["M"].B; MC = rv["M"].C; NA = rv["N"].A; NB = rv["N"].B; NC = rv["N"].C;`,
+			Input: map[string]interface{}{
+				"FuncWithStructMap": func(v map[string]struct {
+					A string
+					B int
+					C bool
+				}) interface{} {
+					return v
+				},
+			},
+			RunOutput: true,
+			Output: map[string]interface{}{
+				"MA": "A",
+				"MB": 1,
+				"MC": false,
+				"NA": "A1",
+				"NB": 2,
+				"NC": true,
+			},
+		},
+	}
+	runTests(t, tests, nil, &Options{Debug: true})
+}
+
+/*	Benchmark test result
+goos: linux
+goarch: amd64
+pkg: github.com/mattn/anko/vm
+BenchmarkToStruct-16    	  199296	      6095 ns/op	    1672 B/op	      43 allocs/op
+*/
+func BenchmarkToStruct(b *testing.B) {
+	rv := reflect.ValueOf(map[interface{}]interface{}{
+		"A": true,
+		"B": 1,
+		"C": 3.14,
+		"D": "d",
+		"E": []interface{}{"e1", "e2"},
+		"F": map[interface{}]interface{}{
+			"f1": "f1",
+			"f2": "f2",
+		},
+		"G": map[interface{}]interface{}{
+			"A": true,
+			"B": 1,
+			"C": 3.14,
+			"D": "d",
+			"E": []interface{}{"e1", "e2"},
+			"F": map[interface{}]interface{}{
+				"f1": "f1",
+				"f2": "f2",
+			},
+		},
+	})
+	rt := reflect.TypeOf(struct {
+		A bool
+		B int
+		C float32
+		D string
+		E []string
+		F map[string]string
+		G struct {
+			A bool
+			B int
+			C float32
+			D string
+			E []string
+			F map[string]string
+		}
+	}{})
+
+	for i := 0; i < b.N; i++ {
+		_, err := convertReflectValueToType(rv, rt)
+		if err != nil {
+			b.Errorf("BenchmarkConvertReflectValueToStruct %v", err)
+		}
+	}
 }

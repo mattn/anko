@@ -30,6 +30,15 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		// if reflect.Type is interface or the types match, return the provided reflect.Value
 		return rv, nil
 	}
+	if rt == rv.Type() {
+		newRv := reflect.New(rt).Elem()
+		if newRv.CanSet() {
+			newRv.Set(rv)
+			return newRv, nil
+		} else {
+			return rv, nil
+		}
+	}
 	if rv.Type().ConvertibleTo(rt) {
 		// if reflect can covert, do that conversion and return
 		return rv.Convert(rt), nil
@@ -96,7 +105,92 @@ func convertReflectValueToType(rv reflect.Value, rt reflect.Type) (reflect.Value
 		}
 	}
 
-	// TODO: need to handle the case where either rv or rt are a pointer but not both
+	if rt.Kind() == reflect.Ptr {
+		newRv := reflect.New(rt).Elem()
+		if newRv.CanSet() {
+			prtRv, err := convertReflectValueToType(rv, rt.Elem())
+			if err != nil {
+				return rv, err
+			}
+			newRv.Set(prtRv.Addr())
+			return newRv, nil
+		}
+	}
+
+	if rt.Kind() == reflect.Struct && rv.Type() == mapIiType {
+		rvIiMap := rv.Interface().(map[interface{}]interface{})
+		rvSiMap := make(map[string]interface{}, len(rvIiMap))
+		for k, v := range rvIiMap {
+			kStr, ok := k.(string)
+			if !ok {
+				return rv, fmt.Errorf("invalid type conversion")
+			}
+			rvSiMap[kStr] = v
+		}
+
+		newRv := reflect.New(rt).Elem()
+		for i := 0; i < rt.NumField(); i++ {
+			field := rt.Field(i)
+
+			fieldV, ok := rvSiMap[field.Name]
+			if !ok {
+				continue
+			}
+			if newRv.Field(i).CanSet() {
+				newFieldV, err := convertReflectValueToType(reflect.ValueOf(fieldV), newRv.Field(i).Type())
+				if err != nil {
+					return rv, err
+				}
+				newRv.Field(i).Set(newFieldV)
+			}
+		}
+		return newRv, nil
+	}
+
+	if rt.Kind() == reflect.Map && rv.Type() == mapIiType {
+		keys := rv.MapKeys()
+		isSameKeyType := rt.Key() == rv.Type().Key()
+		newRv := reflect.MakeMap(reflect.MapOf(rt.Key(), rt.Elem()))
+
+		for i := 0; i < len(keys); i++ {
+			key := keys[i]
+			value := rv.MapIndex(key)
+
+			if isSameKeyType {
+				newValue, err := convertReflectValueToType(value, rt.Elem())
+				if err != nil {
+					return rv, err
+				}
+				newRv.SetMapIndex(key, newValue)
+				continue
+			}
+
+			// only deal with rv and rt map key is of type string
+			if key.Kind() == reflect.Interface {
+				keyStr, ok := key.Interface().(string)
+				if !ok {
+					return rv, fmt.Errorf("invalid type conversion")
+				}
+
+				if rt.Key().Kind() != reflect.String {
+					return rv, fmt.Errorf("invalid type conversion")
+				}
+
+				newKey := reflect.New(rt.Key()).Elem()
+				if !newKey.CanSet() {
+					continue
+				}
+				newKey.Set(reflect.ValueOf(keyStr))
+
+				newValue, err := convertReflectValueToType(value, rt.Elem())
+				if err != nil {
+					return rv, err
+				}
+				newRv.SetMapIndex(newKey, newValue)
+			}
+		}
+		return newRv, nil
+	}
 
 	return rv, errInvalidTypeConversion
 }
