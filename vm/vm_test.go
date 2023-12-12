@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/mattn/anko/ast"
+	"github.com/mattn/anko/ast/astutil"
 	"github.com/mattn/anko/env"
+	"github.com/mattn/anko/parser"
 )
 
 func TestNumbers(t *testing.T) {
@@ -1339,5 +1341,40 @@ fib = func(x) {
 		if err != nil {
 			b.Fatal("Execute error:", err)
 		}
+	}
+}
+
+func TestLetsStatementPosition(t *testing.T) {
+	src := `a, b = 1, 2
+`
+	stmts, err := parser.ParseSrc(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stmtFound bool
+	err = astutil.Walk(stmts, func(e interface{}) error {
+		switch e := e.(type) {
+		case *ast.LetsStmt:
+			if len(e.LHSS) == 2 {
+				if is, want := e.Position().Line, 1; is != want {
+					t.Fatalf("%v != %v", is, want)
+				}
+				if is, want := e.Position().Column, 1; is != want {
+					t.Fatalf("%v != %v", is, want)
+				}
+			}
+			stmtFound = true
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if is, want := stmtFound, true; is != want {
+		t.Fatalf("%v != %v", is, want)
 	}
 }
