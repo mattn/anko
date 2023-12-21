@@ -46,7 +46,7 @@ func (e *Env) DefineGlobalValue(symbol string, value reflect.Value) error {
 
 // set
 
-// Set interface value to the scope where symbol is frist found.
+// Set interface value to the scope where symbol is first found.
 func (e *Env) Set(symbol string, value interface{}) error {
 	if value == nil {
 		return e.SetValue(symbol, NilValue)
@@ -54,7 +54,7 @@ func (e *Env) Set(symbol string, value interface{}) error {
 	return e.SetValue(symbol, reflect.ValueOf(value))
 }
 
-// SetValue reflect value to the scope where symbol is frist found.
+// SetValue reflect value to the scope where symbol is first found.
 func (e *Env) SetValue(symbol string, value reflect.Value) error {
 	e.rwMutex.RLock()
 	_, ok := e.values[symbol]
@@ -74,13 +74,13 @@ func (e *Env) SetValue(symbol string, value reflect.Value) error {
 
 // get
 
-// Get returns interface value from the scope where symbol is frist found.
+// Get returns interface value from the scope where symbol is first found.
 func (e *Env) Get(symbol string) (interface{}, error) {
 	rv, err := e.GetValue(symbol)
 	return rv.Interface(), err
 }
 
-// GetValue returns reflect value from the scope where symbol is frist found.
+// GetValue returns reflect value from the scope where symbol is first found.
 func (e *Env) GetValue(symbol string) (reflect.Value, error) {
 	e.rwMutex.RLock()
 	value, ok := e.values[symbol]
