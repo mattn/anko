@@ -569,9 +569,9 @@ func TestMake(t *testing.T) {
 		// struct
 		{Script: `make(struct { A int64 })`, RunOutput: struct{ A int64 }{}},
 		{Script: `make(struct { A *int64 })`, RunOutput: struct{ A *int64 }{}},
-		{Script: `make(struct { A []int64 })`, RunOutput: struct{ A []int64 }{A: []int64{}}},
-		{Script: `make(struct { A map[string]int64 })`, RunOutput: struct{ A map[string]int64 }{A: map[string]int64{}}},
-		{Script: `a = make(struct { A chan int64 }); go func(){ a.A <- 1 }(); <- a.A`, RunOutput: int64(1)},
+		{Script: `make(struct { A []int64 })`, RunOutput: struct{ A []int64 }{A: nil}},
+		{Script: `make(struct { A map[string]int64 })`, RunOutput: struct{ A map[string]int64 }{A: nil}},
+		{Script: `make(struct { A chan int64 })`, RunOutput: struct{ A chan int64 }{A: nil}},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }

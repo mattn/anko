@@ -286,6 +286,48 @@ func TestGetEnvFromPath(t *testing.T) {
 	}
 }
 
+func TestEnv_Values(t *testing.T) {
+	t.Parallel()
+	
+	env := NewEnv()
+	err := env.Define("test", "test str")
+	if err != nil {
+		t.Fatal("Define error:", err)
+	}
+	
+	values := env.Values()
+	v, ok := values["test"]
+	if !ok {
+		t.Fatal("test is not exist")
+	}
+	if v.Interface().(string) != "test str" {
+		t.Fatal("invalid test value")
+	}
+}
+
+func TestEnv_Types(t *testing.T) {
+	t.Parallel()
+	
+	type Foo struct {
+		A string
+	}
+	
+	env := NewEnv()
+	err := env.DefineType("test", Foo{})
+	if err != nil {
+		t.Fatal("Define error:", err)
+	}
+	
+	types := env.Types()
+	typ, ok := types["test"]
+	if !ok {
+		t.Fatal("test is not exist")
+	}
+	if typ.String() != "env.Foo" {
+		t.Fatal("invalid test type")
+	}
+}
+
 func TestCopy(t *testing.T) {
 	t.Parallel()
 

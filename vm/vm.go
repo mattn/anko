@@ -409,26 +409,10 @@ func makeValue(t reflect.Type) (reflect.Value, error) {
 		if err != nil {
 			return nilValue, err
 		}
-
 		ptrV.Elem().Set(v)
 		return ptrV, nil
 	case reflect.Slice:
 		return reflect.MakeSlice(t, 0, 0), nil
-	case reflect.Struct:
-		structV := reflect.New(t).Elem()
-		for i := 0; i < structV.NumField(); i++ {
-			if structV.Field(i).Kind() == reflect.Ptr {
-				continue
-			}
-			v, err := makeValue(structV.Field(i).Type())
-			if err != nil {
-				return nilValue, err
-			}
-			if structV.Field(i).CanSet() {
-				structV.Field(i).Set(v)
-			}
-		}
-		return structV, nil
 	}
 	return reflect.New(t).Elem(), nil
 }
