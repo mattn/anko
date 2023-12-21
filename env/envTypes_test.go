@@ -311,3 +311,30 @@ func TestDefineTypeFail(t *testing.T) {
 		}
 	}
 }
+
+func TestGetTypeSymbols(t *testing.T) {
+	var symbols []string
+	values := map[string]interface{}{
+		"a": int64(1),
+		"b": float64(1),
+		"c": true,
+		"d": "a",
+	}
+
+	env := NewEnv()
+	for s, v := range values {
+		env.DefineType(s, v)
+	}
+
+	symbols = env.GetTypeSymbols()
+	if len(symbols) != len(values) {
+		t.Errorf("Expected %d symbols, received %d", len(values), len(symbols))
+	}
+
+	for _, symbol := range symbols {
+		_, ok := values[symbol]
+		if !ok {
+			t.Errorf("Missing %s symbol", symbol)
+		}
+	}
+}
