@@ -104,6 +104,17 @@ func (e *Env) GetValue(symbol string) (reflect.Value, error) {
 	return e.parent.GetValue(symbol)
 }
 
+// GetValueSymbols returns all value symbol in the current scope.
+func (e *Env) GetValueSymbols() []string {
+	symbols := make([]string, 0, len(e.values))
+	e.rwMutex.RLock()
+	for symbol := range e.values {
+		symbols = append(symbols, symbol)
+	}
+	e.rwMutex.RUnlock()
+	return symbols
+}
+
 // delete
 
 // Delete deletes symbol in current scope.
