@@ -522,7 +522,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		name := runInfo.rv.String()
 		runInfo.rv = nilValue
 
-		methods, ok := env.Packages[name]
+		methods, ok := runInfo.options.Import(name)
 		if !ok {
 			runInfo.err = newStringError(expr, "package not found: "+name)
 			return
@@ -537,7 +537,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			}
 		}
 
-		types, ok := env.PackageTypes[name]
+		types, ok := runInfo.options.ImportTypes(name)
 		if ok {
 			for typeName, typeValue := range types {
 				err = pack.DefineReflectType(typeName, typeValue)

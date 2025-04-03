@@ -12,7 +12,8 @@ import (
 
 // Options provides options to run VM with
 type Options struct {
-	Debug bool // run in Debug mode
+	Debug       bool // run in Debug mode
+	PkgImporter Importer
 }
 
 type (
