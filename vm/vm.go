@@ -49,6 +49,7 @@ var (
 	errorType          = reflect.ValueOf([]error{nil}).Index(0).Type()
 	vmErrorType        = reflect.TypeOf(&Error{})
 	contextType        = reflect.TypeOf((*context.Context)(nil)).Elem()
+	mapIiType          = reflect.TypeOf(map[interface{}]interface{}{})
 
 	nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	trueValue                 = reflect.ValueOf(true)
