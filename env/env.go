@@ -154,6 +154,28 @@ func (e *Env) GetEnvFromPath(path []string) (*Env, error) {
 	return e, nil
 }
 
+// Values returns all values in Env.
+func (e *Env) Values() map[string]reflect.Value {
+	e.rwMutex.RLock()
+	values := make(map[string]reflect.Value, len(e.values))
+	for symbol, value := range e.values {
+		values[symbol] = value
+	}
+	e.rwMutex.RUnlock()
+	return values
+}
+
+// Types returns all Types in Env.
+func (e *Env) Types() map[string]reflect.Type {
+	e.rwMutex.RLock()
+	types := make(map[string]reflect.Type, len(e.types))
+	for symbol, aType := range e.types {
+		types[symbol] = aType
+	}
+	e.rwMutex.RUnlock()
+	return types
+}
+
 // Copy the Env for current scope
 func (e *Env) Copy() *Env {
 	e.rwMutex.RLock()
