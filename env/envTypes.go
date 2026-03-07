@@ -85,7 +85,7 @@ func (e *Env) Type(symbol string) (reflect.Type, error) {
 
 // GetValueSymbols returns all value symbol in the current scope.
 func (e *Env) GetTypeSymbols() []string {
-	symbols := make([]string, 0, len(e.values))
+	symbols := make([]string, 0, len(e.types))
 	e.rwMutex.RLock()
 	for symbol := range e.types {
 		symbols = append(symbols, symbol)
