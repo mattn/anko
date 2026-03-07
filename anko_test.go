@@ -254,7 +254,8 @@ func readerToChan(t *testing.T, chanQuit chan struct{}, reader *bufio.Reader, ch
 	for {
 		data, err := reader.ReadString('\n')
 		if err != nil && err != io.EOF {
-			t.Fatal("readerToChan ReadString error:", err)
+			t.Error("readerToChan ReadString error:", err)
+			return
 		}
 		select {
 		case <-chanQuit:
