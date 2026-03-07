@@ -126,7 +126,9 @@ func (e *Env) GetEnvFromPath(path []string) (*Env, error) {
 	var ok bool
 	for {
 		// find starting env
+		e.rwMutex.RLock()
 		value, ok = e.values[path[0]]
+		e.rwMutex.RUnlock()
 		if ok {
 			e, ok = value.Interface().(*Env)
 			if ok {
@@ -141,7 +143,9 @@ func (e *Env) GetEnvFromPath(path []string) (*Env, error) {
 
 	for i := 1; i < len(path); i++ {
 		// find child env
+		e.rwMutex.RLock()
 		value, ok = e.values[path[i]]
+		e.rwMutex.RUnlock()
 		if ok {
 			e, ok = value.Interface().(*Env)
 			if ok {
