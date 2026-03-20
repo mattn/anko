@@ -39,18 +39,18 @@ func (runInfo *runInfoStruct) funcExpr() {
 		// add Params to newEnv, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
 			runInfo.rv = in[i+1].Interface().(reflect.Value)
-			runInfo.env.DefineValueFast(funcExpr.Params[i], runInfo.rv)
+			runInfo.env.DefineValue(funcExpr.Params[i], runInfo.rv)
 		}
 		// add last Params to newEnv
 		if len(funcExpr.Params) > 0 {
 			if funcExpr.VarArg {
 				// function is variadic, add last Params to newEnv without convert to Interface and then reflect.Value
 				runInfo.rv = in[len(funcExpr.Params)]
-				runInfo.env.DefineValueFast(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			} else {
 				// function is not variadic, add last Params to newEnv
 				runInfo.rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
-				runInfo.env.DefineValueFast(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
 			}
 		}
 
@@ -74,7 +74,7 @@ func (runInfo *runInfoStruct) funcExpr() {
 
 	// if function name is not empty, define it in the env
 	if funcExpr.Name != "" {
-		runInfo.env.DefineValueFast(funcExpr.Name, runInfo.rv)
+		runInfo.env.DefineValue(funcExpr.Name, runInfo.rv)
 	}
 }
 
