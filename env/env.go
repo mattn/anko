@@ -17,7 +17,7 @@ type (
 
 	// Env is the environment needed for a VM to run in.
 	Env struct {
-		rwMutex        *sync.RWMutex
+		rwMutex        sync.RWMutex
 		parent         *Env
 		values         map[string]reflect.Value
 		types          map[string]reflect.Type
@@ -63,17 +63,15 @@ var (
 // NewEnv creates new global scope.
 func NewEnv() *Env {
 	return &Env{
-		rwMutex: &sync.RWMutex{},
-		values:  make(map[string]reflect.Value),
+		values: make(map[string]reflect.Value),
 	}
 }
 
 // NewEnv creates new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
-		rwMutex: &sync.RWMutex{},
-		parent:  e,
-		values:  make(map[string]reflect.Value),
+		parent: e,
+		values: make(map[string]reflect.Value),
 	}
 }
 
@@ -81,9 +79,8 @@ func (e *Env) NewEnv() *Env {
 // This is a shortcut for calling e.NewEnv then Define that new Env.
 func (e *Env) NewModule(symbol string) (*Env, error) {
 	module := &Env{
-		rwMutex: &sync.RWMutex{},
-		parent:  e,
-		values:  make(map[string]reflect.Value),
+		parent: e,
+		values: make(map[string]reflect.Value),
 	}
 	return module, e.Define(symbol, module)
 }
@@ -162,7 +159,6 @@ func (e *Env) GetEnvFromPath(path []string) (*Env, error) {
 func (e *Env) Copy() *Env {
 	e.rwMutex.RLock()
 	copy := Env{
-		rwMutex:        &sync.RWMutex{},
 		parent:         e.parent,
 		values:         make(map[string]reflect.Value, len(e.values)),
 		externalLookup: e.externalLookup,
