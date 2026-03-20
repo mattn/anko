@@ -171,26 +171,26 @@ func (runInfo *runInfoStruct) invokeOperator() {
 			case reflect.String:
 				runInfo.rv = reflect.ValueOf(toString(lhsV) + toString(runInfo.rv))
 			case reflect.Float64, reflect.Float32:
-				runInfo.rv = reflect.ValueOf(toFloat64(lhsV) + toFloat64(runInfo.rv))
+				runInfo.rv = float64Value(toFloat64(lhsV) + toFloat64(runInfo.rv))
 			default:
-				runInfo.rv = reflect.ValueOf(toInt64(lhsV) + toInt64(runInfo.rv))
+				runInfo.rv = int64Value(toInt64(lhsV) + toInt64(runInfo.rv))
 			}
 
 		case "-":
 			switch lhsV.Kind() {
 			case reflect.Float64, reflect.Float32:
-				runInfo.rv = reflect.ValueOf(toFloat64(lhsV) - toFloat64(runInfo.rv))
+				runInfo.rv = float64Value(toFloat64(lhsV) - toFloat64(runInfo.rv))
 				return
 			}
 			switch runInfo.rv.Kind() {
 			case reflect.Float64, reflect.Float32:
-				runInfo.rv = reflect.ValueOf(toFloat64(lhsV) - toFloat64(runInfo.rv))
+				runInfo.rv = float64Value(toFloat64(lhsV) - toFloat64(runInfo.rv))
 			default:
-				runInfo.rv = reflect.ValueOf(toInt64(lhsV) - toInt64(runInfo.rv))
+				runInfo.rv = int64Value(toInt64(lhsV) - toInt64(runInfo.rv))
 			}
 
 		case "|":
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) | toInt64(runInfo.rv))
+			runInfo.rv = int64Value(toInt64(lhsV) | toInt64(runInfo.rv))
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")
 			runInfo.rv = nilValue
@@ -224,20 +224,20 @@ func (runInfo *runInfoStruct) invokeOperator() {
 				return
 			}
 			if lhsV.Kind() == reflect.Float64 || runInfo.rv.Kind() == reflect.Float64 {
-				runInfo.rv = reflect.ValueOf(toFloat64(lhsV) * toFloat64(runInfo.rv))
+				runInfo.rv = float64Value(toFloat64(lhsV) * toFloat64(runInfo.rv))
 				return
 			}
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) * toInt64(runInfo.rv))
+			runInfo.rv = int64Value(toInt64(lhsV) * toInt64(runInfo.rv))
 		case "/":
-			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) / toFloat64(runInfo.rv))
+			runInfo.rv = float64Value(toFloat64(lhsV) / toFloat64(runInfo.rv))
 		case "%":
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) % toInt64(runInfo.rv))
+			runInfo.rv = int64Value(toInt64(lhsV) % toInt64(runInfo.rv))
 		case ">>":
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) >> uint64(toInt64(runInfo.rv)))
+			runInfo.rv = int64Value(toInt64(lhsV) >> uint64(toInt64(runInfo.rv)))
 		case "<<":
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) << uint64(toInt64(runInfo.rv)))
+			runInfo.rv = int64Value(toInt64(lhsV) << uint64(toInt64(runInfo.rv)))
 		case "&":
-			runInfo.rv = reflect.ValueOf(toInt64(lhsV) & toInt64(runInfo.rv))
+			runInfo.rv = int64Value(toInt64(lhsV) & toInt64(runInfo.rv))
 
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")

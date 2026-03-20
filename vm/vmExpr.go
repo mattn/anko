@@ -191,16 +191,16 @@ func (runInfo *runInfoStruct) invokeExpr() {
 		case "-":
 			switch runInfo.rv.Kind() {
 			case reflect.Int64:
-				runInfo.rv = reflect.ValueOf(-runInfo.rv.Int())
+				runInfo.rv = int64Value(-runInfo.rv.Int())
 			case reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int, reflect.Bool:
-				runInfo.rv = reflect.ValueOf(-toInt64(runInfo.rv))
+				runInfo.rv = int64Value(-toInt64(runInfo.rv))
 			case reflect.Float64:
-				runInfo.rv = reflect.ValueOf(-runInfo.rv.Float())
+				runInfo.rv = float64Value(-runInfo.rv.Float())
 			default:
-				runInfo.rv = reflect.ValueOf(-toFloat64(runInfo.rv))
+				runInfo.rv = float64Value(-toFloat64(runInfo.rv))
 			}
 		case "^":
-			runInfo.rv = reflect.ValueOf(^toInt64(runInfo.rv))
+			runInfo.rv = int64Value(^toInt64(runInfo.rv))
 		case "!":
 			if toBool(runInfo.rv) {
 				runInfo.rv = falseValue
@@ -501,7 +501,7 @@ func (runInfo *runInfoStruct) invokeExpr() {
 
 		switch runInfo.rv.Kind() {
 		case reflect.Slice, reflect.Array, reflect.Map, reflect.String, reflect.Chan:
-			runInfo.rv = reflect.ValueOf(int64(runInfo.rv.Len()))
+			runInfo.rv = int64Value(int64(runInfo.rv.Len()))
 		default:
 			runInfo.err = newStringError(expr, "type "+runInfo.rv.Kind().String()+" does not support len operation")
 			runInfo.rv = nilValue

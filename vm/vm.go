@@ -54,6 +54,8 @@ var (
 	nilValue                  = reflect.New(reflect.TypeOf((*interface{})(nil)).Elem()).Elem()
 	trueValue                 = reflect.ValueOf(true)
 	falseValue                = reflect.ValueOf(false)
+	int64Type                 = reflect.TypeOf(int64(0))
+	float64Type               = reflect.TypeOf(float64(0))
 	zeroValue                 = reflect.Value{}
 	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
@@ -124,6 +126,30 @@ func isNil(v reflect.Value) bool {
 	default:
 		return false
 	}
+}
+
+const int64CacheMin = -1
+const int64CacheMax = 256
+
+var int64Cache [int64CacheMax - int64CacheMin + 1]reflect.Value
+
+func init() {
+	for i := int64CacheMin; i <= int64CacheMax; i++ {
+		int64Cache[i-int64CacheMin] = reflect.ValueOf(int64(i))
+	}
+}
+
+// int64Value returns a reflect.Value for the given int64, using a cache for small values.
+func int64Value(v int64) reflect.Value {
+	if v >= int64CacheMin && v <= int64CacheMax {
+		return int64Cache[v-int64CacheMin]
+	}
+	return reflect.ValueOf(v)
+}
+
+// float64Value returns a reflect.Value for the given float64.
+func float64Value(v float64) reflect.Value {
+	return reflect.ValueOf(v)
 }
 
 // numToString converts a numeric reflect.Value to its string representation.
