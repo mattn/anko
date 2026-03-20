@@ -77,17 +77,41 @@ func (runInfo *runInfoStruct) invokeOperator() {
 
 		switch operator.Operator {
 		case "==":
-			runInfo.rv = reflect.ValueOf(equal(lhsV, runInfo.rv))
+			if equal(lhsV, runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		case "!=":
-			runInfo.rv = reflect.ValueOf(!equal(lhsV, runInfo.rv))
+			if !equal(lhsV, runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		case "<":
-			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) < toFloat64(runInfo.rv))
+			if toFloat64(lhsV) < toFloat64(runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		case "<=":
-			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) <= toFloat64(runInfo.rv))
+			if toFloat64(lhsV) <= toFloat64(runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		case ">":
-			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) > toFloat64(runInfo.rv))
+			if toFloat64(lhsV) > toFloat64(runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		case ">=":
-			runInfo.rv = reflect.ValueOf(toFloat64(lhsV) >= toFloat64(runInfo.rv))
+			if toFloat64(lhsV) >= toFloat64(runInfo.rv) {
+				runInfo.rv = trueValue
+			} else {
+				runInfo.rv = falseValue
+			}
 		default:
 			runInfo.err = newStringError(operator, "unknown operator")
 			runInfo.rv = nilValue
