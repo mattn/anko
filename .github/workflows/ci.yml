@@ -19,6 +19,7 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+        shell: bash
       - uses: codecov/codecov-action@v4
         if: matrix.os == 'ubuntu-latest' && matrix.go == '1.26'
         with:
