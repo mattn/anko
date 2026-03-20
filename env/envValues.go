@@ -28,6 +28,14 @@ func (e *Env) DefineValue(symbol string, value reflect.Value) error {
 	return nil
 }
 
+// DefineValueFast defines/sets reflect value to symbol in current scope
+// without checking for dots in the symbol name.
+func (e *Env) DefineValueFast(symbol string, value reflect.Value) {
+	e.rwMutex.Lock()
+	e.values[symbol] = value
+	e.rwMutex.Unlock()
+}
+
 // DefineGlobal defines/sets interface value to symbol in global scope.
 func (e *Env) DefineGlobal(symbol string, value interface{}) error {
 	for e.parent != nil {

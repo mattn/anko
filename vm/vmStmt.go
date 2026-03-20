@@ -121,7 +121,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
 				// value is slice/array, add each value to left side names
 				for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
-					runInfo.env.DefineValue(stmt.Names[i], value.Index(i))
+					runInfo.env.DefineValueFast(stmt.Names[i], value.Index(i))
 				}
 				// return last value of slice/array
 				runInfo.rv = value.Index(value.Len() - 1)
@@ -131,7 +131,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 		// define all names with right side values
 		for i = 0; i < len(rvs) && i < len(stmt.Names); i++ {
-			runInfo.env.DefineValue(stmt.Names[i], rvs[i])
+			runInfo.env.DefineValueFast(stmt.Names[i], rvs[i])
 		}
 
 		// return last right side value
@@ -295,7 +295,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			// Catch
 			runInfo.stmt = stmt.Catch
 			if stmt.Var != "" {
-				runInfo.env.DefineValue(stmt.Var, reflect.ValueOf(runInfo.err))
+				runInfo.env.DefineValueFast(stmt.Var, reflect.ValueOf(runInfo.err))
 			}
 			runInfo.err = nil
 			runInfo.runSingleStmt()
@@ -394,7 +394,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				if iv.Kind() == reflect.Ptr {
 					iv = iv.Elem()
 				}
-				runInfo.env.DefineValue(stmt.Vars[0], iv)
+				runInfo.env.DefineValueFast(stmt.Vars[0], iv)
 
 				runInfo.stmt = stmt.Stmt
 				runInfo.runSingleStmt()
@@ -428,10 +428,10 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				default:
 				}
 
-				runInfo.env.DefineValue(stmt.Vars[0], keys[i])
+				runInfo.env.DefineValueFast(stmt.Vars[0], keys[i])
 
 				if len(stmt.Vars) > 1 {
-					runInfo.env.DefineValue(stmt.Vars[1], value.MapIndex(keys[i]))
+					runInfo.env.DefineValueFast(stmt.Vars[1], value.MapIndex(keys[i]))
 				}
 
 				runInfo.stmt = stmt.Stmt
@@ -482,7 +482,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 					runInfo.rv = runInfo.rv.Elem()
 				}
 
-				runInfo.env.DefineValue(stmt.Vars[0], runInfo.rv)
+				runInfo.env.DefineValueFast(stmt.Vars[0], runInfo.rv)
 
 				runInfo.stmt = stmt.Stmt
 				runInfo.runSingleStmt()
