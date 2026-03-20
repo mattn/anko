@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/mattn/anko/ast"
 	"github.com/mattn/anko/env"
@@ -125,6 +126,23 @@ func isNil(v reflect.Value) bool {
 	}
 }
 
+// numToString converts a numeric reflect.Value to its string representation.
+// For float32, it uses 32-bit precision to match fmt.Sprintf("%v") behavior.
+func numToString(v reflect.Value) string {
+	switch v.Kind() {
+	case reflect.Float32:
+		return strconv.FormatFloat(v.Float(), 'G', -1, 32)
+	case reflect.Float64:
+		return strconv.FormatFloat(v.Float(), 'G', -1, 64)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(v.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return strconv.FormatUint(v.Uint(), 10)
+	default:
+		return ""
+	}
+}
+
 func isNum(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
@@ -178,7 +196,20 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	}
 
 	if isNum(lhsV) && isNum(rhsV) {
-		return fmt.Sprintf("%v", lhsV) == fmt.Sprintf("%v", rhsV)
+		lhsKind := lhsV.Kind()
+		rhsKind := rhsV.Kind()
+		lhsIsFloat := lhsKind == reflect.Float32 || lhsKind == reflect.Float64
+		rhsIsFloat := rhsKind == reflect.Float32 || rhsKind == reflect.Float64
+		if !lhsIsFloat && !rhsIsFloat {
+			return toInt64(lhsV) == toInt64(rhsV)
+		}
+		// when both are same kind, direct comparison is safe
+		if lhsKind == rhsKind {
+			return toFloat64(lhsV) == toFloat64(rhsV)
+		}
+		// mixed types: use string representation for compatibility
+		// (e.g. float32(1.1) should equal float64(1.1))
+		return numToString(lhsV) == numToString(rhsV)
 	}
 
 	// Try to compare bools to strings and numbers
