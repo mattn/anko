@@ -1,7 +1,7 @@
 # Anko
 
 [![GoDoc Reference](https://godoc.org/github.com/mattn/anko/vm?status.svg)](http://godoc.org/github.com/mattn/anko/vm)
-[![Build Status](https://travis-ci.org/mattn/anko.svg?branch=master)](https://travis-ci.org/mattn/anko)
+[![CI](https://github.com/mattn/anko/actions/workflows/ci.yml/badge.svg)](https://github.com/mattn/anko/actions/workflows/ci.yml)
 [![Financial Contributors on Open Collective](https://opencollective.com/mattn-anko/all/badge.svg?label=financial+contributors)](https://opencollective.com/mattn-anko) [![Coverage](https://codecov.io/gh/mattn/anko/branch/master/graph/badge.svg)](https://codecov.io/gh/mattn/anko)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mattn/anko)](https://goreportcard.com/report/github.com/mattn/anko)
 
