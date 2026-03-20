@@ -56,15 +56,13 @@ func (e *Env) Set(symbol string, value interface{}) error {
 
 // SetValue reflect value to the scope where symbol is frist found.
 func (e *Env) SetValue(symbol string, value reflect.Value) error {
-	e.rwMutex.RLock()
-	_, ok := e.values[symbol]
-	e.rwMutex.RUnlock()
-	if ok {
-		e.rwMutex.Lock()
+	e.rwMutex.Lock()
+	if _, ok := e.values[symbol]; ok {
 		e.values[symbol] = value
 		e.rwMutex.Unlock()
 		return nil
 	}
+	e.rwMutex.Unlock()
 
 	if e.parent == nil {
 		return fmt.Errorf("undefined symbol '%s'", symbol)
