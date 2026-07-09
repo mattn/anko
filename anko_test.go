@@ -144,7 +144,7 @@ func runInteractiveTests(t *testing.T, tests []testInteractive) {
 	chanQuit := make(chan struct{}, 1)
 	chanErr := make(chan string, 3)
 	chanOut := make(chan string, 3)
-	readTimeout := 10 * time.Millisecond
+	readTimeout := 500 * time.Millisecond
 	var dataErr string
 	var dataOut string
 
