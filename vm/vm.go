@@ -57,6 +57,7 @@ var (
 	int64Type                 = reflect.TypeOf(int64(0))
 	float64Type               = reflect.TypeOf(float64(0))
 	zeroValue                 = reflect.Value{}
+	errorNilValue             = reflect.New(errorType).Elem()
 	reflectValueNilValue      = reflect.ValueOf(nilValue)
 	reflectValueErrorNilValue = reflect.ValueOf(reflect.New(errorType).Elem())
 
