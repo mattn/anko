@@ -352,6 +352,11 @@ func isHex(ch rune) bool {
 	return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')
 }
 
+// isBinary returns true if the rune is a binary digit.
+func isBinary(ch rune) bool {
+	return ch == '0' || ch == '1'
+}
+
 // isEOL returns true if the rune is at end-of-line or end-of-file.
 func isEOL(ch rune) bool {
 	return ch == '\n' || ch == -1
@@ -444,6 +449,14 @@ func (s *Scanner) scanNumber() (string, error) {
 		result = append(result, 'x')
 		s.next()
 		for isHex(s.peek()) {
+			result = append(result, s.peek())
+			s.next()
+		}
+	} else if result[0] == '0' && (s.peek() == 'b' || s.peek() == 'B') {
+		// binary
+		result = append(result, 'b')
+		s.next()
+		for isBinary(s.peek()) {
 			result = append(result, s.peek())
 			s.next()
 		}
@@ -625,6 +638,15 @@ func toNumber(numString string) (reflect.Value, error) {
 	// hex
 	if len(numString) > 3 && numString[0:3] == "-0x" {
 		i, err := strconv.ParseInt("-"+numString[3:], 16, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return reflect.ValueOf(i), nil
+	}
+
+	// binary
+	if len(numString) > 2 && numString[0:2] == "0b" {
+		i, err := strconv.ParseInt(numString[2:], 2, 64)
 		if err != nil {
 			return nilValue, err
 		}

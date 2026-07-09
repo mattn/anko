@@ -79,11 +79,13 @@ syn region      ankoParen             start='(' end=')' transparent
 " Integers
 syn match       ankoDecimalInt        "\<\d\+\([Ee]\d\+\)\?\>"
 syn match       ankoHexadecimalInt    "\<0x\x\+\>"
+syn match       ankoBinaryInt         "\<0b[01]\+\>"
 syn match       ankoOctalInt          "\<0\o\+\>"
 syn match       ankoOctalError        "\<0\o*[89]\d*\>"
 
 hi def link     ankoDecimalInt        Integer
 hi def link     ankoHexadecimalInt    Integer
+hi def link     ankoBinaryInt    Integer
 hi def link     ankoOctalInt          Integer
 hi def link     Integer             Number
 

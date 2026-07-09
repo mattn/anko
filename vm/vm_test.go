@@ -33,6 +33,7 @@ func TestNumbers(t *testing.T) {
 		{Script: `1ee1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `1e+e1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `0x1g`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `0b2`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `9223372036854775808`, ParseError: fmt.Errorf("invalid number: 9223372036854775808")},
 		{Script: `-9223372036854775809`, ParseError: fmt.Errorf("invalid number: -9223372036854775809")},
 
@@ -70,6 +71,10 @@ func TestNumbers(t *testing.T) {
 		{Script: `-0xf`, RunOutput: int64(-15)},
 		{Script: `-0Xf`, RunOutput: int64(-15)},
 		{Script: `-0x7FFFFFFFFFFFFFFF`, RunOutput: int64(-9223372036854775807)},
+
+		{Script: `0b1`, RunOutput: int64(1)},
+		{Script: `0b001100`, RunOutput: int64(12)},
+		{Script: `0b111111111111111111111111111111111111111111111111111111111111111`, RunOutput: int64(9223372036854775807)},
 	}
 	runTests(t, tests, nil, &Options{Debug: true})
 }
@@ -1234,6 +1239,7 @@ type Bar struct {
 func (f Foo) ValueReceiver() int {
 	return f.Value
 }
+
 func (b *Bar) PointerReceiver() (int, int) {
 	b.Value = 0
 	*b.Ref = 0
@@ -1369,7 +1375,6 @@ func TestLetsStatementPosition(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
