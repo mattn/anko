@@ -139,6 +139,11 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// LetsStmt
 	case *ast.LetsStmt:
+		if len(stmt.LHSS) < 1 || len(stmt.RHSS) < 1 {
+			runInfo.err = newStringError(stmt, "invalid operation")
+			runInfo.rv = nilValue
+			return
+		}
 		// get right side expression values
 		rvs := make([]reflect.Value, len(stmt.RHSS))
 		var i int

@@ -201,10 +201,10 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parser.go.y:1090
+//line parser.go.y:1104
 
 //line yacctab:1
-var yyExca = [...]int{
+var yyExca = [...]int16{
 	-1, 1,
 	1, -1,
 	-2, 0,
@@ -299,7 +299,7 @@ const yyPrivate = 57344
 
 const yyLast = 3907
 
-var yyAct = [...]int{
+var yyAct = [...]int16{
 	71, 268, 33, 23, 232, 320, 321, 36, 116, 323,
 	322, 5, 8, 288, 377, 72, 8, 267, 76, 8,
 	8, 124, 386, 8, 8, 127, 281, 114, 117, 121,
@@ -693,7 +693,7 @@ var yyAct = [...]int{
 	84, 0, 0, 0, 85, 0, 87,
 }
 
-var yyPact = [...]int{
+var yyPact = [...]int16{
 	-67, -1000, 631, -67, -1000, -71, -71, -1000, -1000, -1000,
 	-1000, -1000, -1000, 3490, 3490, 306, 213, 3782, 93, 89,
 	283, -1000, -1000, 1226, -1000, -1000, 3490, 465, 3490, -1000,
@@ -741,14 +741,14 @@ var yyPact = [...]int{
 	96, 164, -67, -1000, -67, 78, 46, -1000, -1000,
 }
 
-var yyPgo = [...]int{
+var yyPgo = [...]int16{
 	0, 41, 353, 279, 303, 352, 350, 349, 348, 346,
 	344, 6, 5, 56, 0, 8, 25, 343, 2, 340,
 	338, 7, 337, 4, 335, 333, 330, 328, 323, 321,
 	320, 316, 314, 313, 311, 159, 1, 179, 48,
 }
 
-var yyR1 = [...]int{
+var yyR1 = [...]int8{
 	0, 1, 1, 2, 2, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 4, 4, 5,
@@ -770,7 +770,7 @@ var yyR1 = [...]int{
 	36, 36,
 }
 
-var yyR2 = [...]int{
+var yyR2 = [...]int8{
 	0, 1, 2, 2, 3, 0, 1, 1, 1, 2,
 	2, 5, 13, 12, 9, 8, 6, 5, 6, 5,
 	4, 6, 4, 1, 1, 1, 1, 1, 1, 4,
@@ -792,7 +792,7 @@ var yyR2 = [...]int{
 	1, 1,
 }
 
-var yyChk = [...]int{
+var yyChk = [...]int16{
 	-1000, -1, -33, -2, -34, 78, -37, -38, 83, -3,
 	-4, 38, 39, 10, 12, 28, 29, 47, 55, 56,
 	-7, -8, -9, -14, -5, -6, 13, 15, 44, -19,
@@ -840,7 +840,7 @@ var yyChk = [...]int{
 	-36, 31, 73, 74, 73, -1, -1, 74, 74,
 }
 
-var yyDef = [...]int{
+var yyDef = [...]int16{
 	168, -2, -2, 168, 169, 172, 171, 175, 177, 3,
 	6, 7, 8, 57, 0, 0, 0, 0, 0, 0,
 	23, 24, 25, -2, 27, 28, 0, -2, 0, 61,
@@ -888,7 +888,7 @@ var yyDef = [...]int{
 	0, 0, 168, 88, 168, 0, 0, 13, 12,
 }
 
-var yyTok1 = [...]int{
+var yyTok1 = [...]int8{
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	83, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -904,7 +904,7 @@ var yyTok1 = [...]int{
 	3, 3, 3, 73, 66, 74,
 }
 
-var yyTok2 = [...]int{
+var yyTok2 = [...]int8{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
@@ -913,7 +913,7 @@ var yyTok2 = [...]int{
 	52, 53, 54, 55, 56, 57, 58, 72,
 }
 
-var yyTok3 = [...]int{
+var yyTok3 = [...]int8{
 	0,
 }
 
@@ -995,9 +995,9 @@ func yyErrorMessage(state, lookAhead int) string {
 	expected := make([]int, 0, 4)
 
 	// Look for shiftable tokens.
-	base := yyPact[state]
+	base := int(yyPact[state])
 	for tok := TOKSTART; tok-1 < len(yyToknames); tok++ {
-		if n := base + tok; n >= 0 && n < yyLast && yyChk[yyAct[n]] == tok {
+		if n := base + tok; n >= 0 && n < yyLast && int(yyChk[int(yyAct[n])]) == tok {
 			if len(expected) == cap(expected) {
 				return res
 			}
@@ -1007,13 +1007,13 @@ func yyErrorMessage(state, lookAhead int) string {
 
 	if yyDef[state] == -2 {
 		i := 0
-		for yyExca[i] != -1 || yyExca[i+1] != state {
+		for yyExca[i] != -1 || int(yyExca[i+1]) != state {
 			i += 2
 		}
 
 		// Look for tokens that we accept or reduce.
 		for i += 2; yyExca[i] >= 0; i += 2 {
-			tok := yyExca[i]
+			tok := int(yyExca[i])
 			if tok < TOKSTART || yyExca[i+1] == 0 {
 				continue
 			}
@@ -1044,30 +1044,30 @@ func yylex1(lex yyLexer, lval *yySymType) (char, token int) {
 	token = 0
 	char = lex.Lex(lval)
 	if char <= 0 {
-		token = yyTok1[0]
+		token = int(yyTok1[0])
 		goto out
 	}
 	if char < len(yyTok1) {
-		token = yyTok1[char]
+		token = int(yyTok1[char])
 		goto out
 	}
 	if char >= yyPrivate {
 		if char < yyPrivate+len(yyTok2) {
-			token = yyTok2[char-yyPrivate]
+			token = int(yyTok2[char-yyPrivate])
 			goto out
 		}
 	}
 	for i := 0; i < len(yyTok3); i += 2 {
-		token = yyTok3[i+0]
+		token = int(yyTok3[i+0])
 		if token == char {
-			token = yyTok3[i+1]
+			token = int(yyTok3[i+1])
 			goto out
 		}
 	}
 
 out:
 	if token == 0 {
-		token = yyTok2[1] /* unknown char */
+		token = int(yyTok2[1]) /* unknown char */
 	}
 	if yyDebug >= 3 {
 		__yyfmt__.Printf("lex %s(%d)\n", yyTokname(token), uint(char))
@@ -1122,7 +1122,7 @@ yystack:
 	yyS[yyp].yys = yystate
 
 yynewstate:
-	yyn = yyPact[yystate]
+	yyn = int(yyPact[yystate])
 	if yyn <= yyFlag {
 		goto yydefault /* simple state */
 	}
@@ -1133,8 +1133,8 @@ yynewstate:
 	if yyn < 0 || yyn >= yyLast {
 		goto yydefault
 	}
-	yyn = yyAct[yyn]
-	if yyChk[yyn] == yytoken { /* valid shift */
+	yyn = int(yyAct[yyn])
+	if int(yyChk[yyn]) == yytoken { /* valid shift */
 		yyrcvr.char = -1
 		yytoken = -1
 		yyVAL = yyrcvr.lval
@@ -1147,7 +1147,7 @@ yynewstate:
 
 yydefault:
 	/* default state action */
-	yyn = yyDef[yystate]
+	yyn = int(yyDef[yystate])
 	if yyn == -2 {
 		if yyrcvr.char < 0 {
 			yyrcvr.char, yytoken = yylex1(yylex, &yyrcvr.lval)
@@ -1156,18 +1156,18 @@ yydefault:
 		/* look through exception table */
 		xi := 0
 		for {
-			if yyExca[xi+0] == -1 && yyExca[xi+1] == yystate {
+			if yyExca[xi+0] == -1 && int(yyExca[xi+1]) == yystate {
 				break
 			}
 			xi += 2
 		}
 		for xi += 2; ; xi += 2 {
-			yyn = yyExca[xi+0]
+			yyn = int(yyExca[xi+0])
 			if yyn < 0 || yyn == yytoken {
 				break
 			}
 		}
-		yyn = yyExca[xi+1]
+		yyn = int(yyExca[xi+1])
 		if yyn < 0 {
 			goto ret0
 		}
@@ -1189,10 +1189,10 @@ yydefault:
 
 			/* find a state where "error" is a legal shift action */
 			for yyp >= 0 {
-				yyn = yyPact[yyS[yyp].yys] + yyErrCode
+				yyn = int(yyPact[yyS[yyp].yys]) + yyErrCode
 				if yyn >= 0 && yyn < yyLast {
-					yystate = yyAct[yyn] /* simulate a shift of "error" */
-					if yyChk[yystate] == yyErrCode {
+					yystate = int(yyAct[yyn]) /* simulate a shift of "error" */
+					if int(yyChk[yystate]) == yyErrCode {
 						goto yystack
 					}
 				}
@@ -1228,7 +1228,7 @@ yydefault:
 	yypt := yyp
 	_ = yypt // guard against "declared and not used"
 
-	yyp -= yyR2[yyn]
+	yyp -= int(yyR2[yyn])
 	// yyp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
 	if yyp+1 >= len(yyS) {
@@ -1239,16 +1239,16 @@ yydefault:
 	yyVAL = yyS[yyp+1]
 
 	/* consult goto table to find next state */
-	yyn = yyR1[yyn]
-	yyg := yyPgo[yyn]
+	yyn = int(yyR1[yyn])
+	yyg := int(yyPgo[yyn])
 	yyj := yyg + yyS[yyp].yys + 1
 
 	if yyj >= yyLast {
-		yystate = yyAct[yyg]
+		yystate = int(yyAct[yyg])
 	} else {
-		yystate = yyAct[yyj]
-		if yyChk[yystate] != -yyn {
-			yystate = yyAct[yyg]
+		yystate = int(yyAct[yyj])
+		if int(yyChk[yystate]) != -yyn {
+			yystate = int(yyAct[yyg])
 		}
 	}
 	// dummy call; replaced with literal code
@@ -1472,27 +1472,37 @@ yydefault:
 		yyDollar = yyS[yypt-3 : yypt+1]
 //line parser.go.y:272
 		{
-			if len(yyDollar[1].exprs) == 2 && len(yyDollar[3].exprs) == 1 {
-				if _, ok := yyDollar[3].exprs[0].(*ast.ItemExpr); ok {
-					yyVAL.stmt_lets = &ast.LetMapItemStmt{LHSS: yyDollar[1].exprs, RHS: yyDollar[3].exprs[0]}
+			if len(yyDollar[1].exprs) < 1 {
+				yylex.Error("missing expressions on left side of '='")
+				yyVAL.stmt_lets = &ast.LetsStmt{LHSS: yyDollar[1].exprs, RHSS: yyDollar[3].exprs}
+				yyVAL.stmt_lets.SetPosition(yyDollar[2].tok.Position())
+			} else if len(yyDollar[3].exprs) < 1 {
+				yylex.Error("missing expressions on right side of '='")
+				yyVAL.stmt_lets = &ast.LetsStmt{LHSS: yyDollar[1].exprs, RHSS: yyDollar[3].exprs}
+				yyVAL.stmt_lets.SetPosition(yyDollar[1].exprs[0].Position())
+			} else {
+				if len(yyDollar[1].exprs) == 2 && len(yyDollar[3].exprs) == 1 {
+					if _, ok := yyDollar[3].exprs[0].(*ast.ItemExpr); ok {
+						yyVAL.stmt_lets = &ast.LetMapItemStmt{LHSS: yyDollar[1].exprs, RHS: yyDollar[3].exprs[0]}
+					} else {
+						yyVAL.stmt_lets = &ast.LetsStmt{LHSS: yyDollar[1].exprs, RHSS: yyDollar[3].exprs}
+					}
 				} else {
 					yyVAL.stmt_lets = &ast.LetsStmt{LHSS: yyDollar[1].exprs, RHSS: yyDollar[3].exprs}
 				}
-			} else {
-				yyVAL.stmt_lets = &ast.LetsStmt{LHSS: yyDollar[1].exprs, RHSS: yyDollar[3].exprs}
+				yyVAL.stmt_lets.SetPosition(yyDollar[1].exprs[0].Position())
 			}
-			yyVAL.stmt_lets.SetPosition(yyDollar[1].exprs[0].Position())
 		}
 	case 32:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:285
+//line parser.go.y:295
 		{
 			yyVAL.stmt_lets = &ast.ChanStmt{LHS: yyDollar[1].expr, RHS: yyDollar[3].expr}
 			yyVAL.stmt_lets.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 33:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:290
+//line parser.go.y:300
 		{
 			if len(yyDollar[1].exprs) == 2 {
 				chanStmt := &ast.ChanStmt{LHS: yyDollar[1].exprs[0].(ast.Expr), OkExpr: yyDollar[1].exprs[1].(ast.Expr), RHS: yyDollar[3].expr}
@@ -1502,25 +1512,29 @@ yydefault:
 				yylex.Error("missing expressions on left side of channel operator")
 				yyVAL.stmt_lets = &ast.ChanStmt{RHS: yyDollar[3].expr}
 				yyVAL.stmt_lets.SetPosition(yyDollar[2].tok.Position())
+			} else {
+				yylex.Error("too many expressions on left side of channel operator")
+				yyVAL.stmt_lets = &ast.ChanStmt{RHS: yyDollar[3].expr}
+				yyVAL.stmt_lets.SetPosition(yyDollar[1].exprs[0].Position())
 			}
 		}
 	case 34:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:304
+//line parser.go.y:318
 		{
 			yyVAL.stmt_if = &ast.IfStmt{If: yyDollar[2].expr, Then: yyDollar[4].compstmt, Else: nil}
 			yyVAL.stmt_if.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 35:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:309
+//line parser.go.y:323
 		{
 			ifStmt := yyDollar[1].stmt_if.(*ast.IfStmt)
 			ifStmt.ElseIf = append(ifStmt.ElseIf, &ast.IfStmt{If: yyDollar[4].expr, Then: yyDollar[6].compstmt})
 		}
 	case 36:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:314
+//line parser.go.y:328
 		{
 			ifStmt := yyDollar[1].stmt_if.(*ast.IfStmt)
 			if ifStmt.Else != nil {
@@ -1530,14 +1544,14 @@ yydefault:
 		}
 	case 37:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:324
+//line parser.go.y:338
 		{
 			yyVAL.stmt_for = &ast.LoopStmt{Stmt: yyDollar[3].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 38:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:329
+//line parser.go.y:343
 		{
 			if len(yyDollar[2].expr_idents) < 1 {
 				yylex.Error("missing identifier")
@@ -1550,70 +1564,70 @@ yydefault:
 		}
 	case 39:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:340
+//line parser.go.y:354
 		{
 			yyVAL.stmt_for = &ast.LoopStmt{Expr: yyDollar[2].expr, Stmt: yyDollar[4].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 40:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:345
+//line parser.go.y:359
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Stmt: yyDollar[5].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 41:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:350
+//line parser.go.y:364
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Expr3: yyDollar[4].expr, Stmt: yyDollar[6].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 42:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:355
+//line parser.go.y:369
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Expr2: yyDollar[3].expr, Stmt: yyDollar[6].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 43:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:360
+//line parser.go.y:374
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Expr2: yyDollar[3].expr, Expr3: yyDollar[5].expr, Stmt: yyDollar[7].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 44:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:365
+//line parser.go.y:379
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Stmt1: yyDollar[2].stmt_var_or_lets, Stmt: yyDollar[6].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 45:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:370
+//line parser.go.y:384
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Stmt1: yyDollar[2].stmt_var_or_lets, Expr3: yyDollar[5].expr, Stmt: yyDollar[7].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 46:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:375
+//line parser.go.y:389
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Stmt1: yyDollar[2].stmt_var_or_lets, Expr2: yyDollar[4].expr, Stmt: yyDollar[7].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 47:
 		yyDollar = yyS[yypt-9 : yypt+1]
-//line parser.go.y:380
+//line parser.go.y:394
 		{
 			yyVAL.stmt_for = &ast.CForStmt{Stmt1: yyDollar[2].stmt_var_or_lets, Expr2: yyDollar[4].expr, Expr3: yyDollar[6].expr, Stmt: yyDollar[8].compstmt}
 			yyVAL.stmt_for.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 48:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:387
+//line parser.go.y:401
 		{
 			switchStmt := yyDollar[5].stmt_switch_cases.(*ast.SwitchStmt)
 			switchStmt.Expr = yyDollar[2].expr
@@ -1622,25 +1636,25 @@ yydefault:
 		}
 	case 49:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line parser.go.y:396
+//line parser.go.y:410
 		{
 			yyVAL.stmt_switch_cases = &ast.SwitchStmt{}
 		}
 	case 50:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:400
+//line parser.go.y:414
 		{
 			yyVAL.stmt_switch_cases = &ast.SwitchStmt{Default: yyDollar[1].stmt_switch_default}
 		}
 	case 51:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:404
+//line parser.go.y:418
 		{
 			yyVAL.stmt_switch_cases = &ast.SwitchStmt{Cases: []ast.Stmt{yyDollar[1].stmt_switch_case}}
 		}
 	case 52:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:408
+//line parser.go.y:422
 		{
 			switchStmt := yyDollar[1].stmt_switch_cases.(*ast.SwitchStmt)
 			switchStmt.Cases = append(switchStmt.Cases, yyDollar[2].stmt_switch_case)
@@ -1648,7 +1662,7 @@ yydefault:
 		}
 	case 53:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:414
+//line parser.go.y:428
 		{
 			switchStmt := yyDollar[1].stmt_switch_cases.(*ast.SwitchStmt)
 			if switchStmt.Default != nil {
@@ -1658,39 +1672,39 @@ yydefault:
 		}
 	case 54:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:424
+//line parser.go.y:438
 		{
 			yyVAL.stmt_switch_case = &ast.SwitchCaseStmt{Exprs: []ast.Expr{yyDollar[2].expr}, Stmt: yyDollar[4].compstmt}
 			yyVAL.stmt_switch_case.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 55:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:429
+//line parser.go.y:443
 		{
 			yyVAL.stmt_switch_case = &ast.SwitchCaseStmt{Exprs: yyDollar[2].exprs, Stmt: yyDollar[4].compstmt}
 			yyVAL.stmt_switch_case.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 56:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:436
+//line parser.go.y:450
 		{
 			yyVAL.stmt_switch_default = yyDollar[3].compstmt
 		}
 	case 57:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line parser.go.y:443
+//line parser.go.y:457
 		{
 			yyVAL.exprs = nil
 		}
 	case 58:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:447
+//line parser.go.y:461
 		{
 			yyVAL.exprs = []ast.Expr{yyDollar[1].expr}
 		}
 	case 59:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:451
+//line parser.go.y:465
 		{
 			if len(yyDollar[1].exprs) == 0 {
 				yylex.Error("syntax error: unexpected ','")
@@ -1699,7 +1713,7 @@ yydefault:
 		}
 	case 60:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:458
+//line parser.go.y:472
 		{
 			if len(yyDollar[1].exprs) == 0 {
 				yylex.Error("syntax error: unexpected ','")
@@ -1708,61 +1722,61 @@ yydefault:
 		}
 	case 61:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:467
+//line parser.go.y:481
 		{
 			yyVAL.expr = yyDollar[1].expr_member_or_ident
 		}
 	case 62:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:471
+//line parser.go.y:485
 		{
 			yyVAL.expr = yyDollar[1].expr_literals
 		}
 	case 63:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:475
+//line parser.go.y:489
 		{
 			yyVAL.expr = &ast.TernaryOpExpr{Expr: yyDollar[1].expr, LHS: yyDollar[3].expr, RHS: yyDollar[5].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 64:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:480
+//line parser.go.y:494
 		{
 			yyVAL.expr = &ast.NilCoalescingOpExpr{LHS: yyDollar[1].expr, RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 65:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:485
+//line parser.go.y:499
 		{
 			yyVAL.expr = &ast.FuncExpr{Params: yyDollar[3].expr_idents, Stmt: yyDollar[6].compstmt}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 66:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:490
+//line parser.go.y:504
 		{
 			yyVAL.expr = &ast.FuncExpr{Params: yyDollar[3].expr_idents, Stmt: yyDollar[7].compstmt, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 67:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:495
+//line parser.go.y:509
 		{
 			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Params: yyDollar[4].expr_idents, Stmt: yyDollar[7].compstmt}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 68:
 		yyDollar = yyS[yypt-9 : yypt+1]
-//line parser.go.y:500
+//line parser.go.y:514
 		{
 			yyVAL.expr = &ast.FuncExpr{Name: yyDollar[2].tok.Lit, Params: yyDollar[4].expr_idents, Stmt: yyDollar[8].compstmt, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 69:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:505
+//line parser.go.y:519
 		{
 			yyVAL.expr = &ast.ArrayExpr{}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1771,7 +1785,7 @@ yydefault:
 		}
 	case 70:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:510
+//line parser.go.y:524
 		{
 			yyVAL.expr = &ast.ArrayExpr{Exprs: yyDollar[3].exprs}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1780,7 +1794,7 @@ yydefault:
 		}
 	case 71:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:515
+//line parser.go.y:529
 		{
 			yyVAL.expr = &ast.ArrayExpr{Exprs: yyDollar[5].exprs, TypeData: &ast.TypeStruct{Kind: ast.TypeSlice, SubType: yyDollar[2].type_data, Dimensions: yyDollar[1].slice_count}}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1789,7 +1803,7 @@ yydefault:
 		}
 	case 72:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:520
+//line parser.go.y:534
 		{
 			yyVAL.expr = &ast.ParenExpr{SubExpr: yyDollar[2].expr}
 			if l, ok := yylex.(*Lexer); ok {
@@ -1798,63 +1812,63 @@ yydefault:
 		}
 	case 73:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:525
+//line parser.go.y:539
 		{
 			yyVAL.expr = &ast.CallExpr{Name: yyDollar[1].tok.Lit, SubExprs: yyDollar[3].exprs, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 74:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:530
+//line parser.go.y:544
 		{
 			yyVAL.expr = &ast.CallExpr{Name: yyDollar[1].tok.Lit, SubExprs: yyDollar[3].exprs}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 75:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:535
+//line parser.go.y:549
 		{
 			yyVAL.expr = &ast.AnonCallExpr{Expr: yyDollar[1].expr, SubExprs: yyDollar[3].exprs, VarArg: true}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 76:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:540
+//line parser.go.y:554
 		{
 			yyVAL.expr = &ast.AnonCallExpr{Expr: yyDollar[1].expr, SubExprs: yyDollar[3].exprs}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 77:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:545
+//line parser.go.y:559
 		{
 			yyVAL.expr = &ast.ItemExpr{Item: yyDollar[1].expr_ident, Index: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr_ident.Position())
 		}
 	case 78:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:550
+//line parser.go.y:564
 		{
 			yyVAL.expr = &ast.ItemExpr{Item: yyDollar[1].expr, Index: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 79:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:555
+//line parser.go.y:569
 		{
 			yyVAL.expr = &ast.LenExpr{Expr: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 80:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:560
+//line parser.go.y:574
 		{
 			yyVAL.expr = &ast.ImportExpr{Name: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 81:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:565
+//line parser.go.y:579
 		{
 			if yyDollar[3].type_data.Kind == ast.TypeDefault {
 				yyDollar[3].type_data.Kind = ast.TypePtr
@@ -1866,42 +1880,42 @@ yydefault:
 		}
 	case 82:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:575
+//line parser.go.y:589
 		{
 			yyVAL.expr = &ast.MakeExpr{TypeData: yyDollar[3].type_data}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 83:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:580
+//line parser.go.y:594
 		{
 			yyVAL.expr = &ast.MakeExpr{TypeData: yyDollar[3].type_data, LenExpr: yyDollar[5].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 84:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:585
+//line parser.go.y:599
 		{
 			yyVAL.expr = &ast.MakeExpr{TypeData: yyDollar[3].type_data, LenExpr: yyDollar[5].expr, CapExpr: yyDollar[7].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 85:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:590
+//line parser.go.y:604
 		{
 			yyVAL.expr = &ast.MakeTypeExpr{Name: yyDollar[4].tok.Lit, Type: yyDollar[6].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 86:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:595
+//line parser.go.y:609
 		{
 			yyVAL.expr = &ast.IncludeExpr{ItemExpr: yyDollar[1].expr, ListExpr: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 87:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:600
+//line parser.go.y:614
 		{
 			yyDollar[4].expr_map.TypeData = &ast.TypeStruct{Kind: ast.TypeMap, Key: &ast.TypeStruct{Name: "interface"}, SubType: &ast.TypeStruct{Name: "interface"}}
 			yyVAL.expr = yyDollar[4].expr_map
@@ -1909,7 +1923,7 @@ yydefault:
 		}
 	case 88:
 		yyDollar = yyS[yypt-10 : yypt+1]
-//line parser.go.y:606
+//line parser.go.y:620
 		{
 			yyDollar[8].expr_map.TypeData = &ast.TypeStruct{Kind: ast.TypeMap, Key: yyDollar[3].type_data, SubType: yyDollar[5].type_data}
 			yyVAL.expr = yyDollar[8].expr_map
@@ -1917,40 +1931,40 @@ yydefault:
 		}
 	case 89:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:612
+//line parser.go.y:626
 		{
 			yyVAL.expr = yyDollar[3].expr_map
 			yyVAL.expr.SetPosition(yyDollar[3].expr_map.Position())
 		}
 	case 90:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:617
+//line parser.go.y:631
 		{
 			yyVAL.expr = yyDollar[1].expr_slice
 			yyVAL.expr.SetPosition(yyDollar[1].expr_slice.Position())
 		}
 	case 91:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:622
+//line parser.go.y:636
 		{
 			yyVAL.expr = yyDollar[1].expr_chan
 			yyVAL.expr.SetPosition(yyDollar[1].expr_chan.Position())
 		}
 	case 95:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line parser.go.y:631
+//line parser.go.y:645
 		{
 			yyVAL.expr_idents = []string{}
 		}
 	case 96:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:635
+//line parser.go.y:649
 		{
 			yyVAL.expr_idents = []string{yyDollar[1].tok.Lit}
 		}
 	case 97:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.go.y:639
+//line parser.go.y:653
 		{
 			if len(yyDollar[1].expr_idents) == 0 {
 				yylex.Error("syntax error: unexpected ','")
@@ -1959,13 +1973,13 @@ yydefault:
 		}
 	case 98:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:648
+//line parser.go.y:662
 		{
 			yyVAL.type_data = &ast.TypeStruct{Name: yyDollar[1].tok.Lit}
 		}
 	case 99:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:652
+//line parser.go.y:666
 		{
 			if yyDollar[1].type_data.Kind != ast.TypeDefault {
 				yylex.Error("not type default")
@@ -1976,7 +1990,7 @@ yydefault:
 		}
 	case 100:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:661
+//line parser.go.y:675
 		{
 			if yyDollar[2].type_data.Kind == ast.TypeDefault {
 				yyDollar[2].type_data.Kind = ast.TypePtr
@@ -1987,7 +2001,7 @@ yydefault:
 		}
 	case 101:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:670
+//line parser.go.y:684
 		{
 			if yyDollar[2].type_data.Kind == ast.TypeDefault {
 				yyDollar[2].type_data.Kind = ast.TypeSlice
@@ -1999,13 +2013,13 @@ yydefault:
 		}
 	case 102:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:680
+//line parser.go.y:694
 		{
 			yyVAL.type_data = &ast.TypeStruct{Kind: ast.TypeMap, Key: yyDollar[3].type_data, SubType: yyDollar[5].type_data}
 		}
 	case 103:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:684
+//line parser.go.y:698
 		{
 			if yyDollar[2].type_data.Kind == ast.TypeDefault {
 				yyDollar[2].type_data.Kind = ast.TypeChan
@@ -2016,19 +2030,19 @@ yydefault:
 		}
 	case 104:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:693
+//line parser.go.y:707
 		{
 			yyVAL.type_data = yyDollar[4].type_data_struct
 		}
 	case 105:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:699
+//line parser.go.y:713
 		{
 			yyVAL.type_data_struct = &ast.TypeStruct{Kind: ast.TypeStructType, StructNames: []string{yyDollar[1].tok.Lit}, StructTypes: []*ast.TypeStruct{yyDollar[2].type_data}}
 		}
 	case 106:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:703
+//line parser.go.y:717
 		{
 			if yyDollar[1].type_data_struct == nil {
 				yylex.Error("syntax error: unexpected ','")
@@ -2038,45 +2052,45 @@ yydefault:
 		}
 	case 107:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:713
+//line parser.go.y:727
 		{
 			yyVAL.slice_count = 1
 		}
 	case 108:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:717
+//line parser.go.y:731
 		{
 			yyVAL.slice_count = yyDollar[3].slice_count + 1
 		}
 	case 109:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:723
+//line parser.go.y:737
 		{
 			yyVAL.expr_member_or_ident = yyDollar[1].expr_member
 		}
 	case 110:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:727
+//line parser.go.y:741
 		{
 			yyVAL.expr_member_or_ident = yyDollar[1].expr_ident
 		}
 	case 111:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:733
+//line parser.go.y:747
 		{
 			yyVAL.expr_member = &ast.MemberExpr{Expr: yyDollar[1].expr, Name: yyDollar[3].tok.Lit}
 			yyVAL.expr_member.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 112:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:740
+//line parser.go.y:754
 		{
 			yyVAL.expr_ident = &ast.IdentExpr{Lit: yyDollar[1].tok.Lit}
 			yyVAL.expr_ident.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 113:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:747
+//line parser.go.y:761
 		{
 			num, err := toNumber("-" + yyDollar[2].tok.Lit)
 			if err != nil {
@@ -2087,7 +2101,7 @@ yydefault:
 		}
 	case 114:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:756
+//line parser.go.y:770
 		{
 			num, err := toNumber(yyDollar[1].tok.Lit)
 			if err != nil {
@@ -2098,47 +2112,47 @@ yydefault:
 		}
 	case 115:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:765
+//line parser.go.y:779
 		{
 			yyVAL.expr_literals = &ast.LiteralExpr{Literal: stringToValue(yyDollar[1].tok.Lit)}
 			yyVAL.expr_literals.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 116:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:770
+//line parser.go.y:784
 		{
 			yyVAL.expr_literals = &ast.LiteralExpr{Literal: trueValue}
 			yyVAL.expr_literals.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 117:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:775
+//line parser.go.y:789
 		{
 			yyVAL.expr_literals = &ast.LiteralExpr{Literal: falseValue}
 			yyVAL.expr_literals.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 118:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:780
+//line parser.go.y:794
 		{
 			yyVAL.expr_literals = &ast.LiteralExpr{Literal: nilValue}
 			yyVAL.expr_literals.SetPosition(yyDollar[1].tok.Position())
 		}
 	case 119:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line parser.go.y:787
+//line parser.go.y:801
 		{
 			yyVAL.expr_map = &ast.MapExpr{}
 		}
 	case 120:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:791
+//line parser.go.y:805
 		{
 			yyVAL.expr_map = &ast.MapExpr{Keys: []ast.Expr{yyDollar[1].expr}, Values: []ast.Expr{yyDollar[3].expr}}
 		}
 	case 121:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:795
+//line parser.go.y:809
 		{
 			if yyDollar[1].expr_map.Keys == nil {
 				yylex.Error("syntax error: unexpected ','")
@@ -2148,142 +2162,142 @@ yydefault:
 		}
 	case 122:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:805
+//line parser.go.y:819
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 123:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:809
+//line parser.go.y:823
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 124:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:813
+//line parser.go.y:827
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 125:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:817
+//line parser.go.y:831
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, End: yyDollar[4].expr, Cap: yyDollar[6].expr}
 		}
 	case 126:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:821
+//line parser.go.y:835
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr_ident, Begin: yyDollar[3].expr, End: yyDollar[5].expr, Cap: yyDollar[7].expr}
 		}
 	case 127:
 		yyDollar = yyS[yypt-6 : yypt+1]
-//line parser.go.y:825
+//line parser.go.y:839
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr}
 		}
 	case 128:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:829
+//line parser.go.y:843
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: yyDollar[3].expr, End: nil}
 		}
 	case 129:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:833
+//line parser.go.y:847
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: nil, End: yyDollar[4].expr}
 		}
 	case 130:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:837
+//line parser.go.y:851
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, End: yyDollar[4].expr, Cap: yyDollar[6].expr}
 		}
 	case 131:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:841
+//line parser.go.y:855
 		{
 			yyVAL.expr_slice = &ast.SliceExpr{Item: yyDollar[1].expr, Begin: yyDollar[3].expr, End: yyDollar[5].expr, Cap: yyDollar[7].expr}
 		}
 	case 132:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:847
+//line parser.go.y:861
 		{
 			yyVAL.expr_chan = &ast.ChanExpr{LHS: yyDollar[1].expr, RHS: yyDollar[3].expr}
 		}
 	case 133:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:851
+//line parser.go.y:865
 		{
 			yyVAL.expr_chan = &ast.ChanExpr{RHS: yyDollar[2].expr}
 		}
 	case 134:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:857
+//line parser.go.y:871
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "-", Expr: yyDollar[2].expr}
 			yyVAL.expr.SetPosition(yyDollar[2].expr.Position())
 		}
 	case 135:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:862
+//line parser.go.y:876
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "!", Expr: yyDollar[2].expr}
 			yyVAL.expr.SetPosition(yyDollar[2].expr.Position())
 		}
 	case 136:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:867
+//line parser.go.y:881
 		{
 			yyVAL.expr = &ast.UnaryExpr{Operator: "^", Expr: yyDollar[2].expr}
 			yyVAL.expr.SetPosition(yyDollar[2].expr.Position())
 		}
 	case 137:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:872
+//line parser.go.y:886
 		{
 			yyVAL.expr = &ast.AddrExpr{Expr: yyDollar[2].expr}
 			yyVAL.expr.SetPosition(yyDollar[2].expr.Position())
 		}
 	case 138:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:877
+//line parser.go.y:891
 		{
 			yyVAL.expr = &ast.DerefExpr{Expr: yyDollar[2].expr}
 			yyVAL.expr.SetPosition(yyDollar[2].expr.Position())
 		}
 	case 139:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:884
+//line parser.go.y:898
 		{
 			yyVAL.expr = &ast.OpExpr{Op: yyDollar[1].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 140:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:889
+//line parser.go.y:903
 		{
 			yyVAL.expr = &ast.OpExpr{Op: yyDollar[1].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 141:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:894
+//line parser.go.y:908
 		{
 			yyVAL.expr = &ast.OpExpr{Op: yyDollar[1].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 142:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:899
+//line parser.go.y:913
 		{
 			yyVAL.expr = &ast.OpExpr{Op: yyDollar[1].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 143:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:906
+//line parser.go.y:920
 		{
 			rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "+", RHS: oneLiteral}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2293,7 +2307,7 @@ yydefault:
 		}
 	case 144:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:914
+//line parser.go.y:928
 		{
 			rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "-", RHS: oneLiteral}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2303,7 +2317,7 @@ yydefault:
 		}
 	case 145:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:922
+//line parser.go.y:936
 		{
 			rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "+", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2313,7 +2327,7 @@ yydefault:
 		}
 	case 146:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:930
+//line parser.go.y:944
 		{
 			rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "-", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2323,7 +2337,7 @@ yydefault:
 		}
 	case 147:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:938
+//line parser.go.y:952
 		{
 			rhs := &ast.OpExpr{Op: &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "|", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2333,7 +2347,7 @@ yydefault:
 		}
 	case 148:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:946
+//line parser.go.y:960
 		{
 			rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "*", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2343,7 +2357,7 @@ yydefault:
 		}
 	case 149:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:954
+//line parser.go.y:968
 		{
 			rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "/", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2353,7 +2367,7 @@ yydefault:
 		}
 	case 150:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:962
+//line parser.go.y:976
 		{
 			rhs := &ast.OpExpr{Op: &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "&", RHS: yyDollar[3].expr}}
 			rhs.Op.SetPosition(yyDollar[1].expr.Position())
@@ -2363,119 +2377,119 @@ yydefault:
 		}
 	case 151:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:973
+//line parser.go.y:987
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "*", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 152:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:978
+//line parser.go.y:992
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "/", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 153:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:983
+//line parser.go.y:997
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "%", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 154:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:988
+//line parser.go.y:1002
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "<<", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 155:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:993
+//line parser.go.y:1007
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: ">>", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 156:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:998
+//line parser.go.y:1012
 		{
 			yyVAL.expr = &ast.MultiplyOperator{LHS: yyDollar[1].expr, Operator: "&", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 157:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1005
+//line parser.go.y:1019
 		{
 			yyVAL.expr = &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "+", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 158:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1010
+//line parser.go.y:1024
 		{
 			yyVAL.expr = &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "-", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 159:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1015
+//line parser.go.y:1029
 		{
 			yyVAL.expr = &ast.AddOperator{LHS: yyDollar[1].expr, Operator: "|", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 160:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1022
+//line parser.go.y:1036
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: "==", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 161:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1027
+//line parser.go.y:1041
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: "!=", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 162:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1032
+//line parser.go.y:1046
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: "<", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 163:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1037
+//line parser.go.y:1051
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: "<=", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 164:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1042
+//line parser.go.y:1056
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: ">", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 165:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1047
+//line parser.go.y:1061
 		{
 			yyVAL.expr = &ast.ComparisonOperator{LHS: yyDollar[1].expr, Operator: ">=", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 166:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1054
+//line parser.go.y:1068
 		{
 			yyVAL.expr = &ast.BinaryOperator{LHS: yyDollar[1].expr, Operator: "&&", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
 		}
 	case 167:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:1059
+//line parser.go.y:1073
 		{
 			yyVAL.expr = &ast.BinaryOperator{LHS: yyDollar[1].expr, Operator: "||", RHS: yyDollar[3].expr}
 			yyVAL.expr.SetPosition(yyDollar[1].expr.Position())
