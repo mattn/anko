@@ -593,6 +593,16 @@ func (runInfo *runInfoStruct) invokeExpr() {
 				}
 				cap = toInt(runInfo.rv)
 			}
+			if aLen < 0 {
+				runInfo.err = newStringError(expr, "make slice len must not be negative")
+				runInfo.rv = nilValue
+				return
+			}
+			if cap < 0 {
+				runInfo.err = newStringError(expr, "make slice cap must not be negative")
+				runInfo.rv = nilValue
+				return
+			}
 			if aLen > cap {
 				runInfo.err = newStringError(expr, "make slice len > cap")
 				runInfo.rv = nilValue
@@ -609,6 +619,11 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					return
 				}
 				aLen = toInt(runInfo.rv)
+			}
+			if aLen < 0 {
+				runInfo.err = newStringError(expr, "make chan buffer size must not be negative")
+				runInfo.rv = nilValue
+				return
 			}
 			runInfo.rv = reflect.MakeChan(t, aLen)
 			return
