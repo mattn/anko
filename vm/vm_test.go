@@ -612,6 +612,8 @@ func TestChan(t *testing.T) {
 	tests := []Test{
 		// send on closed channel
 		{Script: `a = make(chan int64, 2); close(a); a <- 1`, RunError: fmt.Errorf("send on closed channel")},
+		// close of closed channel
+		{Script: `a = make(chan int64, 2); close(a); close(a)`, RunError: fmt.Errorf("close of closed channel")},
 	}
 	runTests(t, tests, nil, &Options{Debug: false})
 

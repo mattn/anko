@@ -724,8 +724,13 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 			return
 		}
 		if runInfo.rv.Kind() == reflect.Chan {
-			runInfo.rv.Close()
+			ch := runInfo.rv
 			runInfo.rv = nilValue
+			if !runInfo.options.Debug {
+				// captures panic
+				defer recoverFunc(runInfo)
+			}
+			ch.Close()
 			return
 		}
 		runInfo.err = newStringError(stmt, "type cannot be "+runInfo.rv.Kind().String()+" for close")
