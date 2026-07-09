@@ -10,5 +10,5 @@ import (
 )
 
 func syncGo19() {
-	env.PackageTypes["sync"]["Map"] = reflect.TypeOf(sync.Map{})
+	env.PackageTypes["sync"]["Map"] = reflect.TypeOf(&sync.Map{})
 }
