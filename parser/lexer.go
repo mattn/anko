@@ -330,6 +330,7 @@ retry:
 			err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
 			tok = int(ch)
 			lit = string(ch)
+			s.next()
 			return
 		}
 		s.next()
