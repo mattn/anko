@@ -714,6 +714,11 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 				runInfo.rv = nilValue
 				return
 			}
+			if !isHashable(runInfo.rv) {
+				runInfo.err = newStringError(stmt, "type "+hashableTypeString(runInfo.rv)+" cannot be used as map key in delete")
+				runInfo.rv = nilValue
+				return
+			}
 			item.SetMapIndex(runInfo.rv, reflect.Value{})
 			runInfo.rv = nilValue
 		default:

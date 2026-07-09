@@ -86,6 +86,11 @@ func (runInfo *runInfoStruct) invokeExpr() {
 					return
 				}
 				key = runInfo.rv
+				if !isHashable(key) {
+					runInfo.err = newStringError(expr, "type "+hashableTypeString(key)+" cannot be used as map key")
+					runInfo.rv = nilValue
+					return
+				}
 
 				runInfo.expr = expr.Values[i]
 				runInfo.invokeExpr()
@@ -129,6 +134,11 @@ func (runInfo *runInfoStruct) invokeExpr() {
 			key, runInfo.err = convertReflectValueToType(runInfo.rv, keyType)
 			if runInfo.err != nil {
 				runInfo.err = newStringError(expr, "cannot use type "+key.Type().String()+" as type "+keyType.String()+" as map key")
+				runInfo.rv = nilValue
+				return
+			}
+			if !isHashable(key) {
+				runInfo.err = newStringError(expr, "type "+hashableTypeString(key)+" cannot be used as map key")
 				runInfo.rv = nilValue
 				return
 			}

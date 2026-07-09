@@ -179,6 +179,11 @@ func (runInfo *runInfoStruct) invokeLetExpr() {
 				runInfo.rv = nilValue
 				return
 			}
+			if !isHashable(runInfo.rv) {
+				runInfo.err = newStringError(expr, "type "+hashableTypeString(runInfo.rv)+" cannot be used as map key")
+				runInfo.rv = nilValue
+				return
+			}
 
 			value, runInfo.err = convertReflectValueToType(value, item.Type().Elem())
 			if runInfo.err != nil {
