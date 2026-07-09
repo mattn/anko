@@ -130,7 +130,7 @@ func isNil(v reflect.Value) bool {
 }
 
 const int64CacheMin = -1
-const int64CacheMax = 256
+const int64CacheMax = 4095
 
 var int64Cache [int64CacheMax - int64CacheMin + 1]reflect.Value
 
@@ -168,6 +168,15 @@ func numToString(v reflect.Value) string {
 	default:
 		return ""
 	}
+}
+
+// isIntKind returns true if the value is a signed integer kind.
+func isIntKind(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return true
+	}
+	return false
 }
 
 func isNum(v reflect.Value) bool {
