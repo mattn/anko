@@ -89,25 +89,50 @@ func (runInfo *runInfoStruct) invokeOperator() {
 				runInfo.rv = falseValue
 			}
 		case "<":
-			if toFloat64(lhsV) < toFloat64(runInfo.rv) {
+			// integers are compared as integers to keep full int64 precision
+			var result bool
+			if isIntKind(lhsV) && isIntKind(runInfo.rv) {
+				result = lhsV.Int() < runInfo.rv.Int()
+			} else {
+				result = toFloat64(lhsV) < toFloat64(runInfo.rv)
+			}
+			if result {
 				runInfo.rv = trueValue
 			} else {
 				runInfo.rv = falseValue
 			}
 		case "<=":
-			if toFloat64(lhsV) <= toFloat64(runInfo.rv) {
+			var result bool
+			if isIntKind(lhsV) && isIntKind(runInfo.rv) {
+				result = lhsV.Int() <= runInfo.rv.Int()
+			} else {
+				result = toFloat64(lhsV) <= toFloat64(runInfo.rv)
+			}
+			if result {
 				runInfo.rv = trueValue
 			} else {
 				runInfo.rv = falseValue
 			}
 		case ">":
-			if toFloat64(lhsV) > toFloat64(runInfo.rv) {
+			var result bool
+			if isIntKind(lhsV) && isIntKind(runInfo.rv) {
+				result = lhsV.Int() > runInfo.rv.Int()
+			} else {
+				result = toFloat64(lhsV) > toFloat64(runInfo.rv)
+			}
+			if result {
 				runInfo.rv = trueValue
 			} else {
 				runInfo.rv = falseValue
 			}
 		case ">=":
-			if toFloat64(lhsV) >= toFloat64(runInfo.rv) {
+			var result bool
+			if isIntKind(lhsV) && isIntKind(runInfo.rv) {
+				result = lhsV.Int() >= runInfo.rv.Int()
+			} else {
+				result = toFloat64(lhsV) >= toFloat64(runInfo.rv)
+			}
+			if result {
 				runInfo.rv = trueValue
 			} else {
 				runInfo.rv = falseValue

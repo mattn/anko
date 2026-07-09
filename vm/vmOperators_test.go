@@ -190,6 +190,12 @@ func TestComparisonOperators(t *testing.T) {
 		{Script: `a == 2`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a != 1`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a != 2`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
+
+		// int64 comparisons keep full precision beyond float64 (2^53)
+		{Script: `9223372036854775807 > 9223372036854775806`, RunOutput: true},
+		{Script: `9223372036854775806 < 9223372036854775807`, RunOutput: true},
+		{Script: `9223372036854775807 <= 9223372036854775806`, RunOutput: false},
+		{Script: `9223372036854775807 >= 9223372036854775807`, RunOutput: true},
 		{Script: `a == 1.0`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: false, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a == 2.0`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a != 1.0`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: true, Output: map[string]interface{}{"a": int64(2)}},
