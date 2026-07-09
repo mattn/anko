@@ -13,6 +13,70 @@ import (
 func (runInfo *runInfoStruct) funcExpr() {
 	funcExpr := runInfo.expr.(*ast.FuncExpr)
 
+	// for adding env into saved function
+	envFunc := runInfo.env
+	options := runInfo.options
+
+	// runVMFunc runs the function statements with args as the parameter values.
+	// Returns the VM value and a reflect.Value holding the error of the run,
+	// which is of type error or *Error and nil valued when the run succeeded.
+	runVMFunc := func(ctx context.Context, args []reflect.Value) (reflect.Value, reflect.Value) {
+		runInfo := runInfoStruct{ctx: ctx, options: options, env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
+
+		// add Params to newEnv
+		for i, param := range funcExpr.Params {
+			runInfo.env.DefineValue(param, args[i])
+		}
+
+		// run function statements
+		runInfo.runSingleStmt()
+		if runInfo.err != nil && runInfo.err != ErrReturn {
+			return nilValue, reflect.ValueOf(newError(funcExpr, runInfo.err))
+		}
+
+		return runInfo.rv, errorNilValue
+	}
+
+	if !funcExpr.VarArg {
+		// non-variadic functions with few parameters are created with a
+		// concrete signature, so callExpr can call them directly without
+		// going through the reflect.Call machinery.
+		// the signatures match what reflect.MakeFunc would have created, so
+		// checkIfRunVMFunction and reflect.Call still work on these values.
+		switch len(funcExpr.Params) {
+		case 0:
+			runInfo.rv = reflect.ValueOf(func(ctx context.Context) (reflect.Value, reflect.Value) {
+				return runVMFunc(ctx, nil)
+			})
+		case 1:
+			runInfo.rv = reflect.ValueOf(func(ctx context.Context, arg0 reflect.Value) (reflect.Value, reflect.Value) {
+				return runVMFunc(ctx, []reflect.Value{arg0})
+			})
+		case 2:
+			runInfo.rv = reflect.ValueOf(func(ctx context.Context, arg0, arg1 reflect.Value) (reflect.Value, reflect.Value) {
+				return runVMFunc(ctx, []reflect.Value{arg0, arg1})
+			})
+		case 3:
+			runInfo.rv = reflect.ValueOf(func(ctx context.Context, arg0, arg1, arg2 reflect.Value) (reflect.Value, reflect.Value) {
+				return runVMFunc(ctx, []reflect.Value{arg0, arg1, arg2})
+			})
+		case 4:
+			runInfo.rv = reflect.ValueOf(func(ctx context.Context, arg0, arg1, arg2, arg3 reflect.Value) (reflect.Value, reflect.Value) {
+				return runVMFunc(ctx, []reflect.Value{arg0, arg1, arg2, arg3})
+			})
+		}
+		if len(funcExpr.Params) <= 4 {
+			// if function name is not empty, define it in the env
+			if funcExpr.Name != "" {
+				runInfo.env.DefineValue(funcExpr.Name, runInfo.rv)
+			}
+			return
+		}
+	}
+
+	// variadic functions and functions with many parameters go through
+	// reflect.MakeFunc
+
 	// create the inTypes needed by reflect.FuncOf
 	inTypes := make([]reflect.Type, len(funcExpr.Params)+1)
 	// for runVMFunction first arg is always context
@@ -26,47 +90,37 @@ func (runInfo *runInfoStruct) funcExpr() {
 	// create funcType, output is always slice of reflect.Type with two values
 	funcType := reflect.FuncOf(inTypes, []reflect.Type{reflectValueType, reflectValueType}, funcExpr.VarArg)
 
-	// for adding env into saved function
-	envFunc := runInfo.env
-
 	// create a function that can be used by reflect.MakeFunc
 	// this function is a translator that converts a function call into a vm run
 	// returns slice of reflect.Type with two values:
 	// return value of the function and error value of the run
 	runVMFunction := func(in []reflect.Value) []reflect.Value {
-		runInfo := runInfoStruct{ctx: in[0].Interface().(context.Context), options: runInfo.options, env: envFunc.NewEnv(), stmt: funcExpr.Stmt, rv: nilValue}
+		args := make([]reflect.Value, len(funcExpr.Params))
 
-		// add Params to newEnv, except last Params
+		// get Params, except last Params
 		for i := 0; i < len(funcExpr.Params)-1; i++ {
-			runInfo.rv = in[i+1].Interface().(reflect.Value)
-			runInfo.env.DefineValue(funcExpr.Params[i], runInfo.rv)
+			args[i] = in[i+1].Interface().(reflect.Value)
 		}
-		// add last Params to newEnv
+		// get last Params
 		if len(funcExpr.Params) > 0 {
 			if funcExpr.VarArg {
-				// function is variadic, add last Params to newEnv without convert to Interface and then reflect.Value
-				runInfo.rv = in[len(funcExpr.Params)]
-				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				// function is variadic, get last Params without convert to Interface and then reflect.Value
+				args[len(funcExpr.Params)-1] = in[len(funcExpr.Params)]
 			} else {
-				// function is not variadic, add last Params to newEnv
-				runInfo.rv = in[len(funcExpr.Params)].Interface().(reflect.Value)
-				runInfo.env.DefineValue(funcExpr.Params[len(funcExpr.Params)-1], runInfo.rv)
+				args[len(funcExpr.Params)-1] = in[len(funcExpr.Params)].Interface().(reflect.Value)
 			}
 		}
 
-		// run function statements
-		runInfo.runSingleStmt()
-		if runInfo.err != nil && runInfo.err != ErrReturn {
-			runInfo.err = newError(funcExpr, runInfo.err)
+		rv, errV := runVMFunc(in[0].Interface().(context.Context), args)
+		if !errV.IsNil() {
 			// return nil value and error
-			// need to do single reflect.ValueOf because nilValue is already reflect.Value of nil
-			// need to do double reflect.ValueOf of newError in order to match
-			return []reflect.Value{reflectValueNilValue, reflect.ValueOf(reflect.ValueOf(newError(funcExpr, runInfo.err)))}
+			// need to do double reflect.ValueOf of the error in order to match
+			return []reflect.Value{reflectValueNilValue, reflect.ValueOf(errV)}
 		}
 
 		// the reflect.ValueOf of rv is needed to work in the reflect.Value slice
 		// reflectValueErrorNilValue is already a double reflect.ValueOf
-		return []reflect.Value{reflect.ValueOf(runInfo.rv), reflectValueErrorNilValue}
+		return []reflect.Value{reflect.ValueOf(rv), reflectValueErrorNilValue}
 	}
 
 	// make the reflect.Value function that calls runVMFunction
@@ -134,6 +188,15 @@ func (runInfo *runInfoStruct) callExpr() {
 	fType := f.Type()
 	// check if this is a runVMFunction type
 	isRunVMFunction := checkIfRunVMFunction(fType)
+
+	// fast path: VM functions created with a concrete signature can be
+	// called directly, without going through the reflect.Call machinery
+	if isRunVMFunction && !callExpr.VarArg && !fType.IsVariadic() && fType.NumIn()-1 == len(callExpr.SubExprs) {
+		if runInfo.callVMFunctionDirect(f, callExpr) {
+			return
+		}
+	}
+
 	// create/convert the args to the function
 	args, useCallSlice = runInfo.makeCallArgs(fType, isRunVMFunction, callExpr)
 	if runInfo.err != nil {
@@ -179,6 +242,102 @@ func (runInfo *runInfoStruct) callExpr() {
 
 	// processCallReturnValues to get/convert return values to normal rv form
 	runInfo.rv, runInfo.err = processCallReturnValues(rvs, isRunVMFunction, true)
+}
+
+// callVMFunctionDirect calls a VM function that was created with a concrete
+// signature in funcExpr directly, skipping the reflect.Call machinery.
+// Returns false without evaluating any arguments if the function does not
+// have one of the concrete signatures, so callExpr can fall back to the
+// reflect based path. The caller must check that the number of arguments
+// matches the function signature.
+// handled is a named return so it stays true when recoverFunc recovers a
+// panic from the called function.
+func (runInfo *runInfoStruct) callVMFunctionDirect(f reflect.Value, callExpr *ast.CallExpr) (handled bool) {
+	// check the concrete signature before evaluating the arguments, so the
+	// fallback path does not evaluate expressions twice
+	var fn0 func(context.Context) (reflect.Value, reflect.Value)
+	var fn1 func(context.Context, reflect.Value) (reflect.Value, reflect.Value)
+	var fn2 func(context.Context, reflect.Value, reflect.Value) (reflect.Value, reflect.Value)
+	var fn3 func(context.Context, reflect.Value, reflect.Value, reflect.Value) (reflect.Value, reflect.Value)
+	var fn4 func(context.Context, reflect.Value, reflect.Value, reflect.Value, reflect.Value) (reflect.Value, reflect.Value)
+	switch fn := f.Interface().(type) {
+	case func(context.Context) (reflect.Value, reflect.Value):
+		fn0 = fn
+	case func(context.Context, reflect.Value) (reflect.Value, reflect.Value):
+		fn1 = fn
+	case func(context.Context, reflect.Value, reflect.Value) (reflect.Value, reflect.Value):
+		fn2 = fn
+	case func(context.Context, reflect.Value, reflect.Value, reflect.Value) (reflect.Value, reflect.Value):
+		fn3 = fn
+	case func(context.Context, reflect.Value, reflect.Value, reflect.Value, reflect.Value) (reflect.Value, reflect.Value):
+		fn4 = fn
+	default:
+		return false
+	}
+
+	handled = true
+
+	// evaluate the arguments
+	var argsBuf [4]reflect.Value
+	args := argsBuf[:0]
+	for _, subExpr := range callExpr.SubExprs {
+		runInfo.expr = subExpr
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return true
+		}
+		args = append(args, runInfo.rv)
+	}
+
+	if !runInfo.options.Debug {
+		// captures panic
+		defer recoverFunc(runInfo)
+	}
+
+	runInfo.rv = nilValue
+
+	if callExpr.Go {
+		switch {
+		case fn0 != nil:
+			go fn0(runInfo.ctx)
+		case fn1 != nil:
+			go fn1(runInfo.ctx, args[0])
+		case fn2 != nil:
+			go fn2(runInfo.ctx, args[0], args[1])
+		case fn3 != nil:
+			go fn3(runInfo.ctx, args[0], args[1], args[2])
+		case fn4 != nil:
+			go fn4(runInfo.ctx, args[0], args[1], args[2], args[3])
+		}
+		return true
+	}
+
+	var rv, errV reflect.Value
+	switch {
+	case fn0 != nil:
+		rv, errV = fn0(runInfo.ctx)
+	case fn1 != nil:
+		rv, errV = fn1(runInfo.ctx, args[0])
+	case fn2 != nil:
+		rv, errV = fn2(runInfo.ctx, args[0], args[1])
+	case fn3 != nil:
+		rv, errV = fn3(runInfo.ctx, args[0], args[1], args[2])
+	case fn4 != nil:
+		rv, errV = fn4(runInfo.ctx, args[0], args[1], args[2], args[3])
+	}
+
+	if !errV.IsNil() {
+		// same error conversion as processCallReturnValues
+		if errV.Type() == vmErrorType {
+			runInfo.err = errV.Interface().(*Error)
+		} else {
+			runInfo.err = errV.Interface().(error)
+		}
+		return true
+	}
+
+	runInfo.rv = rv
+	return true
 }
 
 // checkIfRunVMFunction checking the number and types of the reflect.Type.
