@@ -22,6 +22,9 @@ func (e *Env) DefineValue(symbol string, value reflect.Value) error {
 		return ErrSymbolContainsDot
 	}
 	e.rwMutex.Lock()
+	if e.values == nil {
+		e.values = make(map[string]reflect.Value)
+	}
 	e.values[symbol] = value
 	e.rwMutex.Unlock()
 

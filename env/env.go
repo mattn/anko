@@ -61,17 +61,16 @@ var (
 )
 
 // NewEnv creates new global scope.
+// The values map is created lazily on the first Define to keep scope
+// creation cheap.
 func NewEnv() *Env {
-	return &Env{
-		values: make(map[string]reflect.Value),
-	}
+	return &Env{}
 }
 
 // NewEnv creates new child scope.
 func (e *Env) NewEnv() *Env {
 	return &Env{
 		parent: e,
-		values: make(map[string]reflect.Value),
 	}
 }
 
@@ -80,7 +79,6 @@ func (e *Env) NewEnv() *Env {
 func (e *Env) NewModule(symbol string) (*Env, error) {
 	module := &Env{
 		parent: e,
-		values: make(map[string]reflect.Value),
 	}
 	return module, e.Define(symbol, module)
 }
@@ -160,11 +158,13 @@ func (e *Env) Copy() *Env {
 	e.rwMutex.RLock()
 	copy := Env{
 		parent:         e.parent,
-		values:         make(map[string]reflect.Value, len(e.values)),
 		externalLookup: e.externalLookup,
 	}
-	for name, value := range e.values {
-		copy.values[name] = value
+	if e.values != nil {
+		copy.values = make(map[string]reflect.Value, len(e.values))
+		for name, value := range e.values {
+			copy.values[name] = value
+		}
 	}
 	if e.types != nil {
 		copy.types = make(map[string]reflect.Type, len(e.types))
