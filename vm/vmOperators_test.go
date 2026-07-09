@@ -149,9 +149,11 @@ func TestBasicOperators(t *testing.T) {
 		{Script: `a % 3`, Input: map[string]interface{}{"a": int64(2)}, RunOutput: int64(2), Output: map[string]interface{}{"a": int64(2)}},
 		{Script: `a % 2`, Input: map[string]interface{}{"a": float64(2.1)}, RunOutput: int64(0), Output: map[string]interface{}{"a": float64(2.1)}},
 		{Script: `a % 3`, Input: map[string]interface{}{"a": float64(2.1)}, RunOutput: int64(2), Output: map[string]interface{}{"a": float64(2.1)}},
+		{Script: `a % 0`, Input: map[string]interface{}{"a": int64(2)}, RunError: fmt.Errorf("integer divide by zero"), Output: map[string]interface{}{"a": int64(2)}},
 
 		{Script: `a * 4`, Input: map[string]interface{}{"a": "a"}, RunOutput: "aaaa", Output: map[string]interface{}{"a": "a"}},
 		{Script: `a * 4.0`, Input: map[string]interface{}{"a": "a"}, RunOutput: float64(0), Output: map[string]interface{}{"a": "a"}},
+		{Script: `a * -1`, Input: map[string]interface{}{"a": "a"}, RunError: fmt.Errorf("negative repeat count"), Output: map[string]interface{}{"a": "a"}},
 
 		{Script: `-a`, Input: map[string]interface{}{"a": nil}, RunOutput: float64(-0), Output: map[string]interface{}{"a": nil}},
 		{Script: `-a`, Input: map[string]interface{}{"a": int32(1)}, RunOutput: int64(-1), Output: map[string]interface{}{"a": int32(1)}},

@@ -220,7 +220,13 @@ func (runInfo *runInfoStruct) invokeOperator() {
 		switch operator.Operator {
 		case "*":
 			if lhsV.Kind() == reflect.String && (runInfo.rv.Kind() == reflect.Int || runInfo.rv.Kind() == reflect.Int32 || runInfo.rv.Kind() == reflect.Int64) {
-				runInfo.rv = reflect.ValueOf(strings.Repeat(toString(lhsV), int(toInt64(runInfo.rv))))
+				count := toInt64(runInfo.rv)
+				if count < 0 {
+					runInfo.err = newStringError(operator, "negative repeat count")
+					runInfo.rv = nilValue
+					return
+				}
+				runInfo.rv = reflect.ValueOf(strings.Repeat(toString(lhsV), int(count)))
 				return
 			}
 			if lhsV.Kind() == reflect.Float64 || runInfo.rv.Kind() == reflect.Float64 {
@@ -231,7 +237,13 @@ func (runInfo *runInfoStruct) invokeOperator() {
 		case "/":
 			runInfo.rv = float64Value(toFloat64(lhsV) / toFloat64(runInfo.rv))
 		case "%":
-			runInfo.rv = int64Value(toInt64(lhsV) % toInt64(runInfo.rv))
+			rhs := toInt64(runInfo.rv)
+			if rhs == 0 {
+				runInfo.err = newStringError(operator, "integer divide by zero")
+				runInfo.rv = nilValue
+				return
+			}
+			runInfo.rv = int64Value(toInt64(lhsV) % rhs)
 		case ">>":
 			runInfo.rv = int64Value(toInt64(lhsV) >> uint64(toInt64(runInfo.rv)))
 		case "<<":
