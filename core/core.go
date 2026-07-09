@@ -18,6 +18,9 @@ func Import(e *env.Env) *env.Env {
 		if rv.Kind() == reflect.Interface {
 			rv = rv.Elem()
 		}
+		if rv.Kind() != reflect.Map {
+			panic(fmt.Sprintf("keys expected map type, got %v", rv.Kind()))
+		}
 		mapKeysValue := rv.MapKeys()
 		mapKeys := make([]interface{}, len(mapKeysValue))
 		for i := 0; i < len(mapKeysValue); i++ {
@@ -57,7 +60,11 @@ func Import(e *env.Env) *env.Env {
 	})
 
 	e.Define("typeOf", func(v interface{}) string {
-		return reflect.TypeOf(v).String()
+		typeOf := reflect.TypeOf(v)
+		if typeOf == nil {
+			return "nil"
+		}
+		return typeOf.String()
 	})
 
 	e.Define("kindOf", func(v interface{}) string {
