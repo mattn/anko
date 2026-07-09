@@ -232,6 +232,9 @@ func TestVar(t *testing.T) {
 		{Script: `a := 1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `var a := 1`, ParseError: fmt.Errorf("syntax error")},
 		{Script: `y = z`, RunError: fmt.Errorf("undefined symbol 'z'")},
+		{Script: `= 1`, ParseError: fmt.Errorf("missing expressions on left side of '='"), RunError: fmt.Errorf("invalid operation")},
+		{Script: `= 1, 2`, ParseError: fmt.Errorf("missing expressions on left side of '='"), RunError: fmt.Errorf("invalid operation")},
+		{Script: `a, b =`, ParseError: fmt.Errorf("missing expressions on right side of '='"), RunError: fmt.Errorf("invalid operation")},
 
 		{Script: `a = nil`, RunOutput: nil, Output: map[string]interface{}{"a": nil}},
 		{Script: `a = true`, RunOutput: true, Output: map[string]interface{}{"a": true}},
@@ -617,6 +620,7 @@ func TestChan(t *testing.T) {
 
 	tests = []Test{
 		{Script: `a = make(chan int64, 2); a <- 1; = <- a`, ParseError: fmt.Errorf("missing expressions on left side of channel operator"), RunError: fmt.Errorf("invalid operation")},
+		{Script: `a = make(chan int64, 2); a <- 1; x, y, z = <- a`, ParseError: fmt.Errorf("too many expressions on left side of channel operator"), RunError: fmt.Errorf("invalid operation")},
 
 		{Script: `<- 1++`, RunError: fmt.Errorf("invalid operation")},
 		{Script: `1++ <- 1`, RunError: fmt.Errorf("invalid operation")},

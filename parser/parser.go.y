@@ -270,16 +270,26 @@ stmt_lets :
 	}
 	| exprs '=' exprs
 	{
-		if len($1) == 2 && len($3) == 1 {
-			if _, ok := $3[0].(*ast.ItemExpr); ok {
-				$$ = &ast.LetMapItemStmt{LHSS: $1, RHS: $3[0]}
+		if len($1) < 1 {
+			yylex.Error("missing expressions on left side of '='")
+			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
+			$$.SetPosition($<tok>2.Position())
+		} else if len($3) < 1 {
+			yylex.Error("missing expressions on right side of '='")
+			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
+			$$.SetPosition($1[0].Position())
+		} else {
+			if len($1) == 2 && len($3) == 1 {
+				if _, ok := $3[0].(*ast.ItemExpr); ok {
+					$$ = &ast.LetMapItemStmt{LHSS: $1, RHS: $3[0]}
+				} else {
+					$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
+				}
 			} else {
 				$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
 			}
-		} else {
-			$$ = &ast.LetsStmt{LHSS: $1, RHSS: $3}
+			$$.SetPosition($1[0].Position())
 		}
-		$$.SetPosition($1[0].Position())
 	}
 	| expr EQOPCHAN expr
 	{
@@ -296,6 +306,10 @@ stmt_lets :
 			yylex.Error("missing expressions on left side of channel operator")
 			$$ = &ast.ChanStmt{RHS: $3}
 			$$.SetPosition($2.Position())
+		} else {
+			yylex.Error("too many expressions on left side of channel operator")
+			$$ = &ast.ChanStmt{RHS: $3}
+			$$.SetPosition($1[0].Position())
 		}
 	}
 
