@@ -42,6 +42,8 @@ func tryToBool(v reflect.Value) (bool, error) {
 		return v.Float() != 0, nil
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return v.Int() != 0, nil
+	case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint:
+		return v.Uint() != 0, nil
 	case reflect.Bool:
 		return v.Bool(), nil
 	case reflect.String:
@@ -85,6 +87,8 @@ func tryToFloat64(v reflect.Value) (float64, error) {
 		return v.Float(), nil
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return float64(v.Int()), nil
+	case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint:
+		return float64(v.Uint()), nil
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
@@ -117,6 +121,8 @@ func tryToInt64(v reflect.Value) (int64, error) {
 		return int64(v.Float()), nil
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return v.Int(), nil
+	case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint:
+		return int64(v.Uint()), nil
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
@@ -156,6 +162,8 @@ func tryToInt(v reflect.Value) (int, error) {
 		return int(v.Float()), nil
 	case reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
 		return int(v.Int()), nil
+	case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint:
+		return int(v.Uint()), nil
 	case reflect.Bool:
 		if v.Bool() {
 			return 1, nil
