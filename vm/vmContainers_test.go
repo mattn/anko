@@ -874,6 +874,14 @@ func TestMaps(t *testing.T) {
 		{Script: `b[1] = 1`, RunError: fmt.Errorf("undefined symbol 'b'")},
 		{Script: `z.y.x = 1`, RunError: fmt.Errorf("undefined symbol 'z'")},
 
+		// unhashable map keys should error instead of panic
+		{Script: `{[1,2]: 3}`, RunError: fmt.Errorf("type []interface {} cannot be used as map key")},
+		{Script: `a = {}; a[[1,2]] = 3`, RunError: fmt.Errorf("type []interface {} cannot be used as map key"), Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = {}; a[{"x":1}] = 3`, RunError: fmt.Errorf("type map[interface {}]interface {} cannot be used as map key"), Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = {}; a[[1,2]]`, RunOutput: nil, Output: map[string]interface{}{"a": map[interface{}]interface{}{}}},
+		{Script: `a = {"b": 1}; delete(a, [1,2])`, RunError: fmt.Errorf("type []interface {} cannot be used as map key in delete"), Output: map[string]interface{}{"a": map[interface{}]interface{}{"b": int64(1)}}},
+		{Script: `a = {}; a[nil] = 1; a[nil]`, RunOutput: int64(1)},
+
 		{Script: `{}`, RunOutput: map[interface{}]interface{}{}},
 		{Script: `{"b": nil}`, RunOutput: map[interface{}]interface{}{"b": nil}},
 		{Script: `{"b": true}`, RunOutput: map[interface{}]interface{}{"b": true}},

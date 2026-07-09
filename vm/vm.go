@@ -254,6 +254,25 @@ func equal(lhsV, rhsV reflect.Value) bool {
 	return reflect.DeepEqual(lhsV.Interface(), rhsV.Interface())
 }
 
+// isHashable returns true if the value can be used as a map key without
+// panicking. A nil interface is a valid map key even though
+// reflect.Value.Comparable reports false for it.
+func isHashable(v reflect.Value) bool {
+	if v.Kind() == reflect.Interface && v.IsNil() {
+		return true
+	}
+	return v.Comparable()
+}
+
+// hashableTypeString returns the type string of the value for error messages,
+// unwrapping interfaces to show the dynamic type.
+func hashableTypeString(v reflect.Value) string {
+	if v.Kind() == reflect.Interface && !v.IsNil() {
+		v = v.Elem()
+	}
+	return v.Type().String()
+}
+
 func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	if aMap.IsNil() {
 		return nilValue
@@ -262,6 +281,10 @@ func getMapIndex(key reflect.Value, aMap reflect.Value) reflect.Value {
 	var err error
 	key, err = convertReflectValueToType(key, aMap.Type().Key())
 	if err != nil {
+		return nilValue
+	}
+	if !isHashable(key) {
+		// an unhashable key can never be in a map
 		return nilValue
 	}
 
