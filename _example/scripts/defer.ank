@@ -1,0 +1,18 @@
+#!anko
+
+# defer runs a function call when the surrounding function returns.
+# Arguments are evaluated at the defer statement, and deferred calls
+# run in last-in first-out order.
+
+func f() {
+  for i = 0; i < 3; i++ {
+    defer println("deferred", i)
+  }
+  println("body done")
+}
+
+f()
+# body done
+# deferred 2
+# deferred 1
+# deferred 0

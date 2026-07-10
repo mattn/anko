@@ -861,3 +861,54 @@ waitGroup.Wait()`,
 
 	runTests(t, tests, nil, &Options{Debug: true})
 }
+
+func TestDefer(t *testing.T) {
+	t.Parallel()
+
+	tests := []Test{
+		// expression in defer must be a function call
+		{Script: `defer 1`, ParseError: fmt.Errorf("syntax error")},
+		{Script: `a = 1; func f() { defer a() }; f()`, RunError: fmt.Errorf("cannot call type int64")},
+		{Script: `func f() { defer b(1) }; f()`, RunError: fmt.Errorf("undefined symbol 'b'")},
+
+		// defers run after the function body in LIFO order
+		{Script: `a = []; func add(x) { a += x }; func f() { defer add(1); defer add(2); a += 3 }; f(); a`,
+			RunOutput: []interface{}{int64(3), int64(2), int64(1)},
+			Output:    map[string]interface{}{"a": []interface{}{int64(3), int64(2), int64(1)}}},
+		{Script: `a = []; func f() { defer func(x) { a += x }(1); a += 2 }; f(); a`,
+			RunOutput: []interface{}{int64(2), int64(1)},
+			Output:    map[string]interface{}{"a": []interface{}{int64(2), int64(1)}}},
+		{Script: `a = []; func f() { for i = 0; i < 3; i++ { defer func(x) { a += x }(i) } }; f(); a`,
+			RunOutput: []interface{}{int64(2), int64(1), int64(0)},
+			Output:    map[string]interface{}{"a": []interface{}{int64(2), int64(1), int64(0)}}},
+
+		// arguments are evaluated at the defer statement
+		{Script: `a = 0; x = 1; func f() { defer func(v) { a = v }(x); x = 2 }; f(); a`,
+			RunOutput: int64(1),
+			Output:    map[string]interface{}{"a": int64(1), "x": int64(2)}},
+
+		// the return value of the function is not changed by defers
+		{Script: `func f() { defer func() { return 10 }(); return 1 }; f()`, RunOutput: int64(1)},
+
+		// defers run when the function returns with an error
+		{Script: `a = 0; func f() { defer func() { a = 1 }(); throw "error" }; try { f() } catch e { }; a`,
+			RunOutput: int64(1),
+			Output:    map[string]interface{}{"a": int64(1)}},
+
+		// an error in a defer becomes the function error, unless the body already failed
+		{Script: `func f() { defer func() { throw "defer error" }() }; f()`, RunError: fmt.Errorf("defer error")},
+		{Script: `func f() { defer func() { throw "defer error" }(); throw "body error" }; f()`, RunError: fmt.Errorf("body error")},
+
+		// variadic function
+		{Script: `a = []; func v(x...) { a += x }; func f() { defer v(1, 2) }; f(); a`,
+			RunOutput: []interface{}{int64(1), int64(2)},
+			Output:    map[string]interface{}{"a": []interface{}{int64(1), int64(2)}}},
+
+		// top level defers run when the script ends, the script value is kept
+		{Script: `a = 1; defer func() { a = 2 }(); a`,
+			RunOutput: int64(1),
+			Output:    map[string]interface{}{"a": int64(2)}},
+	}
+
+	runTests(t, tests, nil, &Options{Debug: true})
+}

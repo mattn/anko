@@ -135,6 +135,12 @@ type GoroutineStmt struct {
 	Expr Expr
 }
 
+// DeferStmt provide statement of defer.
+type DeferStmt struct {
+	StmtImpl
+	Expr Expr
+}
+
 // DeleteStmt provides statement of delete.
 type DeleteStmt struct {
 	ExprImpl

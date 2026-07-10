@@ -110,6 +110,15 @@ func a (x) {
 	println(x + 1)
 }
 a(5) // 6
+
+// defer runs a function call when the surrounding function returns,
+// in last-in first-out order
+func b () {
+	defer println("world")
+	defer println("hello")
+	println("start")
+}
+b() // start, hello, world
 ```
 
 
