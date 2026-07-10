@@ -65,30 +65,7 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// StmtsStmt
 	case *ast.StmtsStmt:
-		for _, stmt := range stmt.Stmts {
-			switch stmt.(type) {
-			case *ast.BreakStmt:
-				runInfo.err = ErrBreak
-				return
-			case *ast.ContinueStmt:
-				runInfo.err = ErrContinue
-				return
-			case *ast.ReturnStmt:
-				runInfo.stmt = stmt
-				runInfo.runSingleStmt()
-				if runInfo.err != nil {
-					return
-				}
-				runInfo.err = ErrReturn
-				return
-			default:
-				runInfo.stmt = stmt
-				runInfo.runSingleStmt()
-				if runInfo.err != nil {
-					return
-				}
-			}
-		}
+		runInfo.runStmtsStmt(stmt)
 
 	// ExprStmt
 	case *ast.ExprStmt:
@@ -97,507 +74,39 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// VarStmt
 	case *ast.VarStmt:
-		// get right side expression values
-		rvs := make([]reflect.Value, len(stmt.Exprs))
-		var i int
-		for i, runInfo.expr = range stmt.Exprs {
-			runInfo.invokeExpr()
-			if runInfo.err != nil {
-				return
-			}
-			if env, ok := runInfo.rv.Interface().(*env.Env); ok {
-				rvs[i] = reflect.ValueOf(env.DeepCopy())
-			} else {
-				rvs[i] = runInfo.rv
-			}
-		}
-
-		if len(rvs) == 1 && len(stmt.Names) > 1 {
-			// only one right side value but many left side names
-			value := rvs[0]
-			if value.Kind() == reflect.Interface && !value.IsNil() {
-				value = value.Elem()
-			}
-			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
-				// value is slice/array, add each value to left side names
-				for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
-					runInfo.env.DefineValue(stmt.Names[i], value.Index(i))
-				}
-				// return last value of slice/array
-				runInfo.rv = value.Index(value.Len() - 1)
-				return
-			}
-		}
-
-		// define all names with right side values
-		for i = 0; i < len(rvs) && i < len(stmt.Names); i++ {
-			runInfo.env.DefineValue(stmt.Names[i], rvs[i])
-		}
-
-		// return last right side value
-		runInfo.rv = rvs[len(rvs)-1]
+		runInfo.runVarStmt(stmt)
 
 	// LetsStmt
 	case *ast.LetsStmt:
-		if len(stmt.LHSS) < 1 || len(stmt.RHSS) < 1 {
-			runInfo.err = newStringError(stmt, "invalid operation")
-			runInfo.rv = nilValue
-			return
-		}
-		// get right side expression values
-		rvs := make([]reflect.Value, len(stmt.RHSS))
-		var i int
-		for i, runInfo.expr = range stmt.RHSS {
-			runInfo.invokeExpr()
-			if runInfo.err != nil {
-				return
-			}
-			if env, ok := runInfo.rv.Interface().(*env.Env); ok {
-				rvs[i] = reflect.ValueOf(env.DeepCopy())
-			} else {
-				rvs[i] = runInfo.rv
-			}
-		}
-
-		if len(rvs) == 1 && len(stmt.LHSS) > 1 {
-			// only one right side value but many left side expressions
-			value := rvs[0]
-			if value.Kind() == reflect.Interface && !value.IsNil() {
-				value = value.Elem()
-			}
-			if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
-				// value is slice/array, add each value to left side expression
-				for i := 0; i < value.Len() && i < len(stmt.LHSS); i++ {
-					runInfo.rv = value.Index(i)
-					runInfo.expr = stmt.LHSS[i]
-					runInfo.invokeLetExpr()
-					if runInfo.err != nil {
-						return
-					}
-				}
-				// return last value of slice/array
-				runInfo.rv = value.Index(value.Len() - 1)
-				return
-			}
-		}
-
-		// invoke all left side expressions with right side values
-		for i = 0; i < len(rvs) && i < len(stmt.LHSS); i++ {
-			value := rvs[i]
-			if value.Kind() == reflect.Interface && !value.IsNil() {
-				value = value.Elem()
-			}
-			runInfo.rv = value
-			runInfo.expr = stmt.LHSS[i]
-			runInfo.invokeLetExpr()
-			if runInfo.err != nil {
-				return
-			}
-		}
-
-		// return last right side value
-		runInfo.rv = rvs[len(rvs)-1]
+		runInfo.runLetsStmt(stmt)
 
 	// LetMapItemStmt
 	case *ast.LetMapItemStmt:
-		runInfo.expr = stmt.RHS
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			return
-		}
-		var rvs []reflect.Value
-		if isNil(runInfo.rv) {
-			rvs = []reflect.Value{nilValue, falseValue}
-		} else {
-			rvs = []reflect.Value{runInfo.rv, trueValue}
-		}
-		var i int
-		for i, runInfo.expr = range stmt.LHSS {
-			runInfo.rv = rvs[i]
-			if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
-				runInfo.rv = runInfo.rv.Elem()
-			}
-			runInfo.invokeLetExpr()
-			if runInfo.err != nil {
-				return
-			}
-		}
-		runInfo.rv = rvs[0]
+		runInfo.runLetMapItemStmt(stmt)
 
 	// IfStmt
 	case *ast.IfStmt:
-		// if
-		runInfo.expr = stmt.If
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			return
-		}
-
-		env := runInfo.env
-
-		if toBool(runInfo.rv) {
-			// then
-			runInfo.rv = nilValue
-			runInfo.stmt = stmt.Then
-			runInfo.env = env.NewEnv()
-			runInfo.runSingleStmt()
-			runInfo.env = env
-			return
-		}
-
-		for _, statement := range stmt.ElseIf {
-			elseIf := statement.(*ast.IfStmt)
-
-			// else if - if
-			runInfo.env = env.NewEnv()
-			runInfo.expr = elseIf.If
-			runInfo.invokeExpr()
-			if runInfo.err != nil {
-				runInfo.env = env
-				return
-			}
-
-			if !toBool(runInfo.rv) {
-				continue
-			}
-
-			// else if - then
-			runInfo.rv = nilValue
-			runInfo.stmt = elseIf.Then
-			runInfo.env = env.NewEnv()
-			runInfo.runSingleStmt()
-			runInfo.env = env
-			return
-		}
-
-		if stmt.Else != nil {
-			// else
-			runInfo.rv = nilValue
-			runInfo.stmt = stmt.Else
-			runInfo.env = env.NewEnv()
-			runInfo.runSingleStmt()
-		}
-
-		runInfo.env = env
+		runInfo.runIfStmt(stmt)
 
 	// TryStmt
 	case *ast.TryStmt:
-		// only the try statement will ignore any error except ErrInterrupt
-		// all other parts will return the error
-
-		env := runInfo.env
-		runInfo.env = env.NewEnv()
-
-		runInfo.stmt = stmt.Try
-		runInfo.runSingleStmt()
-
-		if runInfo.err != nil {
-			if runInfo.err == ErrInterrupt {
-				runInfo.env = env
-				return
-			}
-
-			// Catch
-			runInfo.stmt = stmt.Catch
-			if stmt.Var != "" {
-				runInfo.env.DefineValue(stmt.Var, reflect.ValueOf(runInfo.err))
-			}
-			runInfo.err = nil
-			runInfo.runSingleStmt()
-			if runInfo.err != nil {
-				runInfo.env = env
-				return
-			}
-		}
-
-		if stmt.Finally != nil {
-			// Finally
-			runInfo.stmt = stmt.Finally
-			runInfo.runSingleStmt()
-		}
-
-		runInfo.env = env
+		runInfo.runTryStmt(stmt)
 
 	// LoopStmt
 	case *ast.LoopStmt:
-		env := runInfo.env
-		runInfo.env = env.NewEnv()
-
-		for {
-			select {
-			case <-runInfo.ctx.Done():
-				runInfo.err = ErrInterrupt
-				runInfo.rv = nilValue
-				runInfo.env = env
-				return
-			default:
-			}
-
-			if stmt.Expr != nil {
-				runInfo.expr = stmt.Expr
-				runInfo.invokeExpr()
-				if runInfo.err != nil {
-					break
-				}
-				if !toBool(runInfo.rv) {
-					break
-				}
-			}
-
-			runInfo.stmt = stmt.Stmt
-			runInfo.runSingleStmt()
-			if runInfo.err != nil {
-				if runInfo.err == ErrContinue {
-					runInfo.err = nil
-					continue
-				}
-				if runInfo.err == ErrReturn {
-					runInfo.env = env
-					return
-				}
-				if runInfo.err == ErrBreak {
-					runInfo.err = nil
-				}
-				break
-			}
-		}
-
-		runInfo.rv = nilValue
-		runInfo.env = env
+		runInfo.runLoopStmt(stmt)
 
 	// ForStmt
 	case *ast.ForStmt:
-		runInfo.expr = stmt.Value
-		runInfo.invokeExpr()
-		value := runInfo.rv
-		if runInfo.err != nil {
-			return
-		}
-		if value.Kind() == reflect.Interface && !value.IsNil() {
-			value = value.Elem()
-		}
-
-		env := runInfo.env
-		runInfo.env = env.NewEnv()
-
-		switch value.Kind() {
-		case reflect.Slice, reflect.Array:
-			for i := 0; i < value.Len(); i++ {
-				select {
-				case <-runInfo.ctx.Done():
-					runInfo.err = ErrInterrupt
-					runInfo.rv = nilValue
-					runInfo.env = env
-					return
-				default:
-				}
-
-				iv := value.Index(i)
-				if iv.Kind() == reflect.Interface && !iv.IsNil() {
-					iv = iv.Elem()
-				}
-				if iv.Kind() == reflect.Ptr {
-					iv = iv.Elem()
-				}
-				runInfo.env.DefineValue(stmt.Vars[0], iv)
-
-				runInfo.stmt = stmt.Stmt
-				runInfo.runSingleStmt()
-				if runInfo.err != nil {
-					if runInfo.err == ErrContinue {
-						runInfo.err = nil
-						continue
-					}
-					if runInfo.err == ErrReturn {
-						runInfo.env = env
-						return
-					}
-					if runInfo.err == ErrBreak {
-						runInfo.err = nil
-					}
-					break
-				}
-			}
-			runInfo.rv = nilValue
-			runInfo.env = env
-
-		case reflect.Map:
-			keys := value.MapKeys()
-			for i := 0; i < len(keys); i++ {
-				select {
-				case <-runInfo.ctx.Done():
-					runInfo.err = ErrInterrupt
-					runInfo.rv = nilValue
-					runInfo.env = env
-					return
-				default:
-				}
-
-				runInfo.env.DefineValue(stmt.Vars[0], keys[i])
-
-				if len(stmt.Vars) > 1 {
-					runInfo.env.DefineValue(stmt.Vars[1], value.MapIndex(keys[i]))
-				}
-
-				runInfo.stmt = stmt.Stmt
-				runInfo.runSingleStmt()
-				if runInfo.err != nil {
-					if runInfo.err == ErrContinue {
-						runInfo.err = nil
-						continue
-					}
-					if runInfo.err == ErrReturn {
-						runInfo.env = env
-						return
-					}
-					if runInfo.err == ErrBreak {
-						runInfo.err = nil
-					}
-					break
-				}
-			}
-			runInfo.rv = nilValue
-			runInfo.env = env
-
-		case reflect.Chan:
-			var chosen int
-			var ok bool
-			for {
-				cases := []reflect.SelectCase{{
-					Dir:  reflect.SelectRecv,
-					Chan: reflect.ValueOf(runInfo.ctx.Done()),
-				}, {
-					Dir:  reflect.SelectRecv,
-					Chan: value,
-				}}
-				chosen, runInfo.rv, ok = reflect.Select(cases)
-				if chosen == 0 {
-					runInfo.err = ErrInterrupt
-					runInfo.rv = nilValue
-					break
-				}
-				if !ok {
-					break
-				}
-
-				if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
-					runInfo.rv = runInfo.rv.Elem()
-				}
-				if runInfo.rv.Kind() == reflect.Ptr {
-					runInfo.rv = runInfo.rv.Elem()
-				}
-
-				runInfo.env.DefineValue(stmt.Vars[0], runInfo.rv)
-
-				runInfo.stmt = stmt.Stmt
-				runInfo.runSingleStmt()
-				if runInfo.err != nil {
-					if runInfo.err == ErrContinue {
-						runInfo.err = nil
-						continue
-					}
-					if runInfo.err == ErrReturn {
-						runInfo.env = env
-						return
-					}
-					if runInfo.err == ErrBreak {
-						runInfo.err = nil
-					}
-					break
-				}
-			}
-			runInfo.rv = nilValue
-			runInfo.env = env
-
-		default:
-			runInfo.err = newStringError(stmt, "for cannot loop over type "+value.Kind().String())
-			runInfo.rv = nilValue
-			runInfo.env = env
-		}
+		runInfo.runForStmt(stmt)
 
 	// CForStmt
 	case *ast.CForStmt:
-		env := runInfo.env
-		runInfo.env = env.NewEnv()
-
-		if stmt.Stmt1 != nil {
-			runInfo.stmt = stmt.Stmt1
-			runInfo.runSingleStmt()
-			if runInfo.err != nil {
-				runInfo.env = env
-				return
-			}
-		}
-
-		for {
-			select {
-			case <-runInfo.ctx.Done():
-				runInfo.err = ErrInterrupt
-				runInfo.rv = nilValue
-				runInfo.env = env
-				return
-			default:
-			}
-
-			if stmt.Expr2 != nil {
-				runInfo.expr = stmt.Expr2
-				runInfo.invokeExpr()
-				if runInfo.err != nil {
-					break
-				}
-				if !toBool(runInfo.rv) {
-					break
-				}
-			}
-
-			runInfo.stmt = stmt.Stmt
-			runInfo.runSingleStmt()
-			if runInfo.err == ErrContinue {
-				runInfo.err = nil
-			}
-			if runInfo.err != nil {
-				if runInfo.err == ErrReturn {
-					runInfo.env = env
-					return
-				}
-				if runInfo.err == ErrBreak {
-					runInfo.err = nil
-				}
-				break
-			}
-
-			if stmt.Expr3 != nil {
-				runInfo.expr = stmt.Expr3
-				runInfo.invokeExpr()
-				if runInfo.err != nil {
-					break
-				}
-			}
-		}
-		runInfo.rv = nilValue
-		runInfo.env = env
+		runInfo.runCForStmt(stmt)
 
 	// ReturnStmt
 	case *ast.ReturnStmt:
-		switch len(stmt.Exprs) {
-		case 0:
-			runInfo.rv = nilValue
-			return
-		case 1:
-			runInfo.expr = stmt.Exprs[0]
-			runInfo.invokeExpr()
-			return
-		}
-		rvs := make([]interface{}, len(stmt.Exprs))
-		var i int
-		for i, runInfo.expr = range stmt.Exprs {
-			runInfo.invokeExpr()
-			if runInfo.err != nil {
-				return
-			}
-			rvs[i] = runInfo.rv.Interface()
-		}
-		runInfo.rv = reflect.ValueOf(rvs)
+		runInfo.runReturnStmt(stmt)
 
 	// ThrowStmt
 	case *ast.ThrowStmt:
@@ -610,57 +119,11 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// ModuleStmt
 	case *ast.ModuleStmt:
-		e := runInfo.env
-		runInfo.env, runInfo.err = e.NewModule(stmt.Name)
-		if runInfo.err != nil {
-			return
-		}
-		runInfo.stmt = stmt.Stmt
-		runInfo.runSingleStmt()
-		runInfo.env = e
-		if runInfo.err != nil {
-			return
-		}
-		runInfo.rv = nilValue
+		runInfo.runModuleStmt(stmt)
 
 	// SwitchStmt
 	case *ast.SwitchStmt:
-		env := runInfo.env
-		runInfo.env = env.NewEnv()
-
-		runInfo.expr = stmt.Expr
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			runInfo.env = env
-			return
-		}
-		value := runInfo.rv
-
-		for _, switchCaseStmt := range stmt.Cases {
-			caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
-			for _, runInfo.expr = range caseStmt.Exprs {
-				runInfo.invokeExpr()
-				if runInfo.err != nil {
-					runInfo.env = env
-					return
-				}
-				if equal(runInfo.rv, value) {
-					runInfo.stmt = caseStmt.Stmt
-					runInfo.runSingleStmt()
-					runInfo.env = env
-					return
-				}
-			}
-		}
-
-		if stmt.Default == nil {
-			runInfo.rv = nilValue
-		} else {
-			runInfo.stmt = stmt.Default
-			runInfo.runSingleStmt()
-		}
-
-		runInfo.env = env
+		runInfo.runSwitchStmt(stmt)
 
 	// GoroutineStmt
 	case *ast.GoroutineStmt:
@@ -669,145 +132,15 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 
 	// DeleteStmt
 	case *ast.DeleteStmt:
-		runInfo.expr = stmt.Item
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			return
-		}
-		item := runInfo.rv
-
-		if stmt.Key != nil {
-			runInfo.expr = stmt.Key
-			runInfo.invokeExpr()
-			if runInfo.err != nil {
-				return
-			}
-		}
-
-		if item.Kind() == reflect.Interface && !item.IsNil() {
-			item = item.Elem()
-		}
-
-		switch item.Kind() {
-		case reflect.String:
-			if stmt.Key != nil && runInfo.rv.Kind() == reflect.Bool && runInfo.rv.Bool() {
-				runInfo.env.DeleteGlobal(item.String())
-				runInfo.rv = nilValue
-				return
-			}
-			runInfo.env.Delete(item.String())
-			runInfo.rv = nilValue
-
-		case reflect.Map:
-			if stmt.Key == nil {
-				runInfo.err = newStringError(stmt, "second argument to delete cannot be nil for map")
-				runInfo.rv = nilValue
-				return
-			}
-			if item.IsNil() {
-				runInfo.rv = nilValue
-				return
-			}
-			runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, item.Type().Key())
-			if runInfo.err != nil {
-				runInfo.err = newStringError(stmt, "cannot use type "+item.Type().Key().String()+" as type "+runInfo.rv.Type().String()+" in delete")
-				runInfo.rv = nilValue
-				return
-			}
-			if !isHashable(runInfo.rv) {
-				runInfo.err = newStringError(stmt, "type "+hashableTypeString(runInfo.rv)+" cannot be used as map key in delete")
-				runInfo.rv = nilValue
-				return
-			}
-			item.SetMapIndex(runInfo.rv, reflect.Value{})
-			runInfo.rv = nilValue
-		default:
-			runInfo.err = newStringError(stmt, "first argument to delete cannot be type "+item.Kind().String())
-			runInfo.rv = nilValue
-		}
+		runInfo.runDeleteStmt(stmt)
 
 	// CloseStmt
 	case *ast.CloseStmt:
-		runInfo.expr = stmt.Expr
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			return
-		}
-		if runInfo.rv.Kind() == reflect.Chan {
-			ch := runInfo.rv
-			runInfo.rv = nilValue
-			if !runInfo.options.Debug {
-				// captures panic
-				defer recoverFunc(runInfo)
-			}
-			ch.Close()
-			return
-		}
-		runInfo.err = newStringError(stmt, "type cannot be "+runInfo.rv.Kind().String()+" for close")
-		runInfo.rv = nilValue
+		runInfo.runCloseStmt(stmt)
 
 	// ChanStmt
 	case *ast.ChanStmt:
-		runInfo.expr = stmt.RHS
-		runInfo.invokeExpr()
-		if runInfo.err != nil {
-			return
-		}
-		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
-			runInfo.rv = runInfo.rv.Elem()
-		}
-
-		if runInfo.rv.Kind() != reflect.Chan {
-			// rhs is not channel
-			runInfo.err = newStringError(stmt, "receive from non-chan type "+runInfo.rv.Kind().String())
-			runInfo.rv = nilValue
-			return
-		}
-
-		// rhs is channel
-		// receive from rhs channel
-		rhs := runInfo.rv
-		cases := []reflect.SelectCase{{
-			Dir:  reflect.SelectRecv,
-			Chan: reflect.ValueOf(runInfo.ctx.Done()),
-		}, {
-			Dir:  reflect.SelectRecv,
-			Chan: rhs,
-		}}
-		var chosen int
-		var ok bool
-		chosen, runInfo.rv, ok = reflect.Select(cases)
-		if chosen == 0 {
-			runInfo.err = ErrInterrupt
-			runInfo.rv = nilValue
-			return
-		}
-
-		rhs = runInfo.rv // store rv in rhs temporarily
-
-		if stmt.OkExpr != nil {
-			// set ok to OkExpr
-			if ok {
-				runInfo.rv = trueValue
-			} else {
-				runInfo.rv = falseValue
-			}
-			runInfo.expr = stmt.OkExpr
-			runInfo.invokeLetExpr()
-			// TODO: ok to ignore error?
-		}
-
-		if ok {
-			// set rv to lhs
-			runInfo.rv = rhs
-			runInfo.expr = stmt.LHS
-			runInfo.invokeLetExpr()
-			if runInfo.err != nil {
-				return
-			}
-		} else {
-			runInfo.rv = nilValue
-		}
+		runInfo.runChanStmt(stmt)
 
 	// default
 	default:
@@ -815,4 +148,751 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 		runInfo.rv = nilValue
 	}
 
+}
+
+// runStmtsStmt executes a list of statements.
+func (runInfo *runInfoStruct) runStmtsStmt(stmts *ast.StmtsStmt) {
+	for _, stmt := range stmts.Stmts {
+		switch stmt.(type) {
+		case *ast.BreakStmt:
+			runInfo.err = ErrBreak
+			return
+		case *ast.ContinueStmt:
+			runInfo.err = ErrContinue
+			return
+		case *ast.ReturnStmt:
+			runInfo.stmt = stmt
+			runInfo.runSingleStmt()
+			if runInfo.err != nil {
+				return
+			}
+			runInfo.err = ErrReturn
+			return
+		default:
+			runInfo.stmt = stmt
+			runInfo.runSingleStmt()
+			if runInfo.err != nil {
+				return
+			}
+		}
+	}
+}
+
+// runVarStmt executes a var statement.
+func (runInfo *runInfoStruct) runVarStmt(stmt *ast.VarStmt) {
+	// get right side expression values
+	rvs := make([]reflect.Value, len(stmt.Exprs))
+	var i int
+	for i, runInfo.expr = range stmt.Exprs {
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+			rvs[i] = reflect.ValueOf(env.DeepCopy())
+		} else {
+			rvs[i] = runInfo.rv
+		}
+	}
+
+	if len(rvs) == 1 && len(stmt.Names) > 1 {
+		// only one right side value but many left side names
+		value := rvs[0]
+		if value.Kind() == reflect.Interface && !value.IsNil() {
+			value = value.Elem()
+		}
+		if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
+			// value is slice/array, add each value to left side names
+			for i := 0; i < value.Len() && i < len(stmt.Names); i++ {
+				runInfo.env.DefineValue(stmt.Names[i], value.Index(i))
+			}
+			// return last value of slice/array
+			runInfo.rv = value.Index(value.Len() - 1)
+			return
+		}
+	}
+
+	// define all names with right side values
+	for i = 0; i < len(rvs) && i < len(stmt.Names); i++ {
+		runInfo.env.DefineValue(stmt.Names[i], rvs[i])
+	}
+
+	// return last right side value
+	runInfo.rv = rvs[len(rvs)-1]
+}
+
+// runLetsStmt executes a lets statement.
+func (runInfo *runInfoStruct) runLetsStmt(stmt *ast.LetsStmt) {
+	if len(stmt.LHSS) < 1 || len(stmt.RHSS) < 1 {
+		runInfo.err = newStringError(stmt, "invalid operation")
+		runInfo.rv = nilValue
+		return
+	}
+	// get right side expression values
+	rvs := make([]reflect.Value, len(stmt.RHSS))
+	var i int
+	for i, runInfo.expr = range stmt.RHSS {
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		if env, ok := runInfo.rv.Interface().(*env.Env); ok {
+			rvs[i] = reflect.ValueOf(env.DeepCopy())
+		} else {
+			rvs[i] = runInfo.rv
+		}
+	}
+
+	if len(rvs) == 1 && len(stmt.LHSS) > 1 {
+		// only one right side value but many left side expressions
+		value := rvs[0]
+		if value.Kind() == reflect.Interface && !value.IsNil() {
+			value = value.Elem()
+		}
+		if (value.Kind() == reflect.Slice || value.Kind() == reflect.Array) && value.Len() > 0 {
+			// value is slice/array, add each value to left side expression
+			for i := 0; i < value.Len() && i < len(stmt.LHSS); i++ {
+				runInfo.rv = value.Index(i)
+				runInfo.expr = stmt.LHSS[i]
+				runInfo.invokeLetExpr()
+				if runInfo.err != nil {
+					return
+				}
+			}
+			// return last value of slice/array
+			runInfo.rv = value.Index(value.Len() - 1)
+			return
+		}
+	}
+
+	// invoke all left side expressions with right side values
+	for i = 0; i < len(rvs) && i < len(stmt.LHSS); i++ {
+		value := rvs[i]
+		if value.Kind() == reflect.Interface && !value.IsNil() {
+			value = value.Elem()
+		}
+		runInfo.rv = value
+		runInfo.expr = stmt.LHSS[i]
+		runInfo.invokeLetExpr()
+		if runInfo.err != nil {
+			return
+		}
+	}
+
+	// return last right side value
+	runInfo.rv = rvs[len(rvs)-1]
+}
+
+// runLetMapItemStmt executes a let map item statement.
+func (runInfo *runInfoStruct) runLetMapItemStmt(stmt *ast.LetMapItemStmt) {
+	runInfo.expr = stmt.RHS
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
+	}
+	var rvs []reflect.Value
+	if isNil(runInfo.rv) {
+		rvs = []reflect.Value{nilValue, falseValue}
+	} else {
+		rvs = []reflect.Value{runInfo.rv, trueValue}
+	}
+	var i int
+	for i, runInfo.expr = range stmt.LHSS {
+		runInfo.rv = rvs[i]
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
+		}
+		runInfo.invokeLetExpr()
+		if runInfo.err != nil {
+			return
+		}
+	}
+	runInfo.rv = rvs[0]
+}
+
+// runIfStmt executes an if statement.
+func (runInfo *runInfoStruct) runIfStmt(stmt *ast.IfStmt) {
+	// if
+	runInfo.expr = stmt.If
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
+	}
+
+	env := runInfo.env
+
+	if toBool(runInfo.rv) {
+		// then
+		runInfo.rv = nilValue
+		runInfo.stmt = stmt.Then
+		runInfo.env = env.NewEnv()
+		runInfo.runSingleStmt()
+		runInfo.env = env
+		return
+	}
+
+	for _, statement := range stmt.ElseIf {
+		elseIf := statement.(*ast.IfStmt)
+
+		// else if - if
+		runInfo.env = env.NewEnv()
+		runInfo.expr = elseIf.If
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			runInfo.env = env
+			return
+		}
+
+		if !toBool(runInfo.rv) {
+			continue
+		}
+
+		// else if - then
+		runInfo.rv = nilValue
+		runInfo.stmt = elseIf.Then
+		runInfo.env = env.NewEnv()
+		runInfo.runSingleStmt()
+		runInfo.env = env
+		return
+	}
+
+	if stmt.Else != nil {
+		// else
+		runInfo.rv = nilValue
+		runInfo.stmt = stmt.Else
+		runInfo.env = env.NewEnv()
+		runInfo.runSingleStmt()
+	}
+
+	runInfo.env = env
+}
+
+// runTryStmt executes a try statement.
+func (runInfo *runInfoStruct) runTryStmt(stmt *ast.TryStmt) {
+	// only the try statement will ignore any error except ErrInterrupt
+	// all other parts will return the error
+
+	env := runInfo.env
+	runInfo.env = env.NewEnv()
+
+	runInfo.stmt = stmt.Try
+	runInfo.runSingleStmt()
+
+	if runInfo.err != nil {
+		if runInfo.err == ErrInterrupt {
+			runInfo.env = env
+			return
+		}
+
+		// Catch
+		runInfo.stmt = stmt.Catch
+		if stmt.Var != "" {
+			runInfo.env.DefineValue(stmt.Var, reflect.ValueOf(runInfo.err))
+		}
+		runInfo.err = nil
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			runInfo.env = env
+			return
+		}
+	}
+
+	if stmt.Finally != nil {
+		// Finally
+		runInfo.stmt = stmt.Finally
+		runInfo.runSingleStmt()
+	}
+
+	runInfo.env = env
+}
+
+// runLoopStmt executes a loop statement.
+func (runInfo *runInfoStruct) runLoopStmt(stmt *ast.LoopStmt) {
+	env := runInfo.env
+	runInfo.env = env.NewEnv()
+
+	for {
+		select {
+		case <-runInfo.ctx.Done():
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			runInfo.env = env
+			return
+		default:
+		}
+
+		if stmt.Expr != nil {
+			runInfo.expr = stmt.Expr
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				break
+			}
+			if !toBool(runInfo.rv) {
+				break
+			}
+		}
+
+		runInfo.stmt = stmt.Stmt
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			if runInfo.err == ErrContinue {
+				runInfo.err = nil
+				continue
+			}
+			if runInfo.err == ErrReturn {
+				runInfo.env = env
+				return
+			}
+			if runInfo.err == ErrBreak {
+				runInfo.err = nil
+			}
+			break
+		}
+	}
+
+	runInfo.rv = nilValue
+	runInfo.env = env
+}
+
+// runForStmt executes a for statement.
+func (runInfo *runInfoStruct) runForStmt(stmt *ast.ForStmt) {
+	runInfo.expr = stmt.Value
+	runInfo.invokeExpr()
+	value := runInfo.rv
+	if runInfo.err != nil {
+		return
+	}
+	if value.Kind() == reflect.Interface && !value.IsNil() {
+		value = value.Elem()
+	}
+
+	env := runInfo.env
+	runInfo.env = env.NewEnv()
+
+	switch value.Kind() {
+	case reflect.Slice, reflect.Array:
+		runInfo.runForSliceStmt(stmt, value)
+	case reflect.Map:
+		runInfo.runForMapStmt(stmt, value)
+	case reflect.Chan:
+		runInfo.runForChanStmt(stmt, value)
+	default:
+		runInfo.err = newStringError(stmt, "for cannot loop over type "+value.Kind().String())
+		runInfo.rv = nilValue
+	}
+
+	runInfo.env = env
+}
+
+// runForSliceStmt executes a for statement over a slice or array.
+func (runInfo *runInfoStruct) runForSliceStmt(stmt *ast.ForStmt, value reflect.Value) {
+	for i := 0; i < value.Len(); i++ {
+		select {
+		case <-runInfo.ctx.Done():
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			return
+		default:
+		}
+
+		iv := value.Index(i)
+		if iv.Kind() == reflect.Interface && !iv.IsNil() {
+			iv = iv.Elem()
+		}
+		if iv.Kind() == reflect.Ptr {
+			iv = iv.Elem()
+		}
+		runInfo.env.DefineValue(stmt.Vars[0], iv)
+
+		runInfo.stmt = stmt.Stmt
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			if runInfo.err == ErrContinue {
+				runInfo.err = nil
+				continue
+			}
+			if runInfo.err == ErrReturn {
+				return
+			}
+			if runInfo.err == ErrBreak {
+				runInfo.err = nil
+			}
+			break
+		}
+	}
+	runInfo.rv = nilValue
+}
+
+// runForMapStmt executes a for statement over a map.
+func (runInfo *runInfoStruct) runForMapStmt(stmt *ast.ForStmt, value reflect.Value) {
+	keys := value.MapKeys()
+	for i := 0; i < len(keys); i++ {
+		select {
+		case <-runInfo.ctx.Done():
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			return
+		default:
+		}
+
+		runInfo.env.DefineValue(stmt.Vars[0], keys[i])
+
+		if len(stmt.Vars) > 1 {
+			runInfo.env.DefineValue(stmt.Vars[1], value.MapIndex(keys[i]))
+		}
+
+		runInfo.stmt = stmt.Stmt
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			if runInfo.err == ErrContinue {
+				runInfo.err = nil
+				continue
+			}
+			if runInfo.err == ErrReturn {
+				return
+			}
+			if runInfo.err == ErrBreak {
+				runInfo.err = nil
+			}
+			break
+		}
+	}
+	runInfo.rv = nilValue
+}
+
+// runForChanStmt executes a for statement over a channel.
+func (runInfo *runInfoStruct) runForChanStmt(stmt *ast.ForStmt, value reflect.Value) {
+	var chosen int
+	var ok bool
+	for {
+		cases := []reflect.SelectCase{{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(runInfo.ctx.Done()),
+		}, {
+			Dir:  reflect.SelectRecv,
+			Chan: value,
+		}}
+		chosen, runInfo.rv, ok = reflect.Select(cases)
+		if chosen == 0 {
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			break
+		}
+		if !ok {
+			break
+		}
+
+		if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+			runInfo.rv = runInfo.rv.Elem()
+		}
+		if runInfo.rv.Kind() == reflect.Ptr {
+			runInfo.rv = runInfo.rv.Elem()
+		}
+
+		runInfo.env.DefineValue(stmt.Vars[0], runInfo.rv)
+
+		runInfo.stmt = stmt.Stmt
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			if runInfo.err == ErrContinue {
+				runInfo.err = nil
+				continue
+			}
+			if runInfo.err == ErrReturn {
+				return
+			}
+			if runInfo.err == ErrBreak {
+				runInfo.err = nil
+			}
+			break
+		}
+	}
+	runInfo.rv = nilValue
+}
+
+// runCForStmt executes a C-style for statement.
+func (runInfo *runInfoStruct) runCForStmt(stmt *ast.CForStmt) {
+	env := runInfo.env
+	runInfo.env = env.NewEnv()
+
+	if stmt.Stmt1 != nil {
+		runInfo.stmt = stmt.Stmt1
+		runInfo.runSingleStmt()
+		if runInfo.err != nil {
+			runInfo.env = env
+			return
+		}
+	}
+
+	for {
+		select {
+		case <-runInfo.ctx.Done():
+			runInfo.err = ErrInterrupt
+			runInfo.rv = nilValue
+			runInfo.env = env
+			return
+		default:
+		}
+
+		if stmt.Expr2 != nil {
+			runInfo.expr = stmt.Expr2
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				break
+			}
+			if !toBool(runInfo.rv) {
+				break
+			}
+		}
+
+		runInfo.stmt = stmt.Stmt
+		runInfo.runSingleStmt()
+		if runInfo.err == ErrContinue {
+			runInfo.err = nil
+		}
+		if runInfo.err != nil {
+			if runInfo.err == ErrReturn {
+				runInfo.env = env
+				return
+			}
+			if runInfo.err == ErrBreak {
+				runInfo.err = nil
+			}
+			break
+		}
+
+		if stmt.Expr3 != nil {
+			runInfo.expr = stmt.Expr3
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				break
+			}
+		}
+	}
+	runInfo.rv = nilValue
+	runInfo.env = env
+}
+
+// runReturnStmt executes a return statement.
+func (runInfo *runInfoStruct) runReturnStmt(stmt *ast.ReturnStmt) {
+	switch len(stmt.Exprs) {
+	case 0:
+		runInfo.rv = nilValue
+		return
+	case 1:
+		runInfo.expr = stmt.Exprs[0]
+		runInfo.invokeExpr()
+		return
+	}
+	rvs := make([]interface{}, len(stmt.Exprs))
+	var i int
+	for i, runInfo.expr = range stmt.Exprs {
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		rvs[i] = runInfo.rv.Interface()
+	}
+	runInfo.rv = reflect.ValueOf(rvs)
+}
+
+// runModuleStmt executes a module statement.
+func (runInfo *runInfoStruct) runModuleStmt(stmt *ast.ModuleStmt) {
+	e := runInfo.env
+	runInfo.env, runInfo.err = e.NewModule(stmt.Name)
+	if runInfo.err != nil {
+		return
+	}
+	runInfo.stmt = stmt.Stmt
+	runInfo.runSingleStmt()
+	runInfo.env = e
+	if runInfo.err != nil {
+		return
+	}
+	runInfo.rv = nilValue
+}
+
+// runSwitchStmt executes a switch statement.
+func (runInfo *runInfoStruct) runSwitchStmt(stmt *ast.SwitchStmt) {
+	env := runInfo.env
+	runInfo.env = env.NewEnv()
+
+	runInfo.expr = stmt.Expr
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		runInfo.env = env
+		return
+	}
+	value := runInfo.rv
+
+	for _, switchCaseStmt := range stmt.Cases {
+		caseStmt := switchCaseStmt.(*ast.SwitchCaseStmt)
+		for _, runInfo.expr = range caseStmt.Exprs {
+			runInfo.invokeExpr()
+			if runInfo.err != nil {
+				runInfo.env = env
+				return
+			}
+			if equal(runInfo.rv, value) {
+				runInfo.stmt = caseStmt.Stmt
+				runInfo.runSingleStmt()
+				runInfo.env = env
+				return
+			}
+		}
+	}
+
+	if stmt.Default == nil {
+		runInfo.rv = nilValue
+	} else {
+		runInfo.stmt = stmt.Default
+		runInfo.runSingleStmt()
+	}
+
+	runInfo.env = env
+}
+
+// runDeleteStmt executes a delete statement.
+func (runInfo *runInfoStruct) runDeleteStmt(stmt *ast.DeleteStmt) {
+	runInfo.expr = stmt.Item
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
+	}
+	item := runInfo.rv
+
+	if stmt.Key != nil {
+		runInfo.expr = stmt.Key
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+	}
+
+	if item.Kind() == reflect.Interface && !item.IsNil() {
+		item = item.Elem()
+	}
+
+	switch item.Kind() {
+	case reflect.String:
+		if stmt.Key != nil && runInfo.rv.Kind() == reflect.Bool && runInfo.rv.Bool() {
+			runInfo.env.DeleteGlobal(item.String())
+			runInfo.rv = nilValue
+			return
+		}
+		runInfo.env.Delete(item.String())
+		runInfo.rv = nilValue
+
+	case reflect.Map:
+		if stmt.Key == nil {
+			runInfo.err = newStringError(stmt, "second argument to delete cannot be nil for map")
+			runInfo.rv = nilValue
+			return
+		}
+		if item.IsNil() {
+			runInfo.rv = nilValue
+			return
+		}
+		runInfo.rv, runInfo.err = convertReflectValueToType(runInfo.rv, item.Type().Key())
+		if runInfo.err != nil {
+			runInfo.err = newStringError(stmt, "cannot use type "+item.Type().Key().String()+" as type "+runInfo.rv.Type().String()+" in delete")
+			runInfo.rv = nilValue
+			return
+		}
+		if !isHashable(runInfo.rv) {
+			runInfo.err = newStringError(stmt, "type "+hashableTypeString(runInfo.rv)+" cannot be used as map key in delete")
+			runInfo.rv = nilValue
+			return
+		}
+		item.SetMapIndex(runInfo.rv, reflect.Value{})
+		runInfo.rv = nilValue
+	default:
+		runInfo.err = newStringError(stmt, "first argument to delete cannot be type "+item.Kind().String())
+		runInfo.rv = nilValue
+	}
+}
+
+// runCloseStmt executes a close statement.
+func (runInfo *runInfoStruct) runCloseStmt(stmt *ast.CloseStmt) {
+	runInfo.expr = stmt.Expr
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
+	}
+	if runInfo.rv.Kind() == reflect.Chan {
+		ch := runInfo.rv
+		runInfo.rv = nilValue
+		if !runInfo.options.Debug {
+			// captures panic
+			defer recoverFunc(runInfo)
+		}
+		ch.Close()
+		return
+	}
+	runInfo.err = newStringError(stmt, "type cannot be "+runInfo.rv.Kind().String()+" for close")
+	runInfo.rv = nilValue
+}
+
+// runChanStmt executes a channel receive statement.
+func (runInfo *runInfoStruct) runChanStmt(stmt *ast.ChanStmt) {
+	runInfo.expr = stmt.RHS
+	runInfo.invokeExpr()
+	if runInfo.err != nil {
+		return
+	}
+	if runInfo.rv.Kind() == reflect.Interface && !runInfo.rv.IsNil() {
+		runInfo.rv = runInfo.rv.Elem()
+	}
+
+	if runInfo.rv.Kind() != reflect.Chan {
+		// rhs is not channel
+		runInfo.err = newStringError(stmt, "receive from non-chan type "+runInfo.rv.Kind().String())
+		runInfo.rv = nilValue
+		return
+	}
+
+	// rhs is channel
+	// receive from rhs channel
+	rhs := runInfo.rv
+	cases := []reflect.SelectCase{{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(runInfo.ctx.Done()),
+	}, {
+		Dir:  reflect.SelectRecv,
+		Chan: rhs,
+	}}
+	var chosen int
+	var ok bool
+	chosen, runInfo.rv, ok = reflect.Select(cases)
+	if chosen == 0 {
+		runInfo.err = ErrInterrupt
+		runInfo.rv = nilValue
+		return
+	}
+
+	rhs = runInfo.rv // store rv in rhs temporarily
+
+	if stmt.OkExpr != nil {
+		// set ok to OkExpr
+		if ok {
+			runInfo.rv = trueValue
+		} else {
+			runInfo.rv = falseValue
+		}
+		runInfo.expr = stmt.OkExpr
+		runInfo.invokeLetExpr()
+		// TODO: ok to ignore error?
+	}
+
+	if ok {
+		// set rv to lhs
+		runInfo.rv = rhs
+		runInfo.expr = stmt.LHS
+		runInfo.invokeLetExpr()
+		if runInfo.err != nil {
+			return
+		}
+	} else {
+		runInfo.rv = nilValue
+	}
 }
