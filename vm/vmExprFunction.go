@@ -30,6 +30,9 @@ func (runInfo *runInfoStruct) funcExpr() {
 
 		// run function statements
 		runInfo.runSingleStmt()
+		if len(runInfo.defers) > 0 {
+			runInfo.runDefers()
+		}
 		if runInfo.err != nil && runInfo.err != ErrReturn {
 			return nilValue, reflect.ValueOf(newError(funcExpr, runInfo.err))
 		}

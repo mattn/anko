@@ -81,7 +81,7 @@ import (
 	op_multiply            ast.Operator
 }
 
-%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN STRUCT MAKE OPCHAN EQOPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
+%token<tok> IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL NILCOALESCE MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO DEFER CHAN STRUCT MAKE OPCHAN EQOPCHAN TYPE LEN DELETE CLOSE MAP IMPORT
 
 /* lowest precedence */
 %left ,
@@ -210,6 +210,26 @@ stmt :
 	| GO expr '(' exprs ')'
 	{
 		$$ = &ast.GoroutineStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}}
+		$$.SetPosition($1.Position())
+	}
+	| DEFER IDENT '(' exprs VARARG ')'
+	{
+		$$ = &ast.DeferStmt{Expr: &ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true}}
+		$$.SetPosition($1.Position())
+	}
+	| DEFER IDENT '(' exprs ')'
+	{
+		$$ = &ast.DeferStmt{Expr: &ast.CallExpr{Name: $2.Lit, SubExprs: $4}}
+		$$.SetPosition($1.Position())
+	}
+	| DEFER expr '(' exprs VARARG ')'
+	{
+		$$ = &ast.DeferStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true}}
+		$$.SetPosition($1.Position())
+	}
+	| DEFER expr '(' exprs ')'
+	{
+		$$ = &ast.DeferStmt{Expr: &ast.AnonCallExpr{Expr: $2, SubExprs: $4}}
 		$$.SetPosition($1.Position())
 	}
 	| DELETE '(' expr ')'

@@ -42,6 +42,9 @@ func RunContext(ctx context.Context, env *env.Env, options *Options, stmt ast.St
 		runInfo.options = &Options{}
 	}
 	runInfo.runSingleStmt()
+	if len(runInfo.defers) > 0 {
+		runInfo.runDefers()
+	}
 	if runInfo.err == ErrReturn {
 		runInfo.err = nil
 	}
@@ -129,6 +132,10 @@ func (runInfo *runInfoStruct) runSingleStmt() {
 	case *ast.GoroutineStmt:
 		runInfo.expr = stmt.Expr
 		runInfo.invokeExpr()
+
+	// DeferStmt
+	case *ast.DeferStmt:
+		runInfo.runDeferStmt(stmt)
 
 	// DeleteStmt
 	case *ast.DeleteStmt:
@@ -750,6 +757,97 @@ func (runInfo *runInfoStruct) runSwitchStmt(stmt *ast.SwitchStmt) {
 	}
 
 	runInfo.env = env
+}
+
+// runDeferStmt evaluates the function and arguments of a defer statement and
+// registers the call to be run when the current function returns.
+func (runInfo *runInfoStruct) runDeferStmt(stmt *ast.DeferStmt) {
+	var callExpr *ast.CallExpr
+
+	switch t := stmt.Expr.(type) {
+	case *ast.CallExpr:
+		f := t.Func
+		if !f.IsValid() {
+			// if function is not valid try to get by function name
+			f, runInfo.err = runInfo.env.GetValue(t.Name)
+			if runInfo.err != nil {
+				runInfo.err = newError(t, runInfo.err)
+				runInfo.rv = nilValue
+				return
+			}
+		}
+		callExpr = &ast.CallExpr{Func: f, SubExprs: t.SubExprs, VarArg: t.VarArg}
+		callExpr.SetPosition(t.Position())
+	case *ast.AnonCallExpr:
+		runInfo.expr = t.Expr
+		runInfo.invokeExpr()
+		if runInfo.err != nil {
+			return
+		}
+		callExpr = &ast.CallExpr{Func: runInfo.rv, SubExprs: t.SubExprs, VarArg: t.VarArg}
+		callExpr.SetPosition(t.Expr.Position())
+	default:
+		runInfo.err = newStringError(stmt, "expression in defer must be function call")
+		runInfo.rv = nilValue
+		return
+	}
+
+	f := callExpr.Func
+	if f.Kind() == reflect.Interface && !f.IsNil() {
+		f = f.Elem()
+	}
+	if f.Kind() != reflect.Func {
+		runInfo.err = newStringError(stmt, "cannot call type "+f.Kind().String())
+		runInfo.rv = nilValue
+		return
+	}
+
+	fType := f.Type()
+	isRunVMFunction := checkIfRunVMFunction(fType)
+	args, useCallSlice := runInfo.makeCallArgs(fType, isRunVMFunction, callExpr)
+	if runInfo.err != nil {
+		return
+	}
+
+	runInfo.defers = append(runInfo.defers, capturedFunc{
+		fn:        f,
+		args:      args,
+		callSlice: useCallSlice,
+	})
+	runInfo.rv = nilValue
+}
+
+// runDefers runs the deferred calls registered by runDeferStmt in LIFO order.
+// The current rv is kept. An error from a deferred call becomes the run error
+// unless the run already failed with a real error.
+func (runInfo *runInfoStruct) runDefers() {
+	rv, err := runInfo.rv, runInfo.err
+	defers := runInfo.defers
+	runInfo.defers = nil
+	for i := len(defers) - 1; i >= 0; i-- {
+		runInfo.err = nil
+		runInfo.callDeferredFunc(defers[i])
+		if runInfo.err != nil && (err == nil || err == ErrReturn) {
+			err = runInfo.err
+		}
+	}
+	runInfo.rv = rv
+	runInfo.err = err
+}
+
+// callDeferredFunc calls a single deferred function.
+func (runInfo *runInfoStruct) callDeferredFunc(deferred capturedFunc) {
+	if !runInfo.options.Debug {
+		// captures panic
+		defer recoverFunc(runInfo)
+	}
+	var rvs []reflect.Value
+	if deferred.callSlice {
+		rvs = deferred.fn.CallSlice(deferred.args)
+	} else {
+		rvs = deferred.fn.Call(deferred.args)
+	}
+	_, runInfo.err = processCallReturnValues(rvs, checkIfRunVMFunction(deferred.fn.Type()), true)
 }
 
 // runDeleteStmt executes a delete statement.

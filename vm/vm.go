@@ -33,9 +33,21 @@ type (
 		expr     ast.Expr
 		operator ast.Operator
 
+		// deferred function calls of the current function invocation,
+		// run in LIFO order when the function returns
+		defers []capturedFunc
+
 		// outgoing
 		rv  reflect.Value
 		err error
+	}
+
+	// capturedFunc holds a deferred function with its arguments already
+	// evaluated at the defer statement
+	capturedFunc struct {
+		fn        reflect.Value
+		args      []reflect.Value
+		callSlice bool
 	}
 )
 
