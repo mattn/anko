@@ -3,7 +3,7 @@
 [![GoDoc Reference](https://godoc.org/github.com/mattn/anko/vm?status.svg)](http://godoc.org/github.com/mattn/anko/vm)
 [![CI](https://github.com/mattn/anko/actions/workflows/ci.yml/badge.svg)](https://github.com/mattn/anko/actions/workflows/ci.yml)
 [![Financial Contributors on Open Collective](https://opencollective.com/mattn-anko/all/badge.svg?label=financial+contributors)](https://opencollective.com/mattn-anko) [![Coverage](https://codecov.io/gh/mattn/anko/branch/master/graph/badge.svg)](https://codecov.io/gh/mattn/anko)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mattn/anko)](https://goreportcard.com/report/github.com/mattn/anko)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mattn/anko)](https://goreportcard.com/report/github.com/mattn/anko) [![inspect.software](https://raw.githubusercontent.com/inspect-software/badges/main/v1/m/mattn/anko.svg)](https://inspect.software/software/mattn/anko)
 
 Anko is a scriptable interpreter written in Go.
 
